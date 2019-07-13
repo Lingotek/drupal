@@ -570,7 +570,7 @@ class LingotekConfigManagementForm extends FormBase {
 
   public function batchFinished($success, $results, $operations) {
     if ($success) {
-      drupal_set_message('Operations completed.');
+      $this->messenger()->addStatus('Operations completed.');
     }
   }
 
@@ -614,7 +614,7 @@ class LingotekConfigManagementForm extends FormBase {
         '#theme' => 'item_list',
         '#items' => $links,
       ];
-      drupal_set_message($this->t('Exports available at: @exports',
+      $this->messenger()->addStatus($this->t('Exports available at: @exports',
         ['@exports' => drupal_render($build)]));
     }
   }
@@ -783,12 +783,12 @@ class LingotekConfigManagementForm extends FormBase {
         catch (LingotekApiException $e) {
           $this->translationService->setSourceStatus($entity, Lingotek::STATUS_ERROR);
           if ($document_id) {
-            drupal_set_message($this->t('%label update failed. Please try again.',
-              ['%label' => $entity->label()]), 'error');
+            $this->messenger()->addError($this->t('%label update failed. Please try again.',
+              ['%label' => $entity->label()]));
           }
           else {
-            drupal_set_message($this->t('%label upload failed. Please try again.',
-              ['%label' => $entity->label()]), 'error');
+            $this->messenger()->addError($this->t('%label upload failed. Please try again.',
+              ['%label' => $entity->label()]));
           }
         }
       }
@@ -799,19 +799,19 @@ class LingotekConfigManagementForm extends FormBase {
         catch (LingotekApiException $e) {
           $this->translationService->setConfigSourceStatus($mapper, Lingotek::STATUS_ERROR);
           if ($document_id) {
-            drupal_set_message($this->t('%label update failed. Please try again.',
-              ['%label' => $mapper->getTitle()]), 'error');
+            $this->messenger()->addError($this->t('%label update failed. Please try again.',
+              ['%label' => $mapper->getTitle()]));
           }
           else {
-            drupal_set_message($this->t('%label upload failed. Please try again.',
-              ['%label' => $mapper->getTitle()]), 'error');
+            $this->messenger()->addError($this->t('%label upload failed. Please try again.',
+              ['%label' => $mapper->getTitle()]));
           }
         }
       }
     }
     else {
-      drupal_set_message($this->t('%label has no profile assigned so it was not processed.',
-        ['%label' => $mapper->getTitle()]), 'warning');
+      $this->messenger()->addWarning($this->t('%label has no profile assigned so it was not processed.',
+        ['%label' => $mapper->getTitle()]));
     }
   }
 
@@ -836,8 +836,8 @@ class LingotekConfigManagementForm extends FormBase {
           $this->translationService->checkSourceStatus($entity);
         }
         catch (LingotekApiException $e) {
-          drupal_set_message($this->t('%label upload failed. Please try again.',
-            ['%label' => $entity->label()]), 'error');
+          $this->messenger()->addError($this->t('%label upload failed. Please try again.',
+            ['%label' => $entity->label()]));
         }
       }
       else {
@@ -845,14 +845,14 @@ class LingotekConfigManagementForm extends FormBase {
           $this->translationService->checkConfigSourceStatus($mapper->getPluginId());
         }
         catch (LingotekApiException $e) {
-          drupal_set_message($this->t('%label upload failed. Please try again.',
-            ['%label' => $mapper->getTitle()]), 'error');
+          $this->messenger()->addError($this->t('%label upload failed. Please try again.',
+            ['%label' => $mapper->getTitle()]));
         }
       }
     }
     else {
-      drupal_set_message($this->t('%label has no profile assigned so it was not processed.',
-        ['%label' => $mapper->getTitle()]), 'warning');
+      $this->messenger()->addWarning($this->t('%label has no profile assigned so it was not processed.',
+        ['%label' => $mapper->getTitle()]));
     }
   }
 
@@ -878,8 +878,8 @@ class LingotekConfigManagementForm extends FormBase {
           $result = $this->translationService->requestTranslations($entity);
         }
         catch (LingotekApiException $e) {
-          drupal_set_message($this->t('%label translations request failed. Please try again.',
-            ['%label' => $entity->label()]), 'error');
+          $this->messenger()->addError($this->t('%label translations request failed. Please try again.',
+            ['%label' => $entity->label()]));
         }
       }
       else {
@@ -887,14 +887,14 @@ class LingotekConfigManagementForm extends FormBase {
           $result = $this->translationService->requestConfigTranslations($mapper->getPluginId());
         }
         catch (LingotekApiException $e) {
-          drupal_set_message($this->t('%label translations request failed. Please try again.',
-            ['%label' => $mapper->getTitle()]), 'error');
+          $this->messenger()->addError($this->t('%label translations request failed. Please try again.',
+            ['%label' => $mapper->getTitle()]));
         }
       }
     }
     else {
-      drupal_set_message($this->t('%label has no profile assigned so it was not processed.',
-        ['%label' => $mapper->getTitle()]), 'warning');
+      $this->messenger()->addWarning($this->t('%label has no profile assigned so it was not processed.',
+        ['%label' => $mapper->getTitle()]));
     }
     return $result;
   }
@@ -920,8 +920,8 @@ class LingotekConfigManagementForm extends FormBase {
           $this->translationService->checkTargetStatuses($entity);
         }
         catch (LingotekApiException $e) {
-          drupal_set_message($this->t('%label translation statuses check failed. Please try again.',
-            ['%label' => $entity->label()]), 'error');
+          $this->messenger()->addError($this->t('%label translation statuses check failed. Please try again.',
+            ['%label' => $entity->label()]));
         }
       }
       else {
@@ -929,14 +929,14 @@ class LingotekConfigManagementForm extends FormBase {
           $this->translationService->checkConfigTargetStatuses($mapper->getPluginId());
         }
         catch (LingotekApiException $e) {
-          drupal_set_message($this->t('%label translation statuses check failed. Please try again.',
-            ['%label' => $mapper->getTitle()]), 'error');
+          $this->messenger()->addError($this->t('%label translation statuses check failed. Please try again.',
+            ['%label' => $mapper->getTitle()]));
         }
       }
     }
     else {
-      drupal_set_message($this->t('%label has no profile assigned so it was not processed.',
-        ['%label' => $mapper->getTitle()]), 'warning');
+      $this->messenger()->addWarning($this->t('%label has no profile assigned so it was not processed.',
+        ['%label' => $mapper->getTitle()]));
     }
   }
 
@@ -964,8 +964,8 @@ class LingotekConfigManagementForm extends FormBase {
           $this->translationService->checkTargetStatus($entity, $locale);
         }
         catch (LingotekApiException $e) {
-          drupal_set_message($this->t('%label @locale translation status check failed. Please try again.',
-            ['%label' => $entity->label(), '@locale' => $locale]), 'error');
+          $this->messenger()->addError($this->t('%label @locale translation status check failed. Please try again.',
+            ['%label' => $entity->label(), '@locale' => $locale]));
         }
       }
       else {
@@ -973,14 +973,14 @@ class LingotekConfigManagementForm extends FormBase {
           $this->translationService->checkConfigTargetStatus($mapper->getPluginId(), $locale);
         }
         catch (LingotekApiException $e) {
-          drupal_set_message($this->t('%label @locale translation status check failed. Please try again.',
-            ['%label' => $mapper->getTitle(), '@locale' => $locale]), 'error');
+          $this->messenger()->addError($this->t('%label @locale translation status check failed. Please try again.',
+            ['%label' => $mapper->getTitle(), '@locale' => $locale]));
         }
       }
     }
     else {
-      drupal_set_message($this->t('%label has no profile assigned so it was not processed.',
-        ['%label' => $mapper->getTitle()]), 'warning');
+      $this->messenger()->addWarning($this->t('%label has no profile assigned so it was not processed.',
+        ['%label' => $mapper->getTitle()]));
     }
   }
 
@@ -1008,8 +1008,8 @@ class LingotekConfigManagementForm extends FormBase {
           $this->translationService->addTarget($entity, $locale);
         }
         catch (LingotekApiException $e) {
-          drupal_set_message($this->t('%label @locale translation request failed. Please try again.',
-            ['%label' => $entity->label(), '@locale' => $locale]), 'error');
+          $this->messenger()->addError($this->t('%label @locale translation request failed. Please try again.',
+            ['%label' => $entity->label(), '@locale' => $locale]));
         }
       }
       else {
@@ -1017,14 +1017,14 @@ class LingotekConfigManagementForm extends FormBase {
           $this->translationService->addConfigTarget($mapper->getPluginId(), $locale);
         }
         catch (LingotekApiException $e) {
-          drupal_set_message($this->t('%label @locale translation request failed. Please try again.',
-            ['%label' => $mapper->getTitle(), '@locale' => $locale]), 'error');
+          $this->messenger()->addError($this->t('%label @locale translation request failed. Please try again.',
+            ['%label' => $mapper->getTitle(), '@locale' => $locale]));
         }
       }
     }
     else {
-      drupal_set_message($this->t('%label has no profile assigned so it was not processed.',
-        ['%label' => $mapper->getTitle()]), 'warning');
+      $this->messenger()->addWarning($this->t('%label has no profile assigned so it was not processed.',
+        ['%label' => $mapper->getTitle()]));
     }
   }
 
@@ -1050,8 +1050,8 @@ class LingotekConfigManagementForm extends FormBase {
       $this->performTranslationDownload($mapper, $entity, $locale);
     }
     else {
-      drupal_set_message($this->t('%label has no profile assigned so it was not processed.',
-        ['%label' => $mapper->getTitle()]), 'warning');
+      $this->messenger()->addWarning($this->t('%label has no profile assigned so it was not processed.',
+        ['%label' => $mapper->getTitle()]));
     }
   }
 
@@ -1080,8 +1080,8 @@ class LingotekConfigManagementForm extends FormBase {
       }
     }
     else {
-      drupal_set_message($this->t('%label has no profile assigned so it was not processed.',
-        ['%label' => $mapper->getTitle()]), 'warning');
+      $this->messenger()->addWarning($this->t('%label has no profile assigned so it was not processed.',
+        ['%label' => $mapper->getTitle()]));
     }
   }
 
@@ -1106,8 +1106,8 @@ class LingotekConfigManagementForm extends FormBase {
           $this->translationService->deleteMetadata($entity);
         }
         catch (LingotekApiException $e) {
-          drupal_set_message($this->t('%label deletion failed. Please try again.',
-            ['%label' => $entity->label()]), 'error');
+          $this->messenger()->addError($this->t('%label deletion failed. Please try again.',
+            ['%label' => $entity->label()]));
         }
       }
       else {
@@ -1115,8 +1115,8 @@ class LingotekConfigManagementForm extends FormBase {
           $this->translationService->deleteConfigMetadata($mapper->getPluginId());
         }
         catch (LingotekApiException $e) {
-          drupal_set_message($this->t('%label deletion failed. Please try again.',
-            ['%label' => $mapper->getTitle()]), 'error');
+          $this->messenger()->addError($this->t('%label deletion failed. Please try again.',
+            ['%label' => $mapper->getTitle()]));
         }
       }
     }
@@ -1125,13 +1125,13 @@ class LingotekConfigManagementForm extends FormBase {
         $this->translationService->deleteConfigMetadata($mapper->getPluginId());
       }
       catch (LingotekApiException $e) {
-        drupal_set_message($this->t('%label deletion failed. Please try again.',
-          ['%label' => $mapper->getTitle()]), 'error');
+        $this->messenger()->addError($this->t('%label deletion failed. Please try again.',
+          ['%label' => $mapper->getTitle()]));
       }
     }
     else {
-      drupal_set_message($this->t('%label has no profile assigned so it was not processed.',
-        ['%label' => $mapper->getTitle()]), 'warning');
+      $this->messenger()->addWarning($this->t('%label has no profile assigned so it was not processed.',
+        ['%label' => $mapper->getTitle()]));
     }
   }
 
@@ -1157,7 +1157,7 @@ class LingotekConfigManagementForm extends FormBase {
       }
     }
     catch (LingotekApiException $exception) {
-      drupal_set_message(t('The Translation Profile change for %title failed. Please try again.', ['%title' => $mapper->getTitle()]), 'error');
+      $this->messenger()->addError(t('The Translation Profile change for %title failed. Please try again.', ['%title' => $mapper->getTitle()]));
     }
     if ($profile_id === Lingotek::PROFILE_DISABLED) {
       /** @var \Drupal\Core\Config\Entity\ConfigEntityInterface $entity */
@@ -1571,14 +1571,14 @@ class LingotekConfigManagementForm extends FormBase {
         if ($this->translationService->checkTargetStatus($entity, $locale)) {
           $success = $this->translationService->downloadDocument($entity, $locale);
           if ($success === FALSE) {
-            drupal_set_message($this->t('%label @locale translation download failed. Please try again.',
-              ['%label' => $entity->label(), '@locale' => $locale]), 'error');
+            $this->messenger()->addError($this->t('%label @locale translation download failed. Please try again.',
+              ['%label' => $entity->label(), '@locale' => $locale]));
           }
         }
       }
       catch (LingotekApiException $e) {
-        drupal_set_message($this->t('%label @locale translation download failed. Please try again.',
-          ['%label' => $entity->label(), '@locale' => $locale]), 'error');
+        $this->messenger()->addError($this->t('%label @locale translation download failed. Please try again.',
+          ['%label' => $entity->label(), '@locale' => $locale]));
       }
     }
     else {
@@ -1586,14 +1586,14 @@ class LingotekConfigManagementForm extends FormBase {
         if ($this->translationService->checkConfigTargetStatus($mapper->getPluginId(), $locale)) {
           $success = $this->translationService->downloadConfig($mapper->getPluginId(), $locale);
           if ($success === FALSE) {
-            drupal_set_message($this->t('%label @locale translation download failed. Please try again.',
-              ['%label' => $mapper->getTitle(), '@locale' => $locale]), 'error');
+            $this->messenger()->addError($this->t('%label @locale translation download failed. Please try again.',
+              ['%label' => $mapper->getTitle(), '@locale' => $locale]));
           }
         }
       }
       catch (LingotekApiException $e) {
-        drupal_set_message($this->t('%label @locale translation download failed. Please try again.',
-          ['%label' => $mapper->getTitle(), '@locale' => $locale]), 'error');
+        $this->messenger()->addError($this->t('%label @locale translation download failed. Please try again.',
+          ['%label' => $mapper->getTitle(), '@locale' => $locale]));
       }
     }
   }

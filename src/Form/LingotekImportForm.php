@@ -151,25 +151,25 @@ class LingotekImportForm extends LingotekConfigFormBase {
         'Successfully imported @import_success_count of @importedCount Document',
         'Successfully imported @import_success_count of @importedCount Documents',
         ['@import_success_count' => $import_success_count, '@importedCount' => $importedCount], []);
-      drupal_set_message($plural_or_singular);
+      $this->messenger()->addStatus($plural_or_singular);
       if ($import_success_count != $importedCount) {
         $document_plurality = \Drupal::translation()->formatPlural($import_failure_count,
         'The following document did not import: @failed_imports',
         'The following documents did not import: @failed_imports',
         ['@failed_imports' => $this->toStringUnsuccessfulImports($import_failure_doc_ids)], []);
-        drupal_set_message($document_plurality, 'error');
+        $this->messenger()->addError($document_plurality);
       }
     }
     else {
       if ($import_success_count == 0 && $import_failure_count == 0) {
-        drupal_set_message($this->t('No files were selected to import. Please check the desired documents to import.'), 'error');
+        $this->messenger()->addError($this->t('No files were selected to import. Please check the desired documents to import.'));
       }
       else {
         $file_plurality = \Drupal::translation()->formatPlural($importedCount,
           'There was an error importing your file. We currently only support Wordpress, Drupal, HTML, and Text files.',
           'There was an error importing your files. We currently only support Wordpress, Drupal, HTML, and Text files.',
           [], []);
-        drupal_set_message($file_plurality, 'error');
+        $this->messenger()->addError($file_plurality);
       }
     }
 

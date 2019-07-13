@@ -345,14 +345,3 @@ namespace Drupal\Tests\lingotek\Unit\Form {
 
   }
 }
-
-namespace {
-
-  // @todo Delete after https://drupal.org/node/1858196 is in.
-  if (!function_exists('drupal_set_message')) {
-
-    function drupal_set_message() {
-    }
-
-  }
-}

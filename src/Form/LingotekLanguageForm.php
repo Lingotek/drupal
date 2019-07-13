@@ -122,7 +122,7 @@ class LingotekLanguageForm {
       }
       catch (LingotekApiException $lingotekApiException) {
         if ($lingotekApiException->getCode() === 401) {
-          drupal_set_message("The Lingotek locale has not been validated.", 'warning');
+          \Drupal::messenger()->addWarning("The Lingotek locale has not been validated.", 'warning');
         }
       }
     }

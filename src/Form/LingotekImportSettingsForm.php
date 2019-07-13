@@ -78,7 +78,7 @@ class LingotekImportSettingsForm extends LingotekConfigFormBase {
     $form_values = $form_state->getValues();
     $this->saveImportSettings($form_values);
 
-    drupal_set_message($this->t('Your preferences have been saved'));
+    $this->messenger()->addStatus($this->t('Your preferences have been saved'));
   }
 
 }

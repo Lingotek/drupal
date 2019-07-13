@@ -26,7 +26,7 @@ class CheckUploadToLingotekAction extends LingotekContentEntityActionBase {
       $result = $this->translationService->checkSourceStatus($entity);
     }
     catch (LingotekApiException $exception) {
-      drupal_set_message(t('The upload status check for @entity_type %title translation failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]), 'error');
+      $this->messenger()->addError(t('The upload status check for @entity_type %title translation failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
     }
     return $result;
   }

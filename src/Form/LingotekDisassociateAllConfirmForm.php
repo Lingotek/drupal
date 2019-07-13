@@ -107,10 +107,10 @@ class LingotekDisassociateAllConfirmForm extends ConfirmFormBase {
     $error &= $this->disassociateAllConfigTranslations();
 
     if ($error) {
-      drupal_set_message($this->t('Some translations may have been disassociated, but some failed.'), 'warning');
+      $this->messenger()->addWarning($this->t('Some translations may have been disassociated, but some failed.'));
     }
     else {
-      drupal_set_message($this->t('All translations have been disassociated.'));
+      $this->messenger()->addStatus($this->t('All translations have been disassociated.'));
     }
   }
 
@@ -136,10 +136,10 @@ class LingotekDisassociateAllConfirmForm extends ConfirmFormBase {
       catch (LingotekApiException $exception) {
         $error = TRUE;
         if ($mapper instanceof ConfigEntityMapper) {
-          drupal_set_message(t('The deletion of %title failed. Please try again.', ['%title' => $mapper->getEntity()->label()]), 'error');
+          $this->messenger()->addError(t('The deletion of %title failed. Please try again.', ['%title' => $mapper->getEntity()->label()]));
         }
         else {
-          drupal_set_message(t('The deletion of %title failed. Please try again.', ['%title' => $mapper->getPluginId()]), 'error');
+          $this->messenger()->addError(t('The deletion of %title failed. Please try again.', ['%title' => $mapper->getPluginId()]));
         }
       }
     }
@@ -164,15 +164,15 @@ class LingotekDisassociateAllConfirmForm extends ConfirmFormBase {
         }
         catch (LingotekApiException $exception) {
           $error = TRUE;
-          drupal_set_message(t('The deletion of @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]), 'error');
+          $this->messenger()->addError(t('The deletion of @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
         }
       }
     }
     if ($error) {
-      drupal_set_message($this->t('Some translations may have been disassociated, but some failed.'), 'warning');
+      $this->messenger()->addWarning($this->t('Some translations may have been disassociated, but some failed.'));
     }
     else {
-      drupal_set_message($this->t('All translations have been disassociated.'));
+      $this->messenger()->addStatus($this->t('All translations have been disassociated.'));
     }
     return $error;
   }

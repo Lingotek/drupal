@@ -123,7 +123,7 @@ class LingotekDashboardController extends LingotekControllerBase {
       ],
     ];
     if (isset($requirements['locale_translation']) && isset($requirements['locale_translation']['description'])) {
-      drupal_set_message($requirements['locale_translation']['description'], 'warning');
+      $this->messenger()->addWarning($requirements['locale_translation']['description']);
     }
     return $build;
   }

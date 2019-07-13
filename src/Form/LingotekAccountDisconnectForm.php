@@ -82,7 +82,7 @@ class LingotekAccountDisconnectForm extends ConfirmFormBase {
     $config->save();
 
     $this->logger('lingotek')->notice('Account disconnected from Lingotek.');
-    drupal_set_message($this->t('You were disconnected from Lingotek.'));
+    $this->messenger()->addStatus($this->t('You were disconnected from Lingotek.'));
     $form_state->setRedirectUrl($this->getCancelUrl());
   }
 

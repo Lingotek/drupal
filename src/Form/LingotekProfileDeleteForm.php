@@ -63,11 +63,11 @@ class LingotekProfileDeleteForm extends EntityDeleteForm {
     $usages = $this->profileUsage->isUsedByContent($profile) | $this->profileUsage->isUsedByConfig($profile) | $this->profileUsage->isUsedByContentSettings($profile);
     if (!$usages) {
       $profile->delete();
-      drupal_set_message($this->t('The lingotek profile %profile has been deleted.', ['%profile' => $profile->label()]));
+      $this->messenger()->addStatus($this->t('The lingotek profile %profile has been deleted.', ['%profile' => $profile->label()]));
     }
     else {
-      drupal_set_message($this->t('The Lingotek profile %profile is being used so cannot be deleted.',
-        ['%profile' => $profile->label()]), 'error');
+      $this->messenger()->addError($this->t('The Lingotek profile %profile is being used so cannot be deleted.',
+        ['%profile' => $profile->label()]));
     }
 
     $form_state->setRedirectUrl($this->getCancelUrl());

@@ -6,6 +6,7 @@ use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Messenger\MessengerTrait;
 use Drupal\Core\Routing\RouteBuilderInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
@@ -20,6 +21,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class LingotekElementInfoAlterForm implements ContainerInjectionInterface {
 
   use StringTranslationTrait;
+
+  use MessengerTrait;
 
   use DependencySerializationTrait;
 
@@ -181,7 +184,7 @@ class LingotekElementInfoAlterForm implements ContainerInjectionInterface {
       }
     }
     else {
-      drupal_set_message(t("You must Enable Translation to Enable Translation for Lingotek"), 'error');
+      $this->messenger()->addError(t("You must Enable Translation to Enable Translation for Lingotek"));
     }
   }
 

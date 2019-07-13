@@ -74,15 +74,15 @@ function lingotek_operation_content_upload_finished($success, $results, $operati
         ],
       ],
     ];
-    drupal_set_message(\Drupal::service('renderer')->renderPlain($error_message), 'error');
+    \Drupal::messenger()->addError(\Drupal::service('renderer')->renderPlain($error_message));
   }
   $count = !empty($results['uploads']) ? $results['uploads'] : 0;
   $message = \Drupal::translation()->formatPlural($count, 'Uploaded 1 document to Lingotek.', 'Uploaded @num documents to Lingotek.', ['@num' => $count]);
   if (isset($results['error'])) {
-    drupal_set_message($message, 'warning');
+    \Drupal::messenger()->addWarning($message);
   }
   else {
-    drupal_set_message($message);
+    \Drupal::messenger()->addStatus($message);
   }
 }
 
@@ -126,15 +126,15 @@ function lingotek_operation_content_download_finished($success, $results, $opera
         ],
       ],
     ];
-    drupal_set_message(\Drupal::service('renderer')->renderPlain($error_message), 'error');
+    \Drupal::messenger()->addError(\Drupal::service('renderer')->renderPlain($error_message));
   }
   $count = !empty($results['downloads']) ? $results['downloads'] : 0;
   $message = \Drupal::translation()->formatPlural($count, 'Downloaded a document from Lingotek.', 'Downloaded @num documents from Lingotek.', ['@num' => $count]);
   if (isset($results['error'])) {
-    drupal_set_message($message, 'warning');
+    \Drupal::messenger()->addWarning($message);
   }
   else {
-    drupal_set_message($message);
+    \Drupal::messenger()->addStatus($message);
   }
 
 }

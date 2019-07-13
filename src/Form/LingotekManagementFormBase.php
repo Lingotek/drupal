@@ -662,7 +662,7 @@ abstract class LingotekManagementFormBase extends FormBase {
   public function batchFinished($success, $results, $operations) {
     if ($success) {
       $batch = &batch_get();
-      drupal_set_message('Operations completed.');
+      $this->messenger()->addStatus('Operations completed.');
     }
     return new LocalRedirectResponse($batch['sets'][0]['batch_redirect']);
   }
@@ -721,7 +721,7 @@ abstract class LingotekManagementFormBase extends FormBase {
         '#theme' => 'item_list',
         '#items' => $links,
       ];
-      drupal_set_message($this->t('Exports available at: @exports',
+      $this->messenger()->addStatus($this->t('Exports available at: @exports',
         ['@exports' => drupal_render($build)]));
     }
   }
@@ -830,7 +830,7 @@ abstract class LingotekManagementFormBase extends FormBase {
    */
   protected function redirectToDeleteMultipleNodesForm($values, FormStateInterface $form_state) {
     if (((float) \Drupal::VERSION) < 8.6) {
-      drupal_set_message($this->t('Deletion of nodes is only available with Drupal > 8.6'), 'error');
+      $this->messenger()->addError($this->t('Deletion of nodes is only available with Drupal > 8.6'));
       return;
     }
     $entityInfo = [];
@@ -895,7 +895,7 @@ abstract class LingotekManagementFormBase extends FormBase {
    */
   protected function redirectToDeleteTranslationForm($values, $langcode, FormStateInterface $form_state) {
     if (((float) \Drupal::VERSION) < 8.6) {
-      drupal_set_message($this->t('Deletion of translations is only available with Drupal > 8.6'), 'error');
+      $this->messenger()->addError($this->t('Deletion of translations is only available with Drupal > 8.6'));
       return;
     }
     $entityInfo = [];
@@ -913,7 +913,7 @@ abstract class LingotekManagementFormBase extends FormBase {
       $form_state->setRedirect('entity.' . $this->entityTypeId . '.delete_multiple_form', [], ['query' => $this->getDestinationWithQueryArray()]);
     }
     else {
-      drupal_set_message($this->t('No valid translations for deletion.'), 'warning');
+      $this->messenger()->addWarning($this->t('No valid translations for deletion.'));
       // Ensure selection is persisted.
       $form_state->setRebuild();
     }
@@ -927,7 +927,7 @@ abstract class LingotekManagementFormBase extends FormBase {
    */
   protected function redirectToDeleteMultipleTranslationsForm($values, FormStateInterface $form_state) {
     if (((float) \Drupal::VERSION) < 8.6) {
-      drupal_set_message($this->t('Deletion of translations is only available with Drupal > 8.6'), 'error');
+      $this->messenger()->addError($this->t('Deletion of translations is only available with Drupal > 8.6'));
       return;
     }
     $entityInfo = [];
@@ -948,7 +948,7 @@ abstract class LingotekManagementFormBase extends FormBase {
       $form_state->setRedirect('entity.' . $this->entityTypeId . '.delete_multiple_form', [], ['query' => $this->getDestinationWithQueryArray()]);
     }
     else {
-      drupal_set_message($this->t('No valid translations for deletion.'), 'warning');
+      $this->messenger()->addWarning($this->t('No valid translations for deletion.'));
       // Ensure selection is persisted.
       $form_state->setRebuild();
     }
@@ -985,8 +985,8 @@ abstract class LingotekManagementFormBase extends FormBase {
     }
     else {
       $bundleInfos = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
-      drupal_set_message($this->t('The @type %label has no profile assigned so it was not processed.',
-        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]), 'warning');
+      $this->messenger()->addWarning($this->t('The @type %label has no profile assigned so it was not processed.',
+        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]));
     }
   }
 
@@ -1005,17 +1005,17 @@ abstract class LingotekManagementFormBase extends FormBase {
       catch (LingotekApiException $exception) {
         $this->translationService->setSourceStatus($entity, Lingotek::STATUS_ERROR);
         if ($this->translationService->getDocumentId($entity)) {
-          drupal_set_message(t('The update for @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]), 'error');
+          $this->messenger()->addError(t('The update for @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
         }
         else {
-          drupal_set_message(t('The upload for @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]), 'error');
+          $this->messenger()->addError(t('The upload for @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
         }
       }
     }
     else {
       $bundleInfos = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
-      drupal_set_message($this->t('The @type %label has no profile assigned so it was not processed.',
-        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]), 'warning');
+      $this->messenger()->addWarning($this->t('The @type %label has no profile assigned so it was not processed.',
+        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]));
     }
   }
 
@@ -1032,13 +1032,13 @@ abstract class LingotekManagementFormBase extends FormBase {
         $this->translationService->checkSourceStatus($entity);
       }
       catch (LingotekApiException $exception) {
-        drupal_set_message(t('The upload status check for @entity_type %title translation failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]), 'error');
+        $this->messenger()->addError(t('The upload status check for @entity_type %title translation failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
       }
     }
     else {
       $bundleInfos = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
-      drupal_set_message($this->t('The @type %label has no profile assigned so it was not processed.',
-        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]), 'warning');
+      $this->messenger()->addWarning($this->t('The @type %label has no profile assigned so it was not processed.',
+        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]));
     }
   }
 
@@ -1056,13 +1056,13 @@ abstract class LingotekManagementFormBase extends FormBase {
         $result = $this->translationService->requestTranslations($entity);
       }
       catch (LingotekApiException $exception) {
-        drupal_set_message(t('The request for @entity_type %title translation failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]), 'error');
+        $this->messenger()->addError(t('The request for @entity_type %title translation failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
       }
     }
     else {
       $bundleInfos = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
-      drupal_set_message($this->t('The @type %label has no profile assigned so it was not processed.',
-        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]), 'warning');
+      $this->messenger()->addWarning($this->t('The @type %label has no profile assigned so it was not processed.',
+        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]));
     }
     return $result;
   }
@@ -1080,13 +1080,13 @@ abstract class LingotekManagementFormBase extends FormBase {
         $this->translationService->checkTargetStatuses($entity);
       }
       catch (LingotekApiException $exception) {
-        drupal_set_message(t('The request for @entity_type %title translation status failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]), 'error');
+        $this->messenger()->addError(t('The request for @entity_type %title translation status failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
       }
     }
     else {
       $bundleInfos = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
-      drupal_set_message($this->t('The @type %label has no profile assigned so it was not processed.',
-        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]), 'warning');
+      $this->messenger()->addWarning($this->t('The @type %label has no profile assigned so it was not processed.',
+        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]));
     }
   }
 
@@ -1105,13 +1105,13 @@ abstract class LingotekManagementFormBase extends FormBase {
         $this->translationService->checkTargetStatus($entity, $language);
       }
       catch (LingotekApiException $exception) {
-        drupal_set_message(t('The request for @entity_type %title translation status failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]), 'error');
+        $this->messenger()->addError(t('The request for @entity_type %title translation status failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
       }
     }
     else {
       $bundleInfos = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
-      drupal_set_message($this->t('The @type %label has no profile assigned so it was not processed.',
-        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]), 'warning');
+      $this->messenger()->addWarning($this->t('The @type %label has no profile assigned so it was not processed.',
+        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]));
     }
   }
 
@@ -1131,13 +1131,13 @@ abstract class LingotekManagementFormBase extends FormBase {
         $this->translationService->addTarget($entity, $locale);
       }
       catch (LingotekApiException $exception) {
-        drupal_set_message(t('The request for @entity_type %title translation failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]), 'error');
+        $this->messenger()->addError(t('The request for @entity_type %title translation failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
       }
     }
     else {
       $bundleInfos = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
-      drupal_set_message($this->t('The @type %label has no profile assigned so it was not processed.',
-        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]), 'warning');
+      $this->messenger()->addWarning($this->t('The @type %label has no profile assigned so it was not processed.',
+        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]));
     }
   }
 
@@ -1157,17 +1157,17 @@ abstract class LingotekManagementFormBase extends FormBase {
         $this->translationService->downloadDocument($entity, $locale);
       }
       catch (LingotekApiException $exception) {
-        drupal_set_message(t('The download for @entity_type %title translation failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]), 'error');
+        $this->messenger()->addError(t('The download for @entity_type %title translation failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
       }
       catch (LingotekContentEntityStorageException $storage_exception) {
-        drupal_set_message(t('The download for @entity_type %title failed because of the length of one field translation value: %table.',
-          ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label(), '%table' => $storage_exception->getTable()]), 'error');
+        $this->messenger()->addError(t('The download for @entity_type %title failed because of the length of one field translation value: %table.',
+          ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label(), '%table' => $storage_exception->getTable()]));
       }
     }
     else {
       $bundleInfos = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
-      drupal_set_message($this->t('The @type %label has no profile assigned so it was not processed.',
-        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]), 'warning');
+      $this->messenger()->addWarning($this->t('The @type %label has no profile assigned so it was not processed.',
+        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]));
     }
   }
 
@@ -1189,10 +1189,10 @@ abstract class LingotekManagementFormBase extends FormBase {
               $this->translationService->downloadDocument($entity, $locale);
             }
             catch (LingotekApiException $exception) {
-              drupal_set_message(t('The download for @entity_type %title translation failed. Please try again.', [
+              $this->messenger()->addError(t('The download for @entity_type %title translation failed. Please try again.', [
                 '@entity_type' => $entity->getEntityTypeId(),
                 '%title' => $entity->label(),
-              ]), 'error');
+              ]));
             }
           }
         }
@@ -1200,8 +1200,8 @@ abstract class LingotekManagementFormBase extends FormBase {
     }
     else {
       $bundleInfos = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
-      drupal_set_message($this->t('The @type %label has no profile assigned so it was not processed.',
-        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]), 'warning');
+      $this->messenger()->addWarning($this->t('The @type %label has no profile assigned so it was not processed.',
+        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]));
     }
   }
 
@@ -1218,14 +1218,14 @@ abstract class LingotekManagementFormBase extends FormBase {
         $this->translationService->deleteMetadata($entity);
       }
       catch (LingotekApiException $exception) {
-        drupal_set_message(t('The deletion of @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]), 'error');
+        $this->messenger()->addError(t('The deletion of @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
       }
 
     }
     else {
       $bundleInfos = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
-      drupal_set_message($this->t('The @type %label has no profile assigned so it was not processed.',
-        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]), 'warning');
+      $this->messenger()->addWarning($this->t('The @type %label has no profile assigned so it was not processed.',
+        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]));
     }
   }
 
@@ -1254,7 +1254,7 @@ abstract class LingotekManagementFormBase extends FormBase {
       }
     }
     catch (LingotekApiException $exception) {
-      drupal_set_message(t('The Tranlsation Profile change for @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]), 'error');
+      $this->messenger()->addError(t('The Tranlsation Profile change for @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
     }
   }
 

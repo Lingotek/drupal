@@ -146,7 +146,7 @@ class LingotekProfileListBuilder extends DraggableListBuilder {
         $entity->save();
       }
     }
-    drupal_set_message(t('Configuration saved.'));
+    $this->messenger()->addStatus(t('Configuration saved.'));
   }
 
   /**

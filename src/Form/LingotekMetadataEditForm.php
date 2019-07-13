@@ -176,7 +176,7 @@ class LingotekMetadataEditForm extends ContentEntityForm {
       $metadata->save();
     }
 
-    drupal_set_message($this->t('Metadata saved successfully'));
+    $this->messenger()->addStatus($this->t('Metadata saved successfully'));
   }
 
   /**

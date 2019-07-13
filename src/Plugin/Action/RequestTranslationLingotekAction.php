@@ -28,11 +28,11 @@ class RequestTranslationLingotekAction extends LingotekContentEntityConfigurable
       $result = $this->translationService->addTarget($entity, $locale);
     }
     catch (LingotekApiException $exception) {
-      drupal_set_message(t('The request for @entity_type %title translation failed. Please try again.', [
+      $this->messenger()->addError(t('The request for @entity_type %title translation failed. Please try again.', [
           '@entity_type' => $entity->getEntityTypeId(),
           '@langcode' => $langcode,
           '%title' => $entity->label(),
-        ]), 'error');
+        ]));
     }
     return $result;
   }

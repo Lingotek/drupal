@@ -144,13 +144,13 @@ class LingotekSettingsTabUtilitiesForm extends LingotekConfigFormBase {
     $value = $this->state->get('lingotek.enable_debug_utilities', FALSE);
     $this->state->set('lingotek.enable_debug_utilities', !$value);
     $this->routeBuilder->rebuild();
-    drupal_set_message($this->t('Debug utilities has been %enabled.', ['%enabled' => !$value ? $this->t('enabled') : $this->t('disabled')]));
+    $this->messenger()->addStatus($this->t('Debug utilities has been %enabled.', ['%enabled' => !$value ? $this->t('enabled') : $this->t('disabled')]));
   }
 
   public function refreshResources() {
     $resources = $this->lingotek->getResources(TRUE);
     $this->lingotek->set('account.resources', $resources);
-    drupal_set_message($this->t('Project, workflow, vault, and filter information have been refreshed.'));
+    $this->messenger()->addStatus($this->t('Project, workflow, vault, and filter information have been refreshed.'));
   }
 
   public function disassociateAllTranslations(array &$form, FormStateInterface $form_state) {
@@ -163,7 +163,7 @@ class LingotekSettingsTabUtilitiesForm extends LingotekConfigFormBase {
     $new_response = $this->lingotek->setProjectCallBackUrl($this->lingotek->get('default.project'), $new_callback_url);
 
     if ($new_response) {
-      drupal_set_message($this->t('The callback URL has been updated.'));
+      $this->messenger()->addStatus($this->t('The callback URL has been updated.'));
     }
   }
 

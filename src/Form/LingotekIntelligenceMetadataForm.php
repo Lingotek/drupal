@@ -346,7 +346,7 @@ class LingotekIntelligenceMetadataForm extends FormBase {
     // Show this message only if we are saving the general settings. For profiles
     // it's not needed.
     if ($metadata instanceof LingotekIntelligenceServiceConfig) {
-      drupal_set_message($this->t('Lingotek Intelligence Metadata saved correctly.'));
+      $this->messenger()->addStatus($this->t('Lingotek Intelligence Metadata saved correctly.'));
     }
   }
 

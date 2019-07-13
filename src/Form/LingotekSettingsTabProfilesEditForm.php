@@ -154,7 +154,7 @@ class LingotekSettingsTabProfilesEditForm extends LingotekConfigFormBase {
       $this->deleteCustomProfile();
     }
 
-    drupal_set_message($this->t('The profile has been deleted.'));
+    $this->messenger()->addStatus($this->t('The profile has been deleted.'));
     $form_state->setRedirect('lingotek.settings');
   }
 

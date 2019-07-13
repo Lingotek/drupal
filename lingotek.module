@@ -116,7 +116,7 @@ function lingotek_entity_insert(EntityInterface $entity) {
           }
           catch (LingotekApiException $exception) {
             $translation_service->setSourceStatus($entity, Lingotek::STATUS_ERROR);
-            drupal_set_message(t('The upload for @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]), 'error');
+            \Drupal::messenger()->addError(t('The upload for @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
           }
         }
       }
@@ -188,11 +188,11 @@ function lingotek_entity_insert(EntityInterface $entity) {
           try {
             $document_id = $translation_service->uploadDocument($entity);
             $translation_service->setTargetStatuses($entity, Lingotek::STATUS_REQUEST);
-            drupal_set_message(t('<em>@title</em> sent to Lingotek successfully.', ['@title' => $entity->label()]));
+            \Drupal::messenger()->addStatus(t('<em>@title</em> sent to Lingotek successfully.', ['@title' => $entity->label()]));
           }
           catch (LingotekApiException $exception) {
             $translation_service->setSourceStatus($entity, Lingotek::STATUS_ERROR);
-            drupal_set_message(t('The upload for @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]), 'error');
+            \Drupal::messenger()->addError(t('The upload for @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
           }
         }
         // Updated entity with auto-upload
@@ -203,11 +203,11 @@ function lingotek_entity_insert(EntityInterface $entity) {
             $translation_service->setSourceStatus($entity, Lingotek::STATUS_IMPORTING);
             $translation_service->markTranslationsAsDirty($entity);
             $translation_service->setTargetStatuses($entity, Lingotek::STATUS_PENDING);
-            drupal_set_message(t('<em>@title</em> was updated and sent to Lingotek successfully.', ['@title' => $entity->label()]));
+            \Drupal::messenger()->addStatus(t('<em>@title</em> was updated and sent to Lingotek successfully.', ['@title' => $entity->label()]));
           }
           catch (LingotekApiException $exception) {
             $translation_service->setSourceStatus($entity, Lingotek::STATUS_ERROR);
-            drupal_set_message(t('The update for @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]), 'error');
+            \Drupal::messenger()->addError(t('The update for @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
           }
         }
       }
@@ -272,7 +272,7 @@ function lingotek_entity_update(EntityInterface $entity) {
         }
         catch (LingotekApiException $exception) {
           $translation_service->setSourceStatus($entity, Lingotek::STATUS_ERROR);
-          drupal_set_message(t('The update for @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]), 'error');
+          \Drupal::messenger()->addError(t('The update for @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
         }
       }
       // Updated entity with manual-upload
@@ -333,11 +333,11 @@ function lingotek_entity_update(EntityInterface $entity) {
           $translation_service->setSourceStatus($entity, Lingotek::STATUS_EDITED);
           try {
             $document_id = $translation_service->uploadDocument($entity);
-            drupal_set_message(t('<em>@title</em> sent to Lingotek successfully.', ['@title' => $entity->label()]));
+            \Drupal::messenger()->addStatus(t('<em>@title</em> sent to Lingotek successfully.', ['@title' => $entity->label()]));
           }
           catch (LingotekApiException $exception) {
             $translation_service->setSourceStatus($entity, Lingotek::STATUS_ERROR);
-            drupal_set_message(t('The upload for @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]), 'error');
+            \Drupal::messenger()->addError(t('The upload for @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
           }
         }
         // Updated entity with auto-upload
@@ -347,11 +347,11 @@ function lingotek_entity_update(EntityInterface $entity) {
             $response = $translation_service->updateDocument($entity);
             $translation_service->setSourceStatus($entity, Lingotek::STATUS_IMPORTING);
             $translation_service->markTranslationsAsDirty($entity);
-            drupal_set_message(t('<em>@title</em> was updated and sent to Lingotek successfully.', ['@title' => $entity->label()]));
+            \Drupal::messenger()->addStatus(t('<em>@title</em> was updated and sent to Lingotek successfully.', ['@title' => $entity->label()]));
           }
           catch (LingotekApiException $exception) {
             $translation_service->setSourceStatus($entity, Lingotek::STATUS_ERROR);
-            drupal_set_message(t('The update for @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]), 'error');
+            \Drupal::messenger()->addError(t('The update for @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
           }
         }
       }
@@ -388,7 +388,7 @@ function lingotek_entity_delete(EntityInterface $entity) {
       $response = $translation_service->deleteDocument($entity);
     }
     catch (LingotekApiException $exception) {
-      drupal_set_message(t('Failed deleting @entity_type %title. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]), 'error');
+      \Drupal::messenger()->addError(t('Failed deleting @entity_type %title. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
     }
   }
 }

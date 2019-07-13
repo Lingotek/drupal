@@ -3,6 +3,7 @@
 namespace Drupal\lingotek\Form;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Messenger\MessengerTrait;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\lingotek\LingotekConfigurationServiceInterface;
 
@@ -14,6 +15,8 @@ use Drupal\lingotek\LingotekConfigurationServiceInterface;
 class LingotekFieldConfigEditForm {
 
   use StringTranslationTrait;
+
+  use MessengerTrait;
 
   /**
    * The Lingotek Configuration service.
@@ -119,7 +122,7 @@ class LingotekFieldConfigEditForm {
         else {
           $filtered_field_properties[$content_translation_field_property_key] = 0;
           if ($form_state->getValue('translatable_for_lingotek_properties_' . $content_translation_field_property_key)) {
-            drupal_set_message(t('To translate the image properties with Lingotek, you must enable them for translation first.'), 'warning');
+            $this->messenger()->addWarning(t('To translate the image properties with Lingotek, you must enable them for translation first.'));
           }
         }
       }

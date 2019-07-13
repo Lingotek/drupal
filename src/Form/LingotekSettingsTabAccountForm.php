@@ -74,7 +74,7 @@ class LingotekSettingsTabAccountForm extends LingotekConfigFormBase {
       }
     }
     catch (LingotekApiException $exception) {
-      drupal_set_message($this->t('There was a problem checking your account status.'), 'warning');
+      $this->messenger()->addWarning($this->t('There was a problem checking your account status.'));
     }
 
     $statusRow = [
