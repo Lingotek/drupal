@@ -26,7 +26,17 @@ class LingotekNodeEmbeddingBricksTranslationTest extends LingotekTestBase {
    *
    * @var array
    */
-  public static $modules = ['field_ui', 'block', 'node', 'image', 'comment', 'taxonomy', 'bricks'];
+  public static $modules = [
+    'field_ui',
+    'block',
+    'node',
+    'image',
+    'comment',
+    'taxonomy',
+    // @TODO: entity_reference_revisions is a hidden dependency from bricks. See https://www.drupal.org/project/bricks/issues/3068183
+    'entity_reference_revisions',
+    'bricks',
+  ];
 
   /**
    * @var \Drupal\node\NodeInterface
