@@ -711,18 +711,20 @@ abstract class LingotekManagementFormBase extends FormBase {
   public function debugExportFinished($success, $results, $operations) {
     if ($success) {
       $links = [];
-      foreach ($results['exported'] as $result) {
-        $links[] = [
-          '#theme' => 'file_link',
-          '#file' => File::load($result),
+      if (isset($results['exported'])) {
+        foreach ($results['exported'] as $result) {
+          $links[] = [
+            '#theme' => 'file_link',
+            '#file' => File::load($result),
+          ];
+        }
+        $build = [
+          '#theme' => 'item_list',
+          '#items' => $links,
         ];
+        $this->messenger()->addStatus($this->t('Exports available at: @exports',
+          ['@exports' => \Drupal::service('renderer')->render($build)]));
       }
-      $build = [
-        '#theme' => 'item_list',
-        '#items' => $links,
-      ];
-      $this->messenger()->addStatus($this->t('Exports available at: @exports',
-        ['@exports' => \Drupal::service('renderer')->render($build)]));
     }
   }
 

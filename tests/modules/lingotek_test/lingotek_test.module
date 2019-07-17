@@ -30,7 +30,7 @@ function lingotek_test_lingotek_content_entity_translation_presave(ContentEntity
  *
  * If the document being uploaded is a comment, use the profile from the parent.
  */
-function lingotek_test_lingotek_content_entity_get_profile(ContentEntityInterface $entity, LingotekProfileInterface &$profile, $provide_default = TRUE) {
+function lingotek_test_lingotek_content_entity_get_profile(ContentEntityInterface $entity, LingotekProfileInterface &$profile = NULL, $provide_default = TRUE) {
   if ($entity->getEntityTypeId() === 'comment') {
     /** @var \Drupal\comment\CommentInterface $entity */
     $commented = $entity->getCommentedEntity();

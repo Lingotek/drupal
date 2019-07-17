@@ -82,7 +82,7 @@ function hook_lingotek_content_entity_document_upload(array &$source_data, Conte
  * @returns \Drupal\lingotek\LingotekProfileInterface
  *   The default profile.
  */
-function hook_lingotek_content_entity_get_profile(ContentEntityInterface $entity, LingotekProfileInterface &$profile, $provide_default = TRUE) {
+function hook_lingotek_content_entity_get_profile(ContentEntityInterface $entity, LingotekProfileInterface &$profile = NULL, $provide_default = TRUE) {
   /*
    * If the document being uploaded is a comment, use the profile from the
    * commented entity.

@@ -4,6 +4,7 @@ namespace Drupal\Tests\lingotek\Functional;
 
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
+use Drupal\node\Entity\Node;
 
 /**
  * Tests debugging a node using the bulk management form.
@@ -106,6 +107,34 @@ class LingotekNodeBulkDebugTest extends LingotekTestBase {
     $this->assertIdentical('article (node): Llamas are cool', $response['_debug']['title']);
     $this->assertIdentical('manual', $response['_debug']['profile']);
     $this->assertIdentical('en_US', $response['_debug']['source_locale']);
+  }
+
+  public function testDebugExportError() {
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
+    // Create a node.
+    $node = Node::create(['title' => 'Llamas are cool', 'type' => 'article']);
+    $node->save();
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.content_translation');
+    $translation_service->deleteMetadata($node);
+
+    // Enable the debug operations.
+    $this->drupalGet('admin/lingotek/settings');
+    $this->drupalPostForm(NULL, [], t('Enable debug operations'));
+
+    $this->goToContentBulkManagementForm();
+
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => 'debug.export',
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    $this->assertText('The Article Llamas are cool has no profile assigned so it was not processed.');
+    $this->assertNoText('Exports available');
   }
 
 }
