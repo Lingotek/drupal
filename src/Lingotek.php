@@ -5,17 +5,13 @@ namespace Drupal\lingotek;
 use Drupal\lingotek\Exception\LingotekApiException;
 use Drupal\lingotek\Remote\LingotekApiInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Routing\UrlGeneratorTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
  * The connecting class between Drupal and Lingotek
  */
 class Lingotek implements LingotekInterface {
-
-  use UrlGeneratorTrait;
 
   protected static $instance;
   protected $api;
@@ -491,24 +487,6 @@ class Lingotek implements LingotekInterface {
   public function downloadDocuments($args = []) {
     $response = $this->api->getDocuments($args);
     return $response;
-  }
-
-  /**
-   * Returns a redirect response object for the specified route.
-   *
-   * @param string $route_name
-   *   The name of the route to which to redirect.
-   * @param array $route_parameters
-   *   Parameters for the route.
-   * @param int $status
-   *   The HTTP redirect status code for the redirect. The default is 302 Found.
-   *
-   * @return \Symfony\Component\HttpFoundation\RedirectResponse
-   *   A redirect response object that may be returned by any controller.
-   */
-  public function redirect($route_name, array $route_parameters = [], $status = 302) {
-    $url = $this->url($route_name, $route_parameters, ['absolute' => TRUE]);
-    return new RedirectResponse($url, $status);
   }
 
 }
