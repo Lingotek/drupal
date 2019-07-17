@@ -615,7 +615,7 @@ class LingotekConfigManagementForm extends FormBase {
         '#items' => $links,
       ];
       $this->messenger()->addStatus($this->t('Exports available at: @exports',
-        ['@exports' => drupal_render($build)]));
+        ['@exports' => \Drupal::service('renderer')->render($build)]));
     }
   }
 

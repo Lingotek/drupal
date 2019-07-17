@@ -9,7 +9,7 @@ use Drupal\node\Entity\Node;
 use Drupal\Tests\lingotek\Functional\LingotekTestBase;
 
 /**
- * Tests the markup of lingotek render element types passed to drupal_render().
+ * Tests the markup of lingotek render element types passed to \Drupal::service('renderer')->render().
  *
  * @group lingotek
  * @group legacy
