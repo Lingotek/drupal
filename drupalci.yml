@@ -2,40 +2,45 @@ build:
   assessment:
     validate_codebase:
       phplint: {  }
-      container_composer:
-        options: ' install --prefer-dist --no-suggest --no-progress --no-interaction'
-        halt-on-fail: true
       csslint:
         halt-on-fail: false
       eslint:
         halt-on-fail: false
       phpcs:
+        # phpcs will use core's specified version of Coder.
         sniff-all-files: false
         halt-on-fail: false
-        coder-version: ^8.2@stable
     testing:
-      run_tests.standard:
-        types: 'Simpletest,PHPUnit-Unit,PHPUnit-Kernel,PHPUnit-Functional'
+      # run_tests task is executed several times in order of performance speeds.
+      # halt-on-fail can be set on the run_tests tasks in order to fail fast.
+      # suppress-deprecations is true in order to ignore alerts to usages of
+      # deprecated code.
+      run_tests.phpunit:
+        types: 'PHPUnit-Unit'
         testgroups: '--all'
-        color: true
-        die-on-fail: false
-        keep-results: true
-        keep-results-table: false
-        verbose: false
-        concurrency: 0
-        halt-on-fail: false
-        repeat: 1
         suppress-deprecations: true
-      run_tests.js:
-        concurrency: 1
-        types: PHPUnit-FunctionalJavascript
+        halt-on-fail: false
+      run_tests.kernel:
+        types: 'PHPUnit-Kernel'
         testgroups: '--all'
-        color: true
-        die-on-fail: false
-        keep-results: true
-        keep-results-table: false
-        verbose: false
-        halt-on-fail: false
-        repeat: 1
         suppress-deprecations: true
-      nightwatchjs: {  }
+        halt-on-fail: false
+      run_tests.simpletest:
+        types: 'Simpletest'
+        testgroups: '--all'
+        suppress-deprecations: true
+        halt-on-fail: false
+      run_tests.functional:
+        types: 'PHPUnit-Functional'
+        testgroups: '--all'
+        suppress-deprecations: true
+        halt-on-fail: false
+      # run_tests.javascript:
+      #  concurrency: 15
+      #  types: 'PHPUnit-FunctionalJavascript'
+      #  testgroups: '--all'
+      #  suppress-deprecations: false
+      #  halt-on-fail: false
+      # Run nightwatch testing.
+      # @see https://www.drupal.org/project/drupal/issues/2869825
+      # nightwatchjs:
