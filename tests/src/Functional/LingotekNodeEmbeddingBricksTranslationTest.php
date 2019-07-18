@@ -33,8 +33,6 @@ class LingotekNodeEmbeddingBricksTranslationTest extends LingotekTestBase {
     'image',
     'comment',
     'taxonomy',
-    // @TODO: entity_reference_revisions is a hidden dependency from bricks. See https://www.drupal.org/project/bricks/issues/3068183
-    'entity_reference_revisions',
     'bricks',
   ];
 
