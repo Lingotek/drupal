@@ -91,20 +91,8 @@ class LingotekWorkbenchRedirectController extends LingotekControllerBase {
    */
   protected function generateWorkbenchUri($document_id, $locale, $account) {
     $base_url = $account['host'];
-    // Default expiration is 30 minutes.
-    $expiration = $this->time->getCurrentTime() + (60 * 30);
-    $data = [
-      'document_id' => $document_id,
-      'locale_code' => $locale,
-      'client_id' => $account['default_client_id'],
-      'login_id' => $account['login_id'],
-      'acting_login_id' => $account['login_id'],
-      'expiration' => $expiration,
-    ];
-    $query_data = utf8_encode(http_build_query($data));
-    $hmac = urlencode(base64_encode(hash_hmac('sha1', $query_data, $account['access_token'], TRUE)));
-    $workbench_uri = $base_url . '/lingopoint/portal/wb.action?' . $query_data . "&hmac=" . $hmac;
-
+    // https://{environment}/workbench/document/{uuid}/locale/{es-MX}
+    $workbench_uri = $base_url . '/workbench/document/' . $document_id . '/locale/' . $locale;
     return $workbench_uri;
   }
 

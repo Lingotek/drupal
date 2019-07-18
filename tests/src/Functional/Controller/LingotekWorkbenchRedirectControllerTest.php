@@ -100,19 +100,7 @@ class LingotekWorkbenchRedirectControllerTest extends LingotekTestBase {
     $this->clickLink('ES');
 
     $basepath = \Drupal::request()->getSchemeAndHttpHost();
-    $data = [
-      'document_id' => 'dummy-document-hash-id',
-      'locale_code' => 'es_AR',
-      'client_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0',
-      'login_id' => 'testUser@example.com',
-      'acting_login_id' => 'testUser@example.com',
-      'expiration' => $expiration,
-    ];
-
-    $query_data = utf8_encode(http_build_query($data));
-    $hmac = urlencode(base64_encode(hash_hmac('sha1', $query_data, 'test_token', TRUE)));
-
-    $this->assertUrl($basepath . '/lingopoint/portal/wb.action?document_id=dummy-document-hash-id&locale_code=es_AR&client_id=e39e24c7-6c69-4126-946d-cf8fbff38ef0&login_id=testUser%40example.com&acting_login_id=testUser%40example.com&expiration=' . $expiration . '&hmac=' . $hmac);
+    $this->assertUrl($basepath . '/workbench/document/dummy-document-hash-id/locale/es_AR');
   }
 
 }
