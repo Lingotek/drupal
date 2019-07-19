@@ -5,6 +5,7 @@ namespace Drupal\lingotek;
 use Drupal\Component\Utility\SortArray;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
+use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\ContentEntityTypeInterface;
 use Drupal\Core\Entity\EntityChangedInterface;
@@ -77,6 +78,13 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
   protected $languageManager;
 
   /**
+   * The database connection.
+   *
+   * @var \Drupal\Core\Database\Connection
+   */
+  protected $connection;
+
+  /**
    * Constructs a new LingotekContentTranslationService object.
    *
    * @param \Drupal\lingotek\LingotekInterface $lingotek
@@ -93,8 +101,10 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    *   The language manager.
    * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
    *   The entity field manager.
+   * @param \Drupal\Core\Database\Connection $connection
+   *   The database connection object.
    */
-  public function __construct(LingotekInterface $lingotek, LanguageLocaleMapperInterface $language_locale_mapper, LingotekConfigurationServiceInterface $lingotek_configuration, LingotekConfigTranslationServiceInterface $lingotek_config_translation, EntityTypeManagerInterface $entity_type_manager, LanguageManagerInterface $language_manager, EntityFieldManagerInterface $entity_field_manager = NULL) {
+  public function __construct(LingotekInterface $lingotek, LanguageLocaleMapperInterface $language_locale_mapper, LingotekConfigurationServiceInterface $lingotek_configuration, LingotekConfigTranslationServiceInterface $lingotek_config_translation, EntityTypeManagerInterface $entity_type_manager, LanguageManagerInterface $language_manager, EntityFieldManagerInterface $entity_field_manager = NULL, Connection $connection = NULL) {
     $this->lingotek = $lingotek;
     $this->languageLocaleMapper = $language_locale_mapper;
     $this->lingotekConfiguration = $lingotek_configuration;
@@ -105,7 +115,12 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       @trigger_error('The entity_field.manager service must be passed to LingotekContentTranslationService::__construct, it is required before Lingotek 9.x-1.0. See https://www.drupal.org/node/2549139.', E_USER_DEPRECATED);
       $entity_field_manager = \Drupal::service('entity_field.manager');
     }
+    if (!$connection) {
+      @trigger_error('The database service must be passed to LingotekContentTranslationService::__construct, it is required before Lingotek 9.x-1.0. See https://www.drupal.org/node/2993033.', E_USER_DEPRECATED);
+      $connection = \Drupal::service('database');
+    }
     $this->entityFieldManager = $entity_field_manager;
+    $this->connection = $connection;
   }
 
   /**
@@ -823,7 +838,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       if ($data) {
         // Check the real status, because it may still need review or anything.
         $status = $this->lingotek->getDocumentTranslationStatus($document_id, $locale);
-        $transaction = db_transaction();
+        $transaction = $this->connection->startTransaction();
         try {
           $saved = $this->saveTargetData($entity, $langcode, $data);
           if ($saved) {
@@ -849,7 +864,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
         }
         catch (\Exception $exception) {
           $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_ERROR);
-          $transaction->rollback();
+          $transaction->rollBack();
           return FALSE;
         }
         return TRUE;
@@ -941,7 +956,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
               if ($data) {
                 // Check the real status, because it may still need review or anything.
                 $status = $this->lingotek->getDocumentTranslationStatus($document_id, $locale);
-                $transaction = db_transaction();
+                $transaction = $this->connection->startTransaction();
                 try {
                   $saved = $this->saveTargetData($entity, $langcode, $data);
                   if ($saved) {
@@ -972,7 +987,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
                 }
                 catch (\Exception $exception) {
                   $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_ERROR);
-                  $transaction->rollback();
+                  $transaction->rollBack();
                 }
               }
               else {

@@ -43,7 +43,7 @@ services:
       - { name: service_collector, tag: lingotek_moderation_handler, call: addModerationHandler }
   lingotek.content_translation:
     class: Drupal\lingotek\LingotekContentTranslationService
-    arguments: ['@lingotek', '@lingotek.language_locale_mapper', '@lingotek.configuration', '@lingotek.config_translation', '@entity_type.manager', '@language_manager', '@entity_field.manager']
+    arguments: ['@lingotek', '@lingotek.language_locale_mapper', '@lingotek.configuration', '@lingotek.config_translation', '@entity_type.manager', '@language_manager', '@entity_field.manager', '@database']
   lingotek.config_translation:
     class: Drupal\lingotek\LingotekConfigTranslationService
     arguments: ['@lingotek', '@lingotek.language_locale_mapper', '@lingotek.configuration', '@entity_type.manager', '@language_manager', '@plugin.manager.config_translation.mapper']
