@@ -552,7 +552,7 @@ class LingotekDashboardTest extends LingotekTestBase {
 
     // One language added, there are missing translations.
     $this->drupalGet('admin/lingotek');
-    $this->assertRaw(t('Missing translations for: @languages. See the <a href=":updates">Available translation updates</a> page for more information.', ['@languages' => t('Spanish'), ':updates' => \Drupal::url('locale.translate_status')]), 'Missing translations message');
+    $this->assertRaw(t('Missing translations for: @languages. See the <a href=":updates">Available translation updates</a> page for more information.', ['@languages' => t('Spanish'), ':updates' => Url::fromRoute('locale.translate_status')->toString()]), 'Missing translations message');
 
     // Override Drupal core translation status as 'up-to-date'.
     $status = locale_translation_get_status();
@@ -562,7 +562,7 @@ class LingotekDashboardTest extends LingotekTestBase {
 
     // There are no missing translations, translations are current.
     $this->drupalGet('admin/lingotek');
-    $this->assertNoRaw(t('Missing translations for: @languages. See the <a href=":updates">Available translation updates</a> page for more information.', ['@languages' => t('Spanish'), ':updates' => \Drupal::url('locale.translate_status')]), 'No missing translations message with current translations');
+    $this->assertNoRaw(t('Missing translations for: @languages. See the <a href=":updates">Available translation updates</a> page for more information.', ['@languages' => t('Spanish'), ':updates' => Url::fromRoute('locale.translate_status')->toString()]), 'No missing translations message with current translations');
 
     // Set lingotek module to have a local translation available.
     $status = locale_translation_get_status();
@@ -572,7 +572,7 @@ class LingotekDashboardTest extends LingotekTestBase {
 
     // There are no missing translations, translations are local.
     $this->drupalGet('admin/lingotek');
-    $this->assertNoRaw(t('Missing translations for: @languages. See the <a href=":updates">Available translation updates</a> page for more information.', ['@languages' => t('Spanish'), ':updates' => \Drupal::url('locale.translate_status')]), 'No missing translations message with local translations');
+    $this->assertNoRaw(t('Missing translations for: @languages. See the <a href=":updates">Available translation updates</a> page for more information.', ['@languages' => t('Spanish'), ':updates' => Url::fromRoute('locale.translate_status')->toString()]), 'No missing translations message with local translations');
   }
 
   /**

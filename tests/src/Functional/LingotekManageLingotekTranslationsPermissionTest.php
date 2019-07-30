@@ -5,6 +5,7 @@ namespace Drupal\Tests\lingotek\Functional;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\user\Entity\Role;
+use Drupal\Core\Url;
 
 /**
  * Tests different permissions of the Lingotek module.
@@ -169,7 +170,7 @@ class LingotekManageLingotekTranslationsPermissionTest extends LingotekTestBase 
     $this->drupalLogin($this->translationManagerUser);
 
     // Check the stats.
-    $request = $this->drupalGet(\Drupal::url('lingotek.dashboard_endpoint', [], ['absolute' => TRUE]));
+    $request = $this->drupalGet(Url::fromRoute('lingotek.dashboard_endpoint', [], ['absolute' => TRUE]));
 
     $response = json_decode($request, TRUE);
     $this->verbose(var_export($response, TRUE));

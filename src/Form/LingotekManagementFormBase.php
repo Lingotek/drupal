@@ -524,7 +524,7 @@ abstract class LingotekManagementFormBase extends FormBase {
 
     $row += [
       'title' => $entity->hasLinkTemplate('canonical') ? $this->getLinkGenerator()
-        ->generate($entity->label(), Url::fromRoute($entity->urlInfo()
+        ->generate($entity->label(), Url::fromRoute($entity->toUrl()
           ->getRouteName(), [$entityTypeId => $entity->id()])) : $entity->id(),
       'source' => $source,
       'translations' => $translations,

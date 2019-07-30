@@ -4,6 +4,7 @@ namespace Drupal\lingotek\Moderation;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\Routing\UrlGeneratorInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -40,6 +41,13 @@ class LingotekWorkbenchModerationSettingsForm implements LingotekModerationSetti
   protected $moderationInfo;
 
   /**
+   * The URL generator.
+   *
+   * @var \Drupal\Core\Routing\UrlGeneratorInterface
+   */
+  protected $urlGenerator;
+
+  /**
    * Constructs a new LingotekWorkbenchModerationSettingsForm object.
    *
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
@@ -50,8 +58,10 @@ class LingotekWorkbenchModerationSettingsForm implements LingotekModerationSetti
    *   A Lingotek moderation configuration service.
    * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
    *   The container from which optional services can be requested.
+   * @param \Drupal\Core\Routing\UrlGeneratorInterface $url_generator
+   *   The url generator.
    */
-  public function __construct(ModuleHandlerInterface $module_handler, EntityTypeManagerInterface $entity_type_manager, LingotekModerationConfigurationServiceInterface $moderation_configuration, ContainerInterface $container) {
+  public function __construct(ModuleHandlerInterface $module_handler, EntityTypeManagerInterface $entity_type_manager, LingotekModerationConfigurationServiceInterface $moderation_configuration, ContainerInterface $container, UrlGeneratorInterface $url_generator = NULL) {
     $this->setModuleHandler($module_handler);
     $this->entityTypeManager = $entity_type_manager;
     $this->moderationConfiguration = $moderation_configuration;
@@ -60,6 +70,11 @@ class LingotekWorkbenchModerationSettingsForm implements LingotekModerationSetti
     if ($container->has('workbench_moderation.moderation_information')) {
       $this->moderationInfo = $container->get('workbench_moderation.moderation_information');
     }
+    if (!$url_generator) {
+      @trigger_error('The url_generator service must be passed to LingotekWorkbenchModerationSettingsForm::__construct, it is required before Lingotek 9.x-1.0.', E_USER_DEPRECATED);
+      $url_generator = \Drupal::service('url_generator');
+    }
+    $this->urlGenerator = $url_generator;
   }
 
   /**
@@ -177,7 +192,7 @@ class LingotekWorkbenchModerationSettingsForm implements LingotekModerationSetti
       $bundle_type_id = $entity_type_definition->getBundleEntityType();
       $form = [
         '#markup' => $this->t('This entity bundle is not enabled for moderation with workbench_moderation. You can change its settings <a href=":moderation">here</a>.',
-          [':moderation' => \Drupal::url("entity.$bundle_type_id.moderation", [$bundle_type_id => $bundle])]),
+          [':moderation' => $this->urlGenerator->generateFromRoute("entity.$bundle_type_id.moderation", [$bundle_type_id => $bundle])]),
       ];
     }
     return $form;
