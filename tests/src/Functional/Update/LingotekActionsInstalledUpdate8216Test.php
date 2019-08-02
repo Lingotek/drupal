@@ -49,7 +49,8 @@ class LingotekActionsInstalledUpdate8216Test extends UpdatePathTestBase {
     $actions = Action::loadMultiple();
     // There should be 4 new actions: 1 for delete translations plus the
     // actions for deleting a concrete translation per language.
-    $this->assertCount(34 + 4, $actions);
+    // After lingotek_update_8219 count on 3 more.
+    $this->assertCount(34 + 4 + 3, $actions);
 
     $expectedActions = [
       'node_lingotek_delete_translations_action',

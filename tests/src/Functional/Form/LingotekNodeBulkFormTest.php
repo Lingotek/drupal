@@ -720,9 +720,9 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
   }
 
   /**
-   * Tests that default profile is used after dissasociation.
+   * Tests that default profile is used after cancelation.
    */
-  public function testUploadAfterDisassociating() {
+  public function testUploadAfterCancelation() {
     // Create a node.
     $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
@@ -738,36 +738,33 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
 
     $edit = [
       'table[1]' => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    $edit = [
+      'table[1]' => TRUE,
       $this->getBulkOperationFormName() => $this->getBulkOperationNameForCheckUpload('node'),
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     $edit = [
       'table[1]' => TRUE,
-      $this->getBulkOperationFormName() => $this->getBulkOperationNameForDisassociate('node'),
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForCancel('node'),
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    $this->assertSourceStatus('EN', Lingotek::STATUS_CANCELLED);
+    $this->assertTargetStatus('ES', Lingotek::STATUS_CANCELLED);
 
     $edit = [
       'table[1]' => TRUE,
       $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node'),
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
-    $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
-    $this->assertIdentical(NULL, \Drupal::state()->get('lingotek.uploaded_job_id'));
-
-    // I can check current status.
-    $this->assertLingotekCheckSourceStatusLink();
-
-    $edit = [
-      'table[1]' => TRUE,
-      $this->getBulkOperationFormName() => $this->getBulkOperationNameForCheckUpload('node'),
-    ];
-    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
-
-    // Check that there is a node with the Automatic (default) Profile
-    $automatic_profile = $this->xpath("//td[contains(text(), 'Automatic')]");
-    $this->assertEqual(count($automatic_profile), 1, 'There is one node with the Automatic Profile set.');
+    // Nothing happened.
+    $this->assertSourceStatus('EN', Lingotek::STATUS_CANCELLED);
+    $this->assertTargetStatus('ES', Lingotek::STATUS_CANCELLED);
   }
 
   /**

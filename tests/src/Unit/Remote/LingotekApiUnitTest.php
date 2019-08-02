@@ -143,6 +143,128 @@ class LingotekApiUnitTest extends UnitTestCase {
   }
 
   /**
+   * @covers ::cancelDocument
+   */
+  public function testCancelDocument() {
+    $response = $this->getMockBuilder(ResponseInterface::class)
+      ->disableOriginalConstructor()
+      ->getMock();
+    $response->expects($this->any())
+      ->method('getStatusCode')
+      ->willReturn(Response::HTTP_NO_CONTENT);
+
+    $this->client->expects($this->at(0))
+      ->method('post')
+      ->with('/api/document/fancy-document-id/cancel', [
+        'id' => 'fancy-document-id',
+        'cancelled_reason' => 'CANCELLED_BY_AUTHOR',
+      ])
+      ->will($this->returnValue($response));
+
+    $response = $this->lingotek_api->cancelDocument('fancy-document-id');
+    $this->assertEquals($response->getStatusCode(), Response::HTTP_NO_CONTENT);
+  }
+
+  /**
+   * @covers ::cancelDocument
+   */
+  public function testCancelDocumentThatDoesntExist() {
+    $this->client->expects($this->at(0))
+      ->method('post')
+      ->with('/api/document/fancy-document-id/cancel', [
+        'id' => 'fancy-document-id',
+        'cancelled_reason' => 'CANCELLED_BY_AUTHOR',
+      ])
+      ->will($this->throwException(new \Exception('', Response::HTTP_NOT_FOUND)));
+
+    $response = $this->lingotek_api->cancelDocument('fancy-document-id');
+    $this->assertEquals($response->getStatusCode(), Response::HTTP_NOT_FOUND);
+  }
+
+  /**
+   * @covers ::cancelDocument
+   */
+  public function testCancelDocumentWithoutAuthorization() {
+    $this->expectException('\Drupal\lingotek\Exception\LingotekApiException');
+    $this->expectExceptionMessage('Failed to cancel document');
+
+    $this->client->expects($this->at(0))
+      ->method('post')
+      ->with('/api/document/fancy-document-id/cancel', [
+        'id' => 'fancy-document-id',
+        'cancelled_reason' => 'CANCELLED_BY_AUTHOR',
+      ])
+      ->will($this->throwException(new \Exception('', Response::HTTP_FORBIDDEN)));
+
+    $response = $this->lingotek_api->cancelDocument('fancy-document-id');
+    $this->assertEquals($response->getStatusCode(), Response::HTTP_FORBIDDEN);
+  }
+
+  /**
+   * @covers ::cancelDocumentTarget
+   */
+  public function testCancelDocumentTarget() {
+    $response = $this->getMockBuilder(ResponseInterface::class)
+      ->disableOriginalConstructor()
+      ->getMock();
+    $response->expects($this->any())
+      ->method('getStatusCode')
+      ->willReturn(Response::HTTP_NO_CONTENT);
+
+    $this->client->expects($this->at(0))
+      ->method('post')
+      ->with('/api/document/fancy-document-id/translation/es_ES/cancel', [
+        'id' => 'fancy-document-id',
+        'locale' => 'es_ES',
+        'cancelled_reason' => 'CANCELLED_BY_AUTHOR',
+        'mark_invoiceable' => 'true',
+      ])
+      ->will($this->returnValue($response));
+
+    $response = $this->lingotek_api->cancelDocumentTarget('fancy-document-id', 'es_ES');
+    $this->assertEquals($response->getStatusCode(), Response::HTTP_NO_CONTENT);
+  }
+
+  /**
+   * @covers ::cancelDocumentTarget
+   */
+  public function testCancelDocumentTargetThatDoesntExist() {
+    $this->client->expects($this->at(0))
+      ->method('post')
+      ->with('/api/document/fancy-document-id/translation/es_ES/cancel', [
+        'id' => 'fancy-document-id',
+        'locale' => 'es_ES',
+        'cancelled_reason' => 'CANCELLED_BY_AUTHOR',
+        'mark_invoiceable' => 'true',
+      ])
+      ->will($this->throwException(new \Exception('', Response::HTTP_NOT_FOUND)));
+
+    $response = $this->lingotek_api->cancelDocumentTarget('fancy-document-id', 'es_ES');
+    $this->assertEquals($response->getStatusCode(), Response::HTTP_NOT_FOUND);
+  }
+
+  /**
+   * @covers ::cancelDocumentTarget
+   */
+  public function testCancelDocumentTargetWithoutAuthorization() {
+    $this->expectException('\Drupal\lingotek\Exception\LingotekApiException');
+    $this->expectExceptionMessage('Failed to cancel document');
+
+    $this->client->expects($this->at(0))
+      ->method('post')
+      ->with('/api/document/fancy-document-id/translation/es_ES/cancel', [
+        'id' => 'fancy-document-id',
+        'locale' => 'es_ES',
+        'cancelled_reason' => 'CANCELLED_BY_AUTHOR',
+        'mark_invoiceable' => 'true',
+      ])
+      ->will($this->throwException(new \Exception('', Response::HTTP_FORBIDDEN)));
+
+    $response = $this->lingotek_api->cancelDocumentTarget('fancy-document-id', 'es_ES');
+    $this->assertEquals($response->getStatusCode(), Response::HTTP_FORBIDDEN);
+  }
+
+  /**
    * @covers ::getCommunities
    */
   public function testGetCommunities() {

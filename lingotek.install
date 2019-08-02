@@ -907,6 +907,82 @@ function lingotek_update_8217() {
   $lingotekSettings->save();
 }
 
+/**
+ * Remove delete_tms_documents_upon_disassociation preference from lingotek.settings.
+ */
+function lingotek_update_8218() {
+  $lingotekSettings = \Drupal::configFactory()->getEditable('lingotek.settings');
+  $lingotekSettings->clear('preference.delete_tms_documents_upon_disassociation');
+  $lingotekSettings->save();
+}
+
+/**
+ * Install needed actions if action module and lingotek are enabled.
+ */
+function lingotek_update_8219() {
+  /** @var \Drupal\Core\Action\ActionManager $action_manager */
+  $action_manager = \Drupal::service('plugin.manager.action');
+  $actions = [
+    'entity:lingotek_cancel_action',
+  ];
+  $lang_actions = [
+    'entity:lingotek_cancel_translation_action',
+  ];
+  $languages = \Drupal::languageManager()->getLanguages();
+  $enabled_entity_types = \Drupal::service('lingotek.configuration')
+    ->getEnabledEntityTypes();
+  foreach ($enabled_entity_types as $entity_type_id => $entity_type) {
+    foreach ($actions as $action) {
+      $pluginId = $action . ':' . $entity_type_id;
+      /** @var \Drupal\Component\Plugin\Definition\PluginDefinitionInterface $plugin */
+      $plugin = \Drupal::service('plugin.manager.action')->getDefinition($pluginId);
+      $action_id = $entity_type_id . '_' . str_replace('entity:', '', $action);
+      Action::create([
+        'id' => $action_id,
+        'label' => $plugin['label'],
+        'type' => $entity_type_id,
+        'plugin' => $pluginId,
+        'configuration' => [],
+      ])->save();
+    }
+    foreach ($lang_actions as $action) {
+      foreach ($languages as $langcode => $language) {
+        $pluginId = $action . ':' . $entity_type_id;
+        /** @var \Drupal\Component\Plugin\Definition\PluginDefinitionInterface $plugin */
+        $plugin = $action_manager->getDefinition($pluginId, FALSE);
+        $action_id = $entity_type_id . '_' . $langcode . '_' . str_replace('entity:', '', $action);
+        $existingAction = \Drupal::entityTypeManager()->getStorage('action')
+          ->load($action_id);
+        if ($plugin && isset($enabled_entity_types[$entity_type_id]) && !$existingAction) {
+          Action::create([
+            'id' => $action_id,
+            'label' => new FormattableMarkup($plugin['action_label'], [
+              '@entity_label' => $entity_type->getSingularLabel(),
+              '@language' => $language->getName(),
+            ]),
+            'type' => $entity_type_id,
+            'plugin' => $pluginId,
+            'configuration' => ['language' => $langcode],
+          ])->save();
+        }
+        elseif (!isset($enabled_entity_types[$entity_type_id]) && $existingAction) {
+          $existingAction->delete();
+        }
+      }
+    }
+    // Remove the disassociate one.
+    $action = 'entity:lingotek_disassociate_action';
+    $pluginId = $action . ':' . $entity_type_id;
+    /** @var \Drupal\Component\Plugin\Definition\PluginDefinitionInterface $plugin */
+    $plugin = $action_manager->getDefinition($pluginId, FALSE);
+    $action_id = $entity_type_id . '_' . str_replace('entity:', '', $action);
+    $disassociateAction = Action::load($action_id);
+    if ($disassociateAction) {
+      $disassociateAction->delete();
+    }
+  }
+}
+
 function _lingotek_find_key(&$keys, $id, array $array) {
   foreach ($array as $x => $y) {
     // if (!in_array($x, ['enabled', 'profile'])) {}

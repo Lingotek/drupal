@@ -451,8 +451,8 @@ class LingotekConfigManagementForm extends FormBase {
         $this->createDownloadBatch($values);
         $processed = TRUE;
         break;
-      case 'disassociate':
-        $this->createDisassociateBatch($values);
+      case 'cancel':
+        $this->createCancelBatch($values);
         $processed = TRUE;
         break;
       case 'assign_job':
@@ -478,6 +478,11 @@ class LingotekConfigManagementForm extends FormBase {
       if (0 === strpos($operation, 'download:')) {
         list($operation, $language) = explode(':', $operation);
         $this->createLanguageDownloadBatch($values, $language);
+        $processed = TRUE;
+      }
+      if (0 === strpos($operation, 'cancel:')) {
+        list($operation, $language) = explode(':', $operation);
+        $this->createTargetCancelBatch($values, $language);
         $processed = TRUE;
       }
       if (0 === strpos($operation, 'change_profile:')) {
@@ -700,9 +705,33 @@ class LingotekConfigManagementForm extends FormBase {
    *
    * @param array $values
    *   Array of ids to disassociate.
+   *
+   * @deprecated in 8.x-2.14, will be removed in 8.x-2.16. Use ::createCancelBatch instead.
    */
   protected function createDisassociateBatch($values) {
     $this->createBatch('disassociate', $values, $this->t('Disassociating content from Lingotek service'));
+  }
+
+  /**
+   * Create and set a cancellation batch.
+   *
+   * @param array $values
+   *   Array of ids to cancel.
+   */
+  protected function createCancelBatch($values) {
+    $this->createBatch('cancel', $values, $this->t('Cancelling content from Lingotek service'));
+  }
+
+  /**
+   * Create and set a target cancellation batch.
+   *
+   * @param array $values
+   *   Array of ids to cancel.
+   * @param string $language
+   *   Language code for the request.
+   */
+  protected function createTargetCancelBatch($values, $language) {
+    $this->createBatch('cancelTarget', $values, $this->t('Cancelling target content from Lingotek service'), $language);
   }
 
   /**
@@ -1090,9 +1119,21 @@ class LingotekConfigManagementForm extends FormBase {
    *
    * @param \Drupal\config_translation\ConfigMapperInterface $mapper
    *   The mapper.
+   *
+   * @deprecated in 8.x-2.14, will be removed in 8.x-2.16. Use ::cancel instead.
    */
   public function disassociate(ConfigMapperInterface $mapper, $langcode, $job_id, &$context) {
-    $context['message'] = $this->t('Disassociating all translations for %label.', ['%label' => $mapper->getTitle()]);
+    return $this->cancel($mapper, $langcode, $job_id, $context);
+  }
+
+  /**
+   * Cancel the content from Lingotek.
+   *
+   * @param \Drupal\config_translation\ConfigMapperInterface $mapper
+   *   The mapper.
+   */
+  public function cancel(ConfigMapperInterface $mapper, $langcode, $job_id, &$context) {
+    $context['message'] = $this->t('Cancelling all translations for %label.', ['%label' => $mapper->getTitle()]);
     $entity = $mapper instanceof ConfigEntityMapper ? $mapper->getEntity() : NULL;
     $profile = $mapper instanceof ConfigEntityMapper ?
       $this->lingotekConfiguration->getConfigEntityProfile($entity, FALSE) :
@@ -1103,30 +1144,81 @@ class LingotekConfigManagementForm extends FormBase {
     if ($entity === NULL || $profile !== NULL) {
       if ($mapper instanceof ConfigEntityMapper) {
         try {
-          $this->translationService->deleteMetadata($entity);
+          $this->translationService->cancelDocument($entity);
         }
         catch (LingotekApiException $e) {
-          $this->messenger()->addError($this->t('%label deletion failed. Please try again.',
+          $this->messenger()->addError($this->t('%label cancellation failed. Please try again.',
             ['%label' => $entity->label()]));
         }
       }
       else {
         try {
-          $this->translationService->deleteConfigMetadata($mapper->getPluginId());
+          $this->translationService->cancelConfigDocument($mapper->getPluginId());
         }
         catch (LingotekApiException $e) {
-          $this->messenger()->addError($this->t('%label deletion failed. Please try again.',
+          $this->messenger()->addError($this->t('%label cancellation failed. Please try again.',
             ['%label' => $mapper->getTitle()]));
         }
       }
     }
     elseif ($profile = $this->lingotekConfiguration->getConfigProfile($mapper->getPluginId(), FALSE) or TRUE) {
       try {
-        $this->translationService->deleteConfigMetadata($mapper->getPluginId());
+        $this->translationService->cancelConfigDocument($mapper->getPluginId());
       }
       catch (LingotekApiException $e) {
-        $this->messenger()->addError($this->t('%label deletion failed. Please try again.',
+        $this->messenger()->addError($this->t('%label cancellation failed. Please try again.',
           ['%label' => $mapper->getTitle()]));
+      }
+    }
+    else {
+      $this->messenger()->addWarning($this->t('%label has no profile assigned so it was not processed.',
+        ['%label' => $mapper->getTitle()]));
+    }
+  }
+
+  /**
+   * Cancel the content from Lingotek.
+   *
+   * @param \Drupal\config_translation\ConfigMapperInterface $mapper
+   *   The mapper.
+   */
+  public function cancelTarget(ConfigMapperInterface $mapper, $langcode, $job_id, &$context) {
+    $context['message'] = $this->t('Cancelling translation for %label to language @language.', ['%label' => $mapper->getTitle(), '@language' => $langcode]);
+    $locale = $this->languageLocaleMapper->getLocaleForLangcode($langcode);
+    $entity = $mapper instanceof ConfigEntityMapper ? $mapper->getEntity() : NULL;
+    $profile = $mapper instanceof ConfigEntityMapper ?
+      $this->lingotekConfiguration->getConfigEntityProfile($entity, FALSE) :
+      $this->lingotekConfiguration->getConfigProfile($mapper->getPluginId(), FALSE);
+
+    // If there is no entity, it's a config object and we don't abort based on
+    // the profile.
+    if ($entity === NULL || $profile !== NULL) {
+      if ($mapper instanceof ConfigEntityMapper) {
+        try {
+          $this->translationService->cancelDocumentTarget($entity, $locale);
+        }
+        catch (LingotekApiException $e) {
+          $this->messenger()->addError($this->t('Cancelling translation for %label to language @language failed. Please try again.',
+            ['%label' => $entity->label(), '@language' => $langcode]));
+        }
+      }
+      else {
+        try {
+          $this->translationService->cancelConfigDocumentTarget($mapper->getPluginId(), $locale);
+        }
+        catch (LingotekApiException $e) {
+          $this->messenger()->addError($this->t('Cancelling translation for %label to language @language failed. Please try again.',
+            ['%label' => $mapper->getTitle(), '@language' => $langcode]));
+        }
+      }
+    }
+    elseif ($profile = $this->lingotekConfiguration->getConfigProfile($mapper->getPluginId(), FALSE) or TRUE) {
+      try {
+        $this->translationService->cancelConfigDocumentTarget($mapper->getPluginId());
+      }
+      catch (LingotekApiException $e) {
+        $this->messenger()->addError($this->t('Cancelling translation for %label to language @language. Please try again.',
+          ['%label' => $mapper->getTitle(), '@language' => $langcode]));
       }
     }
     else {
@@ -1255,6 +1347,8 @@ class LingotekConfigManagementForm extends FormBase {
         return $this->t('Source uploaded');
       case Lingotek::STATUS_ERROR:
         return $this->t('Error');
+      case Lingotek::STATUS_CANCELLED:
+        return $this->t('Cancelled by user');
       default:
         return ucfirst(strtolower($status));
     }
@@ -1280,6 +1374,8 @@ class LingotekConfigManagementForm extends FormBase {
           return $language->label() . ' - ' . $this->t('In-progress (interim translation downloaded)');
         case Lingotek::STATUS_ERROR:
           return $language->label() . ' - ' . $this->t('Error');
+        case Lingotek::STATUS_CANCELLED:
+          return $language->label() . ' - ' . $this->t('Cancelled by user');
         default:
           return $language->label() . ' - ' . ucfirst(strtolower($status));
       }
@@ -1309,52 +1405,49 @@ class LingotekConfigManagementForm extends FormBase {
       $this->translationService->getConfigDocumentId($mapper);
     $entity = $is_config_entity ? $mapper->getEntity() : NULL;
 
-    if ($document_id) {
-      $translations_statuses = $mapper instanceof ConfigEntityMapper ?
-        $this->translationService->getTargetStatuses($entity) :
-        $this->translationService->getConfigTargetStatuses($mapper);
+    $translations_statuses = $mapper instanceof ConfigEntityMapper ?
+      $this->translationService->getTargetStatuses($entity) :
+      $this->translationService->getConfigTargetStatuses($mapper);
 
-      foreach ($translations_statuses as $langcode => $status) {
-        if (isset($languages[$langcode]) && $langcode !== $mapper->getLangcode() && array_key_exists($langcode, $languages)) {
-          if ($mapper->hasTranslation($languages[$langcode]) && $status == Lingotek::STATUS_REQUEST) {
-            $translations[$langcode] = [
-              'status' => Lingotek::STATUS_UNTRACKED,
-              'url' => $this->getTargetActionUrl($mapper, Lingotek::STATUS_UNTRACKED, $langcode),
-              'new_window' => $status == Lingotek::STATUS_CURRENT,
-            ];
-          }
-          else {
-            $translations[$langcode] = [
-              'status' => $status,
-              'url' => $this->getTargetActionUrl($mapper, $status, $langcode),
-              'new_window' => $status == Lingotek::STATUS_CURRENT,
-            ];
-          }
-        }
+    foreach ($languages as $langcode => $language) {
+      // Show the untracked translations in the bulk management form, unless it's the
+      // source one.
+      if ($mapper->hasTranslation($language) && $mapper->getLangcode() !== $langcode) {
+        $translations[$langcode] = [
+          'status' => Lingotek::STATUS_UNTRACKED,
+          'url' => NULL,
+          'new_window' => FALSE,
+        ];
       }
-      array_walk($languages, function ($language, $langcode) use ($mapper, &$translations) {
-        if (!isset($translations[$langcode]) && $langcode !== $mapper->getLangcode()) {
-          $translations[$langcode] = [
-            'status' => Lingotek::STATUS_REQUEST,
-            'url' => $this->getTargetActionUrl($mapper, Lingotek::STATUS_REQUEST, $langcode),
-            'new_window' => FALSE,
-          ];
-        }
-      });
     }
-    else {
-      foreach ($languages as $langcode => $language) {
-        // Show the untracked translations in the bulk management form, unless it's the
-        // source one.
-        if ($mapper->hasTranslation($language) && $mapper->getLangcode() !== $langcode) {
+
+    foreach ($translations_statuses as $langcode => $status) {
+      if (isset($languages[$langcode]) && $langcode !== $mapper->getLangcode() && array_key_exists($langcode, $languages)) {
+        if ($mapper->hasTranslation($languages[$langcode]) && $status == Lingotek::STATUS_REQUEST) {
           $translations[$langcode] = [
             'status' => Lingotek::STATUS_UNTRACKED,
-            'url' => NULL,
-            'new_window' => FALSE,
+            'url' => $this->getTargetActionUrl($mapper, Lingotek::STATUS_UNTRACKED, $langcode),
+            'new_window' => $status == Lingotek::STATUS_CURRENT,
+          ];
+        }
+        else {
+          $translations[$langcode] = [
+            'status' => $status,
+            'url' => $this->getTargetActionUrl($mapper, $status, $langcode),
+            'new_window' => $status == Lingotek::STATUS_CURRENT,
           ];
         }
       }
     }
+    array_walk($languages, function ($language, $langcode) use ($document_id, $mapper, &$translations) {
+      if ($document_id && !isset($translations[$langcode]) && $langcode !== $mapper->getLangcode()) {
+        $translations[$langcode] = [
+          'status' => Lingotek::STATUS_REQUEST,
+          'url' => $this->getTargetActionUrl($mapper, Lingotek::STATUS_REQUEST, $langcode),
+          'new_window' => FALSE,
+        ];
+      }
+    });
     ksort($translations);
     return $this->formatTranslations($mapper, $translations);
   }
@@ -1423,11 +1516,12 @@ class LingotekConfigManagementForm extends FormBase {
     $operations[(string) $this->t('Request translations')]['request_translations'] = $this->t('Request all translations');
     $operations[(string) $this->t('Check translation progress')]['check_translations'] = $this->t('Check progress of all translations');
     $operations[(string) $this->t('Download')]['download'] = $this->t('Download all translations');
-    $operations['disassociate'] = $this->t('Disassociate content');
+    $operations[(string) $this->t('Cancel document')]['cancel'] = $this->t('Cancel document');
     foreach ($this->languageManager->getLanguages() as $langcode => $language) {
+      $operations[(string) $this->t('Cancel document')]['cancel:' . $langcode] = $this->t('Cancel @language translation', ['@language' => $language->getName() . ' (' . $language->getId() . ')']);
       $operations[(string) $this->t('Request translations')]['request_translation:' . $langcode] = $this->t('Request @language translation', ['@language' => $language->getName() . ' (' . $language->getId() . ')']);
       $operations[(string) $this->t('Check translation progress')]['check_translation:' . $langcode] = $this->t('Check progress of @language translation', ['@language' => $language->getName() . ' (' . $language->getId() . ')']);
-      $operations[(string) $this->t('Download')]['download:' . $langcode] = $this->t('Download @language translation', ['@language' => $language->getName()]);
+      $operations[(string) $this->t('Download')]['download:' . $langcode] = $this->t('Download @language translation', ['@language' => $language->getName() . ' (' . $language->getId() . ')']);
     }
     foreach ($this->lingotekConfiguration->getProfileOptions() as $profile_id => $profile) {
       $operations[(string) $this->t('Change Translation Profile')]['change_profile:' . $profile_id] = $this->t('Change to @profile Profile', ['@profile' => $profile]);

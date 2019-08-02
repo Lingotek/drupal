@@ -90,6 +90,9 @@ function lingotek_entity_insert(EntityInterface $entity) {
         $translation_service->setTargetStatuses($entity, Lingotek::STATUS_DISABLED);
         return;
       }
+      elseif ($translation_service->getSourceStatus($entity) === Lingotek::STATUS_CANCELLED) {
+        return;
+      }
       elseif ($translation_service->getSourceStatus($entity) === Lingotek::STATUS_DISABLED) {
         if ($translation_service->getDocumentId($entity) !== NULL) {
           $translation_service->setSourceStatus($entity, Lingotek::STATUS_CURRENT);
@@ -246,6 +249,9 @@ function lingotek_entity_update(EntityInterface $entity) {
         $translation_service->setTargetStatuses($entity, Lingotek::STATUS_DISABLED);
         return;
       }
+      elseif ($translation_service->getSourceStatus($entity) === Lingotek::STATUS_CANCELLED) {
+        return;
+      }
       elseif ($translation_service->getSourceStatus($entity) === Lingotek::STATUS_DISABLED) {
         if ($translation_service->getDocumentId($entity) !== NULL) {
           $translation_service->setSourceStatus($entity, Lingotek::STATUS_CURRENT);
@@ -309,6 +315,9 @@ function lingotek_entity_update(EntityInterface $entity) {
       if ($profile->id() === Lingotek::PROFILE_DISABLED) {
         $translation_service->setSourceStatus($entity, Lingotek::STATUS_DISABLED);
         $translation_service->setTargetStatuses($entity, Lingotek::STATUS_DISABLED);
+        return;
+      }
+      elseif ($translation_service->getSourceStatus($entity) === Lingotek::STATUS_CANCELLED) {
         return;
       }
       elseif ($translation_service->getSourceStatus($entity) === Lingotek::STATUS_DISABLED) {
@@ -382,13 +391,13 @@ function lingotek_entity_delete(EntityInterface $entity) {
   /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
   $translation_service = \Drupal::service('lingotek.content_translation');
 
-  // Delete the TMS document if it hasn't been disassociated.
+  // Cancel the TMS document if it's been uploaded.
   if ($translation_service->getDocumentId($entity)) {
     try {
-      $response = $translation_service->deleteDocument($entity);
+      $response = $translation_service->cancelDocument($entity);
     }
     catch (LingotekApiException $exception) {
-      \Drupal::messenger()->addError(t('Failed deleting @entity_type %title. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
+      \Drupal::messenger()->addError(t('Failed cancelling @entity_type %title. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
     }
   }
 }

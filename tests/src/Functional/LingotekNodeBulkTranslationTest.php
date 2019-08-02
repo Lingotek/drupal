@@ -1615,11 +1615,10 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
   }
 
   /**
-   * Tests that we manage errors when using the disassociate action.
+   * Tests that we manage errors when using the cancel action.
    */
-  public function testDisassociateWithActionWithAnError() {
-    \Drupal::configFactory()->getEditable('lingotek.settings')->set('preference.delete_tms_documents_upon_disassociation', TRUE)->save();
-    \Drupal::state()->set('lingotek.must_error_in_disassociate', TRUE);
+  public function testCancelWithActionWithAnError() {
+    \Drupal::state()->set('lingotek.must_error_in_cancel', TRUE);
 
     // Create a node.
     $edit = [];
@@ -1648,16 +1647,61 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     $this->assertLingotekRequestTranslationLink('es_MX');
     $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
 
-    // Disassociate translation.
+    // Cancel translation.
     $edit = [
       $key => TRUE,
-      $this->getBulkOperationFormName() => $this->getBulkOperationNameForDisassociate('node'),
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForCancel('node'),
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
-    // We failed at disassociating.
+    // We failed at cancelling.
     $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
-    $this->assertText('The deletion of node Llamas are cool failed. Please try again.');
+    $this->assertText('The cancellation of node Llamas are cool failed. Please try again.');
+  }
+
+  /**
+   * Tests that we manage errors when using the cancel action.
+   */
+  public function testCancelTargetWithActionWithAnError() {
+    \Drupal::state()->set('lingotek.must_error_in_cancel', TRUE);
+
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    $this->goToContentBulkManagementForm();
+
+    // I can init the upload of content.
+    $this->assertLingotekUploadLink();
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $this->assertIdentical('en_US', \Drupal::state()
+      ->get('lingotek.uploaded_locale'));
+
+    // I can check current status.
+    $this->assertLingotekCheckSourceStatusLink();
+    // I can request a translation
+    $this->assertLingotekRequestTranslationLink('es_MX');
+    $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
+
+    // Cancel translation.
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForCancelTarget('es', 'node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    // We failed at cancelling.
+    $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
+    $this->assertText('The cancellation of node Llamas are cool translation to es failed. Please try again.');
   }
 
   /**

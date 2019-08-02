@@ -118,6 +118,9 @@ class LingotekSourceStatus extends RenderElement {
       case Lingotek::STATUS_ERROR:
         return t('Error');
 
+      case Lingotek::STATUS_CANCELLED:
+        return $this->t('Cancelled by user');
+
       default:
         return ucfirst(strtolower($source_status));
     }

@@ -46,6 +46,7 @@ class Lingotek implements LingotekInterface {
   const STATUS_READY = 'READY';
   const STATUS_DISABLED = 'DISABLED';
   const STATUS_ERROR = 'ERROR';
+  const STATUS_CANCELLED = 'CANCELLED';
 
   /**
    * Status untracked means the target has not been added yet.
@@ -320,6 +321,52 @@ class Lingotek implements LingotekInterface {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function cancelDocument($doc_id) {
+    $result = FALSE;
+    try {
+      $response = $this->api->cancelDocument($doc_id);
+      $status_code = $response->getStatusCode();
+      if ($status_code == Response::HTTP_NO_CONTENT) {
+        $result = TRUE;
+      }
+    }
+    catch (LingotekApiException $ltkException) {
+      if ($ltkException->getCode() === 400) {
+        if (strpos($ltkException->getMessage(), '"Unable to cancel documents which are already in a completed state. Current status: COMPLETE"') > 0) {
+          // We ignore errors for complete documents.
+          $result = TRUE;
+        }
+      }
+    }
+    return $result;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function cancelDocumentTarget($doc_id, $locale) {
+    $result = FALSE;
+    try {
+      $response = $this->api->cancelDocumentTarget($doc_id, $locale);
+      $status_code = $response->getStatusCode();
+      if ($status_code == Response::HTTP_NO_CONTENT) {
+        $result = TRUE;
+      }
+    }
+    catch (LingotekApiException $ltkException) {
+      if ($ltkException->getCode() === 400) {
+        if (strpos($ltkException->getMessage(), '"Unable to cancel translations which are already in a completed state. Current status: COMPLETE"') > 0) {
+          // We ignore errors for complete documents.
+          $result = TRUE;
+        }
+      }
+    }
+    return $result;
+  }
+
+  /**
    * @param $doc_id
    * @return bool
    *
@@ -437,6 +484,9 @@ class Lingotek implements LingotekInterface {
         foreach ($progress_json['entities'] as $index => $data) {
           if ($data['properties']['locale_code'] === $lingotek_locale) {
             $progress = $data['properties']['percent_complete'];
+            if ($data['properties']['status'] === Lingotek::STATUS_CANCELLED) {
+              $progress = $data['properties']['status'];
+            }
             break;
           }
         }
@@ -463,6 +513,10 @@ class Lingotek implements LingotekInterface {
         foreach ($progress_json['entities'] as $index => $data) {
           $lingotek_locale = $data['properties']['locale_code'];
           $statuses[$lingotek_locale] = $data['properties']['percent_complete'];
+          // ToDo: We should have an structure for this, instead of treating this as an snowflake.
+          if ($data['properties']['status'] === Lingotek::STATUS_CANCELLED) {
+            $statuses[$lingotek_locale] = $data['properties']['status'];
+          }
         }
       }
     }

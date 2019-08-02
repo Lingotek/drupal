@@ -281,8 +281,31 @@ interface LingotekConfigTranslationServiceInterface {
    *
    * @return ContentEntityInterface
    *   The entity.
+   *
+   * @deprecated in 8.x-2.14, will be removed in 8.x-2.16. Use ::cancelDocument instead.
    */
   public function deleteDocument(ConfigEntityInterface &$entity);
+
+  /**
+   * Cancels a document from the server.
+   *
+   * @param \Drupal\Core\Config\Entity\ConfigEntityInterface &$entity
+   *   The entity which we want to cancel.
+   *
+   * @return \Drupal\Core\Config\Entity\ConfigEntityInterface
+   *   The entity.
+   */
+  public function cancelDocument(ConfigEntityInterface &$entity);
+
+  /**
+   * Cancels a translation for a given entity in the given locale.
+   *
+   * @param \Drupal\Core\Config\Entity\ConfigEntityInterface &$entity
+   *   The entity which target we want to cancel.
+   * @param string $locale
+   *   Lingotek translation language which we want to modify.
+   */
+  public function cancelDocumentTarget(ConfigEntityInterface &$entity, $locale);
 
   /**
    * Deletes metadata.
@@ -500,8 +523,28 @@ interface LingotekConfigTranslationServiceInterface {
    *
    * @param string $mapper_id
    *   The entity being uploaded.
+   *
+   * @deprecated in 8.x-2.14, will be removed in 8.x-2.16. Use ::cancelConfigDocument instead.
    */
   public function deleteConfigDocument($mapper_id);
+
+  /**
+   * Cancels a document from the server.
+   *
+   * @param string $mapper_id
+   *   The entity being cancelled.
+   */
+  public function cancelConfigDocument($mapper_id);
+
+  /**
+   * Cancels a translation for a given entity in the given locale.
+   *
+   * @param string $mapper_id
+   *   The entity being cancelled.
+   * @param string $locale
+   *   Lingotek translation language which we want to modify.
+   */
+  public function cancelConfigDocumentTarget($mapper_id, $locale);
 
   /**
    * Deletes metadata.

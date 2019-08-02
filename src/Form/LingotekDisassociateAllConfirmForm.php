@@ -7,13 +7,16 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\lingotek\Entity\LingotekConfigMetadata;
 use Drupal\config_translation\ConfigEntityMapper;
+use Drupal\lingotek\Entity\LingotekContentMetadata;
 use Drupal\lingotek\Exception\LingotekApiException;
 use Drupal\lingotek\LingotekConfigTranslationServiceInterface;
 use Drupal\lingotek\LingotekContentTranslationServiceInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
-  * Show a warning before disassociate all content.
+ * Show a warning before disassociate all content.
+ *
+ * @deprecated in 8.x-2.14, will be removed in 8.x-2.16. Use \Drupal\lingotek\Form\LingotekCancelAllConfirmForm instead.
  */
 class LingotekDisassociateAllConfirmForm extends ConfirmFormBase {
 
@@ -73,6 +76,17 @@ class LingotekDisassociateAllConfirmForm extends ConfirmFormBase {
    */
   public function getQuestion() {
     return $this->t('Are you sure you want to disassociate everything from Lingotek?');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDescription() {
+    $string = '<p>' . $this->t("This is useful for switching between different environments. It will disassociate the content from TMS content so your next changes won't alter what is getting worked on from the TMS.") . '</p>';
+    $string .= '<p>' . $this->t("This option should only be used if you still want the translations to be completed (and eventually billed for) in Lingotek's TMS.") . '</p>';
+    $string .= '<p>' . $this->t("Check if you may want to use the Cancel option instead.") . '</p>';
+    $string .= '<p>' . parent::getDescription() . '</p>';
+    return $string;
   }
 
   /**
@@ -152,20 +166,15 @@ class LingotekDisassociateAllConfirmForm extends ConfirmFormBase {
   protected function disassociateAllContentTranslations() {
     $error = FALSE;
 
-    $doc_ids = $this->contentTranslationService->getAllLocalDocumentIds();
-    foreach ($doc_ids as $doc_id) {
-      $entity = $this->contentTranslationService->loadByDocumentId($doc_id);
-      if ($entity === NULL) {
-        \Drupal::logger('lingotek')->warning(t('There is no entity in Drupal corresponding to the Lingotek document @doc_id. The record for this document has been removed from Drupal.', ['@doc_id' => $doc_id]));
+    /** @var \Drupal\lingotek\Entity\LingotekContentMetadata[] $all_content_metadata */
+    $all_content_metadata = LingotekContentMetadata::loadMultiple();
+    foreach ($all_content_metadata as $content_metadata) {
+      try {
+        $content_metadata->delete();
       }
-      else {
-        try {
-          $this->contentTranslationService->deleteMetadata($entity);
-        }
-        catch (LingotekApiException $exception) {
-          $error = TRUE;
-          $this->messenger()->addError(t('The deletion of @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
-        }
+      catch (LingotekApiException $exception) {
+        $error = TRUE;
+        $this->messenger()->addError(t('The disassociation of @entity_type %title failed. Please try again.', ['@entity_type' => $content_metadata->getContentEntityTypeId(), '%title' => $content_metadata->id()]));
       }
     }
     if ($error) {

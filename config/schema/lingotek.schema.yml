@@ -30,6 +30,7 @@ lingotek.settings:
           type: boolean
         delete_tms_documents_upon_disassociation:
           type: boolean
+          deprecated: "This option is unused since 8.x-2.14. Will be removed in 9.x-1.0"
         show_language_labels:
           type: boolean
         allow_local_editing:

@@ -323,12 +323,41 @@ class LingotekFake implements LingotekInterface {
    * {@inheritDoc}
    */
   public function deleteDocument($doc_id) {
+    throw new LingotekApiException('Delete shouldn\'t happen. Documents must be cancelled.');
     if (\Drupal::state()->get('lingotek.must_error_in_disassociate', FALSE)) {
       throw new LingotekApiException('Error was forced.');
     }
     $deleted_docs = \Drupal::state()->get('lingotek.deleted_docs', []);
     $deleted_docs[] = $doc_id;
     \Drupal::state()->set('lingotek.deleted_docs', $deleted_docs);
+    return TRUE;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public function cancelDocument($doc_id) {
+    if (\Drupal::state()->get('lingotek.must_error_in_cancel', FALSE)) {
+      throw new LingotekApiException('Error was forced.');
+    }
+    $cancelled_docs = \Drupal::state()->get('lingotek.cancelled_docs', []);
+    $cancelled_docs[] = $doc_id;
+    \Drupal::state()->set('lingotek.cancelled_docs', $cancelled_docs);
+    return TRUE;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public function cancelDocumentTarget($doc_id, $locale) {
+    if (\Drupal::state()->get('lingotek.must_error_in_cancel', FALSE)) {
+      throw new LingotekApiException('Error was forced.');
+    }
+    $cancelled_locales = \Drupal::state()->get('lingotek.cancelled_locales', []);
+    $cancelled_locales[$doc_id][] = $locale;
+    \Drupal::state()->set('lingotek.cancelled_locales', $cancelled_locales);
+
+    // Cancelled locale target.
     return TRUE;
   }
 

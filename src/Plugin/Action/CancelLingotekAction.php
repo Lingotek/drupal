@@ -8,14 +8,13 @@ use Drupal\lingotek\Exception\LingotekApiException;
  * Assigns ownership of a node to a user.
  *
  * @Action(
- *   id = "entity:lingotek_disassociate_action",
- *   action_label = @Translation("Disassociate @entity_label from Lingotek"),
+ *   id = "entity:lingotek_cancel_action",
+ *   action_label = @Translation("Cancel @entity_label from Lingotek"),
  *   category = "Lingotek",
  *   deriver = "Drupal\lingotek\Plugin\Action\Derivative\ContentEntityLingotekActionDeriver",
  * )
- * @deprecated Use CancelLingotekAction instead.
  */
-class DisassociateFromLingotekAction extends LingotekContentEntityActionBase {
+class CancelLingotekAction extends LingotekContentEntityActionBase {
 
   /**
    * {@inheritdoc}

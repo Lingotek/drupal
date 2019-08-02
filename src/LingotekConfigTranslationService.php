@@ -269,6 +269,12 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
         elseif ($current_status == Lingotek::STATUS_EDITED && in_array($status, [Lingotek::STATUS_CURRENT, Lingotek::STATUS_PENDING])) {
           $this->setTargetStatus($entity, $langcode, $status);
         }
+        if ($status === Lingotek::STATUS_CANCELLED) {
+          $this->setTargetStatus($entity, $langcode, $status);
+        }
+        if ($status === Lingotek::STATUS_DISABLED) {
+          $this->setTargetStatus($entity, $langcode, $status);
+        }
       }
     }
   }
@@ -354,7 +360,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
    */
   public function uploadDocument(ConfigEntityInterface $entity, $job_id = NULL) {
     $profile = $this->lingotekConfiguration->getConfigEntityProfile($entity);
-    if ($profile->id() === Lingotek::PROFILE_DISABLED) {
+    if ($profile->id() === Lingotek::PROFILE_DISABLED || $this->getSourceStatus($entity) === Lingotek::STATUS_CANCELLED) {
       return FALSE;
     }
     // If job id was not set in the form, it may be already assigned.
@@ -408,7 +414,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
    */
   public function checkSourceStatus(ConfigEntityInterface &$entity) {
     $profile = $this->lingotekConfiguration->getConfigEntityProfile($entity);
-    if ($profile->id() === Lingotek::PROFILE_DISABLED) {
+    if ($profile->id() === Lingotek::PROFILE_DISABLED || $this->getSourceStatus($entity) === Lingotek::STATUS_CANCELLED) {
       return FALSE;
     }
     $document_id = $this->getDocumentId($entity);
@@ -427,7 +433,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
    */
   public function updateDocument(ConfigEntityInterface &$entity, $job_id = NULL) {
     $profile = $this->lingotekConfiguration->getConfigEntityProfile($entity);
-    if ($profile->id() === Lingotek::PROFILE_DISABLED) {
+    if ($profile->id() === Lingotek::PROFILE_DISABLED || $this->getSourceStatus($entity) === Lingotek::STATUS_CANCELLED) {
       return FALSE;
     }
     // If job id was not set in the form, it may be already assigned.
@@ -476,7 +482,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
    */
   public function addTarget(ConfigEntityInterface &$entity, $locale) {
     $profile = $this->lingotekConfiguration->getConfigEntityProfile($entity);
-    if ($profile->id() === Lingotek::PROFILE_DISABLED) {
+    if ($profile->id() === Lingotek::PROFILE_DISABLED || $this->getSourceStatus($entity) === Lingotek::STATUS_CANCELLED) {
       return FALSE;
     }
     if ($locale == $this->languageLocaleMapper->getLocaleForLangcode($entity->language()->getId())) {
@@ -509,7 +515,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
    */
   public function requestTranslations(ConfigEntityInterface &$entity) {
     $profile = $this->lingotekConfiguration->getConfigEntityProfile($entity);
-    if ($profile->id() === Lingotek::PROFILE_DISABLED) {
+    if ($profile->id() === Lingotek::PROFILE_DISABLED || $this->getSourceStatus($entity) === Lingotek::STATUS_CANCELLED) {
       return FALSE;
     }
     $languages = [];
@@ -552,7 +558,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
    */
   public function checkTargetStatus(ConfigEntityInterface &$entity, $locale) {
     $profile = $this->lingotekConfiguration->getConfigEntityProfile($entity);
-    if ($profile->id() === Lingotek::PROFILE_DISABLED) {
+    if ($profile->id() === Lingotek::PROFILE_DISABLED || $this->getSourceStatus($entity) === Lingotek::STATUS_CANCELLED) {
       return FALSE;
     }
     $langcode = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale)->getId();
@@ -562,7 +568,11 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     if (($current_status == Lingotek::STATUS_PENDING ||
     $current_status == Lingotek::STATUS_EDITED) &&
     $source_status !== Lingotek::STATUS_EDITED) {
-      if ($this->lingotek->getDocumentTranslationStatus($document_id, $locale) === TRUE) {
+      $translation_status = $this->lingotek->getDocumentTranslationStatus($document_id, $locale);
+      if ($translation_status === Lingotek::STATUS_CANCELLED) {
+        $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_CANCELLED);
+      }
+      elseif ($translation_status === TRUE) {
         $current_status = Lingotek::STATUS_READY;
         $this->setTargetStatus($entity, $langcode, $current_status);
       }
@@ -587,7 +597,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
    */
   protected function clearTargetStatuses(ConfigEntityInterface &$entity) {
     $profile = $this->lingotekConfiguration->getConfigEntityProfile($entity);
-    if ($profile->id() === Lingotek::PROFILE_DISABLED) {
+    if ($profile->id() === Lingotek::PROFILE_DISABLED || $this->getSourceStatus($entity) === Lingotek::STATUS_CANCELLED) {
       return FALSE;
     }
     // Clear the target statuses. As we save the source status with the target,
@@ -602,7 +612,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
    */
   public function checkTargetStatuses(ConfigEntityInterface &$entity) {
     $profile = $this->lingotekConfiguration->getConfigEntityProfile($entity);
-    if ($profile->id() === Lingotek::PROFILE_DISABLED) {
+    if ($profile->id() === Lingotek::PROFILE_DISABLED || $this->getSourceStatus($entity) === Lingotek::STATUS_CANCELLED) {
       return FALSE;
     }
     $document_id = $this->getDocumentId($entity);
@@ -627,7 +637,10 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
       $langcode = $drupal_language->id();
       $current_target_status = $statuses[$langcode];
       if (in_array($current_target_status, [Lingotek::STATUS_UNTRACKED, Lingotek::STATUS_DISABLED, Lingotek::STATUS_EDITED, Lingotek::STATUS_REQUEST, Lingotek::STATUS_NONE, Lingotek::STATUS_READY, Lingotek::STATUS_PENDING, NULL])) {
-        if ($progress === Lingotek::PROGRESS_COMPLETE) {
+        if ($progress === Lingotek::STATUS_CANCELLED) {
+          $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_CANCELLED);
+        }
+        elseif ($progress === Lingotek::PROGRESS_COMPLETE) {
           $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_READY);
         }
         else {
@@ -651,7 +664,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
    */
   public function downloadDocument(ConfigEntityInterface $entity, $locale) {
     $profile = $this->lingotekConfiguration->getConfigEntityProfile($entity);
-    if ($profile->id() === Lingotek::PROFILE_DISABLED) {
+    if ($profile->id() === Lingotek::PROFILE_DISABLED || $this->getSourceStatus($entity) === Lingotek::STATUS_CANCELLED) {
       return FALSE;
     }
     if ($document_id = $this->getDocumentId($entity)) {
@@ -710,9 +723,57 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
   /**
    * {@inheritdoc}
    */
+  public function cancelDocument(ConfigEntityInterface &$entity) {
+    $result = FALSE;
+    $doc_id = $this->getDocumentId($entity);
+    if ($doc_id) {
+      $result = $this->lingotek->cancelDocument($doc_id);
+      $this->lingotekConfiguration->setConfigEntityProfile($entity, NULL);
+      $this->setDocumentId($entity, NULL);
+    }
+    $this->setSourceStatus($entity, Lingotek::STATUS_CANCELLED);
+    $this->setTargetStatuses($entity, Lingotek::STATUS_CANCELLED);
+
+    return $result;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function cancelDocumentTarget(ConfigEntityInterface &$entity, $locale) {
+    $profile = $this->lingotekConfiguration->getConfigEntityProfile($entity);
+    if ($profile->id() === Lingotek::PROFILE_DISABLED || $this->getSourceStatus($entity) === Lingotek::STATUS_CANCELLED) {
+      return FALSE;
+    }
+    $source_langcode = $entity->language()->getId();
+    $source_locale = $this->languageLocaleMapper->getLocaleForLangcode($source_langcode);
+
+    if ($locale == $source_locale) {
+      // This is not a target, but the source language itself.
+      return FALSE;
+    }
+    if ($document_id = $this->getDocumentId($entity)) {
+      $drupal_language = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale);
+
+      if ($this->lingotek->cancelDocumentTarget($document_id, $locale)) {
+        $this->setTargetStatus($entity, $drupal_language->id(), Lingotek::STATUS_CANCELLED);
+        return TRUE;
+      }
+    }
+
+    if ($this->getSourceStatus($entity) == Lingotek::STATUS_DISABLED) {
+      $this->setTargetStatuses($entity, Lingotek::STATUS_DISABLED);
+    }
+    return FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function deleteMetadata(ConfigEntityInterface &$entity) {
-    if ($this->lingotekConfiguration->mustDeleteRemoteAfterDisassociation()) {
-      $this->deleteDocument($entity);
+    $doc_id = $this->getDocumentId($entity);
+    if ($doc_id) {
+      $this->cancelDocument($entity);
     }
     $metadata = LingotekConfigMetadata::loadByConfigName($entity->getEntityTypeId() . '.' . $entity->id());
     if (!$metadata->isNew()) {
@@ -886,6 +947,12 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
         elseif ($current_status == Lingotek::STATUS_EDITED && in_array($status, [Lingotek::STATUS_CURRENT, Lingotek::STATUS_PENDING])) {
           $this->setConfigTargetStatus($mapper, $langcode, $status);
         }
+        if ($status === Lingotek::STATUS_CANCELLED) {
+          $this->setConfigTargetStatus($mapper, $langcode, $status);
+        }
+        if ($status === Lingotek::STATUS_DISABLED) {
+          $this->setConfigTargetStatus($mapper, $langcode, $status);
+        }
       }
     }
   }
@@ -909,11 +976,11 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
    * {@inheritdoc}
    */
   public function uploadConfig($mapper_id, $job_id = NULL) {
+    $mapper = $this->mappers[$mapper_id];
     $profile = $this->lingotekConfiguration->getConfigProfile($mapper_id, FALSE);
-    if ($profile !== NULL && $profile->id() === Lingotek::PROFILE_DISABLED) {
+    if ($profile !== NULL && $profile->id() === Lingotek::PROFILE_DISABLED || $this->getConfigSourceStatus($mapper) === Lingotek::STATUS_CANCELLED) {
       return FALSE;
     }
-    $mapper = $this->mappers[$mapper_id];
     // If job id was not set in the form, it may be already assigned.
     if ($job_id === NULL) {
       $job_id = $this->getConfigJobId($mapper) ?: NULL;
@@ -968,11 +1035,11 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
    * {@inheritdoc}
    */
   public function checkConfigSourceStatus($mapper_id) {
+    $mapper = $this->mappers[$mapper_id];
     $profile = $this->lingotekConfiguration->getConfigProfile($mapper_id);
-    if ($profile->id() === Lingotek::PROFILE_DISABLED) {
+    if ($profile->id() === Lingotek::PROFILE_DISABLED || $this->getConfigSourceStatus($mapper) === Lingotek::STATUS_CANCELLED) {
       return FALSE;
     }
-    $mapper = $this->mappers[$mapper_id];
     $document_id = $this->getConfigDocumentId($mapper);
     if ($document_id && $this->lingotek->getDocumentStatus($document_id)) {
       $this->setConfigSourceStatus($mapper, Lingotek::STATUS_CURRENT);
@@ -988,11 +1055,11 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
    * {@inheritdoc}
    */
   public function addConfigTarget($mapper_id, $locale) {
+    $mapper = $this->mappers[$mapper_id];
     $profile = $this->lingotekConfiguration->getConfigProfile($mapper_id);
-    if ($profile->id() === Lingotek::PROFILE_DISABLED) {
+    if ($profile->id() === Lingotek::PROFILE_DISABLED || $this->getConfigSourceStatus($mapper) === Lingotek::STATUS_CANCELLED) {
       return FALSE;
     }
-    $mapper = $this->mappers[$mapper_id];
     if ($locale == $this->languageLocaleMapper->getLocaleForLangcode($mapper->getLangcode())) {
       // We don't want to translate from one language to itself.
       return FALSE;
@@ -1022,11 +1089,11 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
    * {@inheritdoc}
    */
   public function requestConfigTranslations($mapper_id) {
+    $mapper = $this->mappers[$mapper_id];
     $profile = $this->lingotekConfiguration->getConfigProfile($mapper_id);
-    if ($profile->id() === Lingotek::PROFILE_DISABLED) {
+    if ($profile->id() === Lingotek::PROFILE_DISABLED || $this->getConfigSourceStatus($mapper) === Lingotek::STATUS_CANCELLED) {
       return FALSE;
     }
-    $mapper = $this->mappers[$mapper_id];
     $languages = [];
     if ($document_id = $this->getConfigDocumentId($mapper)) {
       $target_languages = $this->languageManager->getLanguages();
@@ -1061,11 +1128,11 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
    * {@inheritdoc}
    */
   public function checkConfigTargetStatus($mapper_id, $locale) {
+    $mapper = $this->mappers[$mapper_id];
     $profile = $this->lingotekConfiguration->getConfigProfile($mapper_id);
-    if ($profile->id() === Lingotek::PROFILE_DISABLED) {
+    if ($profile->id() === Lingotek::PROFILE_DISABLED || $this->getConfigSourceStatus($mapper) === Lingotek::STATUS_CANCELLED) {
       return FALSE;
     }
-    $mapper = $this->mappers[$mapper_id];
     $langcode = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale)->getId();
     $current_status = $this->getConfigTargetStatus($mapper, $langcode);
     $source_status = $this->getConfigSourceStatus($mapper);
@@ -1073,7 +1140,11 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     if (($current_status == Lingotek::STATUS_PENDING ||
     $current_status == Lingotek::STATUS_EDITED) &&
     $source_status !== Lingotek::STATUS_EDITED) {
-      if ($this->lingotek->getDocumentTranslationStatus($document_id, $locale) === TRUE) {
+      $translation_status = $this->lingotek->getDocumentTranslationStatus($document_id, $locale);
+      if ($translation_status === Lingotek::STATUS_CANCELLED) {
+        $this->setConfigTargetStatus($mapper, $langcode, Lingotek::STATUS_CANCELLED);
+      }
+      elseif ($translation_status === TRUE) {
         $current_status = Lingotek::STATUS_READY;
         $this->setConfigTargetStatus($mapper, $langcode, $current_status);
       }
@@ -1097,11 +1168,11 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
    * @param string $mapper_id
    */
   protected function clearConfigTargetStatuses($mapper_id) {
+    $mapper = $this->mappers[$mapper_id];
     $profile = $this->lingotekConfiguration->getConfigProfile($mapper_id);
-    if ($profile->id() === Lingotek::PROFILE_DISABLED) {
+    if ($profile->id() === Lingotek::PROFILE_DISABLED || $this->getConfigSourceStatus($mapper) === Lingotek::STATUS_CANCELLED) {
       return FALSE;
     }
-    $mapper = $this->mappers[$mapper_id];
     foreach ($mapper->getConfigNames() as $config_name) {
       $metadata = LingotekConfigMetadata::loadByConfigName($config_name);
       $metadata->setTargetStatus([])->save();
@@ -1112,11 +1183,11 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
    * {@inheritdoc}
    */
   public function checkConfigTargetStatuses($mapper_id) {
+    $mapper = $this->mappers[$mapper_id];
     $profile = $this->lingotekConfiguration->getConfigProfile($mapper_id);
-    if ($profile->id() === Lingotek::PROFILE_DISABLED) {
+    if ($profile->id() === Lingotek::PROFILE_DISABLED || $this->getConfigSourceStatus($mapper) === Lingotek::STATUS_CANCELLED) {
       return FALSE;
     }
-    $mapper = $this->mappers[$mapper_id];
     $document_id = $this->getConfigDocumentId($mapper);
     $translation_statuses = $this->lingotek->getDocumentTranslationStatuses($document_id);
     $source_status = $this->getConfigSourceStatus($mapper);
@@ -1139,7 +1210,10 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
       $langcode = $drupal_language->id();
       $current_target_status = $statuses[$langcode];
       if (in_array($current_target_status, [Lingotek::STATUS_UNTRACKED, Lingotek::STATUS_DISABLED, Lingotek::STATUS_EDITED, Lingotek::STATUS_REQUEST, Lingotek::STATUS_NONE, Lingotek::STATUS_READY, Lingotek::STATUS_PENDING, NULL])) {
-        if ($progress === Lingotek::PROGRESS_COMPLETE) {
+        if ($progress === Lingotek::STATUS_CANCELLED) {
+          $this->setConfigTargetStatus($mapper, $langcode, Lingotek::STATUS_CANCELLED);
+        }
+        elseif ($progress === Lingotek::PROGRESS_COMPLETE) {
           $this->setConfigTargetStatus($mapper, $langcode, Lingotek::STATUS_READY);
         }
         else {
@@ -1162,11 +1236,11 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
    * {@inheritdoc}
    */
   public function downloadConfig($mapper_id, $locale) {
+    $mapper = $this->mappers[$mapper_id];
     $profile = $this->lingotekConfiguration->getConfigProfile($mapper_id);
-    if ($profile->id() === Lingotek::PROFILE_DISABLED) {
+    if ($profile->id() === Lingotek::PROFILE_DISABLED || $this->getConfigSourceStatus($mapper) === Lingotek::STATUS_CANCELLED) {
       return FALSE;
     }
-    $mapper = $this->mappers[$mapper_id];
     if ($document_id = $this->getConfigDocumentId($mapper)) {
       $langcode = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale)->getId();
       $data = [];
@@ -1229,10 +1303,59 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
   /**
    * {@inheritdoc}
    */
+  public function cancelConfigDocument($mapper_id) {
+    $mapper = $this->mappers[$mapper_id];
+    $result = FALSE;
+    $doc_id = $this->getConfigDocumentId($mapper);
+    if ($doc_id) {
+      $result = $this->lingotek->cancelDocument($doc_id);
+      $this->setConfigDocumentId($mapper, NULL);
+    }
+    $this->setConfigSourceStatus($mapper, Lingotek::STATUS_CANCELLED);
+    $this->setConfigTargetStatuses($mapper, Lingotek::STATUS_CANCELLED);
+
+    return $result;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function cancelConfigDocumentTarget($mapper_id, $locale) {
+    $mapper = $this->mappers[$mapper_id];
+    $profile = $this->lingotekConfiguration->getConfigProfile($mapper_id);
+    if ($profile->id() === Lingotek::PROFILE_DISABLED || $this->getConfigSourceStatus($mapper) === Lingotek::STATUS_CANCELLED) {
+      return FALSE;
+    }
+    $source_langcode = $mapper->getLangcode();
+    $source_locale = $this->languageLocaleMapper->getLocaleForLangcode($source_langcode);
+
+    if ($locale == $source_locale) {
+      // This is not a target, but the source language itself.
+      return FALSE;
+    }
+    if ($document_id = $this->getConfigDocumentId($mapper)) {
+      $drupal_language = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale);
+
+      if ($this->lingotek->cancelDocumentTarget($document_id, $locale)) {
+        $this->setConfigTargetStatus($mapper, $drupal_language->id(), Lingotek::STATUS_CANCELLED);
+        return TRUE;
+      }
+    }
+
+    if ($this->getConfigSourceStatus($mapper) == Lingotek::STATUS_DISABLED) {
+      $this->setConfigTargetStatuses($mapper, Lingotek::STATUS_DISABLED);
+    }
+    return FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function deleteConfigMetadata($mapper_id) {
     $mapper = $this->mappers[$mapper_id];
-    if ($this->lingotekConfiguration->mustDeleteRemoteAfterDisassociation()) {
-      $this->deleteConfigDocument($mapper_id);
+    $doc_id = $this->getConfigDocumentId($mapper);
+    if ($doc_id) {
+      $this->cancelConfigDocument($mapper_id);
     }
     foreach ($mapper->getConfigNames() as $config_name) {
       $metadata = LingotekConfigMetadata::loadByConfigName($config_name);
@@ -1246,14 +1369,14 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
    * {@inheritdoc}
    */
   public function updateConfig($mapper_id, $job_id = NULL) {
+    $mapper = $this->mappers[$mapper_id];
     $profile = $this->lingotekConfiguration->getConfigProfile($mapper_id, FALSE);
-    if ($profile !== NULL && $profile->id() === Lingotek::PROFILE_DISABLED) {
+    if (($profile !== NULL && $profile->id() === Lingotek::PROFILE_DISABLED) || $this->getConfigSourceStatus($mapper) === Lingotek::STATUS_CANCELLED) {
       return FALSE;
     }
     // Get the provide providing a default.
     $profile = $this->lingotekConfiguration->getConfigProfile($mapper_id);
 
-    $mapper = $this->mappers[$mapper_id];
     // If job id was not set in the form, it may be already assigned.
     if ($job_id === NULL) {
       $job_id = $this->getConfigJobId($mapper) ?: NULL;

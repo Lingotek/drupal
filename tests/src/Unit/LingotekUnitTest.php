@@ -826,6 +826,66 @@ class LingotekUnitTest extends UnitTestCase {
   }
 
   /**
+   * @covers ::cancelDocument
+   */
+  public function testCancelDocument() {
+    $response = $this->getMockBuilder(ResponseInterface::class)
+      ->disableOriginalConstructor()
+      ->getMock();
+    $response->expects($this->at(0))
+      ->method('getStatusCode')
+      ->willReturn(Response::HTTP_NO_CONTENT);
+
+    // Test returning an error.
+    $response->expects($this->at(1))
+      ->method('getStatusCode')
+      ->willReturn(Response::HTTP_INTERNAL_SERVER_ERROR);
+
+    $response->expects($this->at(2))
+      ->method('getStatusCode')
+      ->willReturn(Response::HTTP_NOT_FOUND);
+
+    $this->api->expects($this->any())
+      ->method('cancelDocument')
+      ->with('my_doc_id')
+      ->will($this->returnValue($response));
+
+    $this->assertTrue($this->lingotek->cancelDocument('my_doc_id'));
+    $this->assertFalse($this->lingotek->cancelDocument('my_doc_id'));
+    $this->assertFalse($this->lingotek->cancelDocument('my_doc_id'));
+  }
+
+  /**
+   * @covers ::cancelDocumentTarget
+   */
+  public function testCancelDocumentTarget() {
+    $response = $this->getMockBuilder(ResponseInterface::class)
+      ->disableOriginalConstructor()
+      ->getMock();
+    $response->expects($this->at(0))
+      ->method('getStatusCode')
+      ->willReturn(Response::HTTP_NO_CONTENT);
+
+    // Test returning an error.
+    $response->expects($this->at(1))
+      ->method('getStatusCode')
+      ->willReturn(Response::HTTP_INTERNAL_SERVER_ERROR);
+
+    $response->expects($this->at(2))
+      ->method('getStatusCode')
+      ->willReturn(Response::HTTP_NOT_FOUND);
+
+    $this->api->expects($this->any())
+      ->method('cancelDocumentTarget')
+      ->with('my_doc_id', 'es_ES')
+      ->will($this->returnValue($response));
+
+    $this->assertTrue($this->lingotek->cancelDocumentTarget('my_doc_id', 'es_ES'));
+    $this->assertFalse($this->lingotek->cancelDocumentTarget('my_doc_id', 'es_ES'));
+    $this->assertFalse($this->lingotek->cancelDocumentTarget('my_doc_id', 'es_ES'));
+  }
+
+  /**
    * @covers ::getDocumentTranslationStatus
    */
   public function testGetDocumentTranslationStatus() {
@@ -846,6 +906,7 @@ class LingotekUnitTest extends UnitTestCase {
                 [
                   'locale_code' => 'es-ES',
                   'percent_complete' => 100,
+                  'status' => 'READY',
                 ],
             ],
             [
@@ -853,6 +914,7 @@ class LingotekUnitTest extends UnitTestCase {
                 [
                   'locale_code' => 'de-DE',
                   'percent_complete' => 50,
+                  'status' => 'READY',
                 ],
             ],
 
@@ -879,6 +941,68 @@ class LingotekUnitTest extends UnitTestCase {
     // Assert that an incomplete translation is reported as not completed.
     $result = $this->lingotek->getDocumentTranslationStatus('my_doc_id', 'de_DE');
     $this->assertEquals(50, $result);
+
+    // Assert that an unrequested translation is reported as not completed.
+    $result = $this->lingotek->getDocumentTranslationStatus('my_doc_id', 'ca_ES');
+    $this->assertEquals(FALSE, $result);
+  }
+
+  /**
+   * @covers ::getDocumentTranslationStatus
+   */
+  public function testGetDocumentTranslationStatusCancelled() {
+    $response = $this->getMockBuilder(ResponseInterface::class)
+      ->disableOriginalConstructor()
+      ->getMock();
+    $response->expects($this->any())
+      ->method('getStatusCode')
+      ->willReturn(Response::HTTP_OK);
+    $response->expects($this->any())
+      ->method('getBody')
+      ->willReturn(json_encode(
+        [
+          'entities' =>
+            [
+              [
+                'properties' =>
+                  [
+                    'locale_code' => 'es-ES',
+                    'percent_complete' => 100,
+                    'status' => 'READY',
+                  ],
+              ],
+              [
+                'properties' =>
+                  [
+                    'locale_code' => 'de-DE',
+                    'percent_complete' => 50,
+                    'status' => 'CANCELLED',
+                  ],
+              ],
+
+            ],
+        ]
+      ));
+    $this->api->expects($this->at(0))
+      ->method('getDocumentTranslationStatus')
+      ->with('my_doc_id', 'es_ES')
+      ->will($this->returnValue($response));
+    $this->api->expects($this->at(1))
+      ->method('getDocumentTranslationStatus')
+      ->with('my_doc_id', 'de_DE')
+      ->will($this->returnValue($response));
+    $this->api->expects($this->at(2))
+      ->method('getDocumentTranslationStatus')
+      ->with('my_doc_id', 'ca_ES')
+      ->will($this->returnValue($response));
+
+    // Assert that a complete translation is reported as completed.
+    $result = $this->lingotek->getDocumentTranslationStatus('my_doc_id', 'es_ES');
+    $this->assertEquals(TRUE, $result);
+
+    // Assert that an incomplete translation is reported as not completed.
+    $result = $this->lingotek->getDocumentTranslationStatus('my_doc_id', 'de_DE');
+    $this->assertEquals('CANCELLED', $result);
 
     // Assert that an unrequested translation is reported as not completed.
     $result = $this->lingotek->getDocumentTranslationStatus('my_doc_id', 'ca_ES');

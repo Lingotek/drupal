@@ -570,8 +570,8 @@ abstract class LingotekManagementFormBase extends FormBase {
         $this->createDownloadBatch($values);
         $processed = TRUE;
         break;
-      case 'disassociate':
-        $this->createDisassociateBatch($values);
+      case 'cancel':
+        $this->createCancelBatch($values);
         $processed = TRUE;
         break;
       case 'assign_job':
@@ -605,6 +605,11 @@ abstract class LingotekManagementFormBase extends FormBase {
       if (0 === strpos($operation, 'download:')) {
         list($operation, $language) = explode(':', $operation);
         $this->createLanguageDownloadBatch($values, $language);
+        $processed = TRUE;
+      }
+      if (0 === strpos($operation, 'cancel:')) {
+        list($operation, $language) = explode(':', $operation);
+        $this->createTargetCancelBatch($values, $language);
         $processed = TRUE;
       }
       if (0 === strpos($operation, 'delete_translation:')) {
@@ -809,9 +814,33 @@ abstract class LingotekManagementFormBase extends FormBase {
    *
    * @param array $values
    *   Array of ids to disassociate.
+   *
+   * @deprecated in 8.x-2.14, will be removed in 8.x-2.16. Use ::createCancelBatch instead.
    */
   protected function createDisassociateBatch($values) {
     $this->createBatch('disassociate', $values, $this->t('Disassociating content from Lingotek service'));
+  }
+
+  /**
+   * Create and set a cancellation batch.
+   *
+   * @param array $values
+   *   Array of ids to cancel.
+   */
+  protected function createCancelBatch($values) {
+    $this->createBatch('cancel', $values, $this->t('Cancelling content from Lingotek service'));
+  }
+
+  /**
+   * Create and set a target cancellation batch.
+   *
+   * @param array $values
+   *   Array of ids to cancel.
+   * @param string $language
+   *   Language code for the request.
+   */
+  protected function createTargetCancelBatch($values, $language) {
+    $this->createBatch('cancelTarget', $values, $this->t('Cancelling target content from Lingotek service'), $language);
   }
 
   /**
@@ -1212,15 +1241,52 @@ abstract class LingotekManagementFormBase extends FormBase {
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The entity.
+   *
+   * @deprecated in 8.x-2.14, will be removed in 8.x-2.16. Use ::cancel instead.
    */
   public function disassociate(ContentEntityInterface $entity, $language, $job_id, &$context) {
-    $context['message'] = $this->t('Disassociating all translations for @type %label.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label()]);
+    return $this->cancel($entity, $language, $job_id, $context);
+  }
+
+  /**
+   * Cancel the content from Lingotek.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The entity.
+   */
+  public function cancel(ContentEntityInterface $entity, $language, $job_id, &$context) {
+    $context['message'] = $this->t('Cancelling all translations for @type %label.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label()]);
     if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE)) {
       try {
-        $this->translationService->deleteMetadata($entity);
+        $this->translationService->cancelDocument($entity);
       }
       catch (LingotekApiException $exception) {
-        $this->messenger()->addError(t('The deletion of @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
+        $this->messenger()->addError(t('The cancellation of @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
+      }
+
+    }
+    else {
+      $bundleInfos = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
+      $this->messenger()->addWarning($this->t('The @type %label has no profile assigned so it was not processed.',
+        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]));
+    }
+  }
+
+  /**
+   * Cancel the content from Lingotek.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The entity.
+   */
+  public function cancelTarget(ContentEntityInterface $entity, $langcode, $job_id, &$context) {
+    $context['message'] = $this->t('Cancelling translation for @type %label to language @language.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label(), '@language' => $langcode]);
+    $locale = $this->languageLocaleMapper->getLocaleForLangcode($langcode);
+    if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE)) {
+      try {
+        $this->translationService->cancelDocumentTarget($entity, $locale);
+      }
+      catch (LingotekApiException $exception) {
+        $this->messenger()->addError(t('The cancellation of @entity_type %title translation to @language failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label(), '@language' => $langcode]));
       }
 
     }
@@ -1375,11 +1441,12 @@ abstract class LingotekManagementFormBase extends FormBase {
     foreach ($this->lingotekConfiguration->getProfileOptions() as $profile_id => $profile) {
       $operations[(string) $this->t('Change Translation Profile')]['change_profile:' . $profile_id] = $this->t('Change to @profile Profile', ['@profile' => $profile]);
     }
-    $operations['disassociate'] = $this->t('Disassociate content');
+    $operations[(string) $this->t('Cancel document')]['cancel'] = $this->t('Cancel document');
     foreach ($this->languageManager->getLanguages() as $langcode => $language) {
+      $operations[(string) $this->t('Cancel document')]['cancel:' . $langcode] = $this->t('Cancel @language translation', ['@language' => $language->getName() . ' (' . $language->getId() . ')']);
       $operations[(string) $this->t('Request translations')]['request_translation:' . $langcode] = $this->t('Request @language translation', ['@language' => $language->getName() . ' (' . $language->getId() . ')']);
       $operations[(string) $this->t('Check translation progress')]['check_translation:' . $langcode] = $this->t('Check progress of @language translation', ['@language' => $language->getName() . ' (' . $language->getId() . ')']);
-      $operations[(string) $this->t('Download')]['download:' . $langcode] = $this->t('Download @language translation', ['@language' => $language->getName()]);
+      $operations[(string) $this->t('Download')]['download:' . $langcode] = $this->t('Download @language translation', ['@language' => $language->getName() . ' (' . $language->getId() . ')']);
       if (((float) \Drupal::VERSION) >= 8.6) {
         $operations[(string) $this->t('Delete translations')]['delete_translation:' . $langcode] = $this->t('Delete @language translation', ['@language' => $language->getName() . ' (' . $language->getId() . ')']);
       }

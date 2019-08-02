@@ -90,8 +90,8 @@ class LingotekActionsTest extends LingotekTestBase {
 
     $actions = Action::loadMultiple();
     // We expect 13 initial actions, plus 7 that are the entity bulk Lingotek
-    // actions for all targets, plus 4 per each target language.
-    $this->assertCount($expected + 7 + 4 + 4, $actions);
+    // actions for all targets, plus 5 per each target language.
+    $this->assertCount($expected + 7 + 5 + 5, $actions);
 
     $expectedActions = [
       'node_lingotek_upload_action',
@@ -99,7 +99,7 @@ class LingotekActionsTest extends LingotekTestBase {
       'node_lingotek_request_translations_action',
       'node_lingotek_check_translations_action',
       'node_lingotek_download_translations_action',
-      'node_lingotek_disassociate_action',
+      'node_lingotek_cancel_action',
       'node_lingotek_delete_translations_action',
     ];
     $expectedActions += [
@@ -111,6 +111,8 @@ class LingotekActionsTest extends LingotekTestBase {
       'node_en_lingotek_download_translation_action',
       'node_es_lingotek_delete_translation_action',
       'node_en_lingotek_delete_translation_action',
+      'node_es_lingotek_cancel_translation_action',
+      'node_en_lingotek_cancel_translation_action',
     ];
     foreach ($expectedActions as $expectedAction) {
       $this->assertArrayHasKey($expectedAction, $actions, 'There is an action with id: ' . $expectedAction);
@@ -119,6 +121,7 @@ class LingotekActionsTest extends LingotekTestBase {
     $this->assertEquals('Check content item translation status to Lingotek for Spanish', $actions['node_es_lingotek_check_translation_action']->label());
     $this->assertEquals('Download content item translation to Lingotek for Spanish', $actions['node_es_lingotek_download_translation_action']->label());
     $this->assertEquals('Delete content item translation for Spanish', $actions['node_es_lingotek_delete_translation_action']->label());
+    $this->assertEquals('Cancel content item translation in Lingotek for Spanish', $actions['node_es_lingotek_cancel_translation_action']->label());
 
     // Create another language
     ConfigurableLanguage::createFromLangcode('it')->save();
@@ -127,9 +130,10 @@ class LingotekActionsTest extends LingotekTestBase {
       'node_it_lingotek_check_translation_action',
       'node_it_lingotek_download_translation_action',
       'node_it_lingotek_delete_translation_action',
+      'node_it_lingotek_cancel_translation_action',
     ];
     $actions = Action::loadMultiple();
-    $this->assertCount($expected + 7 + 4 + 4 + 4, $actions);
+    $this->assertCount($expected + 7 + 5 + 5 + 5, $actions);
     foreach ($expectedActions as $expectedAction) {
       $this->assertArrayHasKey($expectedAction, $actions, 'There is an action with id: ' . $expectedAction);
     }
@@ -138,6 +142,7 @@ class LingotekActionsTest extends LingotekTestBase {
     $this->assertEquals('Check content item translation status to Lingotek for Italian', $actions['node_it_lingotek_check_translation_action']->label());
     $this->assertEquals('Download content item translation to Lingotek for Italian', $actions['node_it_lingotek_download_translation_action']->label());
     $this->assertEquals('Delete content item translation for Italian', $actions['node_it_lingotek_delete_translation_action']->label());
+    $this->assertEquals('Cancel content item translation in Lingotek for Italian', $actions['node_it_lingotek_cancel_translation_action']->label());
 
     // Enable for taxonomy terms.
     $this->saveLingotekContentTranslationSettings([
@@ -158,7 +163,7 @@ class LingotekActionsTest extends LingotekTestBase {
       'taxonomy_term_lingotek_request_translations_action',
       'taxonomy_term_lingotek_check_translations_action',
       'taxonomy_term_lingotek_download_translations_action',
-      'taxonomy_term_lingotek_disassociate_action',
+      'taxonomy_term_lingotek_cancel_action',
       'taxonomy_term_lingotek_delete_action',
     ];
     $expectedActions += [
@@ -174,10 +179,13 @@ class LingotekActionsTest extends LingotekTestBase {
       'taxonomy_term_es_lingotek_delete_translation_action',
       'taxonomy_term_en_lingotek_delete_translation_action',
       'taxonomy_term_it_lingotek_delete_translation_action',
+      'taxonomy_term_es_lingotek_cancel_translation_action',
+      'taxonomy_term_en_lingotek_cancel_translation_action',
+      'taxonomy_term_it_lingotek_cancel_translation_action',
     ];
     $actions = Action::loadMultiple();
-    // We add 7 for roundtrip and 12 for the 3 languages per 4 actions.
-    $this->assertCount($expected + 7 + 7 + 4 + 4 + 4 + 12, $actions);
+    // We add 7 for roundtrip and 15 for the 3 languages per 5 actions.
+    $this->assertCount($expected + 7 + 7 + 5 + 5 + 5 + 15, $actions);
     foreach ($expectedActions as $expectedAction) {
       $this->assertArrayHasKey($expectedAction, $actions, 'There is an action with id: ' . $expectedAction);
     }
@@ -186,6 +194,7 @@ class LingotekActionsTest extends LingotekTestBase {
     $this->assertEquals('Check taxonomy term translation status to Lingotek for Italian', $actions['taxonomy_term_it_lingotek_check_translation_action']->label());
     $this->assertEquals('Download taxonomy term translation to Lingotek for Italian', $actions['taxonomy_term_it_lingotek_download_translation_action']->label());
     $this->assertEquals('Delete taxonomy term translation for Italian', $actions['taxonomy_term_it_lingotek_delete_translation_action']->label());
+    $this->assertEquals('Cancel taxonomy term translation in Lingotek for Italian', $actions['taxonomy_term_it_lingotek_cancel_translation_action']->label());
   }
 
 }

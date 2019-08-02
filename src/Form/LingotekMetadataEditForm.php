@@ -204,6 +204,7 @@ class LingotekMetadataEditForm extends ContentEntityForm {
       Lingotek::STATUS_READY => $this->t('Ready'),
       Lingotek::STATUS_REQUEST => $this->t('Request'),
       Lingotek::STATUS_UNTRACKED => $this->t('Untracked'),
+      Lingotek::STATUS_CANCELLED => $this->t('Cancelled'),
     ];
   }
 

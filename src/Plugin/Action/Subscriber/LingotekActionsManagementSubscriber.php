@@ -76,7 +76,7 @@ class LingotekActionsManagementSubscriber implements EventSubscriberInterface {
       'entity:lingotek_request_translations_action',
       'entity:lingotek_check_translations_action',
       'entity:lingotek_download_translations_action',
-      'entity:lingotek_disassociate_action',
+      'entity:lingotek_cancel_action',
       'entity:lingotek_delete_translations_action',
     ];
     $lang_actions = [
@@ -84,6 +84,7 @@ class LingotekActionsManagementSubscriber implements EventSubscriberInterface {
       'entity:lingotek_download_translation_action',
       'entity:lingotek_request_translation_action',
       'entity:lingotek_delete_translation_action',
+      'entity:lingotek_cancel_translation_action',
     ];
 
     $config = $event->getConfig();

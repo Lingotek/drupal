@@ -99,6 +99,9 @@ class LingotekTargetStatus extends RenderElement {
       case Lingotek::STATUS_ERROR:
         return $language->label() . ' - ' . $this->t('Error');
 
+      case Lingotek::STATUS_CANCELLED:
+        return $language->label() . ' - ' . $this->t('Cancelled by user');
+
       default:
         return $language->label() . ' - ' . ucfirst(strtolower($status));
     }

@@ -152,7 +152,33 @@ interface LingotekInterface {
    *   The document id in Lingotek.
    * @return bool
    *   TRUE if the document was successfully deleted. FALSE if not.
+   *
+   * @deprecated in 8.x-2.14, will be removed in 8.x-2.16. Use ::cancelDocument instead.
    */
   public function deleteDocument($doc_id);
+
+  /**
+   * Cancels the document with this document id from the Lingotek service.
+   *
+   * @param string $doc_id
+   *   The document id in Lingotek.
+   *
+   * @return bool
+   *   TRUE if the document was successfully cancelled. FALSE if not.
+   */
+  public function cancelDocument($doc_id);
+
+  /**
+   * Cancels the document target with this document id and locale from the Lingotek service.
+   *
+   * @param string $doc_id
+   *   The document id in Lingotek.
+   * @param string $locale
+   *   The locale target we want to cancel the translation.
+   *
+   * @return bool
+   *   TRUE if the document target was successfully cancelled. FALSE if not.
+   */
+  public function cancelDocumentTarget($doc_id, $locale);
 
 }

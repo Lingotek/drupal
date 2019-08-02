@@ -29,6 +29,27 @@ trait LingotekManagementTestTrait {
   }
 
   /**
+   * Asserts there is no link for uploading the content.
+   *
+   * @param int|string $entity_id
+   *   The entity ID. Optional, defaults to 1.
+   * @param string $entity_type_id
+   *   The entity type ID. Optional, defaults to node.
+   * @param string|null $prefix
+   *   Language prefix if any. Optional, defaults to NULL.
+   */
+  protected function assertNoLingotekUploadLink($entity_id = 1, $entity_type_id = 'node', $prefix = NULL, $destination_entity_type_id = NULL, $destination_entity_id = NULL) {
+    $basepath = \Drupal::request()->getBasePath();
+    $languagePrefix = ($prefix === NULL ? '' : '/' . $prefix);
+    $destination_entity_type_id = $destination_entity_type_id ?: $entity_type_id;
+    $href = $basepath . $languagePrefix . '/admin/lingotek/entity/upload/' . $entity_type_id . '/' . $entity_id;
+    if ($destination = $this->getDestination($destination_entity_type_id, $prefix)) {
+      $href .= $destination;
+    }
+    $this->assertNoLinkByHref($href);
+  }
+
+  /**
    * Asserts there is a link for updating the content.
    *
    * @param string $document_id
@@ -279,8 +300,19 @@ trait LingotekManagementTestTrait {
     return 'download:' . $langcode;
   }
 
+  /**
+   * @deprecated in 8.x-2.14, will be removed in 8.x-2.16. Use ::getBulkOperationNameForCancel instead.
+   */
   protected function getBulkOperationNameForDisassociate($entity_type_id) {
-    return 'disassociate';
+    return $this->getBulkOperationNameForCancel($entity_type_id);
+  }
+
+  protected function getBulkOperationNameForCancel($entity_type_id) {
+    return 'cancel';
+  }
+
+  protected function getBulkOperationNameForCancelTarget($langcode, $entity_type_id) {
+    return 'cancel:' . $langcode;
   }
 
   protected function getBulkOperationNameForDeleteTranslation($langcode, $entity_type_id) {

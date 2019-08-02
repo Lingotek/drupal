@@ -103,9 +103,9 @@ class LingotekConfigEntityBulkProfileTest extends LingotekTestBase {
 
   /**
    * Tests that the translation profiles can be updated with the bulk actions after
-   * disassociating.
+   * cancelling.
    */
-  public function testChangeTranslationProfileBulkAfterDisassociating() {
+  public function testChangeTranslationProfileBulkAfterCancelling() {
     // Login as admin.
     $this->drupalLogin($this->rootUser);
 
@@ -116,7 +116,7 @@ class LingotekConfigEntityBulkProfileTest extends LingotekTestBase {
 
     $edit = [
       'table[article]' => TRUE,
-      $this->getBulkOperationFormName() => $this->getBulkOperationNameForDisassociate('node'),
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForCancel('node'),
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 

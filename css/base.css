@@ -5,7 +5,7 @@
 
 /**
  * Lingotek Translation icon in admin menu.
- * 
+ *
  * @see lingotek.icons.css
  */
 .toolbar-icon-translation:before {
@@ -189,6 +189,24 @@ a.language-icon {
   }
   .language-icon.target-untracked:hover {
     background-color: #8c8c8c;
+  }
+
+.language-icon.source-cancelled,
+.language-icon.target-cancelled {
+  background-color:#ffffff;
+  border: 1px solid #b71c1c;
+  color: #b71c1c;
+}
+  .language-icon.source-cancelled a,
+  .language-icon.target-cancelled a {
+      color: #ffffff;
+  }
+
+  .language-icon.source-cancelled:hover,
+  .language-icon.target-cancelled:hover {
+    background-color:#ffffff;
+    color: #9e0303;
+    border: 1px solid #9e0303;
   }
 
 .language-icon.source-disabled,

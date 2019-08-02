@@ -249,6 +249,8 @@ interface LingotekConfigurationServiceInterface {
    * Determines if remote documents must be deleted after disassociation.
    *
    * @return bool
+   *
+   * @deprecated in 8.x-2.14, will be removed in 8.x-2.16. We should cancel everytime.
    */
   public function mustDeleteRemoteAfterDisassociation();
 
@@ -257,6 +259,8 @@ interface LingotekConfigurationServiceInterface {
    *
    * @param bool $delete
    *   TRUE if remote documents must be deleted, FALSE otherwise.
+   *
+   * @deprecated in 8.x-2.14, will be removed in 8.x-2.16. They always be cancelled.
    */
   public function setDeleteRemoteAfterDisassociation($delete);
 

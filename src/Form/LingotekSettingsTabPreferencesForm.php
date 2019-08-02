@@ -110,13 +110,6 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
       '#default_value' => $lingotek_config->getPreference('language_specific_profiles'),
     ];
 
-    $form['prefs']['delete_tms_documents_upon_disassociation'] = [
-      '#type' => 'checkbox',
-      '#title' => t('Delete documents from Lingotek TMS when disassociating'),
-      '#description' => t('Your documents will remain in your Drupal site but will be deleted from the Lingotek TMS if this option is checked.'),
-      '#default_value' => $lingotek_config->mustDeleteRemoteAfterDisassociation(),
-    ];
-
     $form['prefs']['advanced_parsing'] = [
       '#type' => 'checkbox',
       '#title' => t('Enable advanced features'),
@@ -188,7 +181,6 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
     $lingotek_config->setPreference('advanced_parsing', $form_values['advanced_parsing']);
     $lingotek_config->setPreference('append_type_to_title', $form_values['append_type_to_title']);
     $lingotek_config->setPreference('target_download_status', $form_values['target_download_status']);
-    $lingotek_config->setDeleteRemoteAfterDisassociation($form_values['delete_tms_documents_upon_disassociation']);
     $lingotek_config->setPreference('enable_download_source', $form_values['enable_download_source']);
     parent::submitForm($form, $form_state);
   }

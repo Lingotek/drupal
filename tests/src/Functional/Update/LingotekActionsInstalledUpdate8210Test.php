@@ -51,7 +51,8 @@ class LingotekActionsInstalledUpdate8210Test extends UpdatePathTestBase {
     // action for disassociating.
     // After lingotek_update_8214 count on 9 more.
     // After lingotek_update_8216 count on 4 more.
-    $this->assertCount(19 + 6 + 9 + 4, $actions);
+    // After lingotek_update_8219 count on 3 more.
+    $this->assertCount(19 + 6 + 9 + 4 + 3, $actions);
 
     $expectedActions = [
       'node_lingotek_upload_action',
@@ -59,7 +60,9 @@ class LingotekActionsInstalledUpdate8210Test extends UpdatePathTestBase {
       'node_lingotek_request_translations_action',
       'node_lingotek_check_translations_action',
       'node_lingotek_download_translations_action',
-      'node_lingotek_disassociate_action',
+      // After lingotek_update_8219 cancel replaces disassociate.
+      // 'node_lingotek_disassociate_action',
+      'node_lingotek_cancel_action',
     ];
     foreach ($expectedActions as $expectedAction) {
       $this->assertArrayHasKey($expectedAction, $actions, 'There is an action with id: ' . $expectedAction);

@@ -50,7 +50,8 @@ class LingotekActionsInstalledUpdate8214Test extends UpdatePathTestBase {
     // There should be 6 new actions: 5 steps in the complete roundtrip plus the
     // action for disassociating.
     // After lingotek_update_8216 count on 4 more.
-    $this->assertCount(25 + 9 + 4, $actions);
+    // After lingotek_update_8219 count on 3 more.
+    $this->assertCount(25 + 9 + 4 + 3, $actions);
 
     /**
      * 0 => 'comment_delete_action',

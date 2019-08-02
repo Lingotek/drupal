@@ -111,6 +111,9 @@ class LingotekApi implements LingotekApiInterface {
     return $response;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function deleteDocument($id) {
     try {
       $this->logger->debug('Lingotek::deleteDocument called with id ' . $id);
@@ -126,6 +129,58 @@ class LingotekApi implements LingotekApiInterface {
       throw new LingotekApiException('Failed to delete document: ' . $e->getMessage(), $http_status_code, $e);
     }
     $this->logger->debug('deleteDocument response received, code %code and body %body', ['%code' => $response->getStatusCode(), '%body' => (string) $response->getBody(TRUE)]);
+    return $response;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function cancelDocument($id) {
+    try {
+      $this->logger->debug('Lingotek::cancelDocument called with id ' . $id);
+      $args = [
+        'id' => $id,
+        'cancelled_reason' => 'CANCELLED_BY_AUTHOR',
+      ];
+      $response = $this->lingotekClient->post('/api/document/' . $id . '/cancel', $args);
+    }
+    catch (\Exception $e) {
+      $http_status_code = $e->getCode();
+      if ($http_status_code === Response::HTTP_NOT_FOUND) {
+        $this->logger->error('Error cancelling document: %message.', ['%message' => $e->getMessage()]);
+        return new Response($e->getMessage(), Response::HTTP_NOT_FOUND);
+      }
+      $this->logger->error('Error cancelling document: %message.', ['%message' => $e->getMessage()]);
+      throw new LingotekApiException('Failed to cancel document: ' . $e->getMessage(), $http_status_code, $e);
+    }
+    $this->logger->debug('cancelDocument response received, code %code and body %body', ['%code' => $response->getStatusCode(), '%body' => (string) $response->getBody(TRUE)]);
+    return $response;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function cancelDocumentTarget($document_id, $locale) {
+    try {
+      $this->logger->debug('Lingotek::cancelDocumentTarget called with id ' . $document_id . ' and locale ' . $locale);
+      $args = [
+        'id' => $document_id,
+        'locale' => $locale,
+        'cancelled_reason' => 'CANCELLED_BY_AUTHOR',
+        'mark_invoiceable' => 'true',
+      ];
+      $response = $this->lingotekClient->post('/api/document/' . $document_id . '/translation/' . $locale . '/cancel', $args);
+    }
+    catch (\Exception $e) {
+      $http_status_code = $e->getCode();
+      if ($http_status_code === Response::HTTP_NOT_FOUND) {
+        $this->logger->error('Error cancelling document target: %message.', ['%message' => $e->getMessage()]);
+        return new Response($e->getMessage(), Response::HTTP_NOT_FOUND);
+      }
+      $this->logger->error('Error cancelling document target: %message.', ['%message' => $e->getMessage()]);
+      throw new LingotekApiException('Failed to cancel document target: ' . $e->getMessage(), $http_status_code, $e);
+    }
+    $this->logger->debug('cancelDocumentTarget response received, code %code and body %body', ['%code' => $response->getStatusCode(), '%body' => (string) $response->getBody(TRUE)]);
     return $response;
   }
 

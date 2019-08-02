@@ -2,14 +2,14 @@
 
 namespace Drupal\Tests\lingotek\Functional\Views;
 
-use Drupal\Tests\lingotek\Functional\LingotekNodeBulkDisassociateTest;
+use Drupal\Tests\lingotek\Functional\LingotekNodeBulkCancelTest;
 
 /**
- * Tests disassociating a node using the bulk management view.
+ * Tests cancelling a node using the bulk management view.
  *
  * @group lingotek
  */
-class LingotekNodeBulkViewsDisassociateTest extends LingotekNodeBulkDisassociateTest {
+class LingotekNodeBulkViewsCancelTest extends LingotekNodeBulkCancelTest {
 
   use LingotekViewsTestTrait;
 
