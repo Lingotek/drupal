@@ -28,10 +28,10 @@ class LingotekNotificationController extends LingotekControllerBase {
 
     $request_method = $request->getMethod();
     $http_status_code = Response::HTTP_ACCEPTED;
-    $type = $request->get('type');
+    $type = $request->query->get('type');
     $result = [];
     $messages = [];
-    $security_token = $request->get('security_token');
+    $security_token = $request->query->get('security_token');
     if ($security_token == 1) {
       $http_status_code = Response::HTTP_ACCEPTED;
     }
@@ -49,7 +49,7 @@ class LingotekNotificationController extends LingotekControllerBase {
 
       // a document has uploaded and imported successfully for document_id
       case 'document_uploaded':
-        $entity = $this->getEntity($request->get('document_id'));
+        $entity = $this->getEntity($request->query->get('document_id'));
         /** @var \Drupal\lingotek\Entity\LingotekProfile $profile */
         $profile = $this->getProfile($entity);
         if ($entity) {
@@ -93,15 +93,15 @@ class LingotekNotificationController extends LingotekControllerBase {
          * 'type' => 'target_deleted',
          * )
          */
-        $entity = $this->getEntity($request->get('document_id'));
+        $entity = $this->getEntity($request->query->get('document_id'));
         if ($entity !== NULL) {
           if ($entity instanceof ConfigEntityInterface) {
             $translation_service = $config_translation_service;
           }
-          $locale = $request->get('locale');
+          $locale = $request->query->get('locale');
           $langcode = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale)
             ->id();
-          $user_login = $request->get('deleted_by_user_login');
+          $user_login = $request->query->get('deleted_by_user_login');
           $translation_service->setTargetStatus($entity, $langcode, Lingotek::STATUS_UNTRACKED);
           $this->logger->log(LogLevel::DEBUG, 'Target @locale for entity @label deleted by @user_login', [
             '@locale' => $locale,
@@ -118,9 +118,9 @@ class LingotekNotificationController extends LingotekControllerBase {
         }
         else {
           $http_status_code = Response::HTTP_NO_CONTENT;
-          $document_id = $request->get('document_id');
-          $user_login = $request->get('deleted_by_user_login');
-          $locale = $request->get('locale');
+          $document_id = $request->query->get('document_id');
+          $user_login = $request->query->get('deleted_by_user_login');
+          $locale = $request->query->get('locale');
           $this->logger->log(LogLevel::WARNING, 'Target @locale for document @document_id deleted by @user_login in the TMS, but document not found on the system.', [
             '@locale' => $locale,
             '@user_login' => $user_login,
@@ -146,12 +146,12 @@ class LingotekNotificationController extends LingotekControllerBase {
          * 'type' => 'document_deleted',
          * )
          */
-        $entity = $this->getEntity($request->get('document_id'));
+        $entity = $this->getEntity($request->query->get('document_id'));
         if ($entity !== NULL) {
           if ($entity instanceof ConfigEntityInterface) {
             $translation_service = $config_translation_service;
           }
-          $user_login = $request->get('deleted_by_user_login');
+          $user_login = $request->query->get('deleted_by_user_login');
           $translation_service->deleteMetadata($entity);
           $this->logger->log(LogLevel::DEBUG, 'Document for entity @label deleted by @user_login in the TMS.', [
             '@user_login' => $user_login,
@@ -165,8 +165,8 @@ class LingotekNotificationController extends LingotekControllerBase {
         }
         else {
           $http_status_code = Response::HTTP_NO_CONTENT;
-          $document_id = $request->get('document_id');
-          $user_login = $request->get('deleted_by_user_login');
+          $document_id = $request->query->get('document_id');
+          $user_login = $request->query->get('deleted_by_user_login');
           $this->logger->log(LogLevel::WARNING, 'Document @document_id deleted by @user_login in the TMS, but not found on the system.', [
             '@user_login' => $user_login,
             '@document_id' => $document_id,
@@ -178,8 +178,8 @@ class LingotekNotificationController extends LingotekControllerBase {
       case 'target':
         // TO-DO: download target for locale_code and document_id (also, progress and complete params can be used as needed)
         // ex. ?project_id=103956f4-17cf-4d79-9d15-5f7b7a88dee2&locale_code=de-DE&document_id=bbf48a7b-b201-47a0-bc0e-0446f9e33a2f&complete=true&locale=de_DE&progress=100&type=target
-        $document_id = $request->get('document_id');
-        $locale = $request->get('locale');
+        $document_id = $request->query->get('document_id');
+        $locale = $request->query->get('locale');
         $langcode = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale)
           ->id();
 
