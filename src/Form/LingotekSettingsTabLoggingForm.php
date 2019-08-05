@@ -24,7 +24,7 @@ class LingotekSettingsTabLoggingForm extends LingotekConfigFormBase {
     $form['log'] = [
       '#type' => 'details',
       '#title' => t('Logging'),
-      '#description' => t('Help troubleshoot any issues with the module. The logging enabled below will be available in the') . ' ' . \Drupal::l(t('Drupal watchdog.'), Url::fromUri('internal:/admin/reports/dblog')),
+      '#description' => t('Help troubleshoot any issues with the module. The logging enabled below will be available in the') . ' ' . $this->linkGenerator->generate(t('Drupal watchdog.'), Url::fromUri('internal:/admin/reports/dblog')),
     ];
 
     $form['log']['error_logging'] = [
