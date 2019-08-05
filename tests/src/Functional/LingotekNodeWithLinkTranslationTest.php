@@ -256,7 +256,7 @@ class LingotekNodeWithLinkTranslationTest extends LingotekTestBase {
     // The original link is kept.
     $this->assertLinkByHref('http://drupal.org');
     // Test the error is logged.
-    $status = (bool) db_query_range('SELECT 1 FROM {watchdog} WHERE message = :message', 0, 1, [':message' => "Field field_link for node Llamas are cool in language es-ar not saved, invalid uri \"this is not a valid uri\""]);
+    $status = (bool) \Drupal::database()->queryRange('SELECT 1 FROM {watchdog} WHERE message = :message', 0, 1, [':message' => "Field field_link for node Llamas are cool in language es-ar not saved, invalid uri \"this is not a valid uri\""]);
     $this->assert($status, 'A watchdog message was logged for the invalid uri in a field');
   }
 
