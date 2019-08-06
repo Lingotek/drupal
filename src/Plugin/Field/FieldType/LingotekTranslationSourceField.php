@@ -17,11 +17,15 @@ class LingotekTranslationSourceField extends FieldItemList implements FieldItemL
     $metadata = $this->getEntity();
     $entity_type_id = $metadata->getContentEntityTypeId();
     $entity_id = $metadata->getContentEntityId();
-    $target_entity = \Drupal::entityTypeManager()
-      ->getStorage($entity_type_id)
-      ->load($entity_id);
-
-    $this->list[0] = $this->createItem(0, $target_entity->language()->getId());
+    if ($entity_type_id && $entity_id) {
+      $target_entity = \Drupal::entityTypeManager()
+        ->getStorage($entity_type_id)
+        ->load($entity_id);
+      if ($target_entity) {
+        $this->list[0] = $this->createItem(0,
+          $target_entity->language()->getId());
+      }
+    }
   }
 
 }

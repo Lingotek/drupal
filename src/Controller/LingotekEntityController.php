@@ -93,6 +93,9 @@ class LingotekEntityController extends LingotekControllerBase {
       if ($translation_service->uploadDocument($entity)) {
         $this->messenger()->addStatus(t('@entity_type %title has been uploaded.', ['@entity_type' => ucfirst($entity->getEntityTypeId()), '%title' => $entity->label()]));
       }
+      else {
+        $this->messenger()->addError(t('The upload for @entity_type %title failed. Check your configuration and profile and try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
+      }
     }
     catch (LingotekApiException $exception) {
       $translation_service->setSourceStatus($entity, Lingotek::STATUS_ERROR);
@@ -108,6 +111,9 @@ class LingotekEntityController extends LingotekControllerBase {
     try {
       if ($translation_service->updateDocument($entity)) {
         $this->messenger()->addStatus(t('@entity_type %title has been updated.', ['@entity_type' => ucfirst($entity->getEntityTypeId()), '%title' => $entity->label()]));
+      }
+      else {
+        $this->messenger()->addError(t('The upload for @entity_type %title failed. Check your configuration and profile and try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
       }
     }
     catch (LingotekApiException $exception) {
