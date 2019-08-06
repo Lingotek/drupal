@@ -4,7 +4,6 @@ namespace Drupal\lingotek\Controller;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Entity\Query\QueryFactory;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Url;
@@ -25,19 +24,11 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 class LingotekDashboardController extends LingotekControllerBase {
 
   /**
-   * The entity query factory.
-   *
-   * @var \Drupal\Core\Entity\Query\QueryFactory
-   */
-  protected $queryFactory;
-
-  /**
    * The language manager.
    *
    * @var \Drupal\Core\Language\LanguageManagerInterface
    */
   protected $languageManager;
-
 
   /**
    * @var \Drupal\lingotek\LingotekConfigurationServiceInterface
@@ -53,8 +44,6 @@ class LingotekDashboardController extends LingotekControllerBase {
    *   The factory for configuration objects.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
-   * @param \Drupal\Core\Entity\Query\QueryFactory $query_factory
-   *   The entity query factory.
    * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
    *   The language manager.
    * @param \Drupal\lingotek\LingotekInterface $lingotek
@@ -68,9 +57,8 @@ class LingotekDashboardController extends LingotekControllerBase {
    * @param \Psr\Log\LoggerInterface $logger
    *   A logger instance.
    */
-  public function __construct(Request $request, ConfigFactoryInterface $config_factory, EntityTypeManagerInterface $entity_type_manager, QueryFactory $query_factory, LanguageManagerInterface $language_manager, LingotekInterface $lingotek, LanguageLocaleMapperInterface $language_locale_mapper, LingotekConfigurationServiceInterface $lingotek_configuration, FormBuilderInterface $form_builder, LoggerInterface $logger) {
+  public function __construct(Request $request, ConfigFactoryInterface $config_factory, EntityTypeManagerInterface $entity_type_manager, LanguageManagerInterface $language_manager, LingotekInterface $lingotek, LanguageLocaleMapperInterface $language_locale_mapper, LingotekConfigurationServiceInterface $lingotek_configuration, FormBuilderInterface $form_builder, LoggerInterface $logger) {
     parent::__construct($request, $config_factory, $lingotek, $language_locale_mapper, $form_builder, $logger);
-    $this->queryFactory = $query_factory;
     $this->entityTypeManager = $entity_type_manager;
     $this->languageManager = $language_manager;
     $this->lingotek_configuration = $lingotek_configuration;
@@ -84,7 +72,6 @@ class LingotekDashboardController extends LingotekControllerBase {
       $container->get('request_stack')->getCurrentRequest(),
       $container->get('config.factory'),
       $container->get('entity_type.manager'),
-      $container->get('entity.query'),
       $container->get('language_manager'),
       $container->get('lingotek'),
       $container->get('lingotek.language_locale_mapper'),
@@ -147,14 +134,14 @@ class LingotekDashboardController extends LingotekControllerBase {
         $direction = $request->get('direction');
         if (isset($language, $lingotek_locale, $direction)) {
           // First, we try if there is a disabled language with that locale.
-          $existingLanguage = $this->queryFactory->get('configurable_language')
+          $existingLanguage = $languageStorage->getQuery()
             ->condition('third_party_settings.lingotek.disabled', TRUE)
             ->condition('third_party_settings.lingotek.locale', $lingotek_locale)
             ->execute();
           if (!$existingLanguage) {
             // If we didn't find it, maybe the language was the default
             // locale, and it didn't have a locale stored.
-            $existingLanguage = $this->queryFactory->get('configurable_language')
+            $existingLanguage = $languageStorage->getQuery()
               ->condition('third_party_settings.lingotek.disabled', TRUE)
               ->condition('id', LingotekLocale::convertLingotek2Drupal($lingotek_locale, FALSE))
               ->execute();
@@ -232,6 +219,7 @@ class LingotekDashboardController extends LingotekControllerBase {
       if (!is_null($lingotek_locale_requested) && $lingotek_locale_requested != $lingotek_locale) {
         continue;
       }
+
       $language_report = $this->getLanguageReport($language);
       if ($lingotek_locale_requested == $lingotek_locale) {
         $response = $language_report;
@@ -327,7 +315,7 @@ class LingotekDashboardController extends LingotekControllerBase {
   }
 
   protected function getSourceTypeCount($langcode, $type) {
-    $count = $this->queryFactory->get($type)
+    $count = $this->entityTypeManager->getStorage($type)->getQuery()
       ->condition('langcode', $langcode)
       ->condition('default_langcode', 1)
       ->count()
@@ -345,7 +333,7 @@ class LingotekDashboardController extends LingotekControllerBase {
   }
 
   protected function getTargetTypeCount($langcode, $type) {
-    $count = $this->queryFactory->get($type)
+    $count = $this->entityTypeManager->getStorage($type)->getQuery()
       ->condition('langcode', $langcode)
       ->condition('default_langcode', 0)
       ->count()

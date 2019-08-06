@@ -11,7 +11,6 @@ namespace Drupal\Tests\lingotek\Unit\Form {
   use Drupal\Core\Entity\EntityTypeManagerInterface;
   use Drupal\Core\Entity\EntityStorageInterface;
   use Drupal\Core\Entity\EntityTypeInterface;
-  use Drupal\Core\Entity\Query\QueryFactory;
   use Drupal\Core\Extension\ModuleHandlerInterface;
   use Drupal\Core\Form\FormState;
   use Drupal\Core\Language\LanguageManagerInterface;
@@ -145,9 +144,6 @@ namespace Drupal\Tests\lingotek\Unit\Form {
       $this->entityFieldManager = $this->createMock(EntityFieldManagerInterface::class);
       $this->entityTypeBundleInfo = $this->createMock(EntityTypeBundleInfoInterface::class);
       $this->languageManager = $this->createMock(LanguageManagerInterface::class);
-      $this->entityQuery = $this->getMockBuilder(QueryFactory::class)
-        ->disableOriginalConstructor()
-        ->getMock();
       $this->lingotek = $this->createMock(LingotekInterface::class);
       $this->lingotekConfiguration = $this->createMock(LingotekConfigurationServiceInterface::class);
       $this->languageLocaleMapper = $this->createMock(LanguageLocaleMapperInterface::class);
@@ -163,7 +159,6 @@ namespace Drupal\Tests\lingotek\Unit\Form {
         $this->connection,
         $this->entityTypeManager,
         $this->languageManager,
-        $this->entityQuery,
         $this->lingotek,
         $this->lingotekConfiguration,
         $this->languageLocaleMapper,

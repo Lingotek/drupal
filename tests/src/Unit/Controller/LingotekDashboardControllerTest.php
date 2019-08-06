@@ -4,7 +4,7 @@ namespace Drupal\Tests\lingotek\Unit\Controller;
 
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeManager;
-use Drupal\Core\Entity\Query\QueryFactory;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\Query\QueryInterface;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Language\Language;
@@ -45,13 +45,6 @@ class LingotekDashboardControllerTest extends UnitTestCase {
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface|\PHPUnit_Framework_MockObject_MockObject
    */
   protected $entityTypeManager;
-
-  /**
-   * The mock entity query factory.
-   *
-   * @var \Drupal\Core\Entity\Query\QueryFactory|\PHPUnit_Framework_MockObject_MockObject
-   */
-  protected $entityQueryFactory;
 
   /**
    * The language manager.
@@ -96,6 +89,13 @@ class LingotekDashboardControllerTest extends UnitTestCase {
   protected $logger;
 
   /**
+   * The mocked entity storage.
+   *
+   * @var \Drupal\Core\Entity\Sql\SqlContentEntityStorage|\PHPUnit_Framework_MockObject_MockObject
+   */
+  protected $entityStorage;
+
+  /**
    * The controller under test.
    *
    * @var \Drupal\lingotek\Controller\LingotekDashboardController
@@ -110,12 +110,7 @@ class LingotekDashboardControllerTest extends UnitTestCase {
 
     $this->request = $this->createMock(Request::class);
     $this->configFactory = $this->getConfigFactoryStub(['lingotek.settings' => ['account' => ['access_token' => 'at', 'login_id' => 'login']]]);
-    $this->entityTypeManager = $this->getMockBuilder(EntityTypeManager::class)
-      ->disableOriginalConstructor()
-      ->getMock();
-    $this->entityQueryFactory = $this->getMockBuilder(QueryFactory::class)
-      ->disableOriginalConstructor()
-      ->getMock();
+    $this->entityTypeManager = $this->createMock(EntityTypeManagerInterface::class);
     $this->languageManager = $this->createMock(LanguageManagerInterface::class);
     $this->lingotek = $this->createMock(LingotekInterface::class);
     $this->languageLocaleMapper = $this->createMock(LanguageLocaleMapperInterface::class);
@@ -127,7 +122,6 @@ class LingotekDashboardControllerTest extends UnitTestCase {
       $this->request,
       $this->configFactory,
       $this->entityTypeManager,
-      $this->entityQueryFactory,
       $this->languageManager,
       $this->lingotek,
       $this->languageLocaleMapper,
@@ -204,8 +198,8 @@ class LingotekDashboardControllerTest extends UnitTestCase {
       ->method('execute')
       ->willReturn(3);
 
-    $this->entityQueryFactory->expects($this->any())
-      ->method('get')
+    $this->entityStorage->expects($this->any())
+      ->method('getQuery')
       ->willReturn($query);
 
     $this->languageManager->expects($this->any())
@@ -248,13 +242,13 @@ class LingotekDashboardControllerTest extends UnitTestCase {
    */
   protected function setUpConfigurableLanguageMock() {
     $language = $this->createMock(ConfigurableLanguageInterface::class);
-    $storage = $this->createMock(EntityStorageInterface::class);
-    $storage->expects($this->any())
+    $this->entityStorage = $this->createMock(EntityStorageInterface::class);
+    $this->entityStorage->expects($this->any())
       ->method('load')
       ->willReturn($language);
     $this->entityTypeManager->expects($this->any())
       ->method('getStorage')
-      ->willReturn($storage);
+      ->willReturn($this->entityStorage);
   }
 
 }

@@ -23,7 +23,6 @@ class LingotekManagementForm extends LingotekManagementFormBase {
       $container->get('database'),
       $container->get('entity_type.manager'),
       $container->get('language_manager'),
-      $container->get('entity.query'),
       $container->get('lingotek'),
       $container->get('lingotek.configuration'),
       $container->get('lingotek.language_locale_mapper'),
