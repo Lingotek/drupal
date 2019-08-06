@@ -762,7 +762,58 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
       $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node'),
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
-    // Nothing happened.
+
+    // The node was re-uploaded and target statuses reset.
+    $this->assertSourceStatus('EN', Lingotek::STATUS_IMPORTING);
+    $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
+  }
+
+  /**
+   * Tests that default profile is used after cancelation.
+   */
+  public function testNoAutomaticUploadAfterCancelation() {
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    $this->goToContentBulkManagementForm();
+
+    // I can init the upload of content.
+    $this->assertLingotekUploadLink();
+
+    $edit = [
+      'table[1]' => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    $edit = [
+      'table[1]' => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForCheckUpload('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    $edit = [
+      'table[1]' => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForCancel('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    $this->assertSourceStatus('EN', Lingotek::STATUS_CANCELLED);
+    $this->assertTargetStatus('ES', Lingotek::STATUS_CANCELLED);
+
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'automatic';
+    $this->saveAndKeepPublishedNodeForm($edit, 1);
+
+    $this->goToContentBulkManagementForm();
     $this->assertSourceStatus('EN', Lingotek::STATUS_CANCELLED);
     $this->assertTargetStatus('ES', Lingotek::STATUS_CANCELLED);
   }

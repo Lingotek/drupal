@@ -67,7 +67,7 @@ class LingotekSourceStatus extends RenderElement {
         ['doc_id' => \Drupal::service('lingotek.content_translation')->getDocumentId($entity)],
         ['query' => $this->getDestinationWithQueryArray()]);
     }
-    if ($source_status == Lingotek::STATUS_EDITED || $source_status == Lingotek::STATUS_UNTRACKED || $source_status == Lingotek::STATUS_ERROR) {
+    if ($source_status == Lingotek::STATUS_EDITED || $source_status == Lingotek::STATUS_UNTRACKED || $source_status == Lingotek::STATUS_ERROR || $source_status == Lingotek::STATUS_CANCELLED) {
       if ($doc_id = \Drupal::service('lingotek.content_translation')->getDocumentId($entity)) {
         $url = Url::fromRoute('lingotek.entity.update',
           ['doc_id' => $doc_id],

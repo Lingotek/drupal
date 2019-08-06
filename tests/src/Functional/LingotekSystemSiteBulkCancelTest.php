@@ -70,11 +70,12 @@ class LingotekSystemSiteBulkCancelTest extends LingotekTestBase {
     $this->assertIdentical(Lingotek::STATUS_CANCELLED, $config_translation_service->getConfigSourceStatus($mapper));
     $this->assertIdentical(Lingotek::STATUS_CANCELLED, $config_translation_service->getConfigTargetStatus($mapper, 'es'));
 
-    // We cannot request again.
+    // We can request again.
     $basepath = \Drupal::request()->getBasePath();
-    $this->assertNoLinkByHref($basepath . '/admin/lingotek/config/upload/system.site_information_settings/system.site_information_settings?destination=' . $basepath . '/admin/lingotek/config/manage');
-
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/system.site_information_settings/system.site_information_settings?destination=' . $basepath . '/admin/lingotek/config/manage');
     $this->assertNoLinkByHref($basepath . '/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/es_ES?destination=' . $basepath . '/admin/lingotek/config/manage');
+
+    $this->createAndTranslateSystemSiteWithLinks();
   }
 
   /**

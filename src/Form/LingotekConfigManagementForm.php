@@ -1572,7 +1572,7 @@ class LingotekConfigManagementForm extends FormBase {
         $args,
         ['query' => $this->getDestinationArray()]);
     }
-    if ($source_status == Lingotek::STATUS_EDITED || $source_status == Lingotek::STATUS_UNTRACKED || $source_status == Lingotek::STATUS_ERROR) {
+    if ($source_status == Lingotek::STATUS_EDITED || $source_status == Lingotek::STATUS_UNTRACKED || $source_status == Lingotek::STATUS_ERROR || $source_status == Lingotek::STATUS_CANCELLED) {
       if ($document_id) {
         $url = Url::fromRoute('lingotek.config.update',
           $args,

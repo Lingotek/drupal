@@ -79,11 +79,12 @@ class LingotekContentTypeBulkCancelTest extends LingotekTestBase {
     $this->assertIdentical(Lingotek::STATUS_CANCELLED, $config_translation_service->getSourceStatus($entity));
     $this->assertIdentical(Lingotek::STATUS_CANCELLED, $config_translation_service->getTargetStatus($entity, 'es'));
 
-    // We cannot request again.
+    // We can request again.
     $basepath = \Drupal::request()->getBasePath();
-    $this->assertNoLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
-
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
     $this->assertNoLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/es_ES?destination=' . $basepath . '/admin/lingotek/config/manage');
+
+    $this->createAndTranslateContentTypeWithLinks();
   }
 
   /**

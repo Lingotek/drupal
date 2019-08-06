@@ -95,9 +95,11 @@ class LingotekNodeBulkCancelTest extends LingotekTestBase {
     $this->assertIdentical(Lingotek::STATUS_CANCELLED, $content_translation_service->getSourceStatus($node));
     $this->assertIdentical(Lingotek::STATUS_CANCELLED, $content_translation_service->getTargetStatus($node, 'es'));
 
-    // We cannot request again.
-    $this->assertNoLingotekUploadLink();
+    // We can request again.
+    $this->assertLingotekUploadLink();
     $this->assertNoLingotekRequestTranslationLink('es_ES');
+
+    $this->createAndTranslateNodeWithLinks();
   }
 
   /**

@@ -360,7 +360,8 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
    */
   public function uploadDocument(ConfigEntityInterface $entity, $job_id = NULL) {
     $profile = $this->lingotekConfiguration->getConfigEntityProfile($entity);
-    if ($profile->id() === Lingotek::PROFILE_DISABLED || $this->getSourceStatus($entity) === Lingotek::STATUS_CANCELLED) {
+    // We can reupload if the document is cancelled.
+    if ($profile->id() === Lingotek::PROFILE_DISABLED) {
       return FALSE;
     }
     // If job id was not set in the form, it may be already assigned.
@@ -978,7 +979,8 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
   public function uploadConfig($mapper_id, $job_id = NULL) {
     $mapper = $this->mappers[$mapper_id];
     $profile = $this->lingotekConfiguration->getConfigProfile($mapper_id, FALSE);
-    if ($profile !== NULL && $profile->id() === Lingotek::PROFILE_DISABLED || $this->getConfigSourceStatus($mapper) === Lingotek::STATUS_CANCELLED) {
+    // We can reupload if the document is cancelled.
+    if ($profile !== NULL && $profile->id() === Lingotek::PROFILE_DISABLED) {
       return FALSE;
     }
     // If job id was not set in the form, it may be already assigned.

@@ -219,8 +219,8 @@ class LingotekConfigBulkProfileTest extends LingotekTestBase {
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
-    $this->assertSourceStatus('EN', Lingotek::STATUS_CANCELLED);
-    $this->assertTargetStatus('ES', Lingotek::STATUS_CANCELLED);
+    $this->assertSourceStatus('EN', Lingotek::STATUS_IMPORTING);
+    $this->assertTargetStatus('ES', Lingotek::STATUS_UNTRACKED);
 
     $edit = [
       'table[system.site_information_settings]' => TRUE,

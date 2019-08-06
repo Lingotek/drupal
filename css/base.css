@@ -199,7 +199,7 @@ a.language-icon {
 }
   .language-icon.source-cancelled a,
   .language-icon.target-cancelled a {
-      color: #ffffff;
+    color: #b71c1c;
   }
 
   .language-icon.source-cancelled:hover,

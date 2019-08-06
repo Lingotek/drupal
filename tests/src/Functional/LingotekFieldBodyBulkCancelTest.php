@@ -86,9 +86,11 @@ class LingotekFieldBodyBulkCancelTest extends LingotekTestBase {
 
     // We cannot request again.
     $basepath = \Drupal::request()->getBasePath();
-    $this->assertNoLinkByHref($basepath . '/admin/lingotek/config/upload/field_config/node.article.body?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/field_config/node.article.body?destination=' . $basepath . '/admin/lingotek/config/manage');
 
     $this->assertNoLinkByHref($basepath . '/admin/lingotek/config/request/field_config/node.article.body/es_ES?destination=' . $basepath . '/admin/lingotek/config/manage');
+
+    $this->createAndTranslateFieldWithLinks();
   }
 
   /**

@@ -761,7 +761,8 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    */
   public function uploadDocument(ContentEntityInterface $entity, $job_id = NULL) {
     $profile = $this->lingotekConfiguration->getEntityProfile($entity);
-    if ($profile->id() === Lingotek::PROFILE_DISABLED || $this->getSourceStatus($entity) === Lingotek::STATUS_CANCELLED) {
+    // We can reupload if the document is cancelled.
+    if ($profile->id() === Lingotek::PROFILE_DISABLED) {
       return FALSE;
     }
     // If job id was not set in the form, it may be already assigned.
