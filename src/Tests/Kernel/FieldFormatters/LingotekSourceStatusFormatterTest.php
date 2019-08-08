@@ -1,8 +1,7 @@
 <?php
 
-namespace Drupal\Tests\lingotek\Kernel\FieldFormatters;
+namespace Drupal\lingotek\Tests\Kernel\FieldFormatters;
 
-use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\entity_test\Entity\EntityTest;
@@ -12,9 +11,9 @@ use Drupal\KernelTests\KernelTestBase;
 use Drupal\language\Entity\ConfigurableLanguage;
 
 /**
- * Tests the timestamp formatters.
+ * Tests the Lingotek source status formatter.
  *
- * @group field
+ * @group lingotek
  */
 class LingotekSourceStatusFormatterTest extends KernelTestBase {
 
@@ -44,10 +43,19 @@ class LingotekSourceStatusFormatterTest extends KernelTestBase {
   protected $display;
 
   /**
+   * The entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp() {
     parent::setUp();
+
+    $this->entityTypeManager = \Drupal::service('entity_type.manager');
 
     $this->installConfig(['system']);
     $this->installConfig(['field']);
@@ -56,7 +64,7 @@ class LingotekSourceStatusFormatterTest extends KernelTestBase {
 
     $this->entityType = 'entity_test';
     $this->bundle = $this->entityType;
-    $this->fieldName = Unicode::strtolower($this->randomMachineName());
+    $this->fieldName = mb_strtolower($this->randomMachineName());
 
     $field_storage = FieldStorageConfig::create([
       'field_name' => $this->fieldName,
