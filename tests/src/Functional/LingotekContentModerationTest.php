@@ -5,6 +5,7 @@ namespace Drupal\Tests\lingotek\Functional;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\workflows\Entity\Workflow;
+use Drupal\Tests\content_moderation\Traits\ContentModerationTestTrait;
 
 /**
  * Tests setting up the integration with content moderation.
@@ -13,6 +14,8 @@ use Drupal\workflows\Entity\Workflow;
  * @group legacy
  */
 class LingotekContentModerationTest extends LingotekTestBase {
+
+  use ContentModerationTestTrait;
 
   /**
    * {@inheritdoc}
