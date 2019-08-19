@@ -102,7 +102,7 @@ class LingotekProfileListBuilder extends DraggableListBuilder {
    * {@inheritdoc}
    */
   public function buildRow(EntityInterface $entity) {
-    $row['label'] = $this->getLabel($entity);
+    $row['label'] = $entity->label();
     $row['auto_upload'] = [
       '#type' => 'checkbox',
       '#title' => t('Set @title for automatic upload', ['@title' => $entity->label()]),
