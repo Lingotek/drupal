@@ -637,7 +637,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
       }
       $langcode = $drupal_language->id();
       $current_target_status = $statuses[$langcode];
-      if (in_array($current_target_status, [Lingotek::STATUS_UNTRACKED, Lingotek::STATUS_DISABLED, Lingotek::STATUS_EDITED, Lingotek::STATUS_REQUEST, Lingotek::STATUS_NONE, Lingotek::STATUS_READY, Lingotek::STATUS_PENDING, NULL])) {
+      if (in_array($current_target_status, [Lingotek::STATUS_UNTRACKED, Lingotek::STATUS_DISABLED, Lingotek::STATUS_EDITED, Lingotek::STATUS_REQUEST, Lingotek::STATUS_NONE, Lingotek::STATUS_READY, Lingotek::STATUS_PENDING, Lingotek::STATUS_CANCELLED, NULL])) {
         if ($progress === Lingotek::STATUS_CANCELLED) {
           $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_CANCELLED);
         }
@@ -1211,7 +1211,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
       }
       $langcode = $drupal_language->id();
       $current_target_status = $statuses[$langcode];
-      if (in_array($current_target_status, [Lingotek::STATUS_UNTRACKED, Lingotek::STATUS_DISABLED, Lingotek::STATUS_EDITED, Lingotek::STATUS_REQUEST, Lingotek::STATUS_NONE, Lingotek::STATUS_READY, Lingotek::STATUS_PENDING, NULL])) {
+      if (in_array($current_target_status, [Lingotek::STATUS_UNTRACKED, Lingotek::STATUS_DISABLED, Lingotek::STATUS_EDITED, Lingotek::STATUS_REQUEST, Lingotek::STATUS_NONE, Lingotek::STATUS_READY, Lingotek::STATUS_PENDING, Lingotek::STATUS_CANCELLED, NULL])) {
         if ($progress === Lingotek::STATUS_CANCELLED) {
           $this->setConfigTargetStatus($mapper, $langcode, Lingotek::STATUS_CANCELLED);
         }

@@ -281,10 +281,16 @@ class LingotekFake implements LingotekInterface {
     \Drupal::state()->set('lingotek.checked_target_locale', $locale);
     // Return true if translation is done.
     if (\Drupal::state()->get('lingotek.document_completion', NULL) === NULL) {
+      $result = TRUE;
       $requested_locales = \Drupal::state()->get('lingotek.requested_locales', []);
       if (!isset($requested_locales[$doc_id]) || !in_array($locale, $requested_locales[$doc_id])) {
-        return FALSE;
+        $result = FALSE;
       }
+      $cancelled_locales = \Drupal::state()->get('lingotek.cancelled_locales', []);
+      if (isset($cancelled_locales[$doc_id]) && in_array($locale, $cancelled_locales[$doc_id])) {
+        $result = 'CANCELLED';
+      }
+      return $result;
     }
     return \Drupal::state()->get('lingotek.document_completion', TRUE);
   }
