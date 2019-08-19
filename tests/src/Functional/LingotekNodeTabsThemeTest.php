@@ -25,7 +25,7 @@ class LingotekNodeTabsThemeTest extends LingotekTestBase {
     parent::setUp();
 
     // Install themes theme.
-    $theme_handler = $this->container->get('theme_handler');
+    $theme_handler = $this->container->get('theme_installer');
     $theme_handler->install(['seven', 'bartik']);
     $this->config('system.theme')
       ->set('default', 'bartik')
