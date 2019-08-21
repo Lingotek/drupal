@@ -467,4 +467,8 @@ class LingotekManagementForm extends LingotekManagementFormBase {
     return $filtersKeys;
   }
 
+  public function getEntityTypeId() {
+    return $this->entityTypeId;
+  }
+
 }

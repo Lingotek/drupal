@@ -605,6 +605,19 @@ function lingotek_form_field_config_edit_form_alter(array &$form, FormStateInter
 }
 
 /**
+ * Implements hook_form_FORM_ID_alter() for 'lingotek_management'.
+ */
+function lingotek_form_lingotek_management_alter(array &$form, FormStateInterface $form_state) {
+  $build_info = $form_state->getBuildInfo();
+  if ($build_info && isset($build_info['callback_object'])) {
+    $formObject = $build_info['callback_object'];
+    if ($formObject->getEntityTypeId() === 'paragraph') {
+      \Drupal::service('lingotek.paragraphs_bulk_form')->form($form, $form_state);
+    }
+  }
+}
+
+/**
  * Implements hook_element_info_alter().
  */
 function lingotek_element_info_alter(&$type) {

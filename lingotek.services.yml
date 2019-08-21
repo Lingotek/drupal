@@ -20,6 +20,9 @@ services:
   lingotek.field_config_edit_form:
     class: Drupal\lingotek\Form\LingotekFieldConfigEditForm
     arguments: ['@lingotek.configuration']
+  lingotek.paragraphs_bulk_form:
+    class: Drupal\lingotek\Form\LingotekParagraphsBulkForm
+    arguments: ['@lingotek.configuration']
   lingotek.element_info_alter:
     class: Drupal\lingotek\Form\LingotekElementInfoAlterForm
     arguments: ['@current_user', '@entity_type.manager', '@router.builder', '@lingotek.configuration']
