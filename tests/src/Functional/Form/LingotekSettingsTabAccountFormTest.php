@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\lingotek\Tests\Form;
+namespace Drupal\Tests\lingotek\Functional\Form;
 
 use Drupal\Tests\lingotek\Functional\LingotekTestBase;
 
@@ -8,6 +8,7 @@ use Drupal\Tests\lingotek\Functional\LingotekTestBase;
  * Tests the Lingotek account settings form.
  *
  * @group lingotek
+ * @group legacy
  */
 class LingotekSettingsTabAccountFormTest extends LingotekTestBase {
 
@@ -44,8 +45,8 @@ class LingotekSettingsTabAccountFormTest extends LingotekTestBase {
     $this->assertTableValue('workflow', 'test_workflow (test_workflow)');
     $this->assertTableValue('project', 'test_project (test_project)');
     $this->assertTableValue('vault', 'test_vault (test_vault)');
-    $this->assertTableValue('filter', 'test_filter (test_filter)');
-    $this->assertTableValue('subfilter', 'test_filter (test_filter)');
+    $this->assertTableValue('filter', 'Drupal Default (drupal_default)');
+    $this->assertTableValue('subfilter', 'Drupal Default (drupal_default)');
     $this->assertTableValue('tms', 'https://myaccount.lingotek.com');
     $this->assertTableValue('gmc', 'https://gmc.lingotek.com');
 
@@ -81,8 +82,8 @@ class LingotekSettingsTabAccountFormTest extends LingotekTestBase {
   public function testTableValuesWithDefaultFilters() {
     $this->drupalGet('admin/lingotek/settings');
 
-    $this->assertTableValue('filter', 'Project Default (drupal_default)');
-    $this->assertTableValue('subfilter', 'Project Default (drupal_default)');
+    $this->assertTableValue('filter', 'Drupal Default (drupal_default)');
+    $this->assertTableValue('subfilter', 'Drupal Default (drupal_default)');
   }
 
   /**
