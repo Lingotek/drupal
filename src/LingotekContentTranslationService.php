@@ -2,6 +2,7 @@
 
 namespace Drupal\lingotek;
 
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\SortArray;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
@@ -12,6 +13,7 @@ use Drupal\Core\Entity\EntityChangedInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\EntityStorageException;
+use Drupal\Core\Entity\RevisionLogInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
@@ -1412,6 +1414,16 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       $moderation_factory = \Drupal::service('lingotek.moderation_factory');
       $moderation_handler = $moderation_factory->getModerationHandler();
       $moderation_handler->performModerationTransitionIfNeeded($translation);
+
+      if ($moderation_handler->isModerationEnabled($translation) && $translation instanceof RevisionLogInterface) {
+        $requestTime = \Drupal::time()->getRequestTime();
+        $translation->setNewRevision(TRUE);
+        $translation->setRevisionUserId(\Drupal::currentUser()->id());
+        $translation->setRevisionCreationTime($requestTime);
+        $translation->setRevisionTranslationAffected(TRUE);
+        $translation->setChangedTime($requestTime);
+        $translation->setRevisionLogMessage((string) new FormattableMarkup('Document translated into @langcode by Lingotek.', ['@langcode' => strtoupper($langcode)]));
+      }
 
       $translation->save();
 

@@ -217,6 +217,7 @@ class LingotekNodeContentModerationTranslationTest extends LingotekTestBase {
     $this->assertLink('Revisions');
     $this->clickLink('Revisions');
     $this->drupalGet('es/node/1/revisions');
+    $this->assertText('Document translated into ES by Lingotek.');
 
     // Only one revision stored.
     /** @var \Drupal\node\NodeStorageInterface $node_storage */
