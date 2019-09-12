@@ -3,9 +3,12 @@
 namespace Drupal\lingotek\Form;
 
 use Drupal\block\Entity\Block;
+use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Entity\ContentEntityType;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Configure Lingotek
@@ -97,6 +100,14 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
           '#type' => 'checkbox',
           '#label' => $this->t('Enabled'),
           '#default_value' => $lingotek_config->isEnabled($entity_id, $bundle_id),
+          '#ajax' => [
+            'callback' => [$this, 'ajaxRefreshEntityFieldsForm'],
+            'progress' => [
+              'type' => 'throbber',
+              'message' => NULL,
+            ],
+            'wrapper' => 'container-' . str_replace('_', '-', $entity_id) . '-' . $bundle_id,
+          ],
         ];
         $row['content_type'] = [
           '#markup' => $bundle['label'],
@@ -108,7 +119,7 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
           $row['moderation'] = $moderation;
         }
 
-        $row['fields'] = $this->retrieveFields($entity_id, $bundle_id);
+        $row['fields_container'] = $this->generateFieldsForm($form_state, $entity_id, $bundle_id);
         $table[$bundle_id] = $row;
       }
 
@@ -151,11 +162,15 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
           if (!$lingotek_config->isEnabled($entity_id, $bundle_id)) {
             $lingotek_config->setEnabled($entity_id, $bundle_id);
           }
-          foreach ($bundle['fields'] as $field_id => $field_choice) {
+          foreach ($bundle['fields_container']['fields'] as $field_id => $ignore) {
+            $field_choice = isset($bundle['fields'][$field_id]) ? $bundle['fields'][$field_id] : 0;
             if ($field_choice == 1) {
               $lingotek_config->setFieldLingotekEnabled($entity_id, $bundle_id, $field_id);
               if (isset($form_values[$entity_id][$bundle_id]['fields'][$field_id . ':properties'])) {
-                $lingotek_config->setFieldPropertiesLingotekEnabled($entity_id, $bundle_id, $field_id, $form_values[$entity_id][$bundle_id]['fields'][$field_id . ':properties']);
+                // We need to add both arrays, as the first one only includes the checked properties.
+                $property_values = $form_values[$entity_id][$bundle_id]['fields'][$field_id . ':properties'] +
+                  $form_values[$entity_id][$bundle_id]['fields_container']['fields'][$field_id . ':properties'];
+                $lingotek_config->setFieldPropertiesLingotekEnabled($entity_id, $bundle_id, $field_id, $property_values);
               }
             }
             elseif ($field_choice == 0) {
@@ -243,7 +258,8 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
     return $select;
   }
 
-  protected function retrieveFields($entity_id, $bundle_id) {
+  protected function retrieveFields(FormStateInterface $form_state, $entity_id, $bundle_id) {
+    $provideDefaults = $form_state->getTemporaryValue('provideDefaults') ?: [];
     $entity_type = \Drupal::entityTypeManager()->getDefinition($entity_id);
     /** @var \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_config */
     $lingotek_config = \Drupal::service('lingotek.configuration');
@@ -264,13 +280,26 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
               !in_array($storage_definitions[$field_id]->getName(), [$entity_type->getKey('langcode'), $entity_type->getKey('default_langcode'), 'revision_translation_affected']) &&
           ($field_definition->isTranslatable() || ($field_definition->getType() == 'entity_reference_revisions' || $field_definition->getType() == 'path')) && !$field_definition->isComputed() && !$field_definition->isReadOnly()) {
 
+          $checkbox_choice = 0;
           if ($value = $lingotek_config->isFieldLingotekEnabled($entity_id, $bundle_id, $field_id)) {
             $checkbox_choice = $value;
           }
+          if (isset($provideDefaults[$entity_id][$bundle_id]) && $provideDefaults[$entity_id][$bundle_id] && $lingotek_config->shouldFieldLingotekEnabled($entity_id, $bundle_id, $field_id)) {
+            $checkbox_choice = '1';
+          }
+          $id = 'edit-' . str_replace('_', '-', $entity_id) . '-' . str_replace('_', '-', $bundle_id) . '-fields-' . str_replace('_', '-', $field_id);
           $field_checkbox = [
             '#type' => 'checkbox',
             '#title' => $field_definition->getLabel(),
             '#default_value' => $checkbox_choice,
+            '#checked' => $checkbox_choice,
+            '#name' => $entity_id . '[' . $bundle_id . '][fields][' . $field_id . ']',
+            '#id' => $id,
+            '#attributes' => [
+              'data-drupal-selector' => $id,
+              'id' => $id,
+              'name' => $entity_id . '[' . $bundle_id . '][fields][' . $field_id . ']',
+            ],
           ];
           $field_checkboxes[$field_id] = $field_checkbox;
 
@@ -278,14 +307,46 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
           module_load_include('inc', 'content_translation', 'content_translation.admin');
           $column_element = content_translation_field_sync_widget($field_definition);
           if ($column_element) {
+            $default_properties = $lingotek_config->getDefaultFieldPropertiesLingotekEnabled($entity_id, $bundle_id, $field_id);
             $properties_checkbox_choice = $lingotek_config->getFieldPropertiesLingotekEnabled($entity_id, $bundle_id, $field_id);
-            $field_checkbox = [
-              '#type' => 'checkboxes',
-              '#options' => $column_element['#options'],
-              '#default_value' => $properties_checkbox_choice ?: [],
-              '#attributes' => ['class' => ['field-property-checkbox']],
-            ];
-            $field_checkboxes[$field_id . ':properties'] = $field_checkbox;
+            if ($provideDefaults && !$properties_checkbox_choice) {
+              $properties_checkbox_choice = $default_properties;
+            }
+            foreach ($column_element['#options'] as $property_id => $property) {
+              $checked = FALSE;
+              if ($checkbox_choice) {
+                $checked = isset($properties_checkbox_choice[$property_id]) ?
+                  ($properties_checkbox_choice[$property_id] == '1' || $properties_checkbox_choice[$property_id] === $property_id) : FALSE;
+              }
+              $id = 'edit-' . str_replace('_', '-', $entity_id) . '-' . str_replace('_', '-', $bundle_id) . '-fields-' . str_replace('_', '-', $field_id) . 'properties-' . str_replace('_', '-', $property_id);
+              $property_checkbox = [
+                '#type' => 'checkbox',
+                '#title' => $property,
+                '#default_value' => $checked,
+                '#checked' => $checked,
+                '#name' => $entity_id . '[' . $bundle_id . '][fields][' . $field_id . ':properties][' . $property_id . ']',
+                '#id' => $id,
+                '#attributes' => [
+                  'data-drupal-selector' => $id,
+                  'id' => $id,
+                  'name' => $entity_id . '[' . $bundle_id . '][fields][' . $field_id . ':properties][' . $property_id . ']',
+                  'class' => ['field-property-checkbox'],
+                ],
+              ];
+
+              $property_checkbox['#states']['checked'] = [
+                [
+                ':input[name="' . $field_checkbox['#name'] . '"]' => ['checked' => TRUE],
+                ':input[name="' . $property_checkbox['#name'] . '"]' => ['checked' => TRUE],
+                ],
+              ];
+              if ($checked || (isset($default_properties[$property_id]) && $default_properties[$property_id] === $property_id)) {
+                $property_checkbox['#states']['unchecked'] = [
+                  ':input[name="' . $field_checkbox['#name'] . '"]' => ['unchecked' => TRUE],
+                ];
+              }
+              $field_checkboxes[$field_id . ':properties'][$property_id] = $property_checkbox;
+            }
           }
         }
         // We have an exception here, if the entity alias is a computed field we
@@ -294,10 +355,20 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
           if ($value = $lingotek_config->isFieldLingotekEnabled($entity_id, $bundle_id, $field_id)) {
             $checkbox_choice = $value;
           }
+          if (isset($provideDefaults[$entity_id][$bundle_id]) && $provideDefaults[$entity_id][$bundle_id] && $lingotek_config->shouldFieldLingotekEnabled($entity_id, $bundle_id, $field_id)) {
+            $checkbox_choice = '1';
+          }
+          $id = 'edit-' . str_replace('_', '-', $entity_id) . '-' . str_replace('_', '-', $bundle_id) . '-fields-' . str_replace('_', '-', $field_id);
           $field_checkbox = [
             '#type' => 'checkbox',
             '#title' => $field_definition->getLabel(),
+            '#checked' => $checkbox_choice,
             '#default_value' => $checkbox_choice,
+            '#name' => $entity_id . '[' . $bundle_id . '][fields][' . $field_id . ']',
+            '#id' => $id,
+            '#attributes' => [
+              'data-drupal-selector' => $id,
+            ],
           ];
           $field_checkboxes[$field_id] = $field_checkbox;
         }
@@ -305,6 +376,40 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
     }
 
     return $field_checkboxes;
+  }
+
+  public function ajaxRefreshEntityFieldsForm(array $form, FormStateInterface $form_state, Request $request) {
+    $triggering_element = $form_state->getTriggeringElement();
+    $entity_type_id = $triggering_element['#parents'][0];
+    $bundle = $triggering_element['#parents'][1];
+    $active = $triggering_element['#value'];
+
+    $provideDefaults = $form_state->getTemporaryValue('provideDefaults') ?: [];
+    $provideDefaults[$entity_type_id][$bundle] = $active;
+
+    $form_state->setTemporaryValue('provideDefaults', $provideDefaults);
+
+    // We only need to force the rebuild. No need to do anything else.
+    $response = new AjaxResponse();
+    // Extra divs will be added. See https://www.drupal.org/node/736066.
+    $response->addCommand(new ReplaceCommand('#container-' . str_replace('_', '-', $entity_type_id) . '-' . $bundle, $this->generateFieldsForm($form_state, $entity_type_id, $bundle)));
+    return $response;
+  }
+
+  /**
+   * @param $entity_id
+   * @param $bundle_id
+   * @param $row
+   * @return mixed
+   */
+  protected function generateFieldsForm(FormStateInterface $form_state, $entity_type_id, $bundle_id) {
+    $fields_container = [
+      '#type' => 'container',
+      '#id' => 'container-' . str_replace('_', '-', $entity_type_id) . '-' . $bundle_id,
+      '#attributes' => ['id' => 'container-' . str_replace('_', '-', $entity_type_id) . '-' . $bundle_id],
+      'fields' => $this->retrieveFields($form_state, $entity_type_id, $bundle_id),
+    ];
+    return $fields_container;
   }
 
   /**

@@ -288,6 +288,33 @@ class LingotekConfigurationService implements LingotekConfigurationServiceInterf
   /**
    * {@inheritDoc}
    */
+  public function shouldFieldLingotekEnabled($entity_type_id, $bundle, $field_name) {
+    $should = FALSE;
+    $field_definitions = \Drupal::service('entity_field.manager')
+      ->getFieldDefinitions($entity_type_id, $bundle);
+    $config = \Drupal::config('lingotek.settings');
+    $key = 'translate.entity.' . $entity_type_id . '.' . $bundle . '.field.' . $field_name;
+    $saved_value = $config->get($key);
+
+    $default_enabled = [
+      'string',
+      'image',
+      'text_with_summary',
+      'text_long',
+      'path',
+      'entity_reference_revisions',
+    ];
+    if ($saved_value === NULL) {
+      $type = $field_definitions[$field_name]->getType();
+      $should = !empty($field_definitions[$field_name])
+        && in_array($type, $default_enabled);
+    }
+    return $should;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
   public function setFieldLingotekEnabled($entity_type_id, $bundle, $field_name, $enabled = TRUE) {
     $config = \Drupal::configFactory()->getEditable('lingotek.settings');
     $key = 'translate.entity.' . $entity_type_id . '.' . $bundle . '.field.' . $field_name;
@@ -299,6 +326,32 @@ class LingotekConfigurationService implements LingotekConfigurationServiceInterf
       $config->clear($key);
       $config->save();
     }
+  }
+
+  public function getDefaultFieldPropertiesLingotekEnabled($entity_type_id, $bundle, $field_name) {
+    /** @var \Drupal\Core\Field\FieldDefinitionInterface[] $field_definitions */
+    $field_definitions = \Drupal::service('entity_field.manager')
+      ->getFieldDefinitions($entity_type_id, $bundle);
+    $field_definition = $field_definitions[$field_name];
+    $definition = \Drupal::service('plugin.manager.field.field_type')
+      ->getDefinition($field_definition->getType());
+    $column_groups = $definition['column_groups'];
+    $properties = [];
+    foreach ($column_groups as $property_id => $property) {
+      if (isset($property['translatable']) && $property['translatable']) {
+        $property_definitions = $definition['class']::propertyDefinitions($field_definition->getFieldStorageDefinition());
+        if (isset($property_definitions[$property_id])) {
+          $property_definition = $property_definitions[$property_id];
+          if ($property_definition['type'] === 'string') {
+            $properties[$property_id] = $property_id;
+          }
+          else {
+            $properties[$property_id] = FALSE;
+          }
+        }
+      }
+    }
+    return $properties;
   }
 
   /**
