@@ -220,4 +220,18 @@ class LingotekJobManagementContentEntitiesForm extends LingotekManagementFormBas
     return NULL;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  protected function canHaveDeleteTranslationBulkOptions() {
+    return FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function canHaveDeleteBulkOptions() {
+    return FALSE;
+  }
+
 }

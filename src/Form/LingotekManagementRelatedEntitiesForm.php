@@ -310,4 +310,18 @@ class LingotekManagementRelatedEntitiesForm extends LingotekManagementFormBase {
     $this->setRecursionDepth($value);
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  protected function canHaveDeleteTranslationBulkOptions() {
+    return FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function canHaveDeleteBulkOptions() {
+    return FALSE;
+  }
+
 }

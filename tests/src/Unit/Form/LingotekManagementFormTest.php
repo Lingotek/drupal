@@ -293,7 +293,7 @@ namespace Drupal\Tests\lingotek\Unit\Form {
         ->method('get')
         ->with('bundle_entity_type')
         ->willReturn('node');
-      $this->entityTypeManager->expects($this->exactly(3))
+      $this->entityTypeManager->expects($this->any())
         ->method('getDefinition')
         ->with('node')
         ->willReturn($entityType);

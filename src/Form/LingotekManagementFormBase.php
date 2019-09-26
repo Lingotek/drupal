@@ -861,8 +861,8 @@ abstract class LingotekManagementFormBase extends FormBase {
       $entityInfo[$entity->id()] = [$language->getId() => $language->getId()];
     }
     $this->tempStoreFactory->get('entity_delete_multiple_confirm')
-      ->set($this->currentUser()->id() . ':node', $entityInfo);
-    $form_state->setRedirect('entity.' . $this->entityTypeId . '.delete_multiple_form', [], ['query' => $this->getDestinationWithQueryArray()]);
+      ->set($this->currentUser()->id() . ':' . $this->entityTypeId, $entityInfo);
+    $form_state->setRedirectUrl(Url::fromUserInput($entity->getEntityType()->getLinkTemplate('delete-multiple-form'), ['query' => $this->getDestinationWithQueryArray()]));
   }
 
   /**
@@ -929,8 +929,8 @@ abstract class LingotekManagementFormBase extends FormBase {
     }
     if (!empty($entityInfo)) {
       $this->tempStoreFactory->get('entity_delete_multiple_confirm')
-        ->set($this->currentUser()->id() . ':node', $entityInfo);
-      $form_state->setRedirect('entity.' . $this->entityTypeId . '.delete_multiple_form', [], ['query' => $this->getDestinationWithQueryArray()]);
+        ->set($this->currentUser()->id() . ':' . $this->entityTypeId, $entityInfo);
+      $form_state->setRedirectUrl(Url::fromUserInput($entity->getEntityType()->getLinkTemplate('delete-multiple-form'), ['query' => $this->getDestinationWithQueryArray()]));
     }
     else {
       $this->messenger()->addWarning($this->t('No valid translations for deletion.'));
@@ -964,8 +964,8 @@ abstract class LingotekManagementFormBase extends FormBase {
     }
     if (!empty($entityInfo)) {
       $this->tempStoreFactory->get('entity_delete_multiple_confirm')
-        ->set($this->currentUser()->id() . ':node', $entityInfo);
-      $form_state->setRedirect('entity.' . $this->entityTypeId . '.delete_multiple_form', [], ['query' => $this->getDestinationWithQueryArray()]);
+        ->set($this->currentUser()->id() . ':' . $this->entityTypeId, $entityInfo);
+      $form_state->setRedirectUrl(Url::fromUserInput($entity->getEntityType()->getLinkTemplate('delete-multiple-form'), ['query' => $this->getDestinationWithQueryArray()]));
     }
     else {
       $this->messenger()->addWarning($this->t('No valid translations for deletion.'));
@@ -1424,7 +1424,7 @@ abstract class LingotekManagementFormBase extends FormBase {
     $operations[(string) $this->t('Request translations')]['request_translations'] = $this->t('Request all translations');
     $operations[(string) $this->t('Check translation progress')]['check_translations'] = $this->t('Check progress of all translations');
     $operations[(string) $this->t('Download')]['download'] = $this->t('Download all translations');
-    if (((float) \Drupal::VERSION) >= 8.6) {
+    if ($this->canHaveDeleteTranslationBulkOptions()) {
       $operations[(string) $this->t('Delete translations')]['delete_translations'] = $this->t('Delete translations');
     }
     foreach ($this->lingotekConfiguration->getProfileOptions() as $profile_id => $profile) {
@@ -1436,7 +1436,7 @@ abstract class LingotekManagementFormBase extends FormBase {
       $operations[(string) $this->t('Request translations')]['request_translation:' . $langcode] = $this->t('Request @language translation', ['@language' => $language->getName() . ' (' . $language->getId() . ')']);
       $operations[(string) $this->t('Check translation progress')]['check_translation:' . $langcode] = $this->t('Check progress of @language translation', ['@language' => $language->getName() . ' (' . $language->getId() . ')']);
       $operations[(string) $this->t('Download')]['download:' . $langcode] = $this->t('Download @language translation', ['@language' => $language->getName() . ' (' . $language->getId() . ')']);
-      if (((float) \Drupal::VERSION) >= 8.6) {
+      if ($this->canHaveDeleteTranslationBulkOptions()) {
         $operations[(string) $this->t('Delete translations')]['delete_translation:' . $langcode] = $this->t('Delete @language translation', ['@language' => $language->getName() . ' (' . $language->getId() . ')']);
       }
     }
@@ -1446,9 +1446,7 @@ abstract class LingotekManagementFormBase extends FormBase {
       'clear_job' => $this->t('Clear Job ID'),
     ];
 
-    // We add the delete operation in nodes and comments, as we have those
-    // operations in core.
-    if ($this->entityTypeId === 'node' && (float) \Drupal::VERSION < 8.5) {
+    if ($this->canHaveDeleteBulkOptions()) {
       $operations['delete_nodes'] = $this->t('Delete content');
     }
 
@@ -1462,6 +1460,28 @@ abstract class LingotekManagementFormBase extends FormBase {
 
   protected function getDestinationWithQueryArray() {
     return ['destination' => \Drupal::request()->getRequestUri()];
+  }
+
+  /**
+   * Check if we can delete translation in bulk based on the entity definition.
+   *
+   * @return bool
+   *   TRUE if can delete translation in bulk, FALSE if cannot.
+   */
+  protected function canHaveDeleteTranslationBulkOptions() {
+    return $this->entityTypeManager->getDefinition($this->entityTypeId)
+      ->hasLinkTemplate('delete-multiple-form');
+  }
+
+  /**
+   * Check if we can delete content in bulk based on the entity definition.
+   *
+   * @return bool
+   *   TRUE if can delete translation in bulk, FALSE if cannot.
+   */
+  protected function canHaveDeleteBulkOptions() {
+    return $this->entityTypeManager->getDefinition($this->entityTypeId)
+      ->hasLinkTemplate('delete-multiple-form');
   }
 
 }
