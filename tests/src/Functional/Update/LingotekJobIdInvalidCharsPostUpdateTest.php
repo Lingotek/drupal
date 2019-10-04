@@ -52,10 +52,6 @@ class LingotekJobIdInvalidCharsPostUpdateTest extends UpdatePathTestBase {
     $this->assertEquals('my-job-id\3', $configTranslationService->getJobId($config4));
     $this->assertEquals('my/job/id\4', $configTranslationService->getConfigJobId($mappers['system.site_maintenance_mode']));
 
-    $this->drupalLogin($this->rootUser);
-    $this->drupalGet('admin/lingotek/jobs');
-    $this->assertText('The website encountered an unexpected error. Please try again later.');
-
     $this->runUpdates();
 
     $node1 = Node::load(1);
