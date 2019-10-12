@@ -6,7 +6,7 @@ use Drupal\Tests\field\Traits\EntityReferenceTestTrait;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\node\Entity\Node;
-use Drupal\pathauto\Tests\PathautoTestHelperTrait;
+use Drupal\Tests\pathauto\Functional\PathautoTestHelperTrait;
 
 /**
  * Tests translating a node that contains a path.
