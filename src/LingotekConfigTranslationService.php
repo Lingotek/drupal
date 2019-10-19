@@ -136,16 +136,9 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
   }
 
   /**
-   * Get the translatable properties for this schema.
-   *
-   * @param $schema
-   *   The schema
-   * @param $base_key
-   *   The base name for constructing the canonical name.
-   * @return array
-   *   Canonical names of the translatable properties.
+   * {@inheritDoc}
    */
-  public function getTranslatableProperties($schema, $base_key) {
+  public function getTranslatableProperties(TraversableTypedDataInterface $schema, $base_key) {
     $properties = [];
     $definition = $schema->getDataDefinition();
     if (isset($definition['form_element_class'])) {

@@ -4,6 +4,7 @@ namespace Drupal\lingotek;
 
 use Drupal\config_translation\ConfigNamesMapper;
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
+use Drupal\Core\TypedData\TraversableTypedDataInterface;
 
 /**
  * Service for managing Lingotek configuration translations.
@@ -641,5 +642,18 @@ interface LingotekConfigTranslationServiceInterface {
    *   Returns the job ID is saved.
    */
   public function getConfigJobId(ConfigNamesMapper $mapper);
+
+  /**
+   * Get the translatable properties for this schema.
+   *
+   * @param \Drupal\Core\TypedData\TraversableTypedDataInterface $schema
+   *   The schema we need to extract the properties from.
+   * @param string $prefix
+   *   The prefix to be used for constructing the canonical name.
+   *
+   * @return array
+   *   An array of the canonical-named properties.
+   */
+  public function getTranslatableProperties(TraversableTypedDataInterface $schema, $prefix);
 
 }
