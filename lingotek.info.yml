@@ -21,3 +21,4 @@ test_dependencies:
   - search_api:search_api
   - entity_usage:entity_usage
   - entity_browser:entity_browser
+  - block_field:block_field

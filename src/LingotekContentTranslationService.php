@@ -546,6 +546,36 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
           }
         }
       }
+      if ($field_type === 'block_field') {
+        foreach ($entity->{$k} as $field_item) {
+          $pluginId = $field_item->get('plugin_id')->getValue();
+          $block_instance = $field_item->getBlock();
+          $lingotekConfigTranslation = \Drupal::service('lingotek.config_translation');
+          /** @var \Drupal\Core\Config\TypedConfigManagerInterface $typedConfigManager */
+          $typedConfigManager = \Drupal::service('config.typed');
+          $pluginIDName = $block_instance->getPluginDefinition()['id'];
+          $blockConfig = $block_instance->getConfiguration();
+          $definition = $typedConfigManager->getDefinition($pluginIDName);
+          if ($definition['type'] == 'undefined') {
+            $definition = $typedConfigManager->getDefinition('block_settings');
+          }
+          $dataDefinition = $typedConfigManager->buildDataDefinition($definition, $blockConfig);
+          $schema = $typedConfigManager->create($dataDefinition, $blockConfig);
+          $properties = $lingotekConfigTranslation->getTranslatableProperties($schema, NULL);
+
+          $embedded_data = [];
+          foreach ($properties as $property) {
+            $embedded_data[$property] = $blockConfig[$property];
+          }
+          if (strpos($pluginId, 'block_content') === 0) {
+            $uuid = $block_instance->getDerivativeId();
+            if ($block = \Drupal::service('entity.repository')->loadEntityByUuid('block_content', $uuid)) {
+              $embedded_data['entity'] = $this->getSourceData($block, $visited);
+            }
+          }
+          $data[$k][$field_item->getName()] = $embedded_data;
+        }
+      }
       // If we have an entity reference, we may want to embed it.
       if ($field_type === 'entity_reference' || $field_type === 'er_viewmode' || $field_type === 'bricks') {
         $target_entity_type_id = $field_definitions[$k]->getFieldStorageDefinition()->getSetting('target_type');
@@ -1348,6 +1378,50 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
               $metatag_value = serialize($field_item);
               $translation->{$name}->set($index, $metatag_value);
               ++$index;
+            }
+          }
+          elseif ($field_type === 'block_field') {
+            foreach ($field_data as $index => $field_item) {
+              /** @var \Drupal\Core\Block\BlockPluginInterface $block */
+              $block = $revision->get($name)->get($index)->getBlock();
+              if ($block !== NULL) {
+                $entityData = NULL;
+                if (isset($field_item['entity'])) {
+                  $entityData = $field_item['entity'];
+                  unset($field_item['entity']);
+                }
+                $configuration = $block->getConfiguration();
+                $newConfiguration = array_replace($configuration, $field_item);
+                $translation->{$name}->set($index, [
+                  'plugin_id' => $block->getPluginId(),
+                  'settings' => $newConfiguration,
+                ]);
+                if ($entityData !== NULL) {
+                  $embedded_entity_id = NULL;
+                  if (isset($entityData['_lingotek_metadata'])) {
+                    $target_entity_type_id = $entityData['_lingotek_metadata']['_entity_type_id'];
+                    $embedded_entity_id = $entityData['_lingotek_metadata']['_entity_id'];
+                    $embedded_entity_revision_id = $entityData['_lingotek_metadata']['_entity_revision'];
+                    $embedded_entity = $this->entityTypeManager->getStorage($target_entity_type_id)
+                      ->load($embedded_entity_id);
+                    // We may have orphan references, so ensure that they exist before
+                    // continuing.
+                    if ($embedded_entity !== NULL) {
+                      if ($embedded_entity instanceof ContentEntityInterface) {
+                        if ($this->lingotekConfiguration->isEnabled($embedded_entity->getEntityTypeId(), $embedded_entity->bundle())) {
+                          $this->saveTargetData($embedded_entity, $langcode, $entityData);
+                        }
+                        else {
+                          \Drupal::logger('lingotek')
+                            ->warning($this->t('Field %field not saved as its referenced entity is not translatable by Lingotek', ['%field' => $name]));
+                        }
+                      }
+
+                    }
+
+                  }
+                }
+              }
             }
           }
           else {

@@ -145,7 +145,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
    * @return array
    *   Canonical names of the translatable properties.
    */
-  protected function getTranslatableProperties($schema, $base_key) {
+  public function getTranslatableProperties($schema, $base_key) {
     $properties = [];
     $definition = $schema->getDataDefinition();
     if (isset($definition['form_element_class'])) {
