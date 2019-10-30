@@ -10,6 +10,7 @@ use Drupal\Core\Messenger\MessengerTrait;
 use Drupal\Core\Routing\RouteBuilderInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\Url;
 use Drupal\lingotek\LingotekConfigurationServiceInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -116,11 +117,14 @@ class LingotekElementInfoAlterForm implements ContainerInjectionInterface {
       $key = $element['#name'];
       $form_state->set(['content_translation_for_lingotek', 'key'], $key);
       $context = $form_state->get(['language', $key]);
+      $entity_type_id = $context['entity_type'];
+      $bundle_id = $context['bundle'];
 
       if ($form['form_id']['#value'] !== 'language_content_settings_form') {
         $element['content_translation_for_lingotek'] = [
           '#type' => 'checkbox',
-          '#title' => ('Enable translation for Lingotek'),
+          '#title' => $this->t('Enable translation for Lingotek'),
+          '#description' => $this->t('This will enable Lingotek translation for this bundle, and will enable default fields for translation. You can <a href=":settings">review those settings</a> later.', [':settings' => Url::fromRoute('lingotek.settings')->toString()]),
           '#default_value' => $context['bundle'] !== NULL && $this->lingotekConfiguration->isEnabled($context['entity_type'], $context['bundle']),
           '#states' => [
             'visible' => [
@@ -166,25 +170,71 @@ class LingotekElementInfoAlterForm implements ContainerInjectionInterface {
       'content_translation_for_lingotek',
     ]);
     $enabled = $form_state->getValue([$key, 'content_translation']);
-
+    $entity_type_id = $context['entity_type'];
+    $bundle_id = $context['bundle'];
+    $shouldClearCaches = FALSE;
     if ($enabled) {
       if ($enabled_for_lingotek) {
-        if (!$this->lingotekConfiguration->isEnabled($context['entity_type'], $context['bundle'])) {
-          $this->lingotekConfiguration->setEnabled($context['entity_type'], $context['bundle']);
-          $this->entityTypeManager->clearCachedDefinitions();
-          $this->routeBuilder->setRebuildNeeded();
+        if (!$this->lingotekConfiguration->isEnabled($entity_type_id, $bundle_id)) {
+          $this->lingotekConfiguration->setEnabled($entity_type_id, $bundle_id);
+          $entity_type = \Drupal::entityTypeManager()
+            ->getDefinition($entity_type_id);
+
+          $content_translation_manager = \Drupal::service('content_translation.manager');
+          $storage_definitions = \Drupal::service('entity_field.manager')->getFieldStorageDefinitions($entity_type_id);
+
+          if ($content_translation_manager->isSupported($context['entity_type'])) {
+            $fields = \Drupal::service('entity_field.manager')
+              ->getFieldDefinitions($entity_type_id, $bundle_id);
+            // Find which fields the user previously selected
+            foreach ($fields as $field_id => $field_definition) {
+              // We allow non-translatable entity_reference_revisions fields through.
+              // See https://www.drupal.org/node/2788285
+              if (!empty($storage_definitions[$field_id]) &&
+                $storage_definitions[$field_id]->getProvider() != 'content_translation' &&
+                !in_array($storage_definitions[$field_id]->getName(), [
+                  $entity_type->getKey('langcode'),
+                  $entity_type->getKey('default_langcode'),
+                  'revision_translation_affected',
+                ]) &&
+                ($field_definition->isTranslatable() || ($field_definition->getType() == 'entity_reference_revisions' || $field_definition->getType() == 'path')) && !$field_definition->isComputed() && !$field_definition->isReadOnly()) {
+
+                if ($value = $this->lingotekConfiguration->isFieldLingotekEnabled($entity_type_id, $bundle_id, $field_id)) {
+                  break;
+                }
+                if ($this->lingotekConfiguration->shouldFieldLingotekEnabled($entity_type_id, $bundle_id, $field_id)) {
+                  $this->lingotekConfiguration->setFieldLingotekEnabled($entity_type_id, $bundle_id, $field_id);
+                }
+              }
+              // We have an exception here, if the entity alias is a computed field we
+              // may still want to translate it.
+              elseif ($field_definition->getType() == 'path' && $field_definition->isComputed()) {
+                if ($value = $this->lingotekConfiguration->isFieldLingotekEnabled($entity_type_id, $bundle_id, $field_id)) {
+                  break;
+                }
+                elseif ($this->lingotekConfiguration->shouldFieldLingotekEnabled($entity_type_id, $bundle_id, $field_id)) {
+                  $this->lingotekConfiguration->setFieldLingotekEnabled($entity_type_id, $bundle_id, $field_id);
+                }
+              }
+            }
+          }
         }
+
+        $shouldClearCaches = TRUE;
       }
       else {
         if ($this->lingotekConfiguration->isEnabled($context['entity_type'], $context['bundle'])) {
           $this->lingotekConfiguration->setEnabled($context['entity_type'], $context['bundle'], FALSE);
-          $this->entityTypeManager->clearCachedDefinitions();
-          $this->routeBuilder->setRebuildNeeded();
+          $shouldClearCaches = TRUE;
         }
       }
     }
     else {
       $this->messenger()->addError(t("You must Enable Translation to Enable Translation for Lingotek"));
+    }
+    if ($shouldClearCaches) {
+      $this->entityTypeManager->clearCachedDefinitions();
+      $this->routeBuilder->setRebuildNeeded();
     }
   }
 

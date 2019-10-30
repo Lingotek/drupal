@@ -307,6 +307,11 @@ class LingotekSettingsTabContentFormTest extends LingotekTestBase {
     // It should result that the field is enabled in Lingotek settings.
     $this->drupalGet('admin/lingotek/settings');
     $this->assertFieldChecked('edit-node-test-enabled');
+
+    // We automatically enabled sensible defaults fields according to their type.
+    $this->assertFieldChecked('edit-node-test-fields-title');
+    $this->assertFieldChecked('edit-node-test-fields-body');
+    $this->assertNoFieldChecked('edit-node-test-fields-uid');
   }
 
   /**
@@ -358,6 +363,11 @@ class LingotekSettingsTabContentFormTest extends LingotekTestBase {
 
     $this->drupalGet('admin/lingotek/settings');
     $this->assertFieldChecked('edit-node-article-enabled');
+
+    // We automatically enabled sensible defaults fields according to their type.
+    $this->assertFieldChecked('edit-node-article-fields-title');
+    $this->assertFieldChecked('edit-node-article-fields-body');
+    $this->assertNoFieldChecked('edit-node-article-fields-uid');
   }
 
   /**
