@@ -277,7 +277,9 @@ class LingotekNotificationController extends LingotekControllerBase {
       'messages' => $messages,
     ];
 
-    return JsonResponse::create($response, $http_status_code);
+    return JsonResponse::create($response, $http_status_code)
+      ->setMaxAge(0)
+      ->setSharedMaxAge(0);
   }
 
   protected function getProfile($entity) {
