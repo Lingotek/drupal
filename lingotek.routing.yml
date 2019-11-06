@@ -305,6 +305,14 @@ entity.lingotek_profile.delete_form:
   requirements:
     _permission: 'administer lingotek'
 
+lingotek.settings.content_form:
+  path: '/admin/lingotek/settings/content/{entity_type}/{bundle}/edit'
+  defaults:
+    _form: '\Drupal\lingotek\Form\LingotekSettingsContentSingleForm'
+    _title: 'Edit content settings'
+  requirements:
+    _permission: 'administer lingotek'
+
 lingotek.translation_jobs:
   path: '/admin/lingotek/jobs'
   defaults:
