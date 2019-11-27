@@ -67,6 +67,9 @@ interface LingotekInterface {
    *
    * @return string
    *   The document ID assigned to the uploaded document.
+   *
+   * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
+   * @throws \Drupal\lingotek\Exception\LingotekApiException
    */
   public function uploadDocument($title, $content, $locale, $url = NULL, LingotekProfileInterface $profile = NULL, $job_id = NULL);
 
@@ -87,8 +90,14 @@ interface LingotekInterface {
    * @param string $job_id
    *   (optional) The job ID that will be associated.
    *
-   * @return bool
-   *   TRUE if the document was successfully updated. FALSE if not.
+   * @return bool|string
+   *   TRUE if the document was successfully updated. FALSE if not (v5.1).
+   *   New document ID if the document was successfully updated. FALSE if not (v5.2).
+   *
+   * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentArchivedException
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentLockedException
+   * @throws \Drupal\lingotek\Exception\LingotekApiException
    */
   public function updateDocument($doc_id, $content, $url = NULL, $title = NULL, LingotekProfileInterface $profile = NULL, $job_id = NULL);
 

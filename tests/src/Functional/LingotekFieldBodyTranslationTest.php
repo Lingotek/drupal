@@ -271,11 +271,308 @@ class LingotekFieldBodyTranslationTest extends LingotekTestBase {
   /**
    * Test that we handle errors in upload.
    */
-  public function testUploadingWithAnErrorViaAPI() {
-    $this->saveLingotekConfigTranslationSettings([
-      'node_fields' => 'automatic',
-    ]);
+  public function testUpdatingWithAnErrorViaAutomaticUpload() {
+    // Check that the translate tab is in the field.
+    $this->drupalGet('/admin/config/regional/config-translation/node_fields');
+    $this->clickLink(t('Translate'));
 
+    // Upload the document, which must succeed.
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Body uploaded successfully');
+
+    // Check that the upload succeeded.
+    $this->clickLink('Check upload status');
+    $this->assertText('Body status checked successfully');
+
+    \Drupal::state()->set('lingotek.must_error_in_upload', TRUE);
+
+    // Edit the field.
+    $edit = ['label' => 'Contents'];
+    $this->drupalPostForm('/admin/structure/types/manage/article/fields/node.article.body', $edit, t('Save settings'));
+    $this->assertText('Saved Contents configuration.');
+    $this->assertText('The update for field_config Contents failed. Please try again.');
+
+    // The field has been marked with the error status.
+    $fieldConfig = FieldConfig::load('node.article.body');
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getSourceStatus($fieldConfig);
+    $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The field has been marked as error.');
+
+    // I can still re-try the upload.
+    \Drupal::state()->set('lingotek.must_error_in_upload', FALSE);
+    $this->clickLink(t('Translate'));
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Contents has been updated.');
+  }
+
+  /**
+   * Test that we handle errors in update.
+   */
+  public function testUpdatingWithADocumentArchivedError() {
+    // Check that the translate tab is in the field.
+    $this->drupalGet('/admin/config/regional/config-translation/node_fields');
+    $this->clickLink(t('Translate'));
+
+    // Upload the document, which must succeed.
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Body uploaded successfully');
+
+    // Check that the upload succeeded.
+    $this->clickLink('Check upload status');
+    $this->assertText('Body status checked successfully');
+
+    // Edit the field.
+    $edit = ['label' => 'Contents'];
+    $this->drupalPostForm('/admin/structure/types/manage/article/fields/node.article.body', $edit, t('Save settings'));
+    $this->assertText('Saved Contents configuration.');
+
+    // Go back to the form.
+    $this->drupalGet('/admin/config/regional/config-translation/node_fields');
+    $this->clickLink(t('Translate'));
+
+    \Drupal::state()->set('lingotek.must_document_archived_error_in_update', TRUE);
+
+    // Re-upload. Must fail now.
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Document Contents has been archived. Please upload again.');
+
+    // The field has been marked with the error status.
+    $fieldConfig = FieldConfig::load('node.article.body');
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getSourceStatus($fieldConfig);
+    $this->assertEqual(Lingotek::STATUS_UNTRACKED, $source_status, 'The field has been marked as error.');
+
+    // I can still re-try the upload.
+    \Drupal::state()->set('lingotek.must_document_archived_error_in_update', FALSE);
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Contents uploaded successfully');
+  }
+
+  /**
+   * Test that we handle errors in update.
+   */
+  public function testUpdatingWithADocumentArchivedErrorViaAutomaticUpload() {
+    // Check that the translate tab is in the field.
+    $this->drupalGet('/admin/config/regional/config-translation/node_fields');
+    $this->clickLink(t('Translate'));
+
+    // Upload the document, which must succeed.
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Body uploaded successfully');
+
+    // Check that the upload succeeded.
+    $this->clickLink('Check upload status');
+    $this->assertText('Body status checked successfully');
+
+    \Drupal::state()->set('lingotek.must_document_archived_error_in_update', TRUE);
+
+    // Edit the field.
+    $edit = ['label' => 'Contents'];
+    $this->drupalPostForm('/admin/structure/types/manage/article/fields/node.article.body', $edit, t('Save settings'));
+    $this->assertText('Saved Contents configuration.');
+    $this->assertText('Document field_config Contents has been archived. Please upload again.');
+
+    // The field has been marked with the error status.
+    $fieldConfig = FieldConfig::load('node.article.body');
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getSourceStatus($fieldConfig);
+    $this->assertEqual(Lingotek::STATUS_UNTRACKED, $source_status, 'The field has been marked as error.');
+
+    // I can still re-try the upload.
+    \Drupal::state()->set('lingotek.must_document_archived_error_in_update', FALSE);
+    $this->clickLink(t('Translate'));
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Contents uploaded successfully');
+  }
+
+  /**
+   * Test that we handle errors in update.
+   */
+  public function testUpdatingWithADocumentLockedError() {
+    // Check that the translate tab is in the field.
+    $this->drupalGet('/admin/config/regional/config-translation/node_fields');
+    $this->clickLink(t('Translate'));
+
+    // Upload the document, which must succeed.
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Body uploaded successfully');
+
+    // Check that the upload succeeded.
+    $this->clickLink('Check upload status');
+    $this->assertText('Body status checked successfully');
+
+    // Edit the field.
+    $edit = ['label' => 'Contents'];
+    $this->drupalPostForm('/admin/structure/types/manage/article/fields/node.article.body', $edit, t('Save settings'));
+    $this->assertText('Saved Contents configuration.');
+
+    // Go back to the form.
+    $this->drupalGet('/admin/config/regional/config-translation/node_fields');
+    $this->clickLink(t('Translate'));
+
+    \Drupal::state()->set('lingotek.must_document_locked_error_in_update', TRUE);
+
+    // Re-upload. Must fail now.
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Document field_config Contents has a new version. The document id has been updated for all future interactions. Please try again.');
+
+    // The field has been marked with the error status.
+    $fieldConfig = FieldConfig::load('node.article.body');
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getSourceStatus($fieldConfig);
+    $this->assertEqual(Lingotek::STATUS_EDITED, $source_status, 'The field has been marked as error.');
+
+    // I can still re-try the upload.
+    \Drupal::state()->set('lingotek.must_document_locked_error_in_update', FALSE);
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Contents has been updated.');
+  }
+
+  /**
+   * Test that we handle errors in update.
+   */
+  public function testUpdatingWithADocumentLockedErrorViaAutomaticUpload() {
+    // Check that the translate tab is in the field.
+    $this->drupalGet('/admin/config/regional/config-translation/node_fields');
+    $this->clickLink(t('Translate'));
+
+    // Upload the document, which must succeed.
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Body uploaded successfully');
+
+    // Check that the upload succeeded.
+    $this->clickLink('Check upload status');
+    $this->assertText('Body status checked successfully');
+
+    \Drupal::state()->set('lingotek.must_document_locked_error_in_update', TRUE);
+
+    // Edit the field.
+    $edit = ['label' => 'Contents'];
+    $this->drupalPostForm('/admin/structure/types/manage/article/fields/node.article.body', $edit, t('Save settings'));
+    $this->assertText('Saved Contents configuration.');
+    $this->assertText('Document field_config Contents has a new version. The document id has been updated for all future interactions. Please try again.');
+
+    // The field has been marked with the error status.
+    $fieldConfig = FieldConfig::load('node.article.body');
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getSourceStatus($fieldConfig);
+    $this->assertEqual(Lingotek::STATUS_EDITED, $source_status, 'The field has been marked as error.');
+
+    // I can still re-try the upload.
+    \Drupal::state()->set('lingotek.must_document_locked_error_in_update', FALSE);
+    $this->clickLink(t('Translate'));
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Contents has been updated.');
+  }
+
+  /**
+   * Test that we handle errors in update.
+   */
+  public function testUpdatingWithAPaymentRequiredError() {
+    // Check that the translate tab is in the field.
+    $this->drupalGet('/admin/config/regional/config-translation/node_fields');
+    $this->clickLink(t('Translate'));
+
+    // Upload the document, which must succeed.
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Body uploaded successfully');
+
+    // Check that the upload succeeded.
+    $this->clickLink('Check upload status');
+    $this->assertText('Body status checked successfully');
+
+    // Edit the field.
+    $edit = ['label' => 'Contents'];
+    $this->drupalPostForm('/admin/structure/types/manage/article/fields/node.article.body', $edit, t('Save settings'));
+    $this->assertText('Saved Contents configuration.');
+
+    // Go back to the form.
+    $this->drupalGet('/admin/config/regional/config-translation/node_fields');
+    $this->clickLink(t('Translate'));
+
+    \Drupal::state()->set('lingotek.must_payment_required_error_in_update', TRUE);
+
+    // Re-upload. Must fail now.
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Community has been disabled. Please contact support@lingotek.com to re-enable your community.');
+
+    // The field has been marked with the error status.
+    $fieldConfig = FieldConfig::load('node.article.body');
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getSourceStatus($fieldConfig);
+    $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The field has been marked as error.');
+
+    // I can still re-try the upload.
+    \Drupal::state()->set('lingotek.must_payment_required_error_in_update', FALSE);
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Contents has been updated.');
+  }
+
+  /**
+   * Test that we handle errors in update.
+   */
+  public function testUpdatingWithAPaymentRequiredErrorViaAutomaticUpload() {
+    // Check that the translate tab is in the field.
+    $this->drupalGet('/admin/config/regional/config-translation/node_fields');
+    $this->clickLink(t('Translate'));
+
+    // Upload the document, which must succeed.
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Body uploaded successfully');
+
+    // Check that the upload succeeded.
+    $this->clickLink('Check upload status');
+    $this->assertText('Body status checked successfully');
+
+    \Drupal::state()->set('lingotek.must_payment_required_error_in_update', TRUE);
+
+    // Edit the field.
+    $edit = ['label' => 'Contents'];
+    $this->drupalPostForm('/admin/structure/types/manage/article/fields/node.article.body', $edit, t('Save settings'));
+    $this->assertText('Saved Contents configuration.');
+    $this->assertText('Community has been disabled. Please contact support@lingotek.com to re-enable your community.');
+
+    // The field has been marked with the error status.
+    $fieldConfig = FieldConfig::load('node.article.body');
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getSourceStatus($fieldConfig);
+    $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The field has been marked as error.');
+
+    // I can still re-try the upload.
+    \Drupal::state()->set('lingotek.must_payment_required_error_in_update', FALSE);
+    $this->clickLink(t('Translate'));
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Contents has been updated.');
+  }
+
+  /**
+   * Test that we handle errors in upload.
+   */
+  public function testUploadingWithAnErrorViaAutomaticUpload() {
     \Drupal::state()->set('lingotek.must_error_in_upload', TRUE);
 
     $this->drupalGet('admin/lingotek/settings');
@@ -286,6 +583,58 @@ class LingotekFieldBodyTranslationTest extends LingotekTestBase {
 
     // The document was uploaded automatically and failed.
     $this->assertText('The upload for field_config Excerpt failed. Please try again.');
+
+    // The field has been marked with the error status.
+    $fieldConfig = FieldConfig::load('node.article.field_excerpt');
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getSourceStatus($fieldConfig);
+    $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The field has been marked as error.');
+  }
+
+  /**
+   * Test that we handle errors in upload.
+   */
+  public function testUploadingWithAPaymentRequiredError() {
+    \Drupal::state()->set('lingotek.must_payment_required_error_in_upload', TRUE);
+
+    // Check that the translate tab is in the field.
+    $this->drupalGet('/admin/config/regional/config-translation/node_fields');
+    $this->clickLink(t('Translate'));
+
+    // Upload the document, which must fail.
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Community has been disabled. Please contact support@lingotek.com to re-enable your community.');
+
+    // The field has been marked with the error status.
+    $fieldConfig = FieldConfig::load('node.article.body');
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getSourceStatus($fieldConfig);
+    $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The field has been marked as error.');
+
+    // I can still re-try the upload.
+    \Drupal::state()->set('lingotek.must_payment_required_error_in_upload', FALSE);
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Body uploaded successfully');
+  }
+
+  /**
+   * Test that we handle errors in upload.
+   */
+  public function testUploadingWithAPaymentRequiredErrorViaAutomaticUpload() {
+    \Drupal::state()->set('lingotek.must_payment_required_error_in_upload', TRUE);
+
+    $this->drupalGet('admin/lingotek/settings');
+
+    // Create a field.
+    $edit = ['label' => 'Excerpt', 'new_storage_type' => 'text', 'field_name' => 'excerpt'];
+    $this->drupalPostForm('/admin/structure/types/manage/article/fields/add-field', $edit, 'Save and continue');
+
+    // The document was uploaded automatically and failed.
+    $this->assertText('Community has been disabled. Please contact support@lingotek.com to re-enable your community.');
 
     // The field has been marked with the error status.
     $fieldConfig = FieldConfig::load('node.article.field_excerpt');

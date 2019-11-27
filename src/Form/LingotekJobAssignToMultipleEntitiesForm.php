@@ -9,6 +9,10 @@ use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Drupal\Core\Url;
+use Drupal\lingotek\Exception\LingotekApiException;
+use Drupal\lingotek\Exception\LingotekDocumentArchivedException;
+use Drupal\lingotek\Exception\LingotekDocumentLockedException;
+use Drupal\lingotek\Exception\LingotekPaymentRequiredException;
 use Drupal\lingotek\LingotekContentTranslationServiceInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -169,13 +173,44 @@ class LingotekJobAssignToMultipleEntitiesForm extends FormBase {
     $job_id = $form_state->getValue('job_id');
     $updateTMS = $form_state->getValue('update_tms');
     $entities = $this->getSelectedEntities($this->selection);
+    $errors = FALSE;
 
     foreach ($entities as $entity) {
-      $this->translationService->setJobId($entity, $job_id, $updateTMS);
+      try {
+        $this->translationService->setJobId($entity, $job_id, $updateTMS);
+      }
+      catch (LingotekPaymentRequiredException $exception) {
+        $errors = TRUE;
+        $this->messenger()->addError(t('Community has been disabled. Please contact support@lingotek.com to re-enable your community.'));
+      }
+      catch (LingotekDocumentArchivedException $exception) {
+        $errors = TRUE;
+        $this->messenger()->addError(t('Document @entity_type %title has been archived. Please upload again.', [
+          '@entity_type' => $entity->getEntityTypeId(),
+          '%title' => $entity->label(),
+        ]));
+      }
+      catch (LingotekDocumentLockedException $exception) {
+        $errors = TRUE;
+        $this->messenger()->addError(t('Document @entity_type %title has a new version. The document id has been updated for all future interactions. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
+      }
+      catch (LingotekApiException $exception) {
+        $errors = TRUE;
+        $this->messenger()
+          ->addError(t('The Job ID change submission for @entity_type %title failed. Please try again.', [
+            '@entity_type' => $entity->getEntityTypeId(),
+            '%title' => $entity->label(),
+          ]));
+      }
     }
     $form_state->setRedirectUrl(Url::fromUserInput('/' . $form_state->getValue('destination')));
 
-    $this->postStatusMessage();
+    if (!$errors) {
+      $this->postStatusMessage();
+    }
+    else {
+      $this->messenger->addWarning($this->t('Job ID for some content failed to sync to the TMS.'));
+    }
 
     // Clear selected data.
     $this->tempStore->delete($this->currentUser->id());
@@ -185,7 +220,7 @@ class LingotekJobAssignToMultipleEntitiesForm extends FormBase {
    * Post a status message when succeeded.
    */
   protected function postStatusMessage() {
-    $this->messenger->addStatus('Job ID was assigned successfully.');
+    $this->messenger->addStatus($this->t('Job ID was assigned successfully.'));
   }
 
   /**

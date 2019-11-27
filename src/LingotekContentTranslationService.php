@@ -21,6 +21,9 @@ use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\lingotek\Entity\LingotekContentMetadata;
 use Drupal\lingotek\Exception\LingotekApiException;
 use Drupal\lingotek\Exception\LingotekContentEntityStorageException;
+use Drupal\lingotek\Exception\LingotekDocumentArchivedException;
+use Drupal\lingotek\Exception\LingotekDocumentLockedException;
+use Drupal\lingotek\Exception\LingotekPaymentRequiredException;
 use Drupal\user\UserInterface;
 
 /**
@@ -834,6 +837,10 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     try {
       $document_id = $this->lingotek->uploadDocument($document_name, $source_data, $this->getSourceLocale($entity), $url, $profile, $job_id);
     }
+    catch (LingotekPaymentRequiredException $exception) {
+      $this->setSourceStatus($entity, Lingotek::STATUS_ERROR);
+      throw $exception;
+    }
     catch (LingotekApiException $exception) {
       $this->setSourceStatus($entity, Lingotek::STATUS_ERROR);
       throw $exception;
@@ -961,16 +968,32 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     // Allow other modules to alter the data before is uploaded.
     \Drupal::moduleHandler()->invokeAll('lingotek_content_entity_document_upload', [&$source_data, &$entity, &$url]);
 
-    $result = FALSE;
     try {
-      $result = $this->lingotek->updateDocument($document_id, $source_data, $url, $document_name, $profile, $job_id);
+      $newDocumentID = $this->lingotek->updateDocument($document_id, $source_data, $url, $document_name, $profile, $job_id);
+    }
+    catch (LingotekDocumentLockedException $exception) {
+      $this->setDocumentId($entity, $exception->getNewDocumentId());
+      throw $exception;
+    }
+    catch (LingotekDocumentArchivedException $exception) {
+      $this->setDocumentId($entity, NULL);
+      $this->deleteMetadata($entity);
+      throw $exception;
+    }
+    catch (LingotekPaymentRequiredException $exception) {
+      $this->setSourceStatus($entity, Lingotek::STATUS_ERROR);
+      throw $exception;
     }
     catch (LingotekApiException $exception) {
       $this->setSourceStatus($entity, Lingotek::STATUS_ERROR);
       throw $exception;
     }
 
-    if ($result) {
+    if ($newDocumentID) {
+      if (is_string($newDocumentID)) {
+        $document_id = $newDocumentID;
+        $this->setDocumentId($entity, $newDocumentID);
+      }
       $this->setSourceStatus($entity, Lingotek::STATUS_IMPORTING);
       $this->setTargetStatuses($entity, Lingotek::STATUS_PENDING);
       $this->setJobId($entity, $job_id);
@@ -1534,12 +1557,37 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     if (!$entity->lingotek_metadata->entity) {
       $entity->lingotek_metadata->entity = LingotekContentMetadata::loadByTargetId($entity->getEntityTypeId(), $entity->id());
     }
+    /** @var \Drupal\lingotek\Entity\LingotekContentMetadata $metadata */
     $metadata = &$entity->lingotek_metadata->entity;
 
+    $newDocumentID = FALSE;
     if ($update_tms && $document_id = $this->getDocumentId($entity)) {
-      $this->lingotek->updateDocument($document_id, NULL, NULL, NULL, NULL, $job_id);
+      try {
+        $newDocumentID = $this->lingotek->updateDocument($document_id, NULL, NULL, NULL, NULL, $job_id);
+      }
+      catch (LingotekDocumentLockedException $exception) {
+        $this->setDocumentId($entity, $exception->getNewDocumentId());
+        throw $exception;
+      }
+      catch (LingotekDocumentArchivedException $exception) {
+        $old_job_id = $this->getJobId($entity);
+        $this->setDocumentId($entity, NULL);
+        $this->deleteMetadata($entity);
+        $metadata = LingotekContentMetadata::create(['content_entity_type_id' => $entity->getEntityTypeId(), 'content_entity_id' => $entity->id()]);
+        $metadata->setJobId($old_job_id);
+        $metadata->save();
+        throw $exception;
+      }
+      catch (LingotekPaymentRequiredException $exception) {
+        throw $exception;
+      }
+      catch (LingotekApiException $exception) {
+        throw $exception;
+      }
     }
-
+    if (is_string($newDocumentID)) {
+      $metadata->setDocumentId($newDocumentID);
+    }
     $metadata->setJobId($job_id);
     $metadata->save();
     return $entity;

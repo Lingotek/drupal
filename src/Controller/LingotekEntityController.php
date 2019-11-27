@@ -5,6 +5,9 @@ namespace Drupal\lingotek\Controller;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\lingotek\Exception\LingotekApiException;
 use Drupal\lingotek\Exception\LingotekContentEntityStorageException;
+use Drupal\lingotek\Exception\LingotekDocumentArchivedException;
+use Drupal\lingotek\Exception\LingotekDocumentLockedException;
+use Drupal\lingotek\Exception\LingotekPaymentRequiredException;
 use Drupal\lingotek\Lingotek;
 use Drupal\Core\Url;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -97,8 +100,10 @@ class LingotekEntityController extends LingotekControllerBase {
         $this->messenger()->addError(t('The upload for @entity_type %title failed. Check your configuration and profile and try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
       }
     }
+    catch (LingotekPaymentRequiredException $exception) {
+      $this->messenger()->addError(t('Community has been disabled. Please contact support@lingotek.com to re-enable your community.'));
+    }
     catch (LingotekApiException $exception) {
-      $translation_service->setSourceStatus($entity, Lingotek::STATUS_ERROR);
       $this->messenger()->addError(t('The upload for @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
     }
     return $this->translationsPageRedirect($entity);
@@ -116,8 +121,19 @@ class LingotekEntityController extends LingotekControllerBase {
         $this->messenger()->addError(t('The upload for @entity_type %title failed. Check your configuration and profile and try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
       }
     }
+    catch (LingotekDocumentArchivedException $exception) {
+      $this->messenger()->addError(t('Document @entity_type %title has been archived. Please upload again.', [
+        '@entity_type' => $entity->getEntityTypeId(),
+        '%title' => $entity->label(),
+      ]));
+    }
+    catch (LingotekDocumentLockedException $exception) {
+      $this->messenger()->addError(t('Document @entity_type %title has a new version. The document id has been updated for all future interactions. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
+    }
+    catch (LingotekPaymentRequiredException $exception) {
+      $this->messenger()->addError(t('Community has been disabled. Please contact support@lingotek.com to re-enable your community.'));
+    }
     catch (LingotekApiException $exception) {
-      $translation_service->setSourceStatus($entity, Lingotek::STATUS_ERROR);
       $this->messenger()->addError(t('The update for @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
     }
     return $this->translationsPageRedirect($entity);

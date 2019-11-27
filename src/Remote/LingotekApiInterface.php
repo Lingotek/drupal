@@ -20,6 +20,11 @@ interface LingotekApiInterface {
 
   public function addDocument($args);
 
+  /**
+   * @param $id
+   * @param $args
+   * @return \GuzzleHttp\Psr7\Response
+   */
   public function patchDocument($id, $args);
 
   /**

@@ -13,6 +13,9 @@ use Drupal\Core\TypedData\TraversableTypedDataInterface;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\lingotek\Entity\LingotekConfigMetadata;
 use Drupal\lingotek\Exception\LingotekApiException;
+use Drupal\lingotek\Exception\LingotekDocumentArchivedException;
+use Drupal\lingotek\Exception\LingotekDocumentLockedException;
+use Drupal\lingotek\Exception\LingotekPaymentRequiredException;
 
 /**
  * Service for managing Lingotek configuration translations.
@@ -388,7 +391,17 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     \Drupal::moduleHandler()->invokeAll('lingotek_config_entity_document_upload', [&$source_data, &$entity, &$url]);
     $encoded_data = json_encode($source_data);
 
-    $document_id = $this->lingotek->uploadDocument($document_name, $encoded_data, $this->getSourceLocale($entity), $url, $this->lingotekConfiguration->getConfigEntityProfile($entity), $job_id);
+    try {
+      $document_id = $this->lingotek->uploadDocument($document_name, $encoded_data, $this->getSourceLocale($entity), $url, $this->lingotekConfiguration->getConfigEntityProfile($entity), $job_id);
+    }
+    catch (LingotekPaymentRequiredException $exception) {
+      $this->setSourceStatus($entity, Lingotek::STATUS_ERROR);
+      throw $exception;
+    }
+    catch (LingotekApiException $exception) {
+      $this->setSourceStatus($entity, Lingotek::STATUS_ERROR);
+      throw $exception;
+    }
     if ($document_id) {
       $this->setDocumentId($entity, $document_id);
       $this->lingotekConfiguration->setConfigEntityProfile($entity, $profile->id());
@@ -459,7 +472,33 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     \Drupal::moduleHandler()->invokeAll('lingotek_config_entity_document_upload', [&$source_data, &$entity, &$url]);
     $encoded_data = json_encode($source_data);
 
-    if ($this->lingotek->updateDocument($document_id, $source_data, $url, $document_name, $this->lingotekConfiguration->getConfigEntityProfile($entity), $job_id)) {
+    $newDocumentID = NULL;
+    try {
+      $newDocumentID = $this->lingotek->updateDocument($document_id, $source_data, $url, $document_name, $this->lingotekConfiguration->getConfigEntityProfile($entity), $job_id);
+    }
+    catch (LingotekDocumentLockedException $exception) {
+      $this->setDocumentId($entity, $exception->getNewDocumentId());
+      // TODO: It shouldn't be needed here, EDITED status should already be set.
+      $this->setSourceStatus($entity, Lingotek::STATUS_EDITED);
+      throw $exception;
+    }
+    catch (LingotekDocumentArchivedException $exception) {
+      $this->setDocumentId($entity, NULL);
+      $this->deleteMetadata($entity);
+      throw $exception;
+    }
+    catch (LingotekPaymentRequiredException $exception) {
+      $this->setSourceStatus($entity, Lingotek::STATUS_ERROR);
+      throw $exception;
+    }
+    catch (LingotekApiException $exception) {
+      $this->setSourceStatus($entity, Lingotek::STATUS_ERROR);
+      throw $exception;
+    }
+    if ($newDocumentID) {
+      if (is_string($newDocumentID)) {
+        $this->setDocumentId($entity, $newDocumentID);
+      }
       $this->setSourceStatus($entity, Lingotek::STATUS_IMPORTING);
       $this->setTargetStatuses($entity, Lingotek::STATUS_PENDING);
       $this->setJobId($entity, $job_id);
@@ -1012,7 +1051,17 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
         $document_name = $extended_name;
     }
 
-    $document_id = $this->lingotek->uploadDocument($document_name, $source_data, $this->getConfigSourceLocale($mapper), NULL, $this->lingotekConfiguration->getConfigProfile($mapper_id), $job_id);
+    try {
+      $document_id = $this->lingotek->uploadDocument($document_name, $source_data, $this->getConfigSourceLocale($mapper), NULL, $this->lingotekConfiguration->getConfigProfile($mapper_id), $job_id);
+    }
+    catch (LingotekPaymentRequiredException $exception) {
+      $this->setConfigSourceStatus($mapper, Lingotek::STATUS_ERROR);
+      throw $exception;
+    }
+    catch (LingotekApiException $exception) {
+      $this->setConfigSourceStatus($mapper, Lingotek::STATUS_ERROR);
+      throw $exception;
+    }
     if ($document_id) {
       $this->setConfigDocumentId($mapper, $document_id);
       $this->setConfigSourceStatus($mapper, Lingotek::STATUS_IMPORTING);
@@ -1395,7 +1444,33 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
         $document_name = $extended_name;
     }
 
-    if ($this->lingotek->updateDocument($document_id, $source_data, NULL, $document_name, $profile, $job_id)) {
+    $newDocumentID = NULL;
+    try {
+      $newDocumentID = $this->lingotek->updateDocument($document_id, $source_data, NULL, $document_name, $profile, $job_id);
+    }
+    catch (LingotekDocumentLockedException $exception) {
+      $this->setConfigDocumentId($mapper, $exception->getNewDocumentId());
+      // TODO: It shouldn't be needed here, EDITED status should already be set.
+      $this->setConfigSourceStatus($mapper, Lingotek::STATUS_EDITED);
+      throw $exception;
+    }
+    catch (LingotekDocumentArchivedException $exception) {
+      $this->setConfigSourceStatus($mapper, NULL);
+      $this->deleteConfigMetadata($mapper->getPluginId());
+      throw $exception;
+    }
+    catch (LingotekPaymentRequiredException $exception) {
+      $this->setConfigSourceStatus($mapper, Lingotek::STATUS_ERROR);
+      throw $exception;
+    }
+    catch (LingotekApiException $exception) {
+      $this->setConfigSourceStatus($mapper, Lingotek::STATUS_ERROR);
+      throw $exception;
+    }
+    if ($newDocumentID) {
+      if (is_string($newDocumentID)) {
+        $this->setConfigDocumentId($mapper, $newDocumentID);
+      }
       $this->setConfigSourceStatus($mapper, Lingotek::STATUS_IMPORTING);
       $this->setConfigTargetStatuses($mapper, Lingotek::STATUS_PENDING);
       $this->setConfigJobId($mapper, $job_id);
@@ -1477,12 +1552,40 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
    * {@inheritdoc}
    */
   public function setConfigJobId(ConfigNamesMapper $mapper, $job_id, $update_tms = FALSE) {
+    $newDocumentID = FALSE;
     if ($update_tms && $document_id = $this->getConfigDocumentId($mapper)) {
-      $this->lingotek->updateDocument($document_id, NULL, NULL, NULL, NULL, $job_id);
+      try {
+        $newDocumentID = $this->lingotek->updateDocument($document_id, NULL, NULL, NULL, NULL, $job_id);
+      }
+      catch (LingotekDocumentLockedException $exception) {
+        $this->setConfigDocumentId($mapper, $exception->getNewDocumentId());
+        throw $exception;
+      }
+      catch (LingotekDocumentArchivedException $exception) {
+        $old_job_id = $this->getConfigJobId($mapper);
+        $this->setConfigDocumentId($mapper, NULL);
+        $this->deleteConfigMetadata($mapper->getPluginId());
+        $config_names = $mapper->getConfigNames();
+        foreach ($config_names as $config_name) {
+          $metadata = LingotekConfigMetadata::loadByConfigName($config_name);
+          $metadata->setJobId($old_job_id);
+          $metadata->save();
+        }
+        throw $exception;
+      }
+      catch (LingotekPaymentRequiredException $exception) {
+        throw $exception;
+      }
+      catch (LingotekApiException $exception) {
+        throw $exception;
+      }
     }
     $config_names = $mapper->getConfigNames();
     foreach ($config_names as $config_name) {
       $metadata = LingotekConfigMetadata::loadByConfigName($config_name);
+      if (is_string($newDocumentID)) {
+        $metadata->setDocumentId($newDocumentID);
+      }
       $metadata->setJobId($job_id);
       $metadata->save();
     }
@@ -1505,10 +1608,34 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
    * {@inheritdoc}
    */
   public function setJobId(ConfigEntityInterface $entity, $job_id, $update_tms = FALSE) {
-    if ($update_tms && $document_id = $this->getDocumentId($entity)) {
-      $this->lingotek->updateDocument($document_id, NULL, NULL, NULL, NULL, $job_id);
-    }
+    $newDocumentID = FALSE;
     $metadata = LingotekConfigMetadata::loadByConfigName($entity->getEntityTypeId() . '.' . $entity->id());
+    if ($update_tms && $document_id = $this->getDocumentId($entity)) {
+      try {
+        $newDocumentID = $this->lingotek->updateDocument($document_id, NULL, NULL, NULL, NULL, $job_id);
+      }
+      catch (LingotekDocumentLockedException $exception) {
+        $this->setDocumentId($entity, $exception->getNewDocumentId());
+        throw $exception;
+      }
+      catch (LingotekDocumentArchivedException $exception) {
+        $old_job_id = $this->getJobId($entity);
+        $this->setDocumentId($entity, NULL);
+        $this->deleteMetadata($entity);
+        $metadata->setJobId($old_job_id);
+        $metadata->save();
+        throw $exception;
+      }
+      catch (LingotekPaymentRequiredException $exception) {
+        throw $exception;
+      }
+      catch (LingotekApiException $exception) {
+        throw $exception;
+      }
+    }
+    if (is_string($newDocumentID)) {
+      $metadata->setDocumentId($newDocumentID);
+    }
     $metadata->setJobId($job_id);
     $metadata->save();
     return $entity;

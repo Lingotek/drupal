@@ -4,6 +4,9 @@ namespace Drupal\lingotek_test;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\lingotek\Exception\LingotekApiException;
+use Drupal\lingotek\Exception\LingotekDocumentArchivedException;
+use Drupal\lingotek\Exception\LingotekDocumentLockedException;
+use Drupal\lingotek\Exception\LingotekPaymentRequiredException;
 use Drupal\lingotek\LanguageLocaleMapperInterface;
 use Drupal\lingotek\LingotekInterface;
 use Drupal\lingotek\LingotekProfileInterface;
@@ -194,6 +197,9 @@ class LingotekFake implements LingotekInterface {
     if (\Drupal::state()->get('lingotek.must_error_in_upload', FALSE)) {
       throw new LingotekApiException('Error was forced.');
     }
+    if (\Drupal::state()->get('lingotek.must_payment_required_error_in_upload', FALSE)) {
+      throw new LingotekPaymentRequiredException('Error was forced.');
+    }
     if (is_array($content)) {
       $content = json_encode($content);
     }
@@ -213,6 +219,7 @@ class LingotekFake implements LingotekInterface {
       $doc_id .= '-' . $count;
     }
     ++$count;
+    \Drupal::state()->set('lingotek.last_used_id', $count);
     \Drupal::state()->set('lingotek.uploaded_docs', $count);
 
     // Save the timestamp of the upload.
@@ -224,17 +231,57 @@ class LingotekFake implements LingotekInterface {
   }
 
   public function updateDocument($doc_id, $content, $url = NULL, $title = NULL, LingotekProfileInterface $profile = NULL, $job_id = NULL) {
+    $newId = TRUE;
     if (\Drupal::state()->get('lingotek.must_error_in_upload', FALSE)) {
       throw new LingotekApiException('Error was forced.');
+    }
+    if (\Drupal::state()->get('lingotek.must_payment_required_error_in_update', FALSE)) {
+      throw new LingotekPaymentRequiredException('Error was forced.');
+    }
+    if (\Drupal::state()->get('lingotek.must_document_archived_error_in_update', FALSE)) {
+      throw new LingotekDocumentArchivedException($doc_id, 'Error was forced.');
+    }
+    if (\Drupal::state()->get('lingotek.must_document_locked_error_in_update', FALSE)) {
+      throw new LingotekDocumentLockedException($doc_id, 'new-doc-id', 'Error was forced.');
     }
     if (is_array($content)) {
       $content = json_encode($content);
     }
-
+    if ($content === NULL) {
+      $newId = FALSE;
+    }
     \Drupal::state()->set('lingotek.uploaded_content', $content);
     \Drupal::state()->set('lingotek.uploaded_content_url', $url);
     \Drupal::state()->set('lingotek.uploaded_title', $title);
     \Drupal::state()->set('lingotek.uploaded_job_id', $job_id);
+
+    if ($newId) {
+      $last_doc_id = \Drupal::state()->set('lingotek.last_used_id', 0);
+      $new_doc_id = 'dummy-document-hash-id';
+      if ($last_doc_id > 0) {
+        $new_doc_id .= '-' . $last_doc_id;
+      }
+      ++$last_doc_id;
+      \Drupal::state()->set('lingotek.last_used_id', $last_doc_id);
+    }
+    else {
+      $new_doc_id = $doc_id;
+    }
+
+    $requested_locales = \Drupal::state()->get('lingotek.requested_locales', []);
+    if (isset($requested_locales[$doc_id])) {
+      $new_requested_locales = [];
+      foreach ($requested_locales as $id => $requested_locale) {
+        if ($doc_id === $id) {
+          $new_requested_locales[$new_doc_id] = $requested_locale;
+        }
+        else {
+          $new_requested_locales[$new_doc_id] = $requested_locale;
+        }
+      }
+      $requested_locales = $new_requested_locales;
+    }
+    \Drupal::state()->set('lingotek.requested_locales', $requested_locales);
 
     // Save the timestamp of the upload.
     $timestamps = \Drupal::state()->get('lingotek.upload_timestamps', []);
@@ -242,7 +289,7 @@ class LingotekFake implements LingotekInterface {
     \Drupal::state()->set('lingotek.upload_timestamps', $timestamps);
 
     // Our document is always imported correctly.
-    return TRUE;
+    return $new_doc_id;
   }
 
   public function documentImported($doc_id) {

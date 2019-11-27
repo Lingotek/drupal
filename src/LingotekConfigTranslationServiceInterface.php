@@ -192,6 +192,13 @@ interface LingotekConfigTranslationServiceInterface {
    *
    * @return bool
    *   TRUE if the document was uploaded successfully, FALSE if not.
+   *
+   * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
+   * @throws \Drupal\lingotek\Exception\LingotekApiException
+   *
+   * Propagated from @see ::updateDocument :
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentArchivedException
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentLockedException
    */
   public function uploadDocument(ConfigEntityInterface $entity, $job_id = NULL);
 
@@ -216,6 +223,11 @@ interface LingotekConfigTranslationServiceInterface {
    *
    * @return bool
    *   TRUE if the document was updated successfully, FALSE if not.
+   *
+   * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentArchivedException
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentLockedException
+   * @throws \Drupal\lingotek\Exception\LingotekApiException
    */
   public function updateDocument(ConfigEntityInterface &$entity, $job_id = NULL);
 
@@ -450,6 +462,13 @@ interface LingotekConfigTranslationServiceInterface {
    *
    * @return bool
    *   TRUE if the document was uploaded successfully, FALSE if not.
+   *
+   * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
+   * @throws \Drupal\lingotek\Exception\LingotekApiException
+   *
+   * Propagated from @see ::updateConfig :
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentArchivedException
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentLockedException
    */
   public function uploadConfig($mapper_id, $job_id = NULL);
 
@@ -565,6 +584,11 @@ interface LingotekConfigTranslationServiceInterface {
    *
    * @return bool
    *   TRUE if the document was updated successfully, FALSE if not.
+   *
+   * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
+   * @throws \Drupal\lingotek\Exception\LingotekApiException
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentArchivedException
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentLockedException
    */
   public function updateConfig($mapper_id, $job_id = NULL);
 
@@ -602,6 +626,11 @@ interface LingotekConfigTranslationServiceInterface {
    *
    * @return \Drupal\Core\Config\Entity\ConfigEntityInterface
    *   Returns the entity which job ID is saved.
+   *
+   * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentArchivedException
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentLockedException
+   * @throws \Drupal\lingotek\Exception\LingotekApiException
    */
   public function setJobId(ConfigEntityInterface $entity, $job_id, $update_tms = FALSE);
 
@@ -629,6 +658,11 @@ interface LingotekConfigTranslationServiceInterface {
    *
    * @return \Drupal\Core\Entity\ContentEntityInterface
    *   Returns the mapper which job ID is saved.
+   *
+   * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentArchivedException
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentLockedException
+   * @throws \Drupal\lingotek\Exception\LingotekApiException
    */
   public function setConfigJobId(ConfigNamesMapper $mapper, $job_id, $update_tms = FALSE);
 

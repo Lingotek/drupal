@@ -750,6 +750,42 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
   }
 
   /**
+   * Test that we handle errors in upload.
+   */
+  public function testUploadingWithAPaymentRequiredError() {
+    \Drupal::state()->set('lingotek.must_payment_required_error_in_upload', TRUE);
+
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    $this->goToContentBulkManagementForm();
+
+    // Upload the document, which must fail.
+    $this->clickLink('EN');
+    $this->assertText('Community has been disabled. Please contact support@lingotek.com to re-enable your community.');
+
+    // Check the right class is added.
+    $this->assertSourceStatus('EN', Lingotek::STATUS_ERROR);
+
+    // The node has been marked with the error status.
+    $this->node = Node::load(1);
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.content_translation');
+    $source_status = $translation_service->getSourceStatus($this->node);
+    $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The node has been marked as error.');
+
+    // I can still re-try the upload.
+    \Drupal::state()->set('lingotek.must_payment_required_error_in_upload', FALSE);
+    $this->clickLink('EN');
+    $this->assertText('Node Llamas are cool has been uploaded.');
+  }
+
+  /**
    * Test that we handle errors in update.
    */
   public function testUpdatingWithAnError() {
@@ -783,7 +819,7 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     $this->assertText('The update for node Llamas are cool EDITED failed. Please try again.');
 
     // Check the right class is added.
-    $this->assertSourceStatus('EN', 'error');
+    $this->assertSourceStatus('EN', Lingotek::STATUS_ERROR);
 
     // The node has been marked with the error status.
     $this->node = Node::load(1);
@@ -794,6 +830,162 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
 
     // I can still re-try the upload.
     \Drupal::state()->set('lingotek.must_error_in_upload', FALSE);
+    $this->clickLink('EN');
+    $this->assertText('Node Llamas are cool EDITED has been updated.');
+  }
+
+  /**
+   * Test that we handle errors in update.
+   */
+  public function testUpdatingWithAPaymentRequiredError() {
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    $this->goToContentBulkManagementForm();
+
+    // Upload the document, which must succeed.
+    $this->clickLink('EN');
+    $this->assertText('Node Llamas are cool has been uploaded.');
+
+    // Check upload.
+    $this->clickLink('EN');
+
+    // Edit the node.
+    $edit['title[0][value]'] = 'Llamas are cool EDITED';
+    $this->saveAndKeepPublishedNodeForm($edit, 1);
+
+    \Drupal::state()->set('lingotek.must_payment_required_error_in_update', TRUE);
+
+    $this->goToContentBulkManagementForm();
+
+    // Update the document, which must fail.
+    $this->clickLink('EN');
+    $this->assertText('Community has been disabled. Please contact support@lingotek.com to re-enable your community.');
+
+    // Check the right class is added.
+    $this->assertSourceStatus('EN', Lingotek::STATUS_ERROR);
+
+    // The node has been marked with the error status.
+    $this->node = Node::load(1);
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.content_translation');
+    $source_status = $translation_service->getSourceStatus($this->node);
+    $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The node has been marked as error.');
+
+    // I can still re-try the upload.
+    \Drupal::state()->set('lingotek.must_payment_required_error_in_update', FALSE);
+    $this->clickLink('EN');
+    $this->assertText('Node Llamas are cool EDITED has been updated.');
+  }
+
+  /**
+   * Test that we handle errors in update.
+   */
+  public function testUpdatingWithADocumentArchivedError() {
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    $this->goToContentBulkManagementForm();
+
+    // Upload the document, which must succeed.
+    $this->clickLink('EN');
+    $this->assertText('Node Llamas are cool has been uploaded.');
+
+    // Check upload.
+    $this->clickLink('EN');
+
+    // Edit the node.
+    $edit['title[0][value]'] = 'Llamas are cool EDITED';
+    $this->saveAndKeepPublishedNodeForm($edit, 1);
+
+    \Drupal::state()->set('lingotek.must_document_archived_error_in_update', TRUE);
+
+    $this->goToContentBulkManagementForm();
+
+    // Update the document, which must fail.
+    $this->clickLink('EN');
+    $this->assertText('Document node Llamas are cool EDITED has been archived. Please upload again.');
+
+    // Check the right class is added.
+    $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
+
+    // The node has been marked with the error status.
+    $this->node = Node::load(1);
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.content_translation');
+    $source_status = $translation_service->getSourceStatus($this->node);
+    $this->assertEqual(Lingotek::STATUS_UNTRACKED, $source_status, 'The node has been marked as error.');
+
+    // I can still re-try the upload.
+    \Drupal::state()->set('lingotek.must_document_archived_error_in_update', FALSE);
+    // We cannot click, as for views there won't be a link.
+    // $this->clickLink('EN');
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    // We cannot click, as for views there won't be a link.
+    // $this->assertText('Node Llamas are cool EDITED has been uploaded.');
+    $this->assertSourceStatus('EN', Lingotek::STATUS_IMPORTING);
+  }
+
+  /**
+   * Test that we handle errors in update.
+   */
+  public function testUpdatingWithADocumentLockedError() {
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    $this->goToContentBulkManagementForm();
+
+    // Upload the document, which must succeed.
+    $this->clickLink('EN');
+    $this->assertText('Node Llamas are cool has been uploaded.');
+
+    // Check upload.
+    $this->clickLink('EN');
+
+    // Edit the node.
+    $edit['title[0][value]'] = 'Llamas are cool EDITED';
+    $this->saveAndKeepPublishedNodeForm($edit, 1);
+
+    \Drupal::state()->set('lingotek.must_document_locked_error_in_update', TRUE);
+
+    $this->goToContentBulkManagementForm();
+
+    // Update the document, which must fail.
+    $this->clickLink('EN');
+    $this->assertText('Document node Llamas are cool EDITED has a new version. The document id has been updated for all future interactions. Please try again.');
+
+    // Check the right class is added.
+    $this->assertSourceStatus('EN', Lingotek::STATUS_EDITED);
+
+    // The node has been marked with the error status.
+    $this->node = Node::load(1);
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.content_translation');
+    $source_status = $translation_service->getSourceStatus($this->node);
+    $this->assertEqual(Lingotek::STATUS_EDITED, $source_status, 'The node has been marked as error.');
+
+    // I can still re-try the upload.
+    \Drupal::state()->set('lingotek.must_document_locked_error_in_update', FALSE);
     $this->clickLink('EN');
     $this->assertText('Node Llamas are cool EDITED has been updated.');
   }
@@ -836,6 +1028,48 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
 
     // I can still re-try the upload.
     \Drupal::state()->set('lingotek.must_error_in_upload', FALSE);
+    $this->clickLink('EN');
+    $this->assertText('Node Llamas are cool has been uploaded.');
+  }
+
+  /**
+   * Test that we handle errors in upload.
+   */
+  public function testUploadingWithAPaymentRequiredErrorUsingActions() {
+    \Drupal::state()->set('lingotek.must_payment_required_error_in_upload', TRUE);
+
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    $this->goToContentBulkManagementForm();
+
+    // Upload the document, which must fail.
+    $this->assertLingotekUploadLink();
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $this->assertText('Community has been disabled. Please contact support@lingotek.com to re-enable your community.');
+
+    // Check the right class is added.
+    $this->assertSourceStatus('EN', Lingotek::STATUS_ERROR);
+
+    // The node has been marked with the error status.
+    $this->node = Node::load(1);
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.content_translation');
+    $source_status = $translation_service->getSourceStatus($this->node);
+    $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The node has been marked as error.');
+
+    // I can still re-try the upload.
+    \Drupal::state()->set('lingotek.must_payment_required_error_in_upload', FALSE);
     $this->clickLink('EN');
     $this->assertText('Node Llamas are cool has been uploaded.');
   }
@@ -895,6 +1129,192 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
 
     // I can still re-try the upload.
     \Drupal::state()->set('lingotek.must_error_in_upload', FALSE);
+    $this->clickLink('EN');
+    $this->assertText('Node Llamas are cool EDITED has been updated.');
+  }
+
+  /**
+   * Test that we handle errors in update.
+   */
+  public function testUpdatingWithADocumentArchivedErrorUsingActions() {
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    $this->goToContentBulkManagementForm();
+
+    // Upload the document, which must succeed.
+    $this->assertLingotekUploadLink();
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $this->assertSourceStatus('EN', Lingotek::STATUS_IMPORTING);
+
+    // Check upload.
+    $this->clickLink('EN');
+
+    // Edit the node.
+    $edit = ['title[0][value]' => 'Llamas are cool EDITED'];
+    $this->saveAndKeepPublishedNodeForm($edit, 1);
+
+    \Drupal::state()->set('lingotek.must_document_archived_error_in_update', TRUE);
+
+    $this->goToContentBulkManagementForm();
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    $this->assertText('Document node Llamas are cool EDITED has been archived. Please upload again.');
+
+    // Check the right class is added.
+    $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
+
+    // The node has been marked with the error status.
+    $this->node = Node::load(1);
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.content_translation');
+    $source_status = $translation_service->getSourceStatus($this->node);
+    $this->assertEqual(Lingotek::STATUS_UNTRACKED, $source_status, 'The node has been marked as error.');
+
+    // I can still re-try the upload.
+    \Drupal::state()->set('lingotek.must_document_archived_error_in_update', FALSE);
+    // We cannot click, as for views there won't be a link.
+    // $this->clickLink('EN');
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    // We cannot click, as for views there won't be a link.
+    // $this->assertText('Node Llamas are cool EDITED has been uploaded.');
+    $this->assertSourceStatus('EN', Lingotek::STATUS_IMPORTING);
+  }
+
+  /**
+   * Test that we handle errors in update.
+   */
+  public function testUpdatingWithADocumentLockedErrorUsingActions() {
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    $this->goToContentBulkManagementForm();
+
+    // Upload the document, which must succeed.
+    $this->assertLingotekUploadLink();
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $this->assertSourceStatus('EN', Lingotek::STATUS_IMPORTING);
+
+    // Check upload.
+    $this->clickLink('EN');
+
+    // Edit the node.
+    $edit = ['title[0][value]' => 'Llamas are cool EDITED'];
+    $this->saveAndKeepPublishedNodeForm($edit, 1);
+
+    \Drupal::state()->set('lingotek.must_document_locked_error_in_update', TRUE);
+
+    $this->goToContentBulkManagementForm();
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    $this->assertText('Document node Llamas are cool EDITED has a new version. The document id has been updated for all future interactions. Please try again.');
+
+    // Check the right class is added.
+    $this->assertSourceStatus('EN', Lingotek::STATUS_EDITED);
+
+    // The node has been marked with the error status.
+    $this->node = Node::load(1);
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.content_translation');
+    $source_status = $translation_service->getSourceStatus($this->node);
+    $this->assertEqual(Lingotek::STATUS_EDITED, $source_status, 'The node has been marked as error.');
+
+    // I can still re-try the upload.
+    \Drupal::state()->set('lingotek.must_document_locked_error_in_update', FALSE);
+    $this->clickLink('EN');
+    $this->assertText('Node Llamas are cool EDITED has been updated.');
+  }
+
+  /**
+   * Test that we handle errors in update.
+   */
+  public function testUpdatingWithAPaymentRequiredErrorUsingActions() {
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    $this->goToContentBulkManagementForm();
+
+    // Upload the document, which must succeed.
+    $this->assertLingotekUploadLink();
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $this->assertSourceStatus('EN', Lingotek::STATUS_IMPORTING);
+
+    // Check upload.
+    $this->clickLink('EN');
+
+    // Edit the node.
+    $edit = ['title[0][value]' => 'Llamas are cool EDITED'];
+    $this->saveAndKeepPublishedNodeForm($edit, 1);
+
+    \Drupal::state()->set('lingotek.must_payment_required_error_in_update', TRUE);
+
+    $this->goToContentBulkManagementForm();
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    $this->assertText('Community has been disabled. Please contact support@lingotek.com to re-enable your community.');
+
+    // Check the right class is added.
+    $this->assertSourceStatus('EN', Lingotek::STATUS_ERROR);
+
+    // The node has been marked with the error status.
+    $this->node = Node::load(1);
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.content_translation');
+    $source_status = $translation_service->getSourceStatus($this->node);
+    $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The node has been marked as error.');
+
+    // I can still re-try the upload.
+    \Drupal::state()->set('lingotek.must_payment_required_error_in_update', FALSE);
     $this->clickLink('EN');
     $this->assertText('Node Llamas are cool EDITED has been updated.');
   }

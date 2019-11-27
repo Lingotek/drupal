@@ -6,6 +6,9 @@ use Drupal\Core\Config\Config;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\language\ConfigurableLanguageInterface;
 use Drupal\lingotek\Entity\LingotekProfile;
+use Drupal\lingotek\Exception\LingotekDocumentArchivedException;
+use Drupal\lingotek\Exception\LingotekDocumentLockedException;
+use Drupal\lingotek\Exception\LingotekPaymentRequiredException;
 use Drupal\lingotek\LanguageLocaleMapperInterface;
 use Drupal\lingotek\Lingotek;
 use Drupal\lingotek\LingotekFilterManagerInterface;
@@ -409,6 +412,23 @@ class LingotekUnitTest extends UnitTestCase {
    * @covers ::uploadDocument
    */
   public function testUploadDocument() {
+    $response = $this->getMockBuilder(ResponseInterface::class)
+      ->disableOriginalConstructor()
+      ->getMock();
+    $response->expects($this->any())
+      ->method('getStatusCode')
+      ->willReturn(Response::HTTP_ACCEPTED);
+    $response->expects($this->any())
+      ->method('getBody')
+      ->willReturn(json_encode(
+        [
+          'properties' =>
+            [
+              'id' => 'my-document-id',
+            ],
+        ]
+      ));
+
     $this->lingotekFilterManager->expects($this->any())
       ->method('getFilterId')
       ->willReturn('4f91482b-5aa1-4a4a-a43f-712af7b39625');
@@ -434,7 +454,8 @@ class LingotekUnitTest extends UnitTestCase {
         'fprm_id' => '4f91482b-5aa1-4a4a-a43f-712af7b39625',
         'vault_id' => 'my_test_vault',
         'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0',
-      ]);
+      ])
+      ->will($this->returnValue($response));
 
     // Vault id has changed.
     $this->api->expects($this->at(1))
@@ -449,7 +470,8 @@ class LingotekUnitTest extends UnitTestCase {
         'fprm_id' => '4f91482b-5aa1-4a4a-a43f-712af7b39625',
         'vault_id' => 'another_test_vault',
         'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0',
-      ]);
+      ])
+      ->will($this->returnValue($response));
 
     // If there is a profile with default vault, it must be replaced.
     $this->api->expects($this->at(2))
@@ -464,7 +486,8 @@ class LingotekUnitTest extends UnitTestCase {
         'fprm_id' => '4f91482b-5aa1-4a4a-a43f-712af7b39625',
         'vault_id' => 'default_vault',
         'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0',
-      ]);
+      ])
+      ->will($this->returnValue($response));
 
     // If there is no profile, vault should not be included.
     $this->api->expects($this->at(3))
@@ -478,7 +501,8 @@ class LingotekUnitTest extends UnitTestCase {
         'format' => 'JSON',
         'project_id' => 'default_project',
         'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0',
-       ]);
+       ])
+      ->will($this->returnValue($response));
 
     // If there is an url, it should be included.
     $this->api->expects($this->at(4))
@@ -493,7 +517,8 @@ class LingotekUnitTest extends UnitTestCase {
         'project_id' => 'default_project',
         'external_url' => 'http://example.com/node/1',
         'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0',
-      ]);
+      ])
+      ->will($this->returnValue($response));
 
     // If there is a profile using the project default workflow template vault,
     // vault should not be specified.
@@ -508,7 +533,8 @@ class LingotekUnitTest extends UnitTestCase {
         'format' => 'JSON',
         'project_id' => 'default_project',
         'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0',
-      ]);
+      ])
+      ->will($this->returnValue($response));
 
     // We upload with array of content.
     $this->api->expects($this->at(6))
@@ -523,7 +549,8 @@ class LingotekUnitTest extends UnitTestCase {
         'fprm_id' => '4f91482b-5aa1-4a4a-a43f-712af7b39625',
         'vault_id' => 'test_vault',
         'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0',
-      ]);
+      ])
+      ->will($this->returnValue($response));
 
     // We upload with a job ID.
     $this->api->expects($this->at(7))
@@ -539,50 +566,63 @@ class LingotekUnitTest extends UnitTestCase {
         'vault_id' => 'test_vault',
         'job_id' => 'my_job_id',
         'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0',
-      ]);
+      ])
+      ->will($this->returnValue($response));
 
     // We upload with a profile that has a vault and a project.
     $profile = new LingotekProfile(['id' => 'profile1', 'project' => 'my_test_project', 'vault' => 'my_test_vault'], 'lingotek_profile');
-    $this->lingotek->uploadDocument('title', 'content', 'es', NULL, $profile);
+    $doc_id = $this->lingotek->uploadDocument('title', 'content', 'es', NULL, $profile);
+    $this->assertEquals('my-document-id', $doc_id);
 
     // We upload with a profile that has another vault and another project.
     $profile = new LingotekProfile(['id' => 'profile2', 'project' => 'another_test_project', 'vault' => 'another_test_vault'], 'lingotek_profile');
-    $this->lingotek->uploadDocument('title', 'content', 'es', NULL, $profile);
+    $doc_id = $this->lingotek->uploadDocument('title', 'content', 'es', NULL, $profile);
+    $this->assertEquals('my-document-id', $doc_id);
 
     // We upload with a profile that has marked to use the default vault and project,
     // so must be replaced.
     $profile = new LingotekProfile(['id' => 'profile2', 'project' => 'default', 'vault' => 'default', 'filter' => 'drupal_default'], 'lingotek_profile');
-    $this->lingotek->uploadDocument('title', 'content', 'es', NULL, $profile);
+    $doc_id = $this->lingotek->uploadDocument('title', 'content', 'es', NULL, $profile);
+    $this->assertEquals('my-document-id', $doc_id);
 
     // We upload without a profile.
-    $this->lingotek->uploadDocument('title', 'content', 'es', NULL, NULL);
+    $doc_id = $this->lingotek->uploadDocument('title', 'content', 'es', NULL, NULL);
+    $this->assertEquals('my-document-id', $doc_id);
 
     // We upload without a profile, but with url.
-    $this->lingotek->uploadDocument('title', 'content', 'es', 'http://example.com/node/1', NULL);
+    $doc_id = $this->lingotek->uploadDocument('title', 'content', 'es', 'http://example.com/node/1', NULL);
+    $this->assertEquals('my-document-id', $doc_id);
 
     // We upload with a profile that has marked to use the project default
     // workflow template vault, so must be omitted.
     $profile = new LingotekProfile(['id' => 'profile2', 'project' => 'default', 'vault' => 'project_workflow_vault', 'filter' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265'], 'lingotek_profile');
-    $this->lingotek->uploadDocument('title', 'content', 'es', NULL, $profile);
+    $doc_id = $this->lingotek->uploadDocument('title', 'content', 'es', NULL, $profile);
+    $this->assertEquals('my-document-id', $doc_id);
 
     // We upload with content as an array.
     $profile = new LingotekProfile(['id' => 'profile0', 'project' => 'test_project', 'vault' => 'test_vault'], 'lingotek_profile');
-    $this->lingotek->uploadDocument('title', ['content' => 'wedgiePlatypus'], 'es', NULL, $profile);
+    $doc_id = $this->lingotek->uploadDocument('title', ['content' => 'wedgiePlatypus'], 'es', NULL, $profile);
+    $this->assertEquals('my-document-id', $doc_id);
 
     // We upload with a job ID.
-    $this->lingotek->uploadDocument('title', ['content' => 'wedgiePlatypus'], 'es', NULL, $profile, 'my_job_id');
+    $doc_id = $this->lingotek->uploadDocument('title', ['content' => 'wedgiePlatypus'], 'es', NULL, $profile, 'my_job_id');
+    $this->assertEquals('my-document-id', $doc_id);
   }
 
   /**
    * @covers ::updateDocument
    */
-  public function testUpdateDocument() {
+  public function testUpdateDocumentBC() {
     $response = $this->getMockBuilder(ResponseInterface::class)
       ->disableOriginalConstructor()
       ->getMock();
     $response->expects($this->any())
       ->method('getStatusCode')
       ->willReturn(Response::HTTP_ACCEPTED);
+    $response->expects($this->any())
+      ->method('getBody')
+      // The previous version of the API returned an empty response.
+      ->willReturn(json_encode([]));
 
     $this->lingotekFilterManager->expects($this->any())
       ->method('getFilterId')
@@ -788,6 +828,129 @@ class LingotekUnitTest extends UnitTestCase {
 
     // We upload without a profile
     $this->assertTrue($this->lingotek->addTarget('my_doc_id', 'es_ES', NULL));
+  }
+
+  /**
+   * @covers ::addTarget
+   */
+  public function testAddTargetPaymentRequired() {
+    $response = $this->getMockBuilder(ResponseInterface::class)
+      ->disableOriginalConstructor()
+      ->getMock();
+    $response->expects($this->any())
+      ->method('getStatusCode')
+      ->willReturn(Response::HTTP_PAYMENT_REQUIRED);
+    $response->expects($this->any())
+      ->method('getBody')
+      ->willReturn(json_encode(
+        [
+          'messages' => [
+            "Community has been disabled. Please contact support@lingotek.com to re-enable your community.",
+          ],
+        ]
+      ));
+    $language = $this->createMock(ConfigurableLanguageInterface::class);
+    $language->expects($this->any())
+      ->method('getId')
+      ->will($this->returnValue('es'));
+
+    $this->config->expects($this->any())
+      ->method('get')
+      ->will($this->returnValueMap([['default.workflow', 'default_workflow']]));
+    $this->languageLocaleMapper->expects($this->any())
+      ->method('getConfigurableLanguageForLocale')
+      ->with('es_ES')
+      ->will($this->returnValue($language));
+
+    $this->api->expects($this->at(0))
+      ->method('addTranslation')
+      ->with('my_doc_id', 'es_ES', NULL)
+      ->will($this->returnValue($response));
+
+    $this->expectException(LingotekPaymentRequiredException::class);
+    $this->expectExceptionMessage('Community has been disabled. Please contact support@lingotek.com to re-enable your community.');
+    $this->lingotek->addTarget('my_doc_id', 'es_ES', NULL);
+  }
+
+  /**
+   * @covers ::addTarget
+   */
+  public function testAddTargetGone() {
+    $response = $this->getMockBuilder(ResponseInterface::class)
+      ->disableOriginalConstructor()
+      ->getMock();
+    $response->expects($this->any())
+      ->method('getStatusCode')
+      ->willReturn(Response::HTTP_GONE);
+    $response->expects($this->any())
+      ->method('getBody')
+      ->willReturn(json_encode(
+        [
+          'messages' => [
+            "Document my_doc_id has been archived.",
+          ],
+        ]
+      ));
+    $language = $this->createMock(ConfigurableLanguageInterface::class);
+    $language->expects($this->any())
+      ->method('getId')
+      ->will($this->returnValue('es'));
+
+    $this->config->expects($this->any())
+      ->method('get')
+      ->will($this->returnValueMap([['default.workflow', 'default_workflow']]));
+    $this->languageLocaleMapper->expects($this->any())
+      ->method('getConfigurableLanguageForLocale')
+      ->with('es_ES')
+      ->will($this->returnValue($language));
+
+    $this->api->expects($this->at(0))
+      ->method('addTranslation')
+      ->with('my_doc_id', 'es_ES', NULL)
+      ->will($this->returnValue($response));
+
+    $this->assertFalse($this->lingotek->addTarget('my_doc_id', 'es_ES', NULL));
+  }
+
+  /**
+   * @covers ::addTarget
+   */
+  public function testAddTargetLocked() {
+    $response = $this->getMockBuilder(ResponseInterface::class)
+      ->disableOriginalConstructor()
+      ->getMock();
+    $response->expects($this->any())
+      ->method('getStatusCode')
+      ->willReturn(Response::HTTP_LOCKED);
+    $response->expects($this->any())
+      ->method('getBody')
+      ->willReturn(json_encode(
+        [
+          'next_document_id' => 'my_new_document_id',
+          'messages' => [
+            'Document my_doc_id has been updated with a new version. Use document my_new_document_id for all future interactions.',
+          ],
+        ]
+      ));
+    $language = $this->createMock(ConfigurableLanguageInterface::class);
+    $language->expects($this->any())
+      ->method('getId')
+      ->will($this->returnValue('es'));
+
+    $this->config->expects($this->any())
+      ->method('get')
+      ->will($this->returnValueMap([['default.workflow', 'default_workflow']]));
+    $this->languageLocaleMapper->expects($this->any())
+      ->method('getConfigurableLanguageForLocale')
+      ->with('es_ES')
+      ->will($this->returnValue($language));
+
+    $this->api->expects($this->at(0))
+      ->method('addTranslation')
+      ->with('my_doc_id', 'es_ES', NULL)
+      ->will($this->returnValue($response));
+
+    $this->assertFalse($this->lingotek->addTarget('my_doc_id', 'es_ES', NULL));
   }
 
   /**
@@ -1088,8 +1251,363 @@ class LingotekUnitTest extends UnitTestCase {
       ])
       ->will($this->returnValue($response));
 
-    $data = ['content' => 'My test content', '_lingotek_metadata' => ['_entity_id' => 1, '_intelligence' => ['content_type' => 'node']]];
+    $data = [
+      'content' => 'My test content',
+      '_lingotek_metadata' => [
+        '_entity_id' => 1,
+        '_intelligence' => ['content_type' => 'node'],
+      ],
+    ];
+    $result = $this->lingotek->updateDocument('my_doc_id', $data);
+    $this->assertTrue($result == TRUE);
+  }
+
+  /**
+   * @covers ::updateDocument
+   */
+  public function testUpdateDocument() {
+    $response = $this->getMockBuilder(ResponseInterface::class)
+      ->disableOriginalConstructor()
+      ->getMock();
+    $this->lingotekFilterManager->expects($this->any())
+      ->method('getFilterId')
+      ->willReturn('4f91482b-5aa1-4a4a-a43f-712af7b39625');
+
+    $this->lingotekFilterManager->expects($this->any())
+      ->method('getSubfilterId')
+      ->willReturn('0e79f34d-f27b-4a0c-880e-cd9181a5d265');
+
+    $response->expects($this->any())
+      ->method('getStatusCode')
+      ->willReturn(Response::HTTP_ACCEPTED);
+    $response->expects($this->any())
+      ->method('getBody')
+      ->willReturn(json_encode(
+        [
+          'next_document_id' => 'my_new_document_id',
+          'messages' => [
+            'Document my_doc_id has been updated with a new version. Use document my_new_document_id for all future interactions.',
+          ],
+        ]
+      ));
+    $this->api->expects($this->at(0))
+      ->method('patchDocument')
+      ->with('my_doc_id', [
+        'content' => '{"content":"My test content","_lingotek_metadata":{"_entity_id":1}}',
+        'format' => 'JSON',
+        'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
+        'fprm_id' => '4f91482b-5aa1-4a4a-a43f-712af7b39625',
+        'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0',
+        'content_type' => 'node',
+      ])
+      ->will($this->returnValue($response));
+
+    $data = [
+      'content' => 'My test content',
+      '_lingotek_metadata' => [
+        '_entity_id' => 1,
+        '_intelligence' => ['content_type' => 'node'],
+      ],
+    ];
+
+    $result = $this->lingotek->updateDocument('my_doc_id', $data);
+    $this->assertEquals($result, 'my_new_document_id');
+  }
+
+  /**
+   * @covers ::updateDocument
+   */
+  public function testUpdateDocumentPaymentRequired() {
+    $response = $this->getMockBuilder(ResponseInterface::class)
+      ->disableOriginalConstructor()
+      ->getMock();
+    $this->lingotekFilterManager->expects($this->any())
+      ->method('getFilterId')
+      ->willReturn('4f91482b-5aa1-4a4a-a43f-712af7b39625');
+
+    $this->lingotekFilterManager->expects($this->any())
+      ->method('getSubfilterId')
+      ->willReturn('0e79f34d-f27b-4a0c-880e-cd9181a5d265');
+
+    $response->expects($this->any())
+      ->method('getStatusCode')
+      ->willReturn(Response::HTTP_PAYMENT_REQUIRED);
+    $response->expects($this->any())
+      ->method('getBody')
+      ->willReturn(json_encode(
+        [
+          'messages' => [
+            "Community has been disabled. Please contact support@lingotek.com to re-enable your community.",
+          ],
+        ]
+      ));
+    $this->api->expects($this->at(0))
+      ->method('patchDocument')
+      ->with('my_doc_id', [
+        'content' => '{"content":"My test content","_lingotek_metadata":{"_entity_id":1}}',
+        'format' => 'JSON',
+        'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
+        'fprm_id' => '4f91482b-5aa1-4a4a-a43f-712af7b39625',
+        'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0',
+        'content_type' => 'node',
+      ])
+      ->will($this->returnValue($response));
+
+    $data = [
+      'content' => 'My test content',
+      '_lingotek_metadata' => [
+        '_entity_id' => 1,
+        '_intelligence' => ['content_type' => 'node'],
+      ],
+    ];
+
+    $this->expectException(LingotekPaymentRequiredException::class);
+    $this->expectExceptionMessage('Community has been disabled. Please contact support@lingotek.com to re-enable your community.');
     $this->lingotek->updateDocument('my_doc_id', $data);
+  }
+
+  /**
+   * @covers ::updateDocument
+   */
+  public function testUpdateDocumentGone() {
+    $response = $this->getMockBuilder(ResponseInterface::class)
+      ->disableOriginalConstructor()
+      ->getMock();
+    $this->lingotekFilterManager->expects($this->any())
+      ->method('getFilterId')
+      ->willReturn('4f91482b-5aa1-4a4a-a43f-712af7b39625');
+
+    $this->lingotekFilterManager->expects($this->any())
+      ->method('getSubfilterId')
+      ->willReturn('0e79f34d-f27b-4a0c-880e-cd9181a5d265');
+
+    $response->expects($this->any())
+      ->method('getStatusCode')
+      ->willReturn(Response::HTTP_GONE);
+    $response->expects($this->any())
+      ->method('getBody')
+      ->willReturn(json_encode(
+        [
+          'messages' => [
+            "Document my_doc_id has been archived.",
+          ],
+        ]
+      ));
+    $this->api->expects($this->at(0))
+      ->method('patchDocument')
+      ->with('my_doc_id', [
+        'content' => '{"content":"My test content","_lingotek_metadata":{"_entity_id":1}}',
+        'format' => 'JSON',
+        'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
+        'fprm_id' => '4f91482b-5aa1-4a4a-a43f-712af7b39625',
+        'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0',
+        'content_type' => 'node',
+      ])
+      ->will($this->returnValue($response));
+
+    $data = [
+      'content' => 'My test content',
+      '_lingotek_metadata' => [
+        '_entity_id' => 1,
+        '_intelligence' => ['content_type' => 'node'],
+      ],
+    ];
+
+    $this->expectException(LingotekDocumentArchivedException::class);
+    $this->expectExceptionMessage('Document my_doc_id has been archived.');
+    $this->lingotek->updateDocument('my_doc_id', $data);
+  }
+
+  /**
+   * @covers ::updateDocument
+   */
+  public function testUpdateDocumentLocked() {
+    $response = $this->getMockBuilder(ResponseInterface::class)
+      ->disableOriginalConstructor()
+      ->getMock();
+    $this->lingotekFilterManager->expects($this->any())
+      ->method('getFilterId')
+      ->willReturn('4f91482b-5aa1-4a4a-a43f-712af7b39625');
+
+    $this->lingotekFilterManager->expects($this->any())
+      ->method('getSubfilterId')
+      ->willReturn('0e79f34d-f27b-4a0c-880e-cd9181a5d265');
+
+    $response->expects($this->any())
+      ->method('getStatusCode')
+      ->willReturn(Response::HTTP_LOCKED);
+    $response->expects($this->any())
+      ->method('getBody')
+      ->willReturn(json_encode(
+        [
+          'next_document_id' => 'my_new_document_id',
+          'messages' => [
+            'Document my_doc_id has been updated with a new version. Use document my_new_document_id for all future interactions.',
+          ],
+        ]
+      ));
+    $this->api->expects($this->at(0))
+      ->method('patchDocument')
+      ->with('my_doc_id', [
+        'content' => '{"content":"My test content","_lingotek_metadata":{"_entity_id":1}}',
+        'format' => 'JSON',
+        'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
+        'fprm_id' => '4f91482b-5aa1-4a4a-a43f-712af7b39625',
+        'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0',
+        'content_type' => 'node',
+      ])
+      ->will($this->returnValue($response));
+
+    $data = [
+      'content' => 'My test content',
+      '_lingotek_metadata' => [
+        '_entity_id' => 1,
+        '_intelligence' => ['content_type' => 'node'],
+      ],
+    ];
+
+    $this->expectException(LingotekDocumentLockedException::class);
+    $this->expectExceptionMessage('Document my_doc_id has been updated with a new version. Use document my_new_document_id for all future interactions.');
+    $this->lingotek->updateDocument('my_doc_id', $data);
+  }
+
+  /**
+   * @covers ::uploadDocument
+   */
+  public function testUploadDocumentPaymentRequired() {
+    $response = $this->getMockBuilder(ResponseInterface::class)
+      ->disableOriginalConstructor()
+      ->getMock();
+    $this->lingotekFilterManager->expects($this->any())
+      ->method('getFilterId')
+      ->willReturn('4f91482b-5aa1-4a4a-a43f-712af7b39625');
+
+    $this->lingotekFilterManager->expects($this->any())
+      ->method('getSubfilterId')
+      ->willReturn('0e79f34d-f27b-4a0c-880e-cd9181a5d265');
+
+    $response->expects($this->any())
+      ->method('getStatusCode')
+      ->willReturn(Response::HTTP_PAYMENT_REQUIRED);
+    $response->expects($this->any())
+      ->method('getBody')
+      ->willReturn(json_encode(
+        [
+          'messages' => [
+            "Community has been disabled. Please contact support@lingotek.com to re-enable your community.",
+          ],
+        ]
+      ));
+    $this->api->expects($this->at(0))
+      ->method('addDocument')
+      ->with([
+        'title' => 'title',
+        'content' => '{"content":"My test content","_lingotek_metadata":{"_entity_id":1}}',
+        'locale_code' => 'es',
+        'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
+        'fprm_id' => '4f91482b-5aa1-4a4a-a43f-712af7b39625',
+        'format' => 'JSON',
+        'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0',
+        'content_type' => 'node',
+      ])
+      ->will($this->returnValue($response));
+
+    $data = [
+      'content' => 'My test content',
+      '_lingotek_metadata' => [
+        '_entity_id' => 1,
+        '_intelligence' => ['content_type' => 'node'],
+      ],
+    ];
+
+    $this->expectException(LingotekPaymentRequiredException::class);
+    $this->expectExceptionMessage('Community has been disabled. Please contact support@lingotek.com to re-enable your community.');
+    $this->lingotek->uploadDocument('title', $data, 'es', NULL, NULL);
+  }
+
+  /**
+   * @covers ::downloadDocument
+   */
+  public function testDownloadDocument() {
+    $response = $this->getMockBuilder(ResponseInterface::class)
+      ->disableOriginalConstructor()
+      ->getMock();
+    $response->expects($this->any())
+      ->method('getStatusCode')
+      ->willReturn(Response::HTTP_OK);
+    $response->expects($this->any())
+      ->method('getBody')
+      ->willReturn(json_encode(
+        [
+          'title' =>
+            [
+              'value' => 'Document title',
+            ],
+        ]
+      ));
+
+    $language = $this->createMock(ConfigurableLanguageInterface::class);
+    $language->expects($this->any())
+      ->method('getId')
+      ->will($this->returnValue('es'));
+
+    $this->config->expects($this->any())
+      ->method('get')
+      ->will($this->returnValueMap([['default.workflow', 'default_workflow']]));
+    $this->languageLocaleMapper->expects($this->any())
+      ->method('getConfigurableLanguageForLocale')
+      ->with('es_ES')
+      ->will($this->returnValue($language));
+
+    // Workflow id has the original value.
+    $this->api->expects($this->at(0))
+      ->method('getTranslation')
+      ->with('my_doc_id', 'es_ES')
+      ->will($this->returnValue($response));
+
+    $this->assertNotNull($this->lingotek->downloadDocument('my_doc_id', 'es_ES'));
+  }
+
+  /**
+   * @covers ::downloadDocument
+   */
+  public function testDownloadDocumentGone() {
+    $response = $this->getMockBuilder(ResponseInterface::class)
+      ->disableOriginalConstructor()
+      ->getMock();
+    $response->expects($this->any())
+      ->method('getStatusCode')
+      ->willReturn(Response::HTTP_GONE);
+    $response->expects($this->any())
+      ->method('getBody')
+      ->willReturn(json_encode(
+        [
+          'messages' => [
+            "Document my_doc_id has been archived.",
+          ],
+        ]
+      ));
+
+    $language = $this->createMock(ConfigurableLanguageInterface::class);
+    $language->expects($this->any())
+      ->method('getId')
+      ->will($this->returnValue('es'));
+
+    $this->config->expects($this->any())
+      ->method('get')
+      ->will($this->returnValueMap([['default.workflow', 'default_workflow']]));
+    $this->languageLocaleMapper->expects($this->any())
+      ->method('getConfigurableLanguageForLocale')
+      ->with('es_ES')
+      ->will($this->returnValue($language));
+
+    // Workflow id has the original value.
+    $this->api->expects($this->at(0))
+      ->method('getTranslation')
+      ->with('my_doc_id', 'es_ES')
+      ->will($this->returnValue($response));
+
+    $this->assertFalse($this->lingotek->downloadDocument('my_doc_id', 'es_ES'));
   }
 
 }

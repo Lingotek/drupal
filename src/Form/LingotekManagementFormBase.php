@@ -19,6 +19,9 @@ use Drupal\Core\Url;
 use Drupal\file\Entity\File;
 use Drupal\lingotek\Exception\LingotekApiException;
 use Drupal\lingotek\Exception\LingotekContentEntityStorageException;
+use Drupal\lingotek\Exception\LingotekDocumentArchivedException;
+use Drupal\lingotek\Exception\LingotekDocumentLockedException;
+use Drupal\lingotek\Exception\LingotekPaymentRequiredException;
 use Drupal\lingotek\Helpers\LingotekManagementFormHelperTrait;
 use Drupal\lingotek\LanguageLocaleMapperInterface;
 use Drupal\lingotek\Lingotek;
@@ -1022,8 +1025,19 @@ abstract class LingotekManagementFormBase extends FormBase {
       try {
         $this->translationService->uploadDocument($entity, $job_id);
       }
+      catch (LingotekPaymentRequiredException $exception) {
+        $this->messenger()->addError(t('Community has been disabled. Please contact support@lingotek.com to re-enable your community.'));
+      }
+      catch (LingotekDocumentArchivedException $exception) {
+        $this->messenger()->addError(t('Document @entity_type %title has been archived. Please upload again.', [
+          '@entity_type' => $entity->getEntityTypeId(),
+          '%title' => $entity->label(),
+        ]));
+      }
+      catch (LingotekDocumentLockedException $exception) {
+        $this->messenger()->addError(t('Document @entity_type %title has a new version. The document id has been updated for all future interactions. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
+      }
       catch (LingotekApiException $exception) {
-        $this->translationService->setSourceStatus($entity, Lingotek::STATUS_ERROR);
         if ($this->translationService->getDocumentId($entity)) {
           $this->messenger()->addError(t('The update for @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
         }

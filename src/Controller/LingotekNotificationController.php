@@ -46,7 +46,23 @@ class LingotekNotificationController extends LingotekControllerBase {
       case 'document':
 
         break;
+      case 'document_archived':
+        $entity = $this->getEntity($request->query->get('document_id'));
+        if ($entity) {
+          if ($entity instanceof ConfigEntityInterface) {
+            $translation_service = $config_translation_service;
+          }
+          // We need to unset the document id first, so there's no cancelling
+          // call to the TMS.
+          $translation_service->setDocumentId($entity, NULL);
+          $translation_service->deleteMetadata($entity);
 
+          $http_status_code = Response::HTTP_OK;
+          $messages[] = new FormattableMarkup('Document @label was archived in Lingotek.', [
+            '@label' => $entity->label(),
+          ]);
+        }
+        break;
       // a document has uploaded and imported successfully for document_id
       case 'document_uploaded':
         $entity = $this->getEntity($request->query->get('document_id'));

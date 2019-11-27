@@ -2,7 +2,11 @@
 
 namespace Drupal\lingotek;
 
+use Drupal\Component\Serialization\Json;
 use Drupal\lingotek\Exception\LingotekApiException;
+use Drupal\lingotek\Exception\LingotekDocumentArchivedException;
+use Drupal\lingotek\Exception\LingotekDocumentLockedException;
+use Drupal\lingotek\Exception\LingotekPaymentRequiredException;
 use Drupal\lingotek\Remote\LingotekApiInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -237,8 +241,32 @@ class Lingotek implements LingotekInterface {
     }
     $response = $this->api->addDocument($args);
 
-    // TODO: Response code should be 202 on success
-    return $response;
+    $statusCode = $response->getStatusCode();
+    if ($statusCode == Response::HTTP_ACCEPTED) {
+      $responseBody = Json::decode($response->getBody(), TRUE);
+      if (!empty($responseBody) && !empty($responseBody['properties']['id'])) {
+        return $responseBody['properties']['id'];
+      }
+      else {
+        return FALSE;
+      }
+    }
+    elseif ($statusCode == Response::HTTP_PAYMENT_REQUIRED) {
+      // This is only applicable to subscription-based connectors, but the
+      // recommended action is to present the user with a message letting them
+      // know their Lingotek account has been disabled, and to please contact
+      // support to re-enable their account.
+      $responseBody = Json::decode($response->getBody());
+      $message = '';
+      if (!empty($responseBody) && isset($responseBody['messages'])) {
+        $message = $responseBody['messages'][0];
+      }
+      throw new LingotekPaymentRequiredException($message);
+    }
+    else {
+      return FALSE;
+    }
+    return FALSE;
   }
 
   /**
@@ -285,8 +313,47 @@ class Lingotek implements LingotekInterface {
     }
 
     $response = $this->api->patchDocument($doc_id, $args);
-    if ($response->getStatusCode() == Response::HTTP_ACCEPTED) {
-      return TRUE;
+    $statusCode = $response->getStatusCode();
+    if ($statusCode == Response::HTTP_ACCEPTED) {
+      $responseBody = Json::decode($response->getBody(), TRUE);
+      if (empty($responseBody)) {
+        return TRUE;
+      }
+      else {
+        $nextDocId = $responseBody['next_document_id'];
+        return $nextDocId;
+      }
+    }
+    elseif ($statusCode == Response::HTTP_PAYMENT_REQUIRED) {
+      // This is only applicable to subscription-based connectors, but the
+      // recommended action is to present the user with a message letting them
+      // know their Lingotek account has been disabled, and to please contact
+      // support to re-enable their account.
+      $responseBody = Json::decode($response->getBody());
+      $message = '';
+      if (!empty($responseBody) && isset($responseBody['messages'])) {
+        $message = $responseBody['messages'][0];
+      }
+      throw new LingotekPaymentRequiredException($message);
+    }
+    elseif ($statusCode == Response::HTTP_GONE) {
+      // Set the status of the document back to its pre-uploaded state.
+      // Typically this means the state would be set to Upload, or None but this
+      // may vary depending on connector. Essentially, the content’s status
+      // indicator should show that the source content needs to be re-uploaded
+      // to Lingotek.
+      throw new LingotekDocumentArchivedException($doc_id, sprintf('Document %s has been archived.', $doc_id));
+    }
+    elseif ($statusCode == Response::HTTP_LOCKED) {
+      // Update the connector’s document mapping with the ID provided in the
+      // next_document_id within the API response. This new ID represents the
+      // new version of the document.
+      $responseBody = Json::decode($response->getBody());
+      $nextDocId = '';
+      if (!empty($responseBody) && isset($responseBody['next_document_id'])) {
+        $nextDocId = $responseBody['next_document_id'];
+      }
+      throw new LingotekDocumentLockedException($doc_id, $nextDocId, sprintf('Document %s has been updated with a new version. Use document %s for all future interactions.', $doc_id, $nextDocId));
     }
     return FALSE;
   }
@@ -387,8 +454,42 @@ class Lingotek implements LingotekInterface {
     }
 
     $response = $this->api->addTranslation($doc_id, $locale, $workflow_id);
-    if ($response->getStatusCode() == Response::HTTP_CREATED) {
+    $statusCode = $response->getStatusCode();
+    if ($statusCode == Response::HTTP_CREATED) {
       return TRUE;
+    }
+    elseif ($statusCode == Response::HTTP_PAYMENT_REQUIRED) {
+      // This is only applicable to subscription-based connectors, but the
+      // recommended action is to present the user with a message letting them
+      // know their Lingotek account has been disabled, and to please contact
+      // support to re-enable their account.
+      $responseBody = Json::decode($response->getBody());
+      $message = '';
+      if (!empty($responseBody) && isset($responseBody['messages'])) {
+        $message = $responseBody['messages'][0];
+      }
+      throw new LingotekPaymentRequiredException($message);
+    }
+    elseif ($statusCode == Response::HTTP_GONE) {
+      // Set the status of the document back to its pre-uploaded state.
+      // Typically this means the state would be set to Upload, or None but this
+      // may vary depending on connector. Essentially, the content’s status
+      // indicator should show that the source content needs to be re-uploaded
+      // to Lingotek.
+      return FALSE;
+    }
+    elseif ($statusCode == Response::HTTP_LOCKED) {
+      // Update the connector’s document mapping with the ID provided in the
+      // next_document_id within the API response. This new ID represents the
+      // new version of the document.
+      $responseBody = Json::decode($response->getBody());
+      if (empty($responseBody)) {
+        return FALSE;
+      }
+      else {
+        $nextDocId = $responseBody['next_document_id'];
+        return FALSE;
+      }
     }
     return FALSE;
   }
@@ -527,8 +628,17 @@ class Lingotek implements LingotekInterface {
     // For now, a passthrough to the API object so the controllers do not
     // need to include that class.
     $response = $this->api->getTranslation($doc_id, $locale, $this->configFactory->get(static::SETTINGS)->get('preference.enable_download_source'));
-    if ($response->getStatusCode() == Response::HTTP_OK) {
+    $statusCode = $response->getStatusCode();
+    if ($statusCode == Response::HTTP_OK) {
       return json_decode($response->getBody(), TRUE);
+    }
+    elseif ($statusCode == Response::HTTP_GONE) {
+      // Set the status of the document back to its pre-uploaded state.
+      // Typically this means the state would be set to Upload, or None but this
+      // may vary depending on connector. Essentially, the content’s status
+      // indicator should show that the source content needs to be re-uploaded
+      // to Lingotek.
+      return FALSE;
     }
     return FALSE;
   }

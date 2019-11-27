@@ -223,7 +223,12 @@ interface LingotekContentTranslationServiceInterface {
    * @return bool
    *   TRUE if the document was uploaded successfully, FALSE if not.
    *
+   * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
    * @throws \Drupal\lingotek\Exception\LingotekApiException
+   *
+   * Propagated from @see ::updateDocument :
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentArchivedException
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentLockedException
    */
   public function uploadDocument(ContentEntityInterface $entity, $job_id = NULL);
 
@@ -262,6 +267,9 @@ interface LingotekContentTranslationServiceInterface {
    * @return bool
    *   TRUE if the document was updated successfully, FALSE if not.
    *
+   * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentArchivedException
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentLockedException
    * @throws \Drupal\lingotek\Exception\LingotekApiException
    */
   public function updateDocument(ContentEntityInterface &$entity, $job_id = NULL);
@@ -358,6 +366,11 @@ interface LingotekContentTranslationServiceInterface {
    *
    * @return \Drupal\Core\Entity\ContentEntityInterface
    *   Returns the entity which job ID is saved.
+   *
+   * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentArchivedException
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentLockedException
+   * @throws \Drupal\lingotek\Exception\LingotekApiException
    */
   public function setJobId(ContentEntityInterface $entity, $job_id, $update_tms = FALSE);
 

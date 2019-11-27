@@ -14,6 +14,10 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Drupal\Core\Url;
 use Drupal\field\Entity\FieldConfig;
+use Drupal\lingotek\Exception\LingotekApiException;
+use Drupal\lingotek\Exception\LingotekDocumentArchivedException;
+use Drupal\lingotek\Exception\LingotekDocumentLockedException;
+use Drupal\lingotek\Exception\LingotekPaymentRequiredException;
 use Drupal\lingotek\LingotekConfigTranslationServiceInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -185,20 +189,73 @@ class LingotekJobAssignToMultipleConfigForm extends FormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $job_id = $form_state->getValue('job_id');
     $updateTMS = $form_state->getValue('update_tms');
+    $errors = FALSE;
 
     $mappers = $this->getSelectedMappers($this->selection);
 
     foreach ($mappers as $mapper) {
       if ($mapper instanceof ConfigEntityMapper) {
-        $this->translationService->setJobId($mapper->getEntity(), $job_id, $updateTMS);
+        try {
+          $entity = $mapper->getEntity();
+          $this->translationService->setJobId($entity, $job_id, $updateTMS);
+        }
+        catch (LingotekPaymentRequiredException $exception) {
+          $errors = TRUE;
+          $this->messenger->addError(t('Community has been disabled. Please contact support@lingotek.com to re-enable your community.'));
+        }
+        catch (LingotekDocumentArchivedException $exception) {
+          $errors = TRUE;
+          $this->messenger->addError(t('Document @entity_type %title has been archived. Please upload again.', [
+            '@entity_type' => $entity->getEntityTypeId(),
+            '%title' => $entity->label(),
+          ]));
+        }
+        catch (LingotekDocumentLockedException $exception) {
+          $errors = TRUE;
+          $this->messenger->addError(t('Document @entity_type %title has a new version. The document id has been updated for all future interactions. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
+        }
+        catch (LingotekApiException $exception) {
+          $errors = TRUE;
+          $this->messenger()
+            ->addError(t('The Job ID change submission for @entity_type %title failed. Please try again.', [
+              '@entity_type' => $entity->getEntityTypeId(),
+              '%title' => $entity->label(),
+            ]));
+        }
       }
       else {
-        $this->translationService->setConfigJobId($mapper, $job_id, $updateTMS);
+        try {
+          $this->translationService->setConfigJobId($mapper, $job_id, $updateTMS);
+        }
+        catch (LingotekPaymentRequiredException $exception) {
+          $errors = TRUE;
+          $this->messenger->addError(t('Community has been disabled. Please contact support@lingotek.com to re-enable your community.'));
+        }
+        catch (LingotekDocumentArchivedException $exception) {
+          $errors = TRUE;
+          $this->messenger->addError(t('Document %label has been archived. Please upload again.',
+            ['%label' => $mapper->getTitle()]));
+        }
+        catch (LingotekDocumentLockedException $exception) {
+          $errors = TRUE;
+          $this->messenger->addError(t('Document %label has a new version. The document id has been updated for all future interactions. Please try again.',
+            ['%label' => $mapper->getTitle()]));
+        }
+        catch (LingotekApiException $exception) {
+          $errors = TRUE;
+          $this->messenger->addError(t('The Job ID change submission for %label failed. Please try again.',
+              ['%label' => $mapper->getTitle()]));
+        }
       }
     }
     $form_state->setRedirectUrl(Url::fromUserInput('/' . $form_state->getValue('destination')));
 
-    $this->postStatusMessage();
+    if (!$errors) {
+      $this->postStatusMessage();
+    }
+    else {
+      $this->messenger->addWarning($this->t('Job ID for some config failed to sync to the TMS.'));
+    }
 
     // Clear selected data.
     $this->tempStore->delete($this->currentUser->id());

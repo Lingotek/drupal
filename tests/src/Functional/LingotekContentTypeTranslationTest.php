@@ -215,6 +215,150 @@ class LingotekContentTypeTranslationTest extends LingotekTestBase {
   }
 
   /**
+   * Test that we handle errors in upload.
+   */
+  public function testUploadingWithAPaymentRequiredError() {
+    \Drupal::state()->set('lingotek.must_payment_required_error_in_upload', TRUE);
+
+    // Check that the translate tab is in the node type.
+    $this->drupalGet('/admin/config/regional/config-translation/node_type');
+    $this->clickLink(t('Translate'));
+
+    // Upload the document, which must fail.
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Community has been disabled. Please contact support@lingotek.com to re-enable your community.');
+
+    // The node type has been marked with the error status.
+    $nodeType = NodeType::load('article');
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getSourceStatus($nodeType);
+    $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The node type has been marked as error.');
+
+    // I can still re-try the upload.
+    \Drupal::state()->set('lingotek.must_payment_required_error_in_upload', FALSE);
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Article uploaded successfully');
+  }
+
+  /**
+   * Test that we handle errors in upload.
+   */
+  public function testUploadingWithAPaymentRequiredErrorViaAutomaticUpload() {
+    $this->saveLingotekConfigTranslationSettings([
+      'node_type' => 'automatic',
+    ]);
+
+    \Drupal::state()->set('lingotek.must_payment_required_error_in_upload', TRUE);
+
+    // Create a content type.
+    $edit = ['name' => 'Landing Page', 'type' => 'landing_page'];
+    $this->drupalPostForm('admin/structure/types/add', $edit, 'Save content type');
+
+    // The document was uploaded automatically and failed.
+    $this->assertText('Community has been disabled. Please contact support@lingotek.com to re-enable your community.');
+
+    // The node type has been marked with the error status.
+    $nodeType = NodeType::load('landing_page');
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getSourceStatus($nodeType);
+    $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The node type has been marked as error.');
+  }
+
+  /**
+   * Test that we handle errors in upload.
+   */
+  public function testUpdatingWithAPaymentRequiredError() {
+    // Check that the translate tab is in the node type.
+    $this->drupalGet('/admin/config/regional/config-translation');
+    $this->drupalGet('/admin/config/regional/config-translation/node_type');
+    $this->clickLink(t('Translate'));
+
+    // Upload the document, which must succeed.
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Article uploaded successfully');
+
+    // Check that the upload succeeded.
+    $this->clickLink('Check upload status');
+    $this->assertText('Article status checked successfully');
+
+    // Edit the content type.
+    $edit['name'] = 'Blogpost';
+    $this->drupalPostForm('/admin/structure/types/manage/article', $edit, t('Save content type'));
+    $this->assertText('The content type Blogpost has been updated.');
+
+    // Go back to the form.
+    $this->drupalGet('/admin/config/regional/config-translation/node_type');
+    $this->clickLink(t('Translate'));
+
+    \Drupal::state()->set('lingotek.must_payment_required_error_in_update', TRUE);
+
+    // Re-upload. Must fail now.
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Community has been disabled. Please contact support@lingotek.com to re-enable your community.');
+
+    // The node type has been marked with the error status.
+    $nodeType = NodeType::load('article');
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getSourceStatus($nodeType);
+    $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The node type has been marked as error.');
+
+    // I can still re-try the upload.
+    \Drupal::state()->set('lingotek.must_payment_required_error_in_update', FALSE);
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Blogpost has been updated.');
+  }
+
+  /**
+   * Test that we handle errors in upload.
+   */
+  public function testUpdatingWithAPaymentRequiredErrorViaAutomaticUpload() {
+    // Check that the translate tab is in the node type.
+    $this->drupalGet('/admin/config/regional/config-translation');
+    $this->drupalGet('/admin/config/regional/config-translation/node_type');
+    $this->clickLink(t('Translate'));
+
+    // Upload the document, which must succeed.
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Article uploaded successfully');
+
+    // Check that the upload succeeded.
+    $this->clickLink('Check upload status');
+    $this->assertText('Article status checked successfully');
+
+    \Drupal::state()->set('lingotek.must_payment_required_error_in_update', TRUE);
+
+    // Edit the content type.
+    $edit['name'] = 'Blogpost';
+    $this->drupalPostForm('/admin/structure/types/manage/article', $edit, t('Save content type'));
+    $this->assertText('The content type Blogpost has been updated.');
+
+    $this->assertText('Community has been disabled. Please contact support@lingotek.com to re-enable your community.');
+
+    // The node type has been marked with the error status.
+    $nodeType = NodeType::load('article');
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getSourceStatus($nodeType);
+    $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The node type has been marked as error.');
+
+    // I can still re-try the upload.
+    \Drupal::state()->set('lingotek.must_payment_required_error_in_update', FALSE);
+    $this->clickLink(t('Translate'));
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Blogpost has been updated.');
+  }
+
+  /**
    * Test that we handle errors in update.
    */
   public function testUpdatingWithAnError() {
@@ -265,7 +409,212 @@ class LingotekContentTypeTranslationTest extends LingotekTestBase {
   /**
    * Test that we handle errors in upload.
    */
-  public function testUploadingWithAnErrorViaAPI() {
+  public function testUpdatingWithAnErrorViaAutomaticUpload() {
+    // Create a content type.
+    $edit = ['name' => 'Landing Page', 'type' => 'landing_page'];
+    $this->drupalPostForm('admin/structure/types/add', $edit, 'Save content type');
+
+    \Drupal::state()->set('lingotek.must_error_in_upload', TRUE);
+
+    // Edit the content type.
+    $edit['name'] = 'Landing Page EDITED';
+    $this->drupalPostForm('/admin/structure/types/manage/landing_page', $edit, t('Save content type'));
+
+    // The document was updated automatically and failed.
+    $this->assertText('The update for node_type Landing Page EDITED failed. Please try again.');
+
+    // The node type has been marked with the error status.
+    $nodeType = NodeType::load('landing_page');
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getSourceStatus($nodeType);
+    $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The node type has been marked as error.');
+  }
+
+  /**
+   * Test that we handle errors in update.
+   */
+  public function testUpdatingWithADocumentArchivedError() {
+    // Check that the translate tab is in the node type.
+    $this->drupalGet('/admin/config/regional/config-translation');
+    $this->drupalGet('/admin/config/regional/config-translation/node_type');
+    $this->clickLink(t('Translate'));
+
+    // Upload the document, which must succeed.
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Article uploaded successfully');
+
+    // Check that the upload succeeded.
+    $this->clickLink('Check upload status');
+    $this->assertText('Article status checked successfully');
+
+    // Edit the content type.
+    $edit['name'] = 'Blogpost';
+    $this->drupalPostForm('/admin/structure/types/manage/article', $edit, t('Save content type'));
+    $this->assertText('The content type Blogpost has been updated.');
+
+    // Go back to the form.
+    $this->drupalGet('/admin/config/regional/config-translation/node_type');
+    $this->clickLink(t('Translate'));
+
+    \Drupal::state()->set('lingotek.must_document_archived_error_in_update', TRUE);
+
+    // Re-upload. Must fail now.
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Document Blogpost has been archived. Please upload again.');
+
+    // The node type has been marked with the error status.
+    $nodeType = NodeType::load('article');
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getSourceStatus($nodeType);
+    $this->assertEqual(Lingotek::STATUS_UNTRACKED, $source_status, 'The node type has been marked as error.');
+
+    // I can still re-try the upload.
+    \Drupal::state()->set('lingotek.must_document_archived_error_in_update', FALSE);
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Blogpost uploaded successfully');
+  }
+
+  /**
+   * Test that we handle errors in update.
+   */
+  public function testUpdatingWithADocumentLockedError() {
+    // Check that the translate tab is in the node type.
+    $this->drupalGet('/admin/config/regional/config-translation');
+    $this->drupalGet('/admin/config/regional/config-translation/node_type');
+    $this->clickLink(t('Translate'));
+
+    // Upload the document, which must succeed.
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Article uploaded successfully');
+
+    // Check that the upload succeeded.
+    $this->clickLink('Check upload status');
+    $this->assertText('Article status checked successfully');
+
+    // Edit the content type.
+    $edit['name'] = 'Blogpost';
+    $this->drupalPostForm('/admin/structure/types/manage/article', $edit, t('Save content type'));
+    $this->assertText('The content type Blogpost has been updated.');
+
+    // Go back to the form.
+    $this->drupalGet('/admin/config/regional/config-translation/node_type');
+    $this->clickLink(t('Translate'));
+
+    \Drupal::state()->set('lingotek.must_document_locked_error_in_update', TRUE);
+
+    // Re-upload. Must fail now.
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Document node_type Blogpost has a new version. The document id has been updated for all future interactions. Please try again.');
+
+    // The node type has been marked with the error status.
+    $nodeType = NodeType::load('article');
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getSourceStatus($nodeType);
+    $this->assertEqual(Lingotek::STATUS_EDITED, $source_status, 'The node type has been marked as error.');
+
+    // I can still re-try the upload.
+    \Drupal::state()->set('lingotek.must_document_locked_error_in_update', FALSE);
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Blogpost has been updated.');
+  }
+
+  /**
+   * Test that we handle errors in update.
+   */
+  public function testUpdatingWithADocumentLockedErrorViaAutomaticUpload() {
+    // Check that the translate tab is in the node type.
+    $this->drupalGet('/admin/config/regional/config-translation');
+    $this->drupalGet('/admin/config/regional/config-translation/node_type');
+    $this->clickLink(t('Translate'));
+
+    // Upload the document, which must succeed.
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Article uploaded successfully');
+
+    // Check that the upload succeeded.
+    $this->clickLink('Check upload status');
+    $this->assertText('Article status checked successfully');
+
+    \Drupal::state()->set('lingotek.must_document_locked_error_in_update', TRUE);
+
+    // Edit the content type.
+    $edit['name'] = 'Blogpost';
+    $this->drupalPostForm('/admin/structure/types/manage/article', $edit, t('Save content type'));
+    $this->assertText('The content type Blogpost has been updated.');
+
+    $this->assertText('Document node_type Blogpost has a new version. The document id has been updated for all future interactions. Please try again.');
+
+    // The node type has been marked with the error status.
+    $nodeType = NodeType::load('article');
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getSourceStatus($nodeType);
+    $this->assertEqual(Lingotek::STATUS_EDITED, $source_status, 'The node type has been marked as error.');
+
+    // I can still re-try the upload.
+    \Drupal::state()->set('lingotek.must_document_locked_error_in_update', FALSE);
+    $this->clickLink(t('Translate'));
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Blogpost has been updated.');
+  }
+
+  /**
+   * Test that we handle errors in update.
+   */
+  public function testUpdatingWithADocumentArchivedErrorViaAutomaticUpload() {
+    // Check that the translate tab is in the node type.
+    $this->drupalGet('/admin/config/regional/config-translation');
+    $this->drupalGet('/admin/config/regional/config-translation/node_type');
+    $this->clickLink(t('Translate'));
+
+    // Upload the document, which must succeed.
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Article uploaded successfully');
+
+    // Check that the upload succeeded.
+    $this->clickLink('Check upload status');
+    $this->assertText('Article status checked successfully');
+
+    \Drupal::state()->set('lingotek.must_document_archived_error_in_update', TRUE);
+
+    // Edit the content type.
+    $edit['name'] = 'Blogpost';
+    $this->drupalPostForm('/admin/structure/types/manage/article', $edit, t('Save content type'));
+    $this->assertText('The content type Blogpost has been updated.');
+
+    $this->assertText('Document node_type Blogpost has been archived. Please upload again.');
+
+    // The node type has been marked with the error status.
+    $nodeType = NodeType::load('article');
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getSourceStatus($nodeType);
+    $this->assertEqual(Lingotek::STATUS_UNTRACKED, $source_status, 'The node type has been marked as error.');
+
+    // I can still re-try the upload.
+    \Drupal::state()->set('lingotek.must_document_archived_error_in_update', FALSE);
+    $this->clickLink(t('Translate'));
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Blogpost uploaded successfully');
+  }
+
+  /**
+   * Test that we handle errors in upload.
+   */
+  public function testUploadingWithAnErrorViaAutomaticUpload() {
     $this->saveLingotekConfigTranslationSettings([
       'node_type' => 'automatic',
     ]);

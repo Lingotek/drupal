@@ -91,11 +91,11 @@ class LingotekApi implements LingotekApiInterface {
       $data = json_decode($response->getBody(), TRUE);
       $this->logger->debug('addDocument response received, code %code and body %body', ['%code' => $response->getStatusCode(), '%body' => (string) $response->getBody(TRUE)]);
       if (!empty($data['properties']['id'])) {
-        return $data['properties']['id'];
+        return $response;
       }
     }
     // TODO: log warning
-    return FALSE;
+    return $response;
   }
 
   public function patchDocument($id, $args) {

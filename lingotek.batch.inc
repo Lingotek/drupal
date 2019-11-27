@@ -5,6 +5,9 @@
  * Lingotek batch functions
  */
 
+use Drupal\lingotek\Exception\LingotekDocumentArchivedException;
+use Drupal\lingotek\Exception\LingotekDocumentLockedException;
+use Drupal\lingotek\Exception\LingotekPaymentRequiredException;
 use Drupal\lingotek\Lingotek;
 use Drupal\lingotek\Exception\LingotekApiException;
 
@@ -30,9 +33,11 @@ function lingotek_operation_content_upload($entity_type_id, $entity_id, &$contex
     try {
       $document_id = $translation_service->uploadDocument($entity);
     }
+    catch (LingotekPaymentRequiredException $exception) {
+      $context['results']['error'][] = t('Community has been disabled. Please contact support@lingotek.com to re-enable your community.');
+    }
     catch (LingotekApiException $exception) {
-      // Mark the document as failed.
-      $translation_service->setSourceStatus($entity, Lingotek::STATUS_ERROR);
+      $context['results']['error'][] = t('The upload for @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]);
     }
     if ($document_id) {
       $context['results']['uploads'] = !empty($context['results']['uploads']) ? $context['results']['uploads'] + 1 : 1;
@@ -54,9 +59,16 @@ function lingotek_operation_content_upload($entity_type_id, $entity_id, &$contex
         // ToDo: Log a problem happened updating the document.
       }
     }
+    catch (LingotekDocumentLockedException $exception) {
+      $context['results']['error'][] = t('Document @entity_type %title has a new version. The document id has been updated for all future interactions. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]);
+    }
+    catch (LingotekDocumentArchivedException $exception) {
+      $context['results']['error'][] = t('Document @entity_type %title has been archived. Please upload again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]);
+    }
+    catch (LingotekPaymentRequiredException $exception) {
+      $context['results']['error'][] = t('Community has been disabled. Please contact support@lingotek.com to re-enable your community.');
+    }
     catch (LingotekApiException $exception) {
-      // Mark the document as failed.
-      $translation_service->setSourceStatus($entity, Lingotek::STATUS_ERROR);
       $context['results']['error'][] = t('The update for @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]);
     }
   }

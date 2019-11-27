@@ -672,7 +672,7 @@ class LingotekNodeManageTranslationTabTest extends LingotekTestBase {
   /**
    * Tests clearing job ids with TMS update.
    */
-  public function testClearJobIdsWithTmsUpdate() {
+  public function testClearJobIdsWithTMSUpdate() {
     // Create a couple of content.
     $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
