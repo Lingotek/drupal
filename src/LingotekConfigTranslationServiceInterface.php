@@ -238,6 +238,11 @@ interface LingotekConfigTranslationServiceInterface {
    *   The entity which target we want to add.
    * @param string $locale
    *   Lingotek translation language which we want to modify.
+   *
+   * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentArchivedException
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentLockedException
+   * @throws \Drupal\lingotek\Exception\LingotekApiException
    */
   public function addTarget(ConfigEntityInterface &$entity, $locale);
 
@@ -246,6 +251,11 @@ interface LingotekConfigTranslationServiceInterface {
    *
    * @param \Drupal\Core\Config\Entity\ConfigEntityInterface $entity
    *   The entity being requested for translations.
+   *
+   * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentArchivedException
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentLockedException
+   * @throws \Drupal\lingotek\Exception\LingotekApiException
    */
   public function requestTranslations(ConfigEntityInterface &$entity);
 
@@ -490,6 +500,11 @@ interface LingotekConfigTranslationServiceInterface {
    *   The entity which target we want to add.
    * @param string $locale
    *   Lingotek translation language which we want to modify.
+   *
+   * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentArchivedException
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentLockedException
+   * @throws \Drupal\lingotek\Exception\LingotekApiException
    */
   public function addConfigTarget($mapper_id, $locale);
 
@@ -498,6 +513,11 @@ interface LingotekConfigTranslationServiceInterface {
    *
    * @param string $mapper_id
    *   The entity which target we want to add.
+   *
+   * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentArchivedException
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentLockedException
+   * @throws \Drupal\lingotek\Exception\LingotekApiException
    */
   public function requestConfigTranslations($mapper_id);
 

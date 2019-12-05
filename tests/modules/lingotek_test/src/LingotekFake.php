@@ -301,6 +301,15 @@ class LingotekFake implements LingotekInterface {
     if (\Drupal::state()->get('lingotek.must_error_in_request_translation', FALSE)) {
       throw new LingotekApiException('Error was forced.');
     }
+    if (\Drupal::state()->get('lingotek.must_payment_required_error_in_request_translation', FALSE)) {
+      throw new LingotekPaymentRequiredException('Error was forced.');
+    }
+    if (\Drupal::state()->get('lingotek.must_document_archived_error_in_request_translation', FALSE)) {
+      throw new LingotekDocumentArchivedException($doc_id, 'Error was forced.');
+    }
+    if (\Drupal::state()->get('lingotek.must_document_locked_error_in_request_translation', FALSE)) {
+      throw new LingotekDocumentLockedException($doc_id, 'new-doc-id', 'Error was forced.');
+    }
     $requested_locales = \Drupal::state()->get('lingotek.requested_locales', []);
     $requested_locales[$doc_id][] = $locale;
     \Drupal::state()->set('lingotek.requested_locales', $requested_locales);

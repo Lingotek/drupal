@@ -201,6 +201,11 @@ interface LingotekContentTranslationServiceInterface {
    *   The entity which target we want to add.
    * @param string $locale
    *   Lingotek translation language which we want to modify.
+   *
+   * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentArchivedException
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentLockedException
+   * @throws \Drupal\lingotek\Exception\LingotekApiException
    */
   public function addTarget(ContentEntityInterface &$entity, $locale);
 
@@ -209,6 +214,11 @@ interface LingotekContentTranslationServiceInterface {
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface &$entity
    *   The entity being requested for translations.
+   *
+   * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentArchivedException
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentLockedException
+   * @throws \Drupal\lingotek\Exception\LingotekApiException
    */
   public function requestTranslations(ContentEntityInterface &$entity);
 

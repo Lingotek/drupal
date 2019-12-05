@@ -930,14 +930,40 @@ class LingotekConfigManagementForm extends FormBase {
         try {
           $result = $this->translationService->requestTranslations($entity);
         }
+        catch (LingotekPaymentRequiredException $exception) {
+          $this->messenger()->addError(t('Community has been disabled. Please contact support@lingotek.com to re-enable your community.'));
+        }
+        catch (LingotekDocumentArchivedException $exception) {
+          $this->messenger()->addError(t('Document @entity_type %title has been archived. Please upload again.', [
+            '@entity_type' => $entity->getEntityTypeId(),
+            '%title' => $entity->label(),
+          ]));
+        }
+        catch (LingotekDocumentLockedException $exception) {
+          $this->messenger()->addError(t('Document @entity_type %title has a new version. The document id has been updated for all future interactions. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
+        }
         catch (LingotekApiException $e) {
-          $this->messenger()->addError($this->t('%label translations request failed. Please try again.',
-            ['%label' => $entity->label()]));
+          $this->messenger()->addError($this->t('Document @entity_type %title translations request failed. Please try again.', [
+            '@entity_type' => $entity->getEntityTypeId(),
+            '%title' => $entity->label(),
+          ]));
         }
       }
       else {
         try {
           $result = $this->translationService->requestConfigTranslations($mapper->getPluginId());
+        }
+        catch (LingotekPaymentRequiredException $exception) {
+          $this->messenger()->addError(t('Community has been disabled. Please contact support@lingotek.com to re-enable your community.'));
+        }
+        catch (LingotekDocumentArchivedException $exception) {
+          $this->messenger()->addError(t('Document %label has been archived. Please upload again.',
+            ['%label' => $mapper->getTitle()]));
+
+        }
+        catch (LingotekDocumentLockedException $exception) {
+          $this->messenger()->addError(t('Document %label has a new version. The document id has been updated for all future interactions. Please try again.',
+            ['%label' => $mapper->getTitle()]));
         }
         catch (LingotekApiException $e) {
           $this->messenger()->addError($this->t('%label translations request failed. Please try again.',
@@ -1060,18 +1086,47 @@ class LingotekConfigManagementForm extends FormBase {
         try {
           $this->translationService->addTarget($entity, $locale);
         }
+        catch (LingotekPaymentRequiredException $exception) {
+          $this->messenger()->addError(t('Community has been disabled. Please contact support@lingotek.com to re-enable your community.'));
+        }
+        catch (LingotekDocumentArchivedException $exception) {
+          $this->messenger()->addError(t('Document @entity_type %title has been archived. Please upload again.', [
+            '@entity_type' => $entity->getEntityTypeId(),
+            '%title' => $entity->label(),
+          ]));
+        }
+        catch (LingotekDocumentLockedException $exception) {
+          $this->messenger()->addError(t('Document @entity_type %title has a new version. The document id has been updated for all future interactions. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
+        }
         catch (LingotekApiException $e) {
-          $this->messenger()->addError($this->t('%label @locale translation request failed. Please try again.',
-            ['%label' => $entity->label(), '@locale' => $locale]));
+          $this->messenger()->addError($this->t('Document @entity_type %title @locale translation request failed. Please try again.', [
+            '@entity_type' => $entity->getEntityTypeId(),
+            '%title' => $entity->label(),
+            '@locale' => $locale,
+          ]));
         }
       }
       else {
         try {
           $this->translationService->addConfigTarget($mapper->getPluginId(), $locale);
         }
+        catch (LingotekPaymentRequiredException $exception) {
+          $this->messenger()->addError(t('Community has been disabled. Please contact support@lingotek.com to re-enable your community.'));
+        }
+        catch (LingotekDocumentArchivedException $exception) {
+          $this->messenger()->addError(t('Document %label has been archived. Please upload again.',
+            ['%label' => $mapper->getTitle()]));
+        }
+        catch (LingotekDocumentLockedException $exception) {
+          $this->messenger()->addError(t('Document %label has a new version. The document id has been updated for all future interactions. Please try again.',
+            ['%label' => $mapper->getTitle()]));
+        }
         catch (LingotekApiException $e) {
-          $this->messenger()->addError($this->t('%label @locale translation request failed. Please try again.',
-            ['%label' => $mapper->getTitle(), '@locale' => $locale]));
+          $this->messenger()
+            ->addError($this->t('Document %label @locale translation request failed. Please try again.', [
+              '%label' => $mapper->getTitle(),
+              '@locale' => $locale,
+            ]));
         }
       }
     }

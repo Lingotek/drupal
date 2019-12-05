@@ -120,6 +120,11 @@ interface LingotekInterface {
    *   The profile being used.
    *
    * @return mixed
+   *
+   * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentArchivedException
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentLockedException
+   * @throws \Drupal\lingotek\Exception\LingotekApiException
    */
   public function addTarget($doc_id, $locale, LingotekProfileInterface $profile = NULL);
 

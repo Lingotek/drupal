@@ -731,7 +731,25 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       ];
 
       if (in_array($current_status, $pristine_statuses)) {
-        if ($this->lingotek->addTarget($document_id, $locale, $this->lingotekConfiguration->getEntityProfile($entity))) {
+        try {
+          $result = $this->lingotek->addTarget($document_id, $locale, $this->lingotekConfiguration->getEntityProfile($entity));
+        }
+        catch (LingotekDocumentLockedException $exception) {
+          $this->setDocumentId($entity, $exception->getNewDocumentId());
+          throw $exception;
+        }
+        catch (LingotekDocumentArchivedException $exception) {
+          $this->setDocumentId($entity, NULL);
+          $this->deleteMetadata($entity);
+          throw $exception;
+        }
+        catch (LingotekPaymentRequiredException $exception) {
+          throw $exception;
+        }
+        catch (LingotekApiException $exception) {
+          throw $exception;
+        }
+        if ($result) {
           $this->setTargetStatus($entity, $drupal_language->id(), Lingotek::STATUS_PENDING);
           // If the status was "Importing", and the target was added
           // successfully, we can ensure that the content is current now.
@@ -772,7 +790,25 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
           $source_status = $this->getSourceStatus($entity);
           $current_status = $this->getTargetStatus($entity, $langcode);
           if ($current_status !== Lingotek::STATUS_PENDING && $current_status !== Lingotek::STATUS_CURRENT && $current_status !== Lingotek::STATUS_EDITED  && $current_status !== Lingotek::STATUS_READY) {
-            if ($this->lingotek->addTarget($document_id, $locale, $this->lingotekConfiguration->getEntityProfile($entity))) {
+            try {
+              $result = $this->lingotek->addTarget($document_id, $locale, $this->lingotekConfiguration->getEntityProfile($entity));
+            }
+            catch (LingotekDocumentLockedException $exception) {
+              $this->setDocumentId($entity, $exception->getNewDocumentId());
+              throw $exception;
+            }
+            catch (LingotekDocumentArchivedException $exception) {
+              $this->setDocumentId($entity, NULL);
+              $this->deleteMetadata($entity);
+              throw $exception;
+            }
+            catch (LingotekPaymentRequiredException $exception) {
+              throw $exception;
+            }
+            catch (LingotekApiException $exception) {
+              throw $exception;
+            }
+            if ($result) {
               $languages[] = $langcode;
               $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_PENDING);
               // If the status was "Importing", and the target was added

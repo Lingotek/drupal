@@ -1182,4 +1182,494 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
     $this->assertTargetStatus('DE', Lingotek::STATUS_READY);
   }
 
+  /**
+   * Tests that we manage errors when using the request all translations action.
+   */
+  public function testRequestAllTranslationsWithActionWithAnError() {
+    \Drupal::state()->set('lingotek.must_error_in_request_translation', TRUE);
+
+    $this->goToConfigBulkManagementForm();
+
+    // I can init the upload of content.
+    $this->assertLingotekUploadLink();
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('config'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $this->assertIdentical('en_US', \Drupal::state()
+      ->get('lingotek.uploaded_locale'));
+
+    // I can check current status.
+    $this->assertLingotekCheckSourceStatusLink();
+    // I can request a translation
+    $this->assertLingotekRequestTranslationLink('es_MX');
+    $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
+
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForRequestTranslations('config'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    // We failed at requesting a translation, but we don't know what happened.
+    // So we don't mark as error but keep it on request.
+    $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
+    $this->assertText('System information translations request failed. Please try again.');
+  }
+
+  /**
+   * Tests that we manage errors when using the request all translations action.
+   */
+  public function testRequestAllTranslationsWithActionWithADocumentArchivedError() {
+    \Drupal::state()->set('lingotek.must_document_archived_error_in_request_translation', TRUE);
+
+    $this->goToConfigBulkManagementForm();
+
+    // I can init the upload of content.
+    $this->assertLingotekUploadLink();
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('config'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $this->assertIdentical('en_US', \Drupal::state()
+      ->get('lingotek.uploaded_locale'));
+
+    // I can check current status.
+    $this->assertLingotekCheckSourceStatusLink();
+    // I can request a translation
+    $this->assertLingotekRequestTranslationLink('es_MX');
+    $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
+
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForRequestTranslations('config'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    // Check the right class is added.
+    // We cannot use this as there are 4 elements by default with that status.
+    // $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
+    $source_error = $this->xpath("//span[contains(@class,'language-icon') and contains(@class,'source-untracked')  and ./a[contains(text(), 'EN')]]");
+    $this->assertEqual(count($source_error), 4, 'The system information has been marked as untracked.');
+
+    $this->assertNoLingotekRequestTranslationLink('es_MX');
+    $this->assertText('Document System information has been archived. Please upload again.');
+  }
+
+  /**
+   * Tests that we manage errors when using the request all translations action.
+   */
+  public function testRequestAllTranslationsWithActionWithADocumentLockedError() {
+    \Drupal::state()->set('lingotek.must_document_locked_error_in_request_translation', TRUE);
+
+    $this->goToConfigBulkManagementForm();
+
+    // I can init the upload of content.
+    $this->assertLingotekUploadLink();
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('config'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $this->assertIdentical('en_US', \Drupal::state()
+      ->get('lingotek.uploaded_locale'));
+
+    // I can check current status.
+    $this->assertLingotekCheckSourceStatusLink();
+    // I can request a translation
+    $this->assertLingotekRequestTranslationLink('es_MX');
+    $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
+
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForRequestTranslations('config'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    $this->assertSourceStatus('EN', Lingotek::STATUS_IMPORTING);
+    $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
+    $this->assertText('Document System information has a new version. The document id has been updated for all future interactions. Please try again.');
+  }
+
+  /**
+   * Tests that we manage errors when using the request all translations action.
+   */
+  public function testRequestAllTranslationsWithActionWithAPaymentRequiredError() {
+    \Drupal::state()->set('lingotek.must_payment_required_error_in_request_translation', TRUE);
+
+    $this->goToConfigBulkManagementForm();
+
+    // I can init the upload of content.
+    $this->assertLingotekUploadLink();
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('config'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $this->assertIdentical('en_US', \Drupal::state()
+      ->get('lingotek.uploaded_locale'));
+
+    // I can check current status.
+    $this->assertLingotekCheckSourceStatusLink();
+    // I can request a translation
+    $this->assertLingotekRequestTranslationLink('es_MX');
+    $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
+
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForRequestTranslations('config'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    $this->assertSourceStatus('EN', Lingotek::STATUS_IMPORTING);
+    $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
+    $this->assertText('Community has been disabled. Please contact support@lingotek.com to re-enable your community.');
+  }
+
+  /**
+   * Tests that we manage errors when using the request translation link.
+   */
+  public function testRequestTranslationWithAnError() {
+    \Drupal::state()->set('lingotek.must_error_in_request_translation', TRUE);
+
+    $this->goToConfigBulkManagementForm();
+
+    // I can init the upload of content.
+    $this->assertLingotekUploadLink();
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('config'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $this->assertIdentical('en_US', \Drupal::state()
+      ->get('lingotek.uploaded_locale'));
+
+    // I can check current status.
+    $this->assertLingotekCheckSourceStatusLink();
+    // I can request a translation
+    $this->assertLingotekRequestTranslationLink('es_MX');
+    $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
+
+    $this->clickLink('ES');
+
+    // We failed at requesting a translation, but we don't know what happened.
+    // So we don't mark as error but keep it on request.
+    $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
+    $this->assertText('System information es_MX translation request failed. Please try again.');
+  }
+
+  /**
+   * Tests that we manage errors when using the request translation link.
+   */
+  public function testRequestTranslationWithAPaymentRequiredError() {
+    \Drupal::state()->set('lingotek.must_payment_required_error_in_request_translation', TRUE);
+
+    $this->goToConfigBulkManagementForm();
+
+    // I can init the upload of content.
+    $this->assertLingotekUploadLink();
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('config'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $this->assertIdentical('en_US', \Drupal::state()
+      ->get('lingotek.uploaded_locale'));
+
+    // I can check current status.
+    $this->assertLingotekCheckSourceStatusLink();
+    // I can request a translation
+    $this->assertLingotekRequestTranslationLink('es_MX');
+    $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
+
+    $this->clickLink('ES');
+
+    $this->assertSourceStatus('EN', Lingotek::STATUS_IMPORTING);
+    $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
+    $this->assertText('Community has been disabled. Please contact support@lingotek.com to re-enable your community.');
+  }
+
+  /**
+   * Tests that we manage errors when using the request translation link.
+   */
+  public function testRequestTranslationWithADocumentArchivedError() {
+    \Drupal::state()->set('lingotek.must_document_archived_error_in_request_translation', TRUE);
+
+    $this->goToConfigBulkManagementForm();
+
+    // I can init the upload of content.
+    $this->assertLingotekUploadLink();
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('config'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $this->assertIdentical('en_US', \Drupal::state()
+      ->get('lingotek.uploaded_locale'));
+
+    // I can check current status.
+    $this->assertLingotekCheckSourceStatusLink();
+    // I can request a translation
+    $this->assertLingotekRequestTranslationLink('es_MX');
+    $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
+
+    $this->clickLink('ES');
+
+    // Check the right class is added.
+    // We cannot use this as there are 4 elements by default with that status.
+    // $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
+    $source_error = $this->xpath("//span[contains(@class,'language-icon') and contains(@class,'source-untracked')  and ./a[contains(text(), 'EN')]]");
+    $this->assertEqual(count($source_error), 4, 'The system information has been marked as untracked.');
+
+    $this->assertNoLingotekRequestTranslationLink('es_MX');
+    $this->assertText('Document System information has been archived. Please upload again.');
+  }
+
+  /**
+   * Tests that we manage errors when using the request translation link.
+   */
+  public function testRequestTranslationWithADocumentLockedError() {
+    \Drupal::state()->set('lingotek.must_document_locked_error_in_request_translation', TRUE);
+
+    $this->goToConfigBulkManagementForm();
+
+    // I can init the upload of content.
+    $this->assertLingotekUploadLink();
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('config'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $this->assertIdentical('en_US', \Drupal::state()
+      ->get('lingotek.uploaded_locale'));
+
+    // I can check current status.
+    $this->assertLingotekCheckSourceStatusLink();
+    // I can request a translation
+    $this->assertLingotekRequestTranslationLink('es_MX');
+    $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
+
+    $this->clickLink('ES');
+
+    $this->assertSourceStatus('EN', Lingotek::STATUS_IMPORTING);
+    $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
+    $this->assertText('Document System information has a new version. The document id has been updated for all future interactions. Please try again.');
+  }
+
+  /**
+   * Tests that we manage errors when using the request translation action.
+   */
+  public function testRequestTranslationWithActionWithAnError() {
+    \Drupal::state()->set('lingotek.must_error_in_request_translation', TRUE);
+
+    $this->goToConfigBulkManagementForm();
+
+    // I can init the upload of content.
+    $this->assertLingotekUploadLink();
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('config'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $this->assertIdentical('en_US', \Drupal::state()
+      ->get('lingotek.uploaded_locale'));
+
+    // I can check current status.
+    $this->assertLingotekCheckSourceStatusLink();
+    // I can request a translation
+    $this->assertLingotekRequestTranslationLink('es_MX');
+    $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
+
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForRequestTranslation('es', 'node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    // We failed at requesting a translation, but we don't know what happened.
+    // So we don't mark as error but keep it on request.
+    $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
+    $this->assertText('Document System information es_MX translation request failed. Please try again.');
+  }
+
+  /**
+   * Tests that we manage errors when using the request translation action.
+   */
+  public function testRequestTranslationWithActionWithADocumentArchivedError() {
+    \Drupal::state()->set('lingotek.must_document_archived_error_in_request_translation', TRUE);
+
+    $this->goToConfigBulkManagementForm();
+
+    // I can init the upload of content.
+    $this->assertLingotekUploadLink();
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('config'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $this->assertIdentical('en_US', \Drupal::state()
+      ->get('lingotek.uploaded_locale'));
+
+    // I can check current status.
+    $this->assertLingotekCheckSourceStatusLink();
+    // I can request a translation
+    $this->assertLingotekRequestTranslationLink('es_MX');
+    $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
+
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForRequestTranslation('es', 'node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    // Check the right class is added.
+    // We cannot use this as there are 4 elements by default with that status.
+    // $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
+    $source_error = $this->xpath("//span[contains(@class,'language-icon') and contains(@class,'source-untracked')  and ./a[contains(text(), 'EN')]]");
+    $this->assertEqual(count($source_error), 4, 'The system information has been marked as untracked.');
+
+    $this->assertNoLingotekRequestTranslationLink('es_MX');
+    $this->assertText('Document System information has been archived. Please upload again.');
+  }
+
+  /**
+   * Tests that we manage errors when using the request translation action.
+   */
+  public function testRequestTranslationWithActionWithADocumentLockedError() {
+    \Drupal::state()->set('lingotek.must_document_locked_error_in_request_translation', TRUE);
+
+    $this->goToConfigBulkManagementForm();
+
+    // I can init the upload of content.
+    $this->assertLingotekUploadLink();
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('config'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $this->assertIdentical('en_US', \Drupal::state()
+      ->get('lingotek.uploaded_locale'));
+
+    // I can check current status.
+    $this->assertLingotekCheckSourceStatusLink();
+    // I can request a translation
+    $this->assertLingotekRequestTranslationLink('es_MX');
+    $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
+
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForRequestTranslation('es', 'node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    $this->assertSourceStatus('EN', Lingotek::STATUS_IMPORTING);
+    $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
+    $this->assertText('Document System information has a new version. The document id has been updated for all future interactions. Please try again.');
+  }
+
+  /**
+   * Tests that we manage errors when using the request translation action.
+   */
+  public function testRequestTranslationWithActionWithAPaymentRequiredError() {
+    \Drupal::state()->set('lingotek.must_payment_required_error_in_request_translation', TRUE);
+
+    $this->goToConfigBulkManagementForm();
+
+    // I can init the upload of content.
+    $this->assertLingotekUploadLink();
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('config'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $this->assertIdentical('en_US', \Drupal::state()
+      ->get('lingotek.uploaded_locale'));
+
+    // I can check current status.
+    $this->assertLingotekCheckSourceStatusLink();
+    // I can request a translation
+    $this->assertLingotekRequestTranslationLink('es_MX');
+    $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
+
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForRequestTranslation('es', 'node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    $this->assertSourceStatus('EN', Lingotek::STATUS_IMPORTING);
+    $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
+    $this->assertText('Community has been disabled. Please contact support@lingotek.com to re-enable your community.');
+  }
+
+  protected function getBulkSelectionKey($langcode, $revision_id, $entity_type_id = 'system.site_information_settings') {
+    return 'table[' . $entity_type_id . ']';
+  }
+
+  /**
+   * Asserts there is a link for uploading the content.
+   *
+   * @param int|string $entity_id
+   *   The entity ID. Optional, defaults to 1.
+   * @param string $entity_type_id
+   *   The entity type ID. Optional, defaults to node.
+   * @param string|null $prefix
+   *   Language prefix if any. Optional, defaults to NULL.
+   */
+  protected function assertLingotekUploadLink($entity_id = 'system.site_information_settings', $entity_type_id = 'system.site_information_settings', $prefix = NULL, $destination_entity_type_id = NULL, $destination_entity_id = NULL) {
+    $basepath = \Drupal::request()->getBasePath();
+    $languagePrefix = ($prefix === NULL ? '' : '/' . $prefix);
+    $destination_entity_type_id = $destination_entity_type_id ?: $entity_type_id;
+    $href = $basepath . $languagePrefix . '/admin/lingotek/config/upload/' . $entity_type_id . '/' . $entity_id;
+    if ($destination = $this->getDestination($destination_entity_type_id, $prefix)) {
+      $href .= $destination;
+    }
+    $this->assertLinkByHref($href);
+  }
+
+  protected function assertLingotekCheckSourceStatusLink($document_id = 'system.site_information_settings', $entity_type_id = 'system.site_information_settings', $prefix = NULL, $destination_entity_type_id = NULL, $destination_entity_id = NULL) {
+    $basepath = \Drupal::request()->getBasePath();
+    $languagePrefix = ($prefix === NULL ? '' : '/' . $prefix);
+    $destination_entity_type_id = $destination_entity_type_id ?: $entity_type_id;
+    $href = $basepath . $languagePrefix . '/admin/lingotek/config/check_upload/' . $entity_type_id . '/' . $document_id;
+    if ($destination = $this->getDestination($destination_entity_type_id, $prefix)) {
+      $href .= $destination;
+    }
+    $this->assertLinkByHref($href);
+  }
+
+  protected function assertLingotekRequestTranslationLink($locale, $document_id = 'system.site_information_settings', $entity_type_id = 'system.site_information_settings', $prefix = NULL, $destination_entity_type_id = NULL, $destination_entity_id = NULL) {
+    $basepath = \Drupal::request()->getBasePath();
+    $languagePrefix = ($prefix === NULL ? '' : '/' . $prefix);
+    $destination_entity_type_id = $destination_entity_type_id ?: $entity_type_id;
+    $href = $basepath . $languagePrefix . '/admin/lingotek/config/request/' . $entity_type_id . '/' . $document_id . '/' . $locale;
+    if ($destination = $this->getDestination($destination_entity_type_id, $prefix)) {
+      $href .= $destination;
+    }
+    $this->assertLinkByHref($href);
+  }
+
+  protected function getDestination($entity_type_id = 'system.site_information_settings', $prefix = NULL) {
+    $basepath = \Drupal::request()->getBasePath();
+    return '?destination=' . $basepath . $this->getConfigBulkManagementFormUrl($entity_type_id, $prefix);
+  }
+
+  protected function getConfigBulkManagementFormUrl($entity_type_id = 'system.site_information_settings', $prefix = NULL) {
+    return ($prefix === NULL ? '' : '/' . $prefix) . '/admin/lingotek/config/manage';
+  }
+
 }

@@ -82,6 +82,18 @@ class LingotekEntityController extends LingotekControllerBase {
         $this->messenger()->addWarning(t("There was a problem adding '@locale' as a translation target for @entity_type %title.", ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label(), '@locale' => $locale]));
       }
     }
+    catch (LingotekDocumentArchivedException $exception) {
+      $this->messenger()->addError(t('Document @entity_type %title has been archived. Please upload again.', [
+        '@entity_type' => $entity->getEntityTypeId(),
+        '%title' => $entity->label(),
+      ]));
+    }
+    catch (LingotekDocumentLockedException $exception) {
+      $this->messenger()->addError(t('Document @entity_type %title has a new version. The document id has been updated for all future interactions. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
+    }
+    catch (LingotekPaymentRequiredException $exception) {
+      $this->messenger()->addError(t('Community has been disabled. Please contact support@lingotek.com to re-enable your community.'));
+    }
     catch (LingotekApiException $exception) {
       $this->messenger()->addError(t('The translation request for @entity_type failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]), 'error');
     }
