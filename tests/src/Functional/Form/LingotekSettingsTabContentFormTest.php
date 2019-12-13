@@ -635,4 +635,65 @@ class LingotekSettingsTabContentFormTest extends LingotekTestBase {
     $this->assertNoFieldChecked('edit-node-article-fields-field-imageproperties-file');
   }
 
+  public function testContentTypesAreNotDisabledIfThereAreLotsOfContentTypes() {
+    // Enable translation for the current entity type and ensure the change is
+    // picked up.
+    ContentLanguageSettings::loadByEntityTypeBundle('node', 'article')
+      ->setLanguageAlterable(TRUE)
+      ->save();
+    \Drupal::service('content_translation.manager')
+      ->setEnabled('node', 'article', TRUE);
+
+    drupal_static_reset();
+    \Drupal::entityTypeManager()->clearCachedDefinitions();
+    \Drupal::service('entity.definition_update_manager')->applyUpdates();
+    // Rebuild the container so that the new languages are picked up by services
+    // that hold a list of languages.
+    $this->rebuildContainer();
+
+    $this->saveLingotekContentTranslationSettingsForNodeTypes();
+
+    foreach (range(1, 50) as $i) {
+      $this->drupalCreateContentType([
+        'type' => 'content_type_' . $i,
+        'name' => 'Content Type ' . $i,
+      ]);
+      ContentLanguageSettings::loadByEntityTypeBundle('node', 'content_type_' . $i)
+        ->setLanguageAlterable(TRUE)
+        ->save();
+      \Drupal::service('content_translation.manager')
+        ->setEnabled('node', 'content_type_' . $i, TRUE);
+    }
+
+    // Enable translation for the current entity type and ensure the change is
+    // picked up.
+    ContentLanguageSettings::loadByEntityTypeBundle('node', 'article')
+      ->setLanguageAlterable(TRUE)
+      ->save();
+    \Drupal::service('content_translation.manager')
+      ->setEnabled('node', 'article', TRUE);
+
+    drupal_static_reset();
+    \Drupal::entityTypeManager()->clearCachedDefinitions();
+    \Drupal::service('entity.definition_update_manager')->applyUpdates();
+    // Rebuild the container so that the new languages are picked up by services
+    // that hold a list of languages.
+    $this->rebuildContainer();
+
+    $this->drupalGet('admin/lingotek/settings');
+
+    // Check the form contains the fields, and have the proper values,
+    // but they are disabled.
+    $this->assertFieldChecked('edit-node-article-readonly-enabled');
+    $this->assertFieldByName('node[article][profiles]', 'automatic');
+
+    $edit = ['node[article][profiles]' => 'manual'];
+    $this->drupalPostForm(NULL, $edit, 'Save', [], 'lingoteksettings-tab-content-form');
+
+    // Check the form contains the fields, and have the proper values,
+    // but they are disabled.
+    $this->assertFieldChecked('edit-node-article-readonly-enabled');
+    $this->assertFieldByName('node[article][profiles]', 'manual');
+  }
+
 }

@@ -194,6 +194,11 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
+    $readOnly = FALSE;
+    if ($this->countTranslatableBundles > self::CONTENT_SINGLE_FORM_THRESHOLD) {
+      $readOnly = TRUE;
+    }
+
     /** @var \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_config */
     $lingotek_config = \Drupal::service('lingotek.configuration');
 
@@ -203,27 +208,29 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
     foreach ($this->translatable_bundles as $entity_id => $bundles) {
       foreach ($form_values[$entity_id] as $bundle_id => $bundle) {
         // Only process if we have marked the checkbox.
-        if ($bundle['enabled']) {
-          if (!$lingotek_config->isEnabled($entity_id, $bundle_id)) {
+        if ($bundle['enabled'] || $readOnly) {
+          if (!$lingotek_config->isEnabled($entity_id, $bundle_id) && !$readOnly) {
             $lingotek_config->setEnabled($entity_id, $bundle_id);
           }
-          foreach ($bundle['fields_container']['fields'] as $field_id => $ignore) {
-            $field_choice = isset($bundle['fields'][$field_id]) ? $bundle['fields'][$field_id] : 0;
-            if ($field_choice == 1) {
-              $lingotek_config->setFieldLingotekEnabled($entity_id, $bundle_id, $field_id);
-              if (isset($form_values[$entity_id][$bundle_id]['fields'][$field_id . ':properties'])) {
-                // We need to add both arrays, as the first one only includes the checked properties.
-                $property_values = $form_values[$entity_id][$bundle_id]['fields'][$field_id . ':properties'] +
-                  $form_values[$entity_id][$bundle_id]['fields_container']['fields'][$field_id . ':properties'];
-                $lingotek_config->setFieldPropertiesLingotekEnabled($entity_id, $bundle_id, $field_id, $property_values);
+          if (!$readOnly) {
+            foreach ($bundle['fields_container']['fields'] as $field_id => $ignore) {
+              $field_choice = isset($bundle['fields'][$field_id]) ? $bundle['fields'][$field_id] : 0;
+              if ($field_choice == 1) {
+                $lingotek_config->setFieldLingotekEnabled($entity_id, $bundle_id, $field_id);
+                if (isset($form_values[$entity_id][$bundle_id]['fields'][$field_id . ':properties'])) {
+                  // We need to add both arrays, as the first one only includes the checked properties.
+                  $property_values = $form_values[$entity_id][$bundle_id]['fields'][$field_id . ':properties'] +
+                    $form_values[$entity_id][$bundle_id]['fields_container']['fields'][$field_id . ':properties'];
+                  $lingotek_config->setFieldPropertiesLingotekEnabled($entity_id, $bundle_id, $field_id, $property_values);
+                }
               }
-            }
-            elseif ($field_choice == 0) {
-              $lingotek_config->setFieldLingotekEnabled($entity_id, $bundle_id, $field_id, FALSE);
-              if (isset($form_values[$entity_id][$bundle_id]['fields'][$field_id . ':properties'])) {
-                $properties = array_keys($form_values[$entity_id][$bundle_id]['fields'][$field_id . ':properties']);
-                $properties = array_fill_keys($properties, 0);
-                $lingotek_config->setFieldPropertiesLingotekEnabled($entity_id, $bundle_id, $field_id, $properties);
+              elseif ($field_choice == 0) {
+                $lingotek_config->setFieldLingotekEnabled($entity_id, $bundle_id, $field_id, FALSE);
+                if (isset($form_values[$entity_id][$bundle_id]['fields'][$field_id . ':properties'])) {
+                  $properties = array_keys($form_values[$entity_id][$bundle_id]['fields'][$field_id . ':properties']);
+                  $properties = array_fill_keys($properties, 0);
+                  $lingotek_config->setFieldPropertiesLingotekEnabled($entity_id, $bundle_id, $field_id, $properties);
+                }
               }
             }
           }
@@ -237,7 +244,7 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
           $moderationForm = $moderationFactory->getModerationSettingsForm();
           $moderationForm->submitHandler($entity_id, $bundle_id, $bundle);
         }
-        else {
+        elseif (!$readOnly) {
           // If we removed it, unable it.
           $lingotek_config->setEnabled($entity_id, $bundle_id, FALSE);
         }
@@ -246,8 +253,9 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
 
     // There is some bug than local tasks block cache is not cleared. Let's do
     // that manually.
-    $this->invalidateLocalTaskCacheBlocks();
-
+    if (!$readOnly) {
+      $this->invalidateLocalTaskCacheBlocks();
+    }
     parent::submitForm($form, $form_state);
   }
 

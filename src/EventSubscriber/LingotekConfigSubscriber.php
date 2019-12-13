@@ -181,7 +181,7 @@ class LingotekConfigSubscriber implements EventSubscriberInterface {
       drupal_static_reset();
       $this->entityFieldManager->clearCachedFieldDefinitions();
       $this->entityTypeManager->clearCachedDefinitions();
-      \Drupal::service('router.builder')->rebuild();
+      \Drupal::service('router.builder')->setRebuildNeeded();
 
       if (\Drupal::service('entity.definition_update_manager')->needsUpdates()) {
         $entity_types = $this->lingotekConfiguration->getEnabledEntityTypes();
