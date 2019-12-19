@@ -644,6 +644,9 @@ function lingotek_form_lingotek_management_alter(array &$form, FormStateInterfac
     if ($formObject->getEntityTypeId() === 'paragraph') {
       \Drupal::service('lingotek.paragraphs_bulk_form')->form($form, $form_state);
     }
+    if ($formObject->getEntityTypeId() === 'media') {
+      \Drupal::service('lingotek.media_bulk_form')->form($form, $form_state);
+    }
   }
 }
 

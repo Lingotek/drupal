@@ -23,6 +23,9 @@ services:
   lingotek.paragraphs_bulk_form:
     class: Drupal\lingotek\Form\LingotekParagraphsBulkForm
     arguments: ['@lingotek.configuration']
+  lingotek.media_bulk_form:
+    class: Drupal\lingotek\Form\LingotekMediaBulkForm
+    arguments: ['@lingotek.configuration']
   lingotek.element_info_alter:
     class: Drupal\lingotek\Form\LingotekElementInfoAlterForm
     arguments: ['@current_user', '@entity_type.manager', '@router.builder', '@lingotek.configuration']
