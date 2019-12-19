@@ -18,6 +18,15 @@ use Drupal\lingotek\LingotekConfigMetadataInterface;
  *   entity_keys = {
  *     "id" = "config_name",
  *   },
+ *   config_export = {
+ *     "config_name",
+ *     "document_id",
+ *     "source_status",
+ *     "target_status",
+ *     "profile",
+ *     "hash",
+ *     "job_id",
+ *   },
  * )
  */
 class LingotekConfigMetadata extends ConfigEntityBase implements LingotekConfigMetadataInterface {
