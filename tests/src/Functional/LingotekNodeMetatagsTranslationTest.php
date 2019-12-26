@@ -141,7 +141,7 @@ class LingotekNodeMetatagsTranslationTest extends LingotekTestBase {
     $this->assertText('Las llamas son chulas');
     $this->assertText('Las llamas son muy chulas');
     $this->assertRaw('<meta name="description" content="Este texto ayudará al SEO a encontrar mis llamas." />');
-    $this->assertRaw('<meta name="title" content="Las llamas son chulas | Drupal" />');
+    $this->assertRaw('<title>Las llamas son chulas | Drupal</title>');
   }
 
   /**
