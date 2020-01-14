@@ -35,7 +35,6 @@ class LingotekNotificationController extends LingotekControllerBase {
     if ($security_token == 1) {
       $http_status_code = Response::HTTP_ACCEPTED;
     }
-    parse_str($request->getQueryString(), $params);
     switch ($type) {
 
       // all translations for all documents have been completed for the project
@@ -288,7 +287,7 @@ class LingotekNotificationController extends LingotekControllerBase {
     $response = [
       'service' => 'notify',
       'method' => $request_method,
-      'params' => $params,
+      'params' => $request->query->all(),
       'result' => $result,
       'messages' => $messages,
     ];
