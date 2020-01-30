@@ -287,8 +287,8 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
 
     // Check the status is not edited for Vasque, but available to request
     // translation.
-    $this->assertLingotekRequestTranslationLink('eu_ES');
-    $this->assertNoLingotekRequestTranslationLink('es_MX');
+    $this->assertLingotekRequestTranslationLink('eu_ES', 'dummy-document-hash-id-1');
+    $this->assertNoLingotekRequestTranslationLink('es_MX', 'dummy-document-hash-id-1');
 
     // Recheck status.
     $this->clickLink('Check translation status');

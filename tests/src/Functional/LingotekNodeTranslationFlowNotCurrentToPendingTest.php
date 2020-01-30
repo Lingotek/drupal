@@ -128,7 +128,7 @@ class LingotekNodeTranslationFlowNotCurrentToPendingTest extends LingotekTestBas
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
 
     // There is a link for checking status.
-    $this->assertLingotekCheckSourceStatusLink();
+    $this->assertLingotekCheckSourceStatusLink('dummy-document-hash-id-1');
     $this->clickLink('EN');
     $this->assertText('The import for node Llamas are cool EDITED is complete.');
 

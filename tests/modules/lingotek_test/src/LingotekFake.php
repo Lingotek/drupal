@@ -256,7 +256,7 @@ class LingotekFake implements LingotekInterface {
     \Drupal::state()->set('lingotek.uploaded_job_id', $job_id);
 
     if ($newId) {
-      $last_doc_id = \Drupal::state()->set('lingotek.last_used_id', 0);
+      $last_doc_id = \Drupal::state()->get('lingotek.last_used_id', 0);
       $new_doc_id = 'dummy-document-hash-id';
       if ($last_doc_id > 0) {
         $new_doc_id .= '-' . $last_doc_id;

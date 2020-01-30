@@ -343,8 +343,8 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
 
     // Check all statuses, after being edited and the source re-uploaded
     // Should be in STATUS_PENDING
-    $this->assertLingotekCheckTargetStatusLink('de_AT');
-    $this->assertLingotekCheckTargetStatusLink('es_MX');
+    $this->assertLingotekCheckTargetStatusLink('de_AT', 'dummy-document-hash-id-1');
+    $this->assertLingotekCheckTargetStatusLink('es_MX', 'dummy-document-hash-id-1');
     $key = $this->getBulkSelectionKey('en', 1);
     $edit = [
       $key => TRUE,
@@ -353,8 +353,8 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     // Download all translations.
-    $this->assertLingotekDownloadTargetLink('de_AT');
-    $this->assertLingotekDownloadTargetLink('es_MX');
+    $this->assertLingotekDownloadTargetLink('de_AT', 'dummy-document-hash-id-1');
+    $this->assertLingotekDownloadTargetLink('es_MX', 'dummy-document-hash-id-1');
     $key = $this->getBulkSelectionKey('en', 1);
     $edit = [
       $key => TRUE,
@@ -365,8 +365,8 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
       ->get('lingotek.downloaded_locale'));
 
     // Now the link is to the workbench, and it opens in a new tab.
-    $this->assertLingotekWorkbenchLink('es_MX');
-    $this->assertLingotekWorkbenchLink('de_AT');
+    $this->assertLingotekWorkbenchLink('es_MX', 'dummy-document-hash-id-1');
+    $this->assertLingotekWorkbenchLink('de_AT', 'dummy-document-hash-id-1');
   }
 
   public function testNodeTranslationUsingActionsForMultipleLocalesAfterEditingWithPendingPhases() {
@@ -389,8 +389,8 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
 
     // Check all statuses, after being edited and the source re-uploaded
     // Should be in STATUS_PENDING
-    $this->assertLingotekCheckTargetStatusLink('de_AT');
-    $this->assertLingotekCheckTargetStatusLink('es_MX');
+    $this->assertLingotekCheckTargetStatusLink('de_AT', 'dummy-document-hash-id-1');
+    $this->assertLingotekCheckTargetStatusLink('es_MX', 'dummy-document-hash-id-1');
     $key = $this->getBulkSelectionKey('en', 1);
     $edit = [
       $key => TRUE,
