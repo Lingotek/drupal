@@ -81,6 +81,35 @@ class LingotekNotificationController extends LingotekControllerBase {
           $messages[] = "Document not found.";
         }
         break;
+      case 'import_failure':
+        $prevDocumentId = $request->query->get('prev_document_id');
+        $documentId = $request->query->get('document_id');
+        $entity = $this->getEntity($documentId);
+        if ($entity) {
+          if ($entity instanceof ConfigEntityInterface) {
+            $translation_service = $config_translation_service;
+          }
+          $http_status_code = Response::HTTP_OK;
+          // We update the document id to the previous one no matter what. If it
+          // was a new document, we want to set the document id to NULL anyway.
+          $translation_service->setDocumentId($entity, $prevDocumentId);
+          $translation_service->setSourceStatus($entity, Lingotek::STATUS_ERROR);
+          $this->logger->log(LogLevel::DEBUG, 'Document import for entity @label failed. Reverting @documentId to previous id @prevDocumentId', [
+            '@label' => $entity->label(),
+            '@documentId' => $documentId,
+            '@prevDocumentId' => $prevDocumentId ?: '(NULL)',
+          ]);
+          $messages[] = new FormattableMarkup('Document import for entity @label failed. Reverting @documentId to previous id @prevDocumentId', [
+            '@label' => $entity->label(),
+            '@documentId' => $documentId,
+            '@prevDocumentId' => $prevDocumentId ?: '(NULL)',
+          ]);
+        }
+        else {
+          $http_status_code = Response::HTTP_NO_CONTENT;
+          $messages[] = "Document not found.";
+        }
+        break;
       case 'target_deleted':
         /**
          * array(

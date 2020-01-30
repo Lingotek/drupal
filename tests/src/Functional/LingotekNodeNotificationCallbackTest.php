@@ -1242,6 +1242,163 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
   }
 
   /**
+   * Tests that a node is archived on the right callback.
+   */
+  public function testImportFailureWhileUploading() {
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'automatic';
+    $this->saveAndPublishNodeForm($edit);
+
+    /** @var \Drupal\node\NodeInterface $node */
+    $node = Node::load(1);
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $content_translation_service */
+    $content_translation_service = \Drupal::service('lingotek.content_translation');
+
+    // Assert the content is importing.
+    $this->assertIdentical(Lingotek::STATUS_IMPORTING, $content_translation_service->getSourceStatus($node));
+    $this->assertIdentical($content_translation_service->getDocumentId($node), 'dummy-document-hash-id');
+
+    $this->goToContentBulkManagementForm();
+
+    // Simulate the notification of failed import document.
+    $url = Url::fromRoute('lingotek.notify', [], [
+      'query' => [
+        'project_id' => 'test_project',
+        'document_id' => 'dummy-document-hash-id',
+        'type' => 'import_failure',
+      ],
+    ])->setAbsolute()->toString();
+    $request = $this->client->post($url, [
+      'cookies' => $this->cookies,
+      'headers' => [
+        'Accept' => 'application/json',
+        'Content-Type' => 'application/json',
+      ],
+      'http_errors' => FALSE,
+    ]);
+    $response = json_decode($request->getBody(), TRUE);
+    $this->verbose($request);
+    $this->assertIdentical($response['messages'][0], 'Document import for entity Llamas are cool failed. Reverting dummy-document-hash-id to previous id (NULL)');
+
+    $this->goToContentBulkManagementForm();
+
+    $node = $this->resetStorageCachesAndReloadNode();
+
+    $this->assertNull($content_translation_service->getDocumentId($node));
+    $this->assertIdentical(Lingotek::STATUS_ERROR, $content_translation_service->getSourceStatus($node));
+  }
+
+  /**
+   * Tests that a node is archived on the right callback.
+   */
+  public function testImportFailureWhileUpdating() {
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'automatic';
+    $this->saveAndPublishNodeForm($edit);
+
+    /** @var \Drupal\node\NodeInterface $node */
+    $node = Node::load(1);
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $content_translation_service */
+    $content_translation_service = \Drupal::service('lingotek.content_translation');
+
+    // Assert the content is importing.
+    $this->assertIdentical(Lingotek::STATUS_IMPORTING, $content_translation_service->getSourceStatus($node));
+    $this->assertIdentical($content_translation_service->getDocumentId($node), 'dummy-document-hash-id');
+
+    $this->goToContentBulkManagementForm();
+
+    // Simulate the notification of content successfully uploaded.
+    $url = Url::fromRoute('lingotek.notify', [], [
+      'query' => [
+        'project_id' => 'test_project',
+        'document_id' => 'dummy-document-hash-id',
+        'complete' => 'false',
+        'type' => 'document_uploaded',
+        'progress' => '0',
+      ],
+    ])->setAbsolute()->toString();
+    $request = $this->client->post($url, [
+      'cookies' => $this->cookies,
+      'headers' => [
+        'Accept' => 'application/json',
+        'Content-Type' => 'application/json',
+      ],
+      'http_errors' => FALSE,
+    ]);
+    $response = json_decode($request->getBody(), TRUE);
+    $this->verbose($request);
+    $this->assertIdentical(['es'], $response['result']['request_translations'], 'Spanish language has been requested after notification automatically.');
+
+    $this->goToContentBulkManagementForm();
+
+    $node = $this->resetStorageCachesAndReloadNode();
+
+    // Assert the content is imported.
+    $this->assertIdentical(Lingotek::STATUS_CURRENT, $content_translation_service->getSourceStatus($node));
+    // Assert the target is pending.
+    $this->assertIdentical(Lingotek::STATUS_PENDING, $content_translation_service->getTargetStatus($node, 'es'));
+
+    // Edit the node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool EDITED';
+    $this->saveAndKeepPublishedNodeForm($edit, 1);
+
+    $this->goToContentBulkManagementForm();
+    $node = $this->resetStorageCachesAndReloadNode();
+
+    // Assert the content is importing.
+    $this->assertIdentical(Lingotek::STATUS_IMPORTING, $content_translation_service->getSourceStatus($node));
+    // Assert the target is pending.
+    $this->assertIdentical(Lingotek::STATUS_PENDING, $content_translation_service->getTargetStatus($node, 'es'));
+    // Assert the document id changed.
+    $this->assertIdentical($content_translation_service->getDocumentId($node), 'dummy-document-hash-id-1');
+
+    // Simulate the notification of failed import document.
+    $url = Url::fromRoute('lingotek.notify', [], [
+      'query' => [
+        'project_id' => 'test_project',
+        'prev_document_id' => 'dummy-document-hash-id',
+        'document_id' => 'dummy-document-hash-id-1',
+        'type' => 'import_failure',
+      ],
+    ])->setAbsolute()->toString();
+    $request = $this->client->post($url, [
+      'cookies' => $this->cookies,
+      'headers' => [
+        'Accept' => 'application/json',
+        'Content-Type' => 'application/json',
+      ],
+      'http_errors' => FALSE,
+    ]);
+    $response = json_decode($request->getBody(), TRUE);
+    $this->verbose($request);
+
+    $this->assertIdentical($response['messages'][0], 'Document import for entity Llamas are cool EDITED failed. Reverting dummy-document-hash-id-1 to previous id dummy-document-hash-id');
+
+    $this->goToContentBulkManagementForm();
+
+    $node = $this->resetStorageCachesAndReloadNode();
+
+    // Assert the document id was restored.
+    $this->assertEquals($content_translation_service->getDocumentId($node), 'dummy-document-hash-id');
+    $this->assertIdentical(Lingotek::STATUS_ERROR, $content_translation_service->getSourceStatus($node));
+  }
+
+  /**
    * Resets node and metadata storage caches and reloads the node.
    *
    * @return \Drupal\node\NodeInterface
