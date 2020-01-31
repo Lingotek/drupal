@@ -1242,7 +1242,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
   }
 
   /**
-   * Tests that a node is archived on the right callback.
+   * Tests that an import_failure callback is handled after document upload.
    */
   public function testImportFailureWhileUploading() {
     // Login as admin.
@@ -1296,7 +1296,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
   }
 
   /**
-   * Tests that a node is archived on the right callback.
+   * Tests that an import_failure callback is handled after document update.
    */
   public function testImportFailureWhileUpdating() {
     // Login as admin.
