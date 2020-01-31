@@ -1054,4 +1054,187 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
     $this->assertIdentical(Lingotek::STATUS_ERROR, $config_translation_service->getSourceStatus($entity));
   }
 
+  /**
+   * Tests that a document_cancelled callback is handled after document upload.
+   */
+  public function testDocumentCancelledAfterUploading() {
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
+    // Enable translation for the current entity type and ensure the change is
+    // picked up.
+    $this->saveLingotekConfigTranslationSettings([
+      'node_type' => 'automatic',
+    ]);
+
+    // Create Article node types. We use the form at least once to ensure that
+    // we don't break anything. E.g. see https://www.drupal.org/node/2645202.
+    $this->drupalPostForm('/admin/structure/types/add', ['type' => 'article', 'name' => 'Article'], 'Save content type');
+
+    /** @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface $node_storage */
+    $node_storage = $this->container->get('entity_type.manager')->getStorage('node_type');
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $config_translation_service */
+    $config_translation_service = \Drupal::service('lingotek.config_translation');
+
+    $entity = $node_storage->load('article');
+
+    // Assert the content is importing.
+    $this->assertIdentical(Lingotek::STATUS_IMPORTING, $config_translation_service->getSourceStatus($entity));
+    $this->assertIdentical($config_translation_service->getDocumentId($entity), 'dummy-document-hash-id');
+
+    $this->goToConfigBulkManagementForm('node_type');
+
+    // Simulate the notification of content successfully uploaded.
+    $url = Url::fromRoute('lingotek.notify', [], [
+      'query' => [
+        'project_id' => 'test_project',
+        'document_id' => 'dummy-document-hash-id',
+        'complete' => 'false',
+        'type' => 'document_uploaded',
+        'progress' => '0',
+      ],
+    ])->setAbsolute()->toString();
+    $request = $this->client->post($url, [
+      'cookies' => $this->cookies,
+      'headers' => [
+        'Accept' => 'application/json',
+        'Content-Type' => 'application/json',
+      ],
+      'http_errors' => FALSE,
+    ]);
+    $response = json_decode($request->getBody(), TRUE);
+    $this->verbose($request);
+    $this->assertIdentical(['es'], $response['result']['request_translations'], 'Spanish language has been requested after notification automatically.');
+
+    $this->goToConfigBulkManagementForm('node_type');
+
+    $entity = $node_storage->load('article');
+
+    // Assert the content is imported.
+    $this->assertIdentical(Lingotek::STATUS_CURRENT, $config_translation_service->getSourceStatus($entity));
+    // Assert the target is pending.
+    $this->assertIdentical(Lingotek::STATUS_PENDING, $config_translation_service->getTargetStatus($entity, 'es'));
+
+    // Simulate the notification of document_cancelled document.
+    $url = Url::fromRoute('lingotek.notify', [], [
+      'query' => [
+        'project_id' => 'test_project',
+        'document_id' => 'dummy-document-hash-id',
+        'type' => 'document_cancelled',
+      ],
+    ])->setAbsolute()->toString();
+    $request = $this->client->post($url, [
+      'cookies' => $this->cookies,
+      'headers' => [
+        'Accept' => 'application/json',
+        'Content-Type' => 'application/json',
+      ],
+      'http_errors' => FALSE,
+    ]);
+    $response = json_decode($request->getBody(), TRUE);
+    $this->verbose($request);
+
+    $this->assertIdentical($response['messages'][0], 'Document Article cancelled in TMS.');
+
+    $this->goToConfigBulkManagementForm('node_type');
+
+    $entity = $node_storage->load('article');
+
+    $this->assertIdentical('dummy-document-hash-id', $config_translation_service->getDocumentId($entity));
+    $this->assertIdentical(Lingotek::STATUS_CANCELLED, $config_translation_service->getSourceStatus($entity));
+    $this->assertIdentical(Lingotek::STATUS_CANCELLED, $config_translation_service->getTargetStatus($entity, 'es'));
+  }
+
+  /**
+   * Tests that a target_cancelled callback is handled after document upload.
+   */
+  public function testTargetCancelledAfterUploading() {
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
+    // Enable translation for the current entity type and ensure the change is
+    // picked up.
+    $this->saveLingotekConfigTranslationSettings([
+      'node_type' => 'automatic',
+    ]);
+
+    // Create Article node types. We use the form at least once to ensure that
+    // we don't break anything. E.g. see https://www.drupal.org/node/2645202.
+    $this->drupalPostForm('/admin/structure/types/add', ['type' => 'article', 'name' => 'Article'], 'Save content type');
+
+    /** @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface $node_storage */
+    $node_storage = $this->container->get('entity_type.manager')->getStorage('node_type');
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $config_translation_service */
+    $config_translation_service = \Drupal::service('lingotek.config_translation');
+
+    $entity = $node_storage->load('article');
+
+    // Assert the content is importing.
+    $this->assertIdentical(Lingotek::STATUS_IMPORTING, $config_translation_service->getSourceStatus($entity));
+    $this->assertIdentical($config_translation_service->getDocumentId($entity), 'dummy-document-hash-id');
+
+    $this->goToConfigBulkManagementForm('node_type');
+
+    // Simulate the notification of content successfully uploaded.
+    $url = Url::fromRoute('lingotek.notify', [], [
+      'query' => [
+        'project_id' => 'test_project',
+        'document_id' => 'dummy-document-hash-id',
+        'complete' => 'false',
+        'type' => 'document_uploaded',
+        'progress' => '0',
+      ],
+    ])->setAbsolute()->toString();
+    $request = $this->client->post($url, [
+      'cookies' => $this->cookies,
+      'headers' => [
+        'Accept' => 'application/json',
+        'Content-Type' => 'application/json',
+      ],
+      'http_errors' => FALSE,
+    ]);
+    $response = json_decode($request->getBody(), TRUE);
+    $this->verbose($request);
+    $this->assertIdentical(['es'], $response['result']['request_translations'], 'Spanish language has been requested after notification automatically.');
+
+    $this->goToConfigBulkManagementForm('node_type');
+
+    $entity = $node_storage->load('article');
+
+    // Assert the content is imported.
+    $this->assertIdentical(Lingotek::STATUS_CURRENT, $config_translation_service->getSourceStatus($entity));
+    // Assert the target is pending.
+    $this->assertIdentical(Lingotek::STATUS_PENDING, $config_translation_service->getTargetStatus($entity, 'es'));
+
+    // Simulate the notification of document_cancelled document.
+    $url = Url::fromRoute('lingotek.notify', [], [
+      'query' => [
+        'project_id' => 'test_project',
+        'document_id' => 'dummy-document-hash-id',
+        'type' => 'target_cancelled',
+        'locale' => 'es_ES',
+      ],
+    ])->setAbsolute()->toString();
+    $request = $this->client->post($url, [
+      'cookies' => $this->cookies,
+      'headers' => [
+        'Accept' => 'application/json',
+        'Content-Type' => 'application/json',
+      ],
+      'http_errors' => FALSE,
+    ]);
+    $response = json_decode($request->getBody(), TRUE);
+    $this->verbose($request);
+
+    $this->assertIdentical($response['messages'][0], 'Document Article target es_ES cancelled in TMS.');
+
+    $this->goToConfigBulkManagementForm('node_type');
+
+    $entity = $node_storage->load('article');
+
+    $this->assertIdentical('dummy-document-hash-id', $config_translation_service->getDocumentId($entity));
+    $this->assertIdentical(Lingotek::STATUS_CURRENT, $config_translation_service->getSourceStatus($entity));
+    $this->assertIdentical(Lingotek::STATUS_CANCELLED, $config_translation_service->getTargetStatus($entity, 'es'));
+  }
+
 }

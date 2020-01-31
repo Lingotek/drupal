@@ -3,11 +3,20 @@
 namespace Drupal\lingotek\Controller;
 
 use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Render\HtmlResponse;
+use Drupal\lingotek\LanguageLocaleMapperInterface;
 use Drupal\lingotek\Lingotek;
+use Drupal\lingotek\LingotekConfigTranslationServiceInterface;
+use Drupal\lingotek\LingotekConfigurationServiceInterface;
+use Drupal\lingotek\LingotekContentTranslationServiceInterface;
+use Drupal\lingotek\LingotekInterface;
+use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -17,14 +26,75 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class LingotekNotificationController extends LingotekControllerBase {
 
+  /**
+   * The Lingotek configuration service.
+   *
+   * @var \Drupal\lingotek\LingotekConfigurationServiceInterface
+   */
+  protected $lingotekConfiguration;
+
+  /**
+   * The Lingotek content translation service.
+   *
+   * @var \Drupal\lingotek\LingotekContentTranslationServiceInterface
+   */
+  protected $lingotekContentTranslation;
+
+  /**
+   * The Lingotek configuration translation service.
+   *
+   * @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface
+   */
+  protected $lingotekConfigTranslation;
+
+  /**
+   * Constructs a LingotekControllerBase object.
+   *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The Request instance.
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   The factory for configuration objects.
+   * @param \Drupal\lingotek\LingotekInterface $lingotek
+   *   The lingotek service.
+   * @param \Drupal\lingotek\LanguageLocaleMapperInterface $language_locale_mapper
+   *   The language-locale mapper.
+   * @param \Drupal\Core\Form\FormBuilderInterface $form_builder
+   *   The form builder.
+   * @param \Psr\Log\LoggerInterface $logger
+   *   A logger instance.
+   * @param \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_configuration
+   *   The Lingotek configuration service.
+   * @param \Drupal\lingotek\LingotekContentTranslationServiceInterface $content_translation_service
+   *   The Lingotek content translation service.
+   * @param \Drupal\lingotek\LingotekConfigTranslationServiceInterface $config_translation_service
+   *   The Lingotek config translation service.
+   */
+  public function __construct(Request $request, ConfigFactoryInterface $config_factory, LingotekInterface $lingotek, LanguageLocaleMapperInterface $language_locale_mapper, FormBuilderInterface $form_builder, LoggerInterface $logger, LingotekConfigurationServiceInterface $lingotek_configuration, LingotekContentTranslationServiceInterface $content_translation_service, LingotekConfigTranslationServiceInterface $config_translation_service) {
+    parent::__construct($request, $config_factory, $lingotek, $language_locale_mapper, $form_builder, $logger);
+    $this->lingotekConfiguration = $lingotek_configuration;
+    $this->lingotekContentTranslation = $content_translation_service;
+    $this->lingotekConfigTranslation = $config_translation_service;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('request_stack')->getCurrentRequest(),
+      $container->get('config.factory'),
+      $container->get('lingotek'),
+      $container->get('lingotek.language_locale_mapper'),
+      $container->get('form_builder'),
+      $container->get('logger.channel.lingotek'),
+      $container->get('lingotek.configuration'),
+      $container->get('lingotek.content_translation'),
+      $container->get('lingotek.config_translation')
+    );
+  }
+
   public function endpoint(Request $request) {
-    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $content_translation_service */
-    $content_translation_service = \Drupal::service('lingotek.content_translation');
-
-    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $config_translation_service */
-    $config_translation_service = \Drupal::service('lingotek.config_translation');
-
-    $translation_service = $content_translation_service;
+    $translation_service = $this->lingotekContentTranslation;
 
     $request_method = $request->getMethod();
     $http_status_code = Response::HTTP_ACCEPTED;
@@ -49,7 +119,7 @@ class LingotekNotificationController extends LingotekControllerBase {
         $entity = $this->getEntity($request->query->get('document_id'));
         if ($entity) {
           if ($entity instanceof ConfigEntityInterface) {
-            $translation_service = $config_translation_service;
+            $translation_service = $this->lingotekConfigTranslation;
           }
           // We need to unset the document id first, so there's no cancelling
           // call to the TMS.
@@ -62,6 +132,34 @@ class LingotekNotificationController extends LingotekControllerBase {
           ]);
         }
         break;
+      case 'document_cancelled':
+        $documentId = $request->query->get('document_id');
+        $entity = $this->getEntity($documentId);
+        if ($entity) {
+          if ($entity instanceof ConfigEntityInterface) {
+            $translation_service = $this->lingotekConfigTranslation;
+            $this->lingotekConfiguration->setConfigEntityProfile($entity, NULL);
+          }
+          elseif ($entity instanceof ContentEntityInterface) {
+            $this->lingotekConfiguration->setProfile($entity, NULL);
+          }
+          $http_status_code = Response::HTTP_OK;
+
+          $translation_service->setSourceStatus($entity, Lingotek::STATUS_CANCELLED);
+          $translation_service->setTargetStatuses($entity, Lingotek::STATUS_CANCELLED);
+
+          $this->logger->log(LogLevel::DEBUG, 'Document @label cancelled in TMS.', [
+            '@label' => $entity->label(),
+          ]);
+          $messages[] = new FormattableMarkup('Document @label cancelled in TMS.', [
+            '@label' => $entity->label(),
+          ]);
+        }
+        else {
+          $http_status_code = Response::HTTP_NO_CONTENT;
+          $messages[] = "Document not found.";
+        }
+        break;
       // a document has uploaded and imported successfully for document_id
       case 'document_uploaded':
         $entity = $this->getEntity($request->query->get('document_id'));
@@ -69,7 +167,7 @@ class LingotekNotificationController extends LingotekControllerBase {
         $profile = $this->getProfile($entity);
         if ($entity) {
           if ($entity instanceof ConfigEntityInterface) {
-            $translation_service = $config_translation_service;
+            $translation_service = $this->lingotekConfigTranslation;
           }
           $http_status_code = Response::HTTP_OK;
           $translation_service->setSourceStatus($entity, Lingotek::STATUS_CURRENT);
@@ -87,7 +185,7 @@ class LingotekNotificationController extends LingotekControllerBase {
         $entity = $this->getEntity($documentId);
         if ($entity) {
           if ($entity instanceof ConfigEntityInterface) {
-            $translation_service = $config_translation_service;
+            $translation_service = $this->lingotekConfigTranslation;
           }
           $http_status_code = Response::HTTP_OK;
           // We update the document id to the previous one no matter what. If it
@@ -103,6 +201,34 @@ class LingotekNotificationController extends LingotekControllerBase {
             '@label' => $entity->label(),
             '@documentId' => $documentId,
             '@prevDocumentId' => $prevDocumentId ?: '(NULL)',
+          ]);
+        }
+        else {
+          $http_status_code = Response::HTTP_NO_CONTENT;
+          $messages[] = "Document not found.";
+        }
+        break;
+      case 'target_cancelled':
+        $documentId = $request->query->get('document_id');
+        $locale = $request->query->get('locale');
+        $entity = $this->getEntity($documentId);
+        if ($entity) {
+          if ($entity instanceof ConfigEntityInterface) {
+            $translation_service = $this->lingotekConfigTranslation;
+          }
+          $http_status_code = Response::HTTP_OK;
+
+          $langcode = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale)
+            ->id();
+          $translation_service->setTargetStatus($entity, $langcode, Lingotek::STATUS_CANCELLED);
+
+          $this->logger->log(LogLevel::DEBUG, 'Document @label target @locale cancelled in TMS.', [
+            '@label' => $entity->label(),
+            '@locale' => $locale,
+          ]);
+          $messages[] = new FormattableMarkup('Document @label target @locale cancelled in TMS.', [
+            '@label' => $entity->label(),
+            '@locale' => $locale,
           ]);
         }
         else {
@@ -140,7 +266,7 @@ class LingotekNotificationController extends LingotekControllerBase {
         $entity = $this->getEntity($request->query->get('document_id'));
         if ($entity !== NULL) {
           if ($entity instanceof ConfigEntityInterface) {
-            $translation_service = $config_translation_service;
+            $translation_service = $this->lingotekConfigTranslation;
           }
           $locale = $request->query->get('locale');
           $langcode = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale)
@@ -193,7 +319,7 @@ class LingotekNotificationController extends LingotekControllerBase {
         $entity = $this->getEntity($request->query->get('document_id'));
         if ($entity !== NULL) {
           if ($entity instanceof ConfigEntityInterface) {
-            $translation_service = $config_translation_service;
+            $translation_service = $this->lingotekConfigTranslation;
           }
           $user_login = $request->query->get('deleted_by_user_login');
           $translation_service->deleteMetadata($entity);
@@ -245,7 +371,7 @@ class LingotekNotificationController extends LingotekControllerBase {
           $profile = $this->getProfile($entity);
           if ($entity) {
             if ($entity instanceof ConfigEntityInterface) {
-              $translation_service = $config_translation_service;
+              $translation_service = $this->lingotekConfigTranslation;
             }
             $translation_service->setTargetStatus($entity, $langcode, Lingotek::STATUS_READY);
 
