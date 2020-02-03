@@ -258,6 +258,9 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $this->assertIdentical('es_MX', \Drupal::state()
       ->get('lingotek.downloaded_locale'));
 
+    $this->assertNoLink('Download completed translation');
+    $this->assertLink('Re-download completed translation');
+
     // The content is translated and published.
     $this->clickLink('Las llamas son chulas');
     $this->assertText('Las llamas son chulas');

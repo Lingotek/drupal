@@ -148,7 +148,12 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
           $path = '/admin/lingotek/workbench/' . $document_id . '/' . $locale;
           $this->addOperationLink($entity, $option, 'Edit in Lingotek Workbench', $path, $language, TRUE);
           $path = '/admin/lingotek/entity/download/' . $document_id . '/' . $locale;
-          $this->addOperationLink($entity, $option, 'Download completed translation', $path, $language, TRUE);
+          if ($target_status === Lingotek::STATUS_READY) {
+            $this->addOperationLink($entity, $option, 'Download completed translation', $path, $language, TRUE);
+          }
+          elseif ($target_status === Lingotek::STATUS_CURRENT) {
+            $this->addOperationLink($entity, $option, 'Re-download completed translation', $path, $language, TRUE);
+          }
           $targets_ready = TRUE;
         }
       }
