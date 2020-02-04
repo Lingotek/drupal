@@ -1140,7 +1140,7 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
 
     $entity = $node_storage->load('article');
 
-    $this->assertIdentical('dummy-document-hash-id', $config_translation_service->getDocumentId($entity));
+    $this->assertNull($config_translation_service->getDocumentId($entity));
     $this->assertIdentical(Lingotek::STATUS_CANCELLED, $config_translation_service->getSourceStatus($entity));
     $this->assertIdentical(Lingotek::STATUS_CANCELLED, $config_translation_service->getTargetStatus($entity, 'es'));
   }

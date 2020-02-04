@@ -1080,7 +1080,7 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
     $field_storage->resetCache();
     $entity = $field_storage->load('node.article.body');
 
-    $this->assertIdentical('dummy-document-hash-id', $config_translation_service->getDocumentId($entity));
+    $this->assertNull($config_translation_service->getDocumentId($entity));
     $this->assertIdentical(Lingotek::STATUS_CANCELLED, $config_translation_service->getSourceStatus($entity));
     $this->assertIdentical(Lingotek::STATUS_CANCELLED, $config_translation_service->getTargetStatus($entity, 'es'));
   }

@@ -1477,7 +1477,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
 
     $node = $this->resetStorageCachesAndReloadNode();
 
-    $this->assertIdentical('dummy-document-hash-id', $content_translation_service->getDocumentId($node));
+    $this->assertNull($content_translation_service->getDocumentId($node));
     $this->assertIdentical(Lingotek::STATUS_CANCELLED, $content_translation_service->getSourceStatus($node));
     $this->assertIdentical(Lingotek::STATUS_CANCELLED, $content_translation_service->getTargetStatus($node, 'es'));
   }

@@ -145,6 +145,7 @@ class LingotekNotificationController extends LingotekControllerBase {
           }
           $http_status_code = Response::HTTP_OK;
 
+          $translation_service->setDocumentId($entity, NULL);
           $translation_service->setSourceStatus($entity, Lingotek::STATUS_CANCELLED);
           $translation_service->setTargetStatuses($entity, Lingotek::STATUS_CANCELLED);
 
