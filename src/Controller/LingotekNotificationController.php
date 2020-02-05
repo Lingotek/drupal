@@ -180,6 +180,20 @@ class LingotekNotificationController extends LingotekControllerBase {
           $messages[] = "Document not found.";
         }
         break;
+      case 'document_updated':
+        $entity = $this->getEntity($request->query->get('document_id'));
+        if ($entity) {
+          if ($entity instanceof ConfigEntityInterface) {
+            $translation_service = $this->lingotekConfigTranslation;
+          }
+          $http_status_code = Response::HTTP_OK;
+          $translation_service->setSourceStatus($entity, Lingotek::STATUS_CURRENT);
+        }
+        else {
+          $http_status_code = Response::HTTP_NO_CONTENT;
+          $messages[] = "Document not found.";
+        }
+        break;
       case 'import_failure':
         $prevDocumentId = $request->query->get('prev_document_id');
         $documentId = $request->query->get('document_id');

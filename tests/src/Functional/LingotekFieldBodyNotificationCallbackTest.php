@@ -985,6 +985,124 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
   }
 
   /**
+   * Tests that a document_updated callback is handled after document update.
+   */
+  public function testDocumentUpdated() {
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
+    // Enable translation for the current entity type and ensure the change is
+    // picked up.
+    $this->saveLingotekConfigTranslationSettings([
+      'node_fields' => 'automatic',
+    ]);
+
+    // Create Article node types.
+    $type = $this->drupalCreateContentType([
+      'type' => 'article',
+      'name' => 'Article',
+    ]);
+    node_add_body_field($type);
+
+    /** @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface $field_storage */
+    $field_storage = $this->container->get('entity_type.manager')->getStorage('field_config');
+
+    // The node cache needs to be reset before reload.
+    $field_storage->resetCache();
+    $entity = $field_storage->load('node.article.body');
+
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $config_translation_service */
+    $config_translation_service = \Drupal::service('lingotek.config_translation');
+
+    // Assert the content is importing.
+    $this->assertIdentical(Lingotek::STATUS_IMPORTING, $config_translation_service->getSourceStatus($entity));
+    $this->assertIdentical($config_translation_service->getDocumentId($entity), 'dummy-document-hash-id');
+
+    $this->goToConfigBulkManagementForm('node_fields');
+
+    // Simulate the notification of content successfully uploaded.
+    $url = Url::fromRoute('lingotek.notify', [], [
+      'query' => [
+        'project_id' => 'test_project',
+        'document_id' => 'dummy-document-hash-id',
+        'complete' => 'false',
+        'type' => 'document_uploaded',
+        'progress' => '0',
+      ],
+    ])->setAbsolute()->toString();
+    $request = $this->client->post($url, [
+      'cookies' => $this->cookies,
+      'headers' => [
+        'Accept' => 'application/json',
+        'Content-Type' => 'application/json',
+      ],
+      'http_errors' => FALSE,
+    ]);
+    $response = json_decode($request->getBody(), TRUE);
+    $this->verbose($request);
+    $this->assertIdentical(['es'], $response['result']['request_translations'], 'Spanish language has been requested after notification automatically.');
+
+    $this->goToConfigBulkManagementForm('node_fields');
+
+    // The node cache needs to be reset before reload.
+    $field_storage->resetCache();
+    $entity = $field_storage->load('node.article.body');
+
+    // Assert the content is imported.
+    $this->assertIdentical(Lingotek::STATUS_CURRENT, $config_translation_service->getSourceStatus($entity));
+    // Assert the target is pending.
+    $this->assertIdentical(Lingotek::STATUS_PENDING, $config_translation_service->getTargetStatus($entity, 'es'));
+
+    // Edit the field.
+    $edit = ['label' => 'Body EDITED'];
+    $this->drupalPostForm('/admin/structure/types/manage/article/fields/node.article.body', $edit, t('Save settings'));
+
+    $this->goToConfigBulkManagementForm('node_fields');
+
+    // The node cache needs to be reset before reload.
+    $field_storage->resetCache();
+    $entity = $field_storage->load('node.article.body');
+
+    // Assert the content is importing.
+    $this->assertIdentical(Lingotek::STATUS_IMPORTING, $config_translation_service->getSourceStatus($entity));
+    // Assert the target is pending.
+    $this->assertIdentical(Lingotek::STATUS_PENDING, $config_translation_service->getTargetStatus($entity, 'es'));
+    // Assert the document id changed.
+    $this->assertIdentical($config_translation_service->getDocumentId($entity), 'dummy-document-hash-id-1');
+
+    // Simulate the notification of content successfully updated.
+    $url = Url::fromRoute('lingotek.notify', [], [
+      'query' => [
+        'project_id' => 'test_project',
+        'document_id' => 'dummy-document-hash-id-1',
+        'complete' => 'false',
+        'type' => 'document_updated',
+        'progress' => '100',
+      ],
+    ])->setAbsolute()->toString();
+    $request = $this->client->post($url, [
+      'cookies' => $this->cookies,
+      'headers' => [
+        'Accept' => 'application/json',
+        'Content-Type' => 'application/json',
+      ],
+      'http_errors' => FALSE,
+    ]);
+    $response = json_decode($request->getBody(), TRUE);
+    $this->verbose($request);
+
+    $this->goToConfigBulkManagementForm('node_fields');
+
+    // The node cache needs to be reset before reload.
+    $field_storage->resetCache();
+    $entity = $field_storage->load('node.article.body');
+
+    // Assert the document id and the CURRENT status.
+    $this->assertEquals($config_translation_service->getDocumentId($entity), 'dummy-document-hash-id-1');
+    $this->assertIdentical(Lingotek::STATUS_CURRENT, $config_translation_service->getSourceStatus($entity));
+  }
+
+  /**
    * Tests that a document_cancelled callback is handled after document upload.
    */
   public function testDocumentCancelledAfterUploading() {
