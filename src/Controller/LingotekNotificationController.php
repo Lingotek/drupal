@@ -450,7 +450,10 @@ class LingotekNotificationController extends LingotekControllerBase {
       // ignore
       default:
         $http_status_code = Response::HTTP_ACCEPTED;
-        return new HtmlResponse('It works, but nothing to look here.', $http_status_code);
+        $response = new HtmlResponse('It works, but nothing to look here.', $http_status_code);
+        $response->setMaxAge(0)
+          ->setSharedMaxAge(0);
+        return $response;
       break;
     }
 

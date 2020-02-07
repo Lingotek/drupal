@@ -126,4 +126,43 @@ class LingotekNotificationControllerTest extends LingotekTestBase {
     $this->assertIdentical([], $response['result']['request_translations'], 'Spanish language has been requested after notification automatically.');
   }
 
+  /**
+   * Tests that a callback is never cached.
+   */
+  public function testUnprocessedCallbackNotCached() {
+
+    // Simulate the notification of content successfully uploaded.
+    $url = Url::fromRoute('lingotek.notify', [], [
+      'query' => [
+        'llamas' => 'cool',
+      ],
+    ])->setAbsolute()->toString();
+    $request = $this->client->get($url, [
+      'headers' => [
+        'Accept' => 'application/json',
+        'Content-Type' => 'application/json',
+      ],
+      'http_errors' => FALSE,
+    ]);
+    $cache_control_header = $request->getHeader('Cache-Control');
+    $this->assertContains('max-age=0', $cache_control_header[0]);
+
+    $response = (string) $request->getBody();
+    $this->assertIdentical($response, 'It works, but nothing to look here.');
+
+    // Simulate again the notification of content successfully uploaded.
+    $request = $this->client->get($url, [
+      'headers' => [
+        'Accept' => 'application/json',
+        'Content-Type' => 'application/json',
+      ],
+      'http_errors' => FALSE,
+    ]);
+    $cache_control_header = $request->getHeader('Cache-Control');
+    $this->assertContains('max-age=0', $cache_control_header[0]);
+
+    $response = (string) $request->getBody();
+    $this->assertIdentical($response, 'It works, but nothing to look here.');
+  }
+
 }
