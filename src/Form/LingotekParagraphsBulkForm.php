@@ -41,8 +41,8 @@ class LingotekParagraphsBulkForm {
           $parent = $paragraph;
           do {
             $parent = $parent->getParentEntity();
-          } while ($parent->getEntityTypeId() === 'paragraph');
-          $form['table']['#options'][$id]['parent'] = $parent->toLink();
+          } while ($parent !== NULL && $parent->getEntityTypeId() === 'paragraph');
+          $form['table']['#options'][$id]['parent'] = $parent !== NULL ? $parent->toLink() : '';
         }
       }
     }
