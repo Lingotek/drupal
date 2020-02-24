@@ -25,10 +25,6 @@ class LingotekWorkbenchModerationTest extends LingotekTestBase {
   protected function setUp() {
     parent::setUp();
 
-    if ((float) \Drupal::VERSION >= 8.5) {
-      $this->markTestSkipped("We don't test workbench moderation module with core > 8.5.x. See https://www.drupal.org/project/drupal/issues/2942578.");
-    }
-
     // Place the actions and title block.
     $this->drupalPlaceBlock('page_title_block', ['region' => 'content', 'weight' => -5]);
     $this->drupalPlaceBlock('local_tasks_block', ['region' => 'content', 'weight' => -10]);
@@ -65,20 +61,28 @@ class LingotekWorkbenchModerationTest extends LingotekTestBase {
     $this->enableModerationThroughUI('article',
       ['draft', 'needs_review', 'published'], 'draft');
 
-    $edit = [
-      'node[article][enabled]' => 1,
-      'node[article][profiles]' => 'automatic',
-      'node[article][fields][title]' => 1,
-      'node[article][fields][body]' => 1,
-      'node[article][moderation][upload_status]' => 'draft',
-      'node[article][moderation][download_transition]' => 'draft_needs_review',
-      'node[page][enabled]' => 1,
-      'node[page][profiles]' => 'automatic',
-      'node[page][fields][title]' => 1,
-      'node[page][fields][body]' => 1,
-
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
+    $this->saveLingotekContentTranslationSettings([
+      'node' => [
+        'article' => [
+          'profiles' => 'automatic',
+          'fields' => [
+            'title' => 1,
+            'body' => 1,
+          ],
+          'moderation' => [
+            'upload_status' => 'draft',
+            'download_transition' => 'draft_needs_review',
+          ],
+        ],
+        'page' => [
+          'profiles' => 'automatic',
+          'fields' => [
+            'title' => 1,
+            'body' => 1,
+          ],
+        ],
+      ],
+    ]);
   }
 
   /**
@@ -209,10 +213,15 @@ class LingotekWorkbenchModerationTest extends LingotekTestBase {
     $this->drupalPostForm('/node/add/article', $edit, t('Save and Create New Draft'));
 
     $this->assertText('Article Llamas are cool has been created.');
-    $this->drupalPostForm('/node/1/edit', $edit, t('Save and Create New Draft (this translation)'));
+    $this->assertText('Llamas are cool sent to Lingotek successfully.');
+    $currentStatus = $this->getSession()->getPage()->find('css', 'div[id="edit-current"]');
+    $this->assertEqual($currentStatus->getText(), 'Status Draft');
 
+    $this->drupalPostForm('/node/1/edit', $edit, t('Save and Create New Draft (this translation)'));
     $this->assertText('Article Llamas are cool has been updated.');
-    $this->assertNoText('Llamas are cool was updated and sent to Lingotek successfully.');
+    $this->assertText('Llamas are cool was updated and sent to Lingotek successfully.');
+    $currentStatus = $this->getSession()->getPage()->find('css', 'div[id="edit-current"]');
+    $this->assertEqual($currentStatus->getText(), 'Status Draft');
   }
 
   /**
@@ -245,7 +254,7 @@ class LingotekWorkbenchModerationTest extends LingotekTestBase {
       'node[article][moderation][upload_status]' => 'needs_review',
       'node[article][moderation][download_transition]' => 'needs_review_published',
     ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
+    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], 'lingoteksettings-tab-content-form');
   }
 
   /**
