@@ -97,21 +97,23 @@ class LingotekContentModerationHandler implements LingotekModerationHandlerInter
   public  function performModerationTransitionIfNeeded(ContentEntityInterface &$entity) {
     if ($this->moderationInfo->shouldModerateEntitiesOfBundle($entity->getEntityType(), $entity->bundle())) {
       $transition = $this->moderationConfiguration->getDownloadTransition($entity->getEntityTypeId(), $entity->bundle());
-      $bundles = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
-      $workflow = NULL;
-      if (isset($bundles[$entity->bundle()]['workflow'])) {
-        /** @var \Drupal\workflows\WorkflowInterface $workflow */
-        $workflow = $this->entityTypeManager->getStorage('workflow')
-          ->load($bundles[$entity->bundle()]['workflow']);
-        if ($workflow) {
-          $theTransition = $this->getWorkflowTransition($workflow, $transition);
-          if ($theTransition !== NULL) {
-            // Ensure we can execute this transition.
-            $state = $this->getModerationState($entity);
-            $validStates = $theTransition->from();
-            $validStatesIds = array_keys($validStates);
-            if (in_array($state, $validStatesIds)) {
-              $this->setModerationState($entity, $theTransition->to()->id());
+      if ($transition) {
+        $bundles = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
+        $workflow = NULL;
+        if (isset($bundles[$entity->bundle()]['workflow'])) {
+          /** @var \Drupal\workflows\WorkflowInterface $workflow */
+          $workflow = $this->entityTypeManager->getStorage('workflow')
+            ->load($bundles[$entity->bundle()]['workflow']);
+          if ($workflow) {
+            $theTransition = $this->getWorkflowTransition($workflow, $transition);
+            if ($theTransition !== NULL) {
+              // Ensure we can execute this transition.
+              $state = $this->getModerationState($entity);
+              $validStates = $theTransition->from();
+              $validStatesIds = array_keys($validStates);
+              if (in_array($state, $validStatesIds)) {
+                $this->setModerationState($entity, $theTransition->to()->id());
+              }
             }
           }
         }

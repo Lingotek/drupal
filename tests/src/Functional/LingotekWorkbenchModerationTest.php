@@ -4,6 +4,7 @@ namespace Drupal\Tests\lingotek\Functional;
 
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
+use Drupal\lingotek\Lingotek;
 use Drupal\workbench_moderation\Entity\ModerationState;
 
 /**
@@ -375,6 +376,31 @@ class LingotekWorkbenchModerationTest extends LingotekTestBase {
     // Let's see the current status is modified.
     $this->clickLink('Llamas are cool');
     $this->assertNoFieldByName('new_state', 'The transition to a new workbench status happened (so no moderation form is shown).');
+  }
+
+  public function testDownloadWhenContentModerationWasSetupAfterLingotek() {
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'automatic';
+    $this->saveAndPublishNodeForm($edit, 'page');
+
+    $this->goToContentBulkManagementForm();
+    // Request translation.
+    $this->clickLink('ES');
+
+    $this->enableModerationThroughUI('page',
+      ['draft', 'needs_review', 'published'], 'draft');
+
+    $this->goToContentBulkManagementForm();
+
+    // Check translation.
+    $this->clickLink('ES');
+    // Download translation.
+    $this->clickLink('ES');
+
+    $this->assertTargetStatus('ES', Lingotek::STATUS_CURRENT);
   }
 
   /**
