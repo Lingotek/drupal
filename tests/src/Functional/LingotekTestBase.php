@@ -6,6 +6,7 @@ use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\lingotek\Lingotek;
 use Drupal\Tests\BrowserTestBase;
+use Drupal\Tests\system\Functional\Entity\Traits\EntityDefinitionTestTrait;
 use Drupal\workflows\Entity\Workflow;
 use GuzzleHttp\Cookie\CookieJar;
 
@@ -15,6 +16,7 @@ use GuzzleHttp\Cookie\CookieJar;
 abstract class LingotekTestBase extends BrowserTestBase {
 
   use LingotekManagementTestTrait;
+  use EntityDefinitionTestTrait;
 
   /**
    * The cookie jar holding the testing session cookies for Guzzle requests.

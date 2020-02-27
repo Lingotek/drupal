@@ -56,7 +56,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
 
     drupal_static_reset();
     \Drupal::entityTypeManager()->clearCachedDefinitions();
-    \Drupal::service('entity.definition_update_manager')->applyUpdates();
+    $this->applyEntityUpdates();
     // Rebuild the container so that the new languages are picked up by services
     // that hold a list of languages.
     $this->rebuildContainer();
@@ -503,7 +503,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
 
     drupal_static_reset();
     \Drupal::entityTypeManager()->clearCachedDefinitions();
-    \Drupal::service('entity.definition_update_manager')->applyUpdates();
+    $this->applyEntityUpdates();
     // Rebuild the container so that the new languages are picked up by services
     // that hold a list of languages.
     $this->rebuildContainer();
@@ -666,7 +666,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
 
     drupal_static_reset();
     \Drupal::entityTypeManager()->clearCachedDefinitions();
-    \Drupal::service('entity.definition_update_manager')->applyUpdates();
+    $this->applyEntityUpdates();
     // Rebuild the container so that the new languages are picked up by services
     // that hold a list of languages.
     $this->rebuildContainer();

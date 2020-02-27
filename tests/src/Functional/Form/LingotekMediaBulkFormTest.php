@@ -58,7 +58,7 @@ class LingotekMediaBulkFormTest extends LingotekTestBase {
 
     drupal_static_reset();
     \Drupal::entityTypeManager()->clearCachedDefinitions();
-    \Drupal::service('entity.definition_update_manager')->applyUpdates();
+    $this->applyEntityUpdates();
 
     // We need to rebuild routes.
     $this->rebuildAll();

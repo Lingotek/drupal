@@ -56,7 +56,7 @@ class LingotekTaxonomyTermTranslationTest extends LingotekTestBase {
     ContentLanguageSettings::loadByEntityTypeBundle('taxonomy_term', $this->vocabulary->id())->setLanguageAlterable(TRUE)->save();
     \Drupal::service('content_translation.manager')->setEnabled('taxonomy_term', $this->vocabulary->id(), TRUE);
 
-    \Drupal::service('entity.definition_update_manager')->applyUpdates();
+    $this->applyEntityUpdates();
     // Rebuild the container so that the new languages are picked up by services
     // that hold a list of languages.
     $this->rebuildContainer();

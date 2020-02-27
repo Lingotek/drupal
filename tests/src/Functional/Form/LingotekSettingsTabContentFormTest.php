@@ -75,12 +75,12 @@ class LingotekSettingsTabContentFormTest extends LingotekTestBase {
 
     drupal_static_reset();
     \Drupal::entityTypeManager()->clearCachedDefinitions();
-    \Drupal::service('entity.definition_update_manager')->applyUpdates();
+    $this->applyEntityUpdates();
     // Rebuild the container so that the new languages are picked up by services
     // that hold a list of languages.
     $this->rebuildContainer();
 
-    \Drupal::service('entity.definition_update_manager')->applyUpdates();
+    $this->applyEntityUpdates();
 
     // Check the form contains the article type and only its text-based fields.
     $this->drupalGet('admin/lingotek/settings');
@@ -134,12 +134,12 @@ class LingotekSettingsTabContentFormTest extends LingotekTestBase {
 
     drupal_static_reset();
     \Drupal::entityTypeManager()->clearCachedDefinitions();
-    \Drupal::service('entity.definition_update_manager')->applyUpdates();
+    $this->applyEntityUpdates();
     // Rebuild the container so that the new languages are picked up by services
     // that hold a list of languages.
     $this->rebuildContainer();
 
-    \Drupal::service('entity.definition_update_manager')->applyUpdates();
+    $this->applyEntityUpdates();
 
     // Check the form contains the article type and only its text-based fields.
     $this->drupalGet('admin/lingotek/settings');
@@ -188,12 +188,12 @@ class LingotekSettingsTabContentFormTest extends LingotekTestBase {
 
     drupal_static_reset();
     \Drupal::entityTypeManager()->clearCachedDefinitions();
-    \Drupal::service('entity.definition_update_manager')->applyUpdates();
+    $this->applyEntityUpdates();
     // Rebuild the container so that the new languages are picked up by services
     // that hold a list of languages.
     $this->rebuildContainer();
 
-    \Drupal::service('entity.definition_update_manager')->applyUpdates();
+    $this->applyEntityUpdates();
 
     // Check the form contains the article type and only its text-based fields.
     $this->drupalGet('admin/lingotek/settings');
@@ -252,12 +252,12 @@ class LingotekSettingsTabContentFormTest extends LingotekTestBase {
 
     drupal_static_reset();
     \Drupal::entityTypeManager()->clearCachedDefinitions();
-    \Drupal::service('entity.definition_update_manager')->applyUpdates();
+    $this->applyEntityUpdates();
     // Rebuild the container so that the new languages are picked up by services
     // that hold a list of languages.
     $this->rebuildContainer();
 
-    \Drupal::service('entity.definition_update_manager')->applyUpdates();
+    $this->applyEntityUpdates();
 
     // Ensure field storage is translatable.
     $field_storage = FieldStorageConfig::loadByName('node', 'field_image');
@@ -325,12 +325,12 @@ class LingotekSettingsTabContentFormTest extends LingotekTestBase {
 
     drupal_static_reset();
     \Drupal::entityTypeManager()->clearCachedDefinitions();
-    \Drupal::service('entity.definition_update_manager')->applyUpdates();
+    $this->applyEntityUpdates();
     // Rebuild the container so that the new languages are picked up by services
     // that hold a list of languages.
     $this->rebuildContainer();
 
-    \Drupal::service('entity.definition_update_manager')->applyUpdates();
+    $this->applyEntityUpdates();
 
     // Check the form contains the article type and only its text-based fields.
     $this->drupalGet('admin/structure/types/manage/article');
@@ -356,7 +356,7 @@ class LingotekSettingsTabContentFormTest extends LingotekTestBase {
       'language_configuration[content_translation_for_lingotek]' => TRUE,
     ];
     $this->drupalPostForm('admin/structure/types/manage/article', $edit, t('Save content type'));
-    \Drupal::service('entity.definition_update_manager')->applyUpdates();
+    $this->applyEntityUpdates();
 
     // Check the form contains the article type and only its text-based fields.
     $this->drupalGet('admin/structure/types/manage/article');
@@ -384,12 +384,12 @@ class LingotekSettingsTabContentFormTest extends LingotekTestBase {
 
     drupal_static_reset();
     \Drupal::entityTypeManager()->clearCachedDefinitions();
-    \Drupal::service('entity.definition_update_manager')->applyUpdates();
+    $this->applyEntityUpdates();
     // Rebuild the container so that the new languages are picked up by services
     // that hold a list of languages.
     $this->rebuildContainer();
 
-    \Drupal::service('entity.definition_update_manager')->applyUpdates();
+    $this->applyEntityUpdates();
 
     $this->drupalGet('admin/lingotek/settings');
 
@@ -455,12 +455,12 @@ class LingotekSettingsTabContentFormTest extends LingotekTestBase {
 
     drupal_static_reset();
     \Drupal::entityTypeManager()->clearCachedDefinitions();
-    \Drupal::service('entity.definition_update_manager')->applyUpdates();
+    $this->applyEntityUpdates();
     // Rebuild the container so that the new languages are picked up by services
     // that hold a list of languages.
     $this->rebuildContainer();
 
-    \Drupal::service('entity.definition_update_manager')->applyUpdates();
+    $this->applyEntityUpdates();
 
     $this->drupalGet('admin/lingotek/settings');
 
@@ -646,7 +646,7 @@ class LingotekSettingsTabContentFormTest extends LingotekTestBase {
 
     drupal_static_reset();
     \Drupal::entityTypeManager()->clearCachedDefinitions();
-    \Drupal::service('entity.definition_update_manager')->applyUpdates();
+    $this->applyEntityUpdates();
     // Rebuild the container so that the new languages are picked up by services
     // that hold a list of languages.
     $this->rebuildContainer();
@@ -675,7 +675,7 @@ class LingotekSettingsTabContentFormTest extends LingotekTestBase {
 
     drupal_static_reset();
     \Drupal::entityTypeManager()->clearCachedDefinitions();
-    \Drupal::service('entity.definition_update_manager')->applyUpdates();
+    $this->applyEntityUpdates();
     // Rebuild the container so that the new languages are picked up by services
     // that hold a list of languages.
     $this->rebuildContainer();
