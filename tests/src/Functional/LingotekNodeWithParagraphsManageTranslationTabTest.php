@@ -84,7 +84,7 @@ class LingotekNodeWithParagraphsManageTranslationTabTest extends LingotekTestBas
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['langcode[0][value]'] = 'en';
     $edit['field_paragraphs_demo[0][subform][field_text_demo][0][value]'] = 'Llamas are very cool';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit, NULL);
 
     // Login as translation manager.
@@ -153,7 +153,7 @@ class LingotekNodeWithParagraphsManageTranslationTabTest extends LingotekTestBas
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['langcode[0][value]'] = 'en';
     $edit['field_paragraphs_demo[0][subform][field_text_demo][0][value]'] = 'Llamas are very cool';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit, NULL);
 
     // Login as translation manager.

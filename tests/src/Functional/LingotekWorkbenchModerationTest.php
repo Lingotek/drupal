@@ -94,7 +94,7 @@ class LingotekWorkbenchModerationTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'automatic';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
     $this->drupalPostForm('/node/add/article', $edit, t('Save and Request Review'));
 
     $this->assertText('Article Llamas are cool has been created.');
@@ -109,7 +109,7 @@ class LingotekWorkbenchModerationTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->drupalPostForm('/node/add/article', $edit, t('Save and Request Review'));
 
     $this->assertText('Article Llamas are cool has been created.');
@@ -124,7 +124,7 @@ class LingotekWorkbenchModerationTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'automatic';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
     $this->drupalPostForm('/node/add/article', $edit, t('Save and Create New Draft'));
 
     $this->assertText('Article Llamas are cool has been created.');
@@ -139,7 +139,7 @@ class LingotekWorkbenchModerationTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->drupalPostForm('/node/add/article', $edit, t('Save and Create New Draft'));
 
     $this->assertText('Article Llamas are cool has been created.');
@@ -154,7 +154,7 @@ class LingotekWorkbenchModerationTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'automatic';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
     $this->drupalPostForm('/node/add/article', $edit, t('Save and Create New Draft'));
 
     $this->assertText('Article Llamas are cool has been created.');
@@ -172,7 +172,7 @@ class LingotekWorkbenchModerationTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->drupalPostForm('/node/add/article', $edit, t('Save and Create New Draft'));
 
     $this->assertText('Article Llamas are cool has been created.');
@@ -190,7 +190,7 @@ class LingotekWorkbenchModerationTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'automatic';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
     $this->drupalPostForm('/node/add/article', $edit, t('Save and Create New Draft'));
 
     $this->assertText('Article Llamas are cool has been created.');
@@ -210,7 +210,7 @@ class LingotekWorkbenchModerationTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'automatic';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
     $this->drupalPostForm('/node/add/article', $edit, t('Save and Create New Draft'));
 
     $this->assertText('Article Llamas are cool has been created.');
@@ -233,7 +233,7 @@ class LingotekWorkbenchModerationTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->drupalPostForm('/node/add/article', $edit, t('Save and Create New Draft'));
 
     $this->assertText('Article Llamas are cool has been created.');
@@ -268,7 +268,7 @@ class LingotekWorkbenchModerationTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'automatic';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
     $this->drupalPostForm('/node/add/article', $edit, t('Save and Create New Draft'));
 
     // Moderate.
@@ -288,7 +288,7 @@ class LingotekWorkbenchModerationTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'automatic';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
     $this->drupalPostForm('/node/add/article', $edit, t('Save and Create New Draft'));
 
     // Moderate.
@@ -308,7 +308,7 @@ class LingotekWorkbenchModerationTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->drupalPostForm('/node/add/article', $edit, t('Save and Create New Draft'));
 
     // Moderate.
@@ -328,7 +328,7 @@ class LingotekWorkbenchModerationTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->drupalPostForm('/node/add/article', $edit, t('Save and Create New Draft'));
 
     // Moderate.
@@ -348,7 +348,7 @@ class LingotekWorkbenchModerationTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'automatic';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
     $this->drupalPostForm('/node/add/article', $edit, t('Save and Create New Draft'));
 
     // The status is draft.
@@ -383,7 +383,7 @@ class LingotekWorkbenchModerationTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'automatic';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
     $this->saveAndPublishNodeForm($edit, 'page');
 
     $this->goToContentBulkManagementForm();
@@ -413,7 +413,7 @@ class LingotekWorkbenchModerationTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'automatic';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
     $this->drupalPostForm('/node/add/article', $edit, t('Save and Create New Draft'));
 
     // The status is draft.
@@ -454,7 +454,7 @@ class LingotekWorkbenchModerationTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'automatic';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
     $this->saveAndPublishNodeForm($edit, 'page');
 
     $this->assertText('Page Llamas are cool has been created.');

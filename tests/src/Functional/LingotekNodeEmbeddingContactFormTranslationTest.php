@@ -187,7 +187,7 @@ class LingotekNodeEmbeddingContactFormTranslationTest extends LingotekTestBase {
     $edit['langcode[0][value]'] = 'en';
     $edit['field_contact_form[0][target_id]'] =
       $this->contactForm->label() . ' (' . $this->contactForm->id() . ')';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
 
     $this->saveAndPublishNodeForm($edit);
 

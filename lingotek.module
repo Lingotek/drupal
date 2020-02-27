@@ -468,6 +468,7 @@ function lingotek_form_alter(&$form, FormStateInterface $form_state, $form_id) {
       '#title' => t('Translation Management'),
       '#description' => t("The Lingotek Translation module was developed to help you translate your site. The module integrates the Lingotek translation management system directly into Drupal, so that your users can leverage the power of Lingotek's translation tools and services without ever having to leave the comfort of your Drupal environment."),
       '#group' => 'advanced',
+      '#tree' => TRUE,
       '#weight' => 50,
       '#access' => $can_assign_profile,
     ];
@@ -508,7 +509,7 @@ function lingotek_form_content_entity_form_submit(array $form, FormStateInterfac
   $entity = $entity_form->getEntity();
 
   if ($entity_form->getOperation() !== 'lingotek_metadata') {
-    $profile_id = $form_values['lingotek_translation_profile'];
+    $profile_id = $form_values['lingotek_translation_management']['lingotek_translation_profile'];
     $lingotek_config->setProfile($entity, $profile_id, FALSE);
   }
 }

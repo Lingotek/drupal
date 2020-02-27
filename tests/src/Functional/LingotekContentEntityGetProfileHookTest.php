@@ -127,7 +127,7 @@ class LingotekContentEntityGetProfileHookTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'group_1';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'group_1';
     $this->saveAndPublishNodeForm($edit);
 
     // Save a comment for the group_1 node.
@@ -148,7 +148,7 @@ class LingotekContentEntityGetProfileHookTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool 2';
     $edit['body[0][value]'] = 'Llamas are very cool 2';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'group_2';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'group_2';
     $this->saveAndPublishNodeForm($edit);
 
     // Save a comment for the group_1 node.

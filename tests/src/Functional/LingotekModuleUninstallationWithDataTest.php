@@ -111,7 +111,7 @@ class LingotekModuleUninstallationWithDataTest extends LingotekTestBase {
     $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $edit['langcode[0][value]'] = 'en';
 
     $this->saveAndPublishNodeForm($edit);

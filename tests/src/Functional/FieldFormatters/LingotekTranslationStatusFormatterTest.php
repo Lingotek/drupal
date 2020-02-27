@@ -59,7 +59,7 @@ class LingotekTranslationStatusFormatterTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'automatic';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
     $this->saveAndPublishNodeForm($edit);
     $this->assertSession()->addressEquals('/node/1');
 
@@ -76,7 +76,7 @@ class LingotekTranslationStatusFormatterTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'automatic';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
     $this->saveAndPublishNodeForm($edit);
     $this->assertSession()->addressEquals('/node/1');
 

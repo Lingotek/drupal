@@ -96,7 +96,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'automatic';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
     $this->saveAndPublishNodeForm($edit);
 
     /** @var \Drupal\node\NodeInterface $node */
@@ -188,7 +188,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'automatic';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
     $this->saveAndPublishNodeForm($edit);
 
     /** @var \Drupal\node\NodeInterface $node */
@@ -292,7 +292,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
     /** @var \Drupal\node\NodeInterface $node */
@@ -415,7 +415,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'profile2';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'profile2';
     $this->saveAndPublishNodeForm($edit);
 
     /** @var \Drupal\node\NodeInterface $node */
@@ -543,7 +543,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'automatic';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
     $this->saveAndPublishNodeForm($edit);
 
     /** @var \Drupal\node\NodeInterface $node */
@@ -587,7 +587,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool 2';
     $edit['body[0][value]'] = 'Llamas are very cool 2';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'automatic';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
     $this->saveAndPublishNodeForm($edit);
 
     // Simulate the notification of content successfully uploaded.
@@ -627,7 +627,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'automatic';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
     $this->saveAndPublishNodeForm($edit);
     $this->goToContentBulkManagementForm();
 
@@ -764,7 +764,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'automatic';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
     $this->saveAndPublishNodeForm($edit);
 
     // Simulate the notification of content successfully uploaded.
@@ -901,7 +901,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'automatic';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
     $this->saveAndPublishNodeForm($edit);
 
     // Simulate the notification of content successfully uploaded.
@@ -1029,7 +1029,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'automatic';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
     $this->saveAndPublishNodeForm($edit);
 
     // Simulate the notification of content successfully uploaded.
@@ -1160,7 +1160,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'automatic';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
     $this->saveAndPublishNodeForm($edit);
 
     /** @var \Drupal\node\NodeInterface $node */
@@ -1253,7 +1253,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'automatic';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
     $this->saveAndPublishNodeForm($edit);
 
     /** @var \Drupal\node\NodeInterface $node */
@@ -1307,7 +1307,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'automatic';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
     $this->saveAndPublishNodeForm($edit);
 
     /** @var \Drupal\node\NodeInterface $node */
@@ -1410,7 +1410,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'automatic';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
     $this->saveAndPublishNodeForm($edit);
 
     /** @var \Drupal\node\NodeInterface $node */
@@ -1512,7 +1512,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'automatic';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
     $this->saveAndPublishNodeForm($edit);
 
     /** @var \Drupal\node\NodeInterface $node */
@@ -1596,7 +1596,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'automatic';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
     $this->saveAndPublishNodeForm($edit);
 
     /** @var \Drupal\node\NodeInterface $node */

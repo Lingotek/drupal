@@ -18,13 +18,23 @@ class LingotekEntityTestBulkTranslationTest extends LingotekTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['entity_test'];
+  public static $modules = ['block', 'entity_test'];
 
   /**
    * {@inheritdoc}
    */
   protected function setUp() {
     parent::setUp();
+
+    // Place the actions and title block.
+    $this->drupalPlaceBlock('page_title_block', [
+      'region' => 'content',
+      'weight' => -5,
+    ]);
+    $this->drupalPlaceBlock('local_tasks_block', [
+      'region' => 'content',
+      'weight' => -10,
+    ]);
 
     // Add a language.
     ConfigurableLanguage::createFromLangcode('es')->setThirdPartySetting('lingotek', 'locale', 'es_MX')->save();
@@ -67,7 +77,7 @@ class LingotekEntityTestBulkTranslationTest extends LingotekTestBase {
     $edit['name[0][value]'] = 'Llamas are cool';
     $edit['field_test_text[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->drupalPostForm('/entity_test_mul/add/entity_test_mul', $edit, t('Save'));
 
     $this->goToContentBulkManagementForm('entity_test_mul');
@@ -121,7 +131,7 @@ class LingotekEntityTestBulkTranslationTest extends LingotekTestBase {
     $edit['name[0][value]'] = 'Llamas are cool';
     $edit['field_test_text[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->drupalPostForm('/entity_test_mul/add/entity_test_mul', $edit, t('Save'));
 
     $this->goToContentBulkManagementForm('entity_test_mul');
@@ -193,7 +203,7 @@ class LingotekEntityTestBulkTranslationTest extends LingotekTestBase {
     $edit['name[0][value]'] = 'Llamas are cool';
     $edit['field_test_text[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->drupalPostForm('/entity_test_mul/add/entity_test_mul', $edit, t('Save'));
 
     $this->goToContentBulkManagementForm('entity_test_mul');
@@ -273,7 +283,7 @@ class LingotekEntityTestBulkTranslationTest extends LingotekTestBase {
     $edit['name[0][value]'] = 'Llamas are cool';
     $edit['field_test_text[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->drupalPostForm('/entity_test_mul/add/entity_test_mul', $edit, t('Save'));
 
     $this->goToContentBulkManagementForm('entity_test_mul');
@@ -340,7 +350,7 @@ class LingotekEntityTestBulkTranslationTest extends LingotekTestBase {
     $edit['name[0][value]'] = 'Llamas are cool';
     $edit['field_test_text[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->drupalPostForm('/entity_test_mul/add/entity_test_mul', $edit, t('Save'));
 
     $this->goToContentBulkManagementForm('entity_test_mul');
@@ -412,7 +422,7 @@ class LingotekEntityTestBulkTranslationTest extends LingotekTestBase {
     $edit['name[0][value]'] = 'Llamas are cool';
     $edit['field_test_text[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->drupalPostForm('/entity_test_mul/add/entity_test_mul', $edit, t('Save'));
 
     $this->goToContentBulkManagementForm('entity_test_mul');
@@ -494,6 +504,42 @@ class LingotekEntityTestBulkTranslationTest extends LingotekTestBase {
     $this->assertTargetStatus('ES', 'current');
     $this->assertTargetStatus('IT', 'current');
     $this->assertTargetStatus('DE', 'request');
+  }
+
+  /**
+   * Test that when a node is created we cannot assign a profile if using a restricted user.
+   */
+  public function testCannotAssignProfileToContentWithoutRightPermission() {
+    $editor = $this->drupalCreateUser(['administer entity_test content', 'view test entity']);
+    // Login as editor.
+    $this->drupalLogin($editor);
+    // Get the node form.
+    $this->drupalGet('entity_test_mul/add/entity_test_mul');
+    // Assert translation profile cannot be assigned.
+    $this->assertNoField('lingotek_translation_management[lingotek_translation_profile]');
+
+    $translation_manager = $this->drupalCreateUser([
+      'administer entity_test content',
+      'view test entity',
+      'assign lingotek translation profiles',
+    ]);
+    // Login as translation manager.
+    $this->drupalLogin($translation_manager);
+    // Get the node form.
+    $this->drupalGet('entity_test_mul/add/entity_test_mul');
+    // Assert translation profile can be assigned.
+    $this->assertField('lingotek_translation_management[lingotek_translation_profile]');
+
+    // Create a entity_test_mul.
+    $edit = [];
+    $edit['name[0][value]'] = 'Llamas are cool';
+    $edit['field_test_text[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
+    $this->drupalPostForm('/entity_test_mul/add/entity_test_mul', $edit, t('Save'));
+    $this->clickLink('Edit');
+
+    $this->assertFieldById('edit-lingotek-translation-management-lingotek-translation-profile', 'manual');
   }
 
 }

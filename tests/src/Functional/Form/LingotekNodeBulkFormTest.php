@@ -78,7 +78,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
       $edit['title[0][value]'] = 'Llamas are cool ' . $i;
       $edit['body[0][value]'] = 'Llamas are very cool ' . $i;
       $edit['langcode[0][value]'] = 'en';
-      $edit['lingotek_translation_profile'] = 'manual';
+      $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
       $this->saveAndPublishNodeForm($edit);
       $nodes[$i] = $edit;
     }
@@ -140,7 +140,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
       $edit['title[0][value]'] = 'Llamas are cool ' . $indexes[$i];
       $edit['body[0][value]'] = 'Llamas are very cool ' . $indexes[$i];
       $edit['langcode[0][value]'] = 'en';
-      $edit['lingotek_translation_profile'] = $profile;
+      $edit['lingotek_translation_management[lingotek_translation_profile]'] = $profile;
       $this->saveAndPublishNodeForm($edit);
       $nodes[$i] = $edit;
     }
@@ -215,7 +215,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
       $edit['title[0][value]'] = 'Llamas are cool ' . $indexes[$i];
       $edit['body[0][value]'] = 'Llamas are very cool ' . $indexes[$i];
       $edit['langcode[0][value]'] = 'en';
-      $edit['lingotek_translation_profile'] = 'manual';
+      $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
       $this->saveAndPublishNodeForm($edit);
       $nodes[$i] = $edit;
     }
@@ -330,7 +330,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
       $edit['title[0][value]'] = $animal . ' are cool ' . $i;
       $edit['body[0][value]'] = $animal . ' are very cool ' . $i;
       $edit['langcode[0][value]'] = 'en';
-      $edit['lingotek_translation_profile'] = 'manual';
+      $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
       $this->saveAndPublishNodeForm($edit);
       $nodes[$i] = $edit;
     }
@@ -420,7 +420,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
       $edit['title[0][value]'] = new FormattableMarkup('Llamas are cool @langcode @i', ['@langcode' => strtoupper($langcode), '@i' => $i]);
       $edit['body[0][value]'] = $edit['title[0][value]'];
       $edit['langcode[0][value]'] = $langcode;
-      $edit['lingotek_translation_profile'] = 'manual';
+      $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
       $this->saveAndPublishNodeForm($edit);
       $nodes[$i] = $edit;
     }
@@ -526,7 +526,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
       $edit['title[0][value]'] = new FormattableMarkup('Llamas are cool @bundle @i', ['@bundle' => $bundle, '@i' => $i]);
       $edit['body[0][value]'] = $edit['title[0][value]'];
       $edit['langcode[0][value]'] = 'en';
-      $edit['lingotek_translation_profile'] = 'manual';
+      $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
       $this->saveAndPublishNodeForm($edit, $bundle);
       $nodes[$i] = $edit;
     }
@@ -617,7 +617,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
     // Go and upload this node.
@@ -728,7 +728,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
     $this->goToContentBulkManagementForm();
@@ -777,7 +777,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
     $this->goToContentBulkManagementForm();
@@ -810,7 +810,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'automatic';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
     $this->saveAndKeepPublishedNodeForm($edit, 1);
 
     $this->goToContentBulkManagementForm();
@@ -827,13 +827,13 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
     $edit['title[0][value]'] = 'Dogs are cool';
     $edit['body[0][value]'] = 'Dogs are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
     $this->goToContentBulkManagementForm();
@@ -873,13 +873,13 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'automatic';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
     $this->saveAndPublishNodeForm($edit);
 
     $edit['title[0][value]'] = 'Dogs are cool';
     $edit['body[0][value]'] = 'Dogs are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'automatic';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
     $this->saveAndPublishNodeForm($edit);
 
     $this->goToContentBulkManagementForm();
@@ -925,13 +925,13 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
     $edit['title[0][value]'] = 'Dogs are cool';
     $edit['body[0][value]'] = 'Dogs are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
     $this->goToContentBulkManagementForm();
@@ -996,13 +996,13 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
     $edit['title[0][value]'] = 'Dogs are cool';
     $edit['body[0][value]'] = 'Dogs are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
     $this->goToContentBulkManagementForm();
@@ -1070,13 +1070,13 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
     $edit['title[0][value]'] = 'Dogs are cool';
     $edit['body[0][value]'] = 'Dogs are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
     $this->goToContentBulkManagementForm();
@@ -1150,13 +1150,13 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
     $edit['title[0][value]'] = 'Dogs are cool';
     $edit['body[0][value]'] = 'Dogs are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
     $this->goToContentBulkManagementForm();
@@ -1230,13 +1230,13 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
     $edit['title[0][value]'] = 'Dogs are cool';
     $edit['body[0][value]'] = 'Dogs are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
     $this->goToContentBulkManagementForm();
@@ -1310,13 +1310,13 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
     $edit['title[0][value]'] = 'Dogs are cool';
     $edit['body[0][value]'] = 'Dogs are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
     $this->goToContentBulkManagementForm();
@@ -1389,13 +1389,13 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
     $edit['title[0][value]'] = 'Dogs are cool';
     $edit['body[0][value]'] = 'Dogs are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
     $this->goToContentBulkManagementForm();
@@ -1442,13 +1442,13 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
     $edit['title[0][value]'] = 'Dogs are cool';
     $edit['body[0][value]'] = 'Dogs are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
     $this->goToContentBulkManagementForm();
@@ -1487,13 +1487,13 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
     $edit['title[0][value]'] = 'Dogs are cool';
     $edit['body[0][value]'] = 'Dogs are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
     $this->goToContentBulkManagementForm();
@@ -1533,13 +1533,13 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
     $edit['title[0][value]'] = 'Dogs are cool';
     $edit['body[0][value]'] = 'Dogs are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
     $this->goToContentBulkManagementForm();
@@ -1606,13 +1606,13 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
     $edit['title[0][value]'] = 'Dogs are cool';
     $edit['body[0][value]'] = 'Dogs are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
     $this->goToContentBulkManagementForm();
@@ -1679,13 +1679,13 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
     $edit['title[0][value]'] = 'Dogs are cool';
     $edit['body[0][value]'] = 'Dogs are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
     $this->goToContentBulkManagementForm();
@@ -1756,13 +1756,13 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
     $edit['title[0][value]'] = 'Dogs are cool';
     $edit['body[0][value]'] = 'Dogs are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
     $this->goToContentBulkManagementForm();
@@ -1833,13 +1833,13 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
     $edit['title[0][value]'] = 'Dogs are cool';
     $edit['body[0][value]'] = 'Dogs are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
     $this->goToContentBulkManagementForm();
@@ -1910,13 +1910,13 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
     $edit['title[0][value]'] = 'Dogs are cool';
     $edit['body[0][value]'] = 'Dogs are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
     $this->goToContentBulkManagementForm();
@@ -1990,7 +1990,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
       $edit['title[0][value]'] = 'Llamas are cool ' . $i;
       $edit['body[0][value]'] = 'Llamas are very cool ' . $i;
       $edit['langcode[0][value]'] = 'en';
-      $edit['lingotek_translation_profile'] = 'automatic';
+      $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
       $this->saveAndPublishNodeForm($edit);
       $nodes[$i] = $edit;
     }
@@ -2044,7 +2044,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
       $edit['title[0][value]'] = 'Llamas are cool ' . $i;
       $edit['body[0][value]'] = 'Llamas are very cool ' . $i;
       $edit['langcode[0][value]'] = 'en';
-      $edit['lingotek_translation_profile'] = 'automatic';
+      $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
       $this->saveAndPublishNodeForm($edit);
       $nodes[$i] = $edit;
     }
@@ -2084,7 +2084,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
       $edit['title[0][value]'] = 'Llamas are cool ' . $i;
       $edit['body[0][value]'] = 'Llamas are very cool ' . $i;
       $edit['langcode[0][value]'] = 'en';
-      $edit['lingotek_translation_profile'] = 'manual';
+      $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
       $this->saveAndPublishNodeForm($edit);
       $nodes[$i] = $edit;
     }
@@ -2120,7 +2120,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
       $edit['title[0][value]'] = 'Llamas are cool ' . $i;
       $edit['body[0][value]'] = 'Llamas are very cool ' . $i;
       $edit['langcode[0][value]'] = 'en';
-      $edit['lingotek_translation_profile'] = 'manual';
+      $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
       $this->saveAndPublishNodeForm($edit);
       $nodes[$i] = $edit;
     }
@@ -2157,7 +2157,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
     // Go to the bulk management form.
@@ -2201,7 +2201,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
     // Go to the bulk management form.

@@ -70,7 +70,7 @@ class LingotekWorkbenchModerationCustomMenuLinkTest extends LingotekTestBase {
     $edit['description[0][value]'] = 'Llamas are very cool';
     $edit['link[0][uri]'] = '<front>';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'automatic';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
     $this->drupalPostForm('/admin/structure/menu/manage/main/add', $edit, t('Save'));
 
     $this->assertText('The menu link has been saved.');

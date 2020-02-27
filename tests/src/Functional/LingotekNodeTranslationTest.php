@@ -188,7 +188,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
     $edit['files[field_image_0]'] = \Drupal::service('file_system')->realpath($test_image->uri);
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
 
     $this->drupalPostForm('node/add/article', $edit, t('Preview'));
 
@@ -283,7 +283,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool EDITED';
     $edit['body[0][value]'] = 'Llamas are very cool EDITED';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'automatic';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
     $this->saveAndKeepPublishedThisTranslationNodeForm($edit, 1);
 
     $this->clickLink('Translate');
@@ -317,7 +317,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool EDITED';
     $edit['body[0][value]'] = '';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'automatic';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
     $this->saveAndKeepPublishedThisTranslationNodeForm($edit, 1);
 
     $this->clickLink('Translate');
@@ -377,7 +377,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     // Get the node form.
     $this->drupalGet('node/add/article');
     // Assert translation profile cannot be assigned.
-    $this->assertNoField('lingotek_translation_profile');
+    $this->assertNoField('lingotek_translation_management[lingotek_translation_profile]');
 
     $translation_manager = $this->drupalCreateUser([
       'bypass node access',
@@ -388,7 +388,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     // Get the node form.
     $this->drupalGet('node/add/article');
     // Assert translation profile can be assigned.
-    $this->assertField('lingotek_translation_profile');
+    $this->assertField('lingotek_translation_management[lingotek_translation_profile]');
   }
 
   /**
@@ -468,7 +468,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
     // Check that the translate tab is in the node.
@@ -505,7 +505,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
     // Check that the translate tab is in the node.
@@ -540,7 +540,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
     // Check that the translate tab is in the node.
@@ -594,7 +594,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
     // Check that the translate tab is in the node.
@@ -648,7 +648,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
     // Check that the translate tab is in the node.
@@ -702,7 +702,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'automatic';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
     $this->saveAndPublishNodeForm($edit);
 
     \Drupal::state()->set('lingotek.must_document_archived_error_in_update', TRUE);
@@ -731,7 +731,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
     // Check that the translate tab is in the node.
@@ -785,7 +785,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'automatic';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
     $this->saveAndPublishNodeForm($edit);
 
     \Drupal::state()->set('lingotek.must_document_locked_error_in_update', TRUE);
@@ -816,7 +816,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'automatic';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
     $this->saveAndPublishNodeForm($edit);
 
     // The document was uploaded automatically and failed.
@@ -841,7 +841,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'automatic';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
     $this->saveAndPublishNodeForm($edit);
 
     // The document was uploaded automatically and failed.
@@ -864,7 +864,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'automatic';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
     $this->saveAndPublishNodeForm($edit);
 
     \Drupal::state()->set('lingotek.must_error_in_upload', TRUE);
@@ -893,7 +893,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'automatic';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
     $this->saveAndPublishNodeForm($edit);
 
     \Drupal::state()->set('lingotek.must_payment_required_error_in_update', TRUE);
@@ -924,7 +924,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
     // Check that the translate tab is in the node.
@@ -967,7 +967,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
     // Check that the translate tab is in the node.
@@ -1008,7 +1008,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
     // Check that the translate tab is in the node.
@@ -1049,7 +1049,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
     // Check that the translate tab is in the node.
@@ -1091,7 +1091,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'automatic';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
     $this->saveAndPublishNodeForm($edit);
 
     // Check that the translate tab is in the node.
@@ -1139,7 +1139,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
     // Check that the translate tab is in the node.

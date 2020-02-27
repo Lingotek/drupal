@@ -212,7 +212,7 @@ class LingotekNodeEmbeddingTagsTranslationTest extends LingotekTestBase {
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
     $edit['field_tags[target_id]'] = implode(',', ['Camelid', 'Herbivorous']);
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
 
     $this->saveAndPublishNodeForm($edit);
 
@@ -298,7 +298,7 @@ class LingotekNodeEmbeddingTagsTranslationTest extends LingotekTestBase {
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
     $edit['field_tags[target_id]'] = implode(',', ['Camelid', 'Herbivorous']);
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
 
     $this->saveAndPublishNodeForm($edit);
 
@@ -490,7 +490,7 @@ class LingotekNodeEmbeddingTagsTranslationTest extends LingotekTestBase {
     $edit['field_other_tags[0][target_id]'] = 'Camelid';
     $edit['field_other_tags[1][target_id]'] = 'Spitting';
     $edit['field_other_tags[2][target_id]'] = 'Herbivorous';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
 
     $this->saveAndPublishNodeForm($edit, NULL);
 

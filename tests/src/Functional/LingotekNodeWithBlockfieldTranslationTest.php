@@ -153,7 +153,7 @@ class LingotekNodeWithBlockfieldTranslationTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['field_block[0][plugin_id]'] = 'current_theme_block';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $edit['langcode[0][value]'] = 'en';
 
     // Because we cannot do ajax requests in this test, we submit and edit later.
@@ -161,7 +161,7 @@ class LingotekNodeWithBlockfieldTranslationTest extends LingotekTestBase {
 
     $edit['field_block[0][settings][label_display]'] = TRUE;
     $edit['field_block[0][settings][label]'] = 'Current theme overridden title block';
-    $edit['lingotek_translation_profile'] = 'automatic';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
     $this->saveAndKeepPublishedNodeForm($edit, 1);
 
     $this->assertText('Current theme overridden title block');
@@ -243,7 +243,7 @@ class LingotekNodeWithBlockfieldTranslationTest extends LingotekTestBase {
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['field_block[0][plugin_id]'] = 'block_content:' . $dogsBlock->uuid();
     $edit['field_block[1][plugin_id]'] = 'block_content:' . $catsBlock->uuid();
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $edit['langcode[0][value]'] = 'en';
 
     // Because we cannot do ajax requests in this test, we submit and edit later.
@@ -253,7 +253,7 @@ class LingotekNodeWithBlockfieldTranslationTest extends LingotekTestBase {
     $edit['field_block[0][settings][label]'] = 'Dogs overridden title block';
     $edit['field_block[1][settings][label_display]'] = TRUE;
     $edit['field_block[1][settings][label]'] = 'Cats overridden title block';
-    $edit['lingotek_translation_profile'] = 'automatic';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
     $this->saveAndKeepPublishedNodeForm($edit, 1);
 
     $this->assertText('Dogs overridden title block');

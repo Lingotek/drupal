@@ -507,7 +507,7 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['langcode[0][value]'] = 'en';
     $edit['field_paragraphs_demo[0][subform][field_text_demo][0][value]'] = 'Llamas are very cool';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit, NULL);
 
     Paragraph::load(1)->delete();
@@ -579,7 +579,7 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     $edit['langcode[0][value]'] = 'en';
     $edit['field_paragraphs_demo[0][subform][field_text_demo][0][value]'] = 'Llamas are very cool for the first time';
     $edit['field_paragraphs_demo[1][subform][field_text_demo][0][value]'] = 'Llamas are very cool for the second time';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit, NULL);
 
     $this->goToContentBulkManagementForm();
@@ -624,7 +624,7 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['field_paragraphs_demo[1][subform][field_text_demo][0][value]'] = 'Llamas are very cool for the second time';
     $edit['field_paragraphs_demo[2][subform][field_text_demo][0][value]'] = 'Llamas are very cool for the third time';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndKeepPublishedNodeForm($edit, NULL);
 
     // Download translation.

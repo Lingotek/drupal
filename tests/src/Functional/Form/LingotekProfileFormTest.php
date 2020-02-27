@@ -192,7 +192,7 @@ class LingotekProfileFormTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = $profile_id;
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = $profile_id;
     $this->saveAndPublishNodeForm($edit);
     $this->assertUrl('/node/1', [], 'Node has been created.');
 

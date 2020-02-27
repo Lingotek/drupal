@@ -82,7 +82,7 @@ class LingotekNodeNotificationCallbackQueueWorkerTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'automatic_worker';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic_worker';
     $this->saveAndPublishNodeForm($edit);
 
     /** @var \Drupal\node\NodeInterface $node */
@@ -182,7 +182,7 @@ class LingotekNodeNotificationCallbackQueueWorkerTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'automatic_worker';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic_worker';
     $this->saveAndPublishNodeForm($edit);
     $this->goToContentBulkManagementForm();
 
@@ -278,7 +278,7 @@ class LingotekNodeNotificationCallbackQueueWorkerTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'automatic_worker';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic_worker';
     $this->saveAndPublishNodeForm($edit);
 
     // Simulate the notification of content successfully uploaded.

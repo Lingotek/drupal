@@ -488,7 +488,7 @@ class LingotekNodeNestedParagraphsTranslationTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['langcode[0][value]'] = 'en';
     $edit['field_paragraph_container[0][subform][field_paragraphs_demo][0][subform][field_text_demo][0][value]'] = 'Llamas are very cool';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit, NULL);
 
     Paragraph::load(1)->delete();

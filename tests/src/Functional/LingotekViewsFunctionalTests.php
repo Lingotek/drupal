@@ -72,7 +72,7 @@ class LingotekViewsFunctionalTests extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
     $this->drupalGet('lingotek/views/node_and_lingotek_metadata');
@@ -84,7 +84,7 @@ class LingotekViewsFunctionalTests extends LingotekTestBase {
     $this->assertSession()->elementTextNotContains('css', 'td.views-field-translation-status-value', 'EN');
     $this->assertLink('Manual');
 
-    $this->saveAndKeepPublishedNodeForm(['lingotek_translation_profile' => 'automatic'], 1);
+    $this->saveAndKeepPublishedNodeForm(['lingotek_translation_management[lingotek_translation_profile]' => 'automatic'], 1);
 
     $this->drupalGet('lingotek/views/node_and_lingotek_metadata');
 
@@ -106,7 +106,7 @@ class LingotekViewsFunctionalTests extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_profile'] = 'manual';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
     $this->drupalGet('lingotek/views/lingotek_metadata');
@@ -117,7 +117,7 @@ class LingotekViewsFunctionalTests extends LingotekTestBase {
     $this->assertSession()->elementTextNotContains('css', 'td.views-field-translation-status-value', 'EN');
     $this->assertLink('Manual');
 
-    $this->saveAndKeepPublishedNodeForm(['lingotek_translation_profile' => 'automatic'], 1);
+    $this->saveAndKeepPublishedNodeForm(['lingotek_translation_management[lingotek_translation_profile]' => 'automatic'], 1);
 
     $this->drupalGet('lingotek/views/lingotek_metadata');
 

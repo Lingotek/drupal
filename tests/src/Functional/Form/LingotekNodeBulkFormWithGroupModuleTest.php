@@ -192,7 +192,7 @@ if (version_compare(\Drupal::VERSION, '8.6', '>=')) {
           '@i' => $i,
         ]);
         $edit['body[0][value]'] = $edit['title[0][value]'];
-        $edit['lingotek_translation_profile'] = 'manual';
+        $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
         $this->saveAndPublishNodeForm($edit);
         $this->relateNodeToGroup($i, $group, $edit['title[0][value]']);
         $nodes[$i] = $edit;
