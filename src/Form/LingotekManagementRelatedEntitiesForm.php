@@ -170,7 +170,7 @@ class LingotekManagementRelatedEntitiesForm extends LingotekManagementFormBase {
 
   protected function getNestedEntities(ContentEntityInterface &$entity, &$visited = [], &$entities = [], $depth = 1) {
     $visited[$entity->bundle()][] = $entity->id();
-    $entities[$entity->getEntityTypeId()][$entity->id()] = $entity;
+    $entities[$entity->getEntityTypeId()][$entity->id()] = $entity->getUntranslated();
     if ($depth > 0) {
       --$depth;
       $field_definitions = $this->entityFieldManager->getFieldDefinitions($entity->getEntityTypeId(), $entity->bundle());

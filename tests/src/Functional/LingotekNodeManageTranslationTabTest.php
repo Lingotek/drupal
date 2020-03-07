@@ -5,6 +5,7 @@ namespace Drupal\Tests\lingotek\Functional;
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
+use Drupal\lingotek\Lingotek;
 use Drupal\Tests\field\Traits\EntityReferenceTestTrait;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
@@ -735,6 +736,27 @@ class LingotekNodeManageTranslationTabTest extends LingotekTestBase {
     // The job id is gone.
     $this->assertNoText('my_custom_job_id_1');
     $this->assertNoText('my_custom_job_id_2');
+  }
+
+  public function testCorrectTargetsInNonSourceLanguage() {
+    $this->testNodeTranslationUsingLinks();
+
+    // Add a language.
+    ConfigurableLanguage::createFromLangcode('de')->setThirdPartySetting('lingotek', 'locale', 'de_DE')->save();
+
+    $this->goToContentBulkManagementForm('node');
+
+    $this->assertSourceStatus('EN', Lingotek::STATUS_CURRENT);
+    $this->assertTargetStatus('ES', Lingotek::STATUS_CURRENT);
+    $this->assertTargetStatus('DE', Lingotek::STATUS_REQUEST);
+    $this->assertNoTargetStatus('EN', Lingotek::STATUS_CURRENT);
+
+    $this->goToContentBulkManagementForm('node', 'es');
+
+    $this->assertSourceStatus('EN', Lingotek::STATUS_CURRENT);
+    $this->assertTargetStatus('ES', Lingotek::STATUS_CURRENT);
+    $this->assertTargetStatus('DE', Lingotek::STATUS_REQUEST);
+    $this->assertNoTargetStatus('EN', Lingotek::STATUS_CURRENT);
   }
 
   /**
