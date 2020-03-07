@@ -259,6 +259,7 @@ abstract class LingotekManagementFormBase extends FormBase {
           Lingotek::STATUS_CURRENT => $this->t('Current'),
           Lingotek::STATUS_IMPORTING => $this->t('Importing'),
           Lingotek::STATUS_EDITED => $this->t('Edited'),
+          Lingotek::STATUS_CANCELLED => $this->t('Cancelled'),
           Lingotek::STATUS_ERROR => $this->t('Error'),
         ],
       ];
@@ -272,9 +273,10 @@ abstract class LingotekManagementFormBase extends FormBase {
           Lingotek::STATUS_EDITED => $this->t('Edited'),
           Lingotek::STATUS_PENDING => $this->t('In Progress'),
           Lingotek::STATUS_READY => $this->t('Ready'),
-          Lingotek::STATUS_ERROR => $this->t('Error'),
           Lingotek::STATUS_INTERMEDIATE => $this->t('Interim'),
           Lingotek::STATUS_REQUEST => $this->t('Not Requested'),
+          Lingotek::STATUS_CANCELLED => $this->t('Cancelled'),
+          Lingotek::STATUS_ERROR => $this->t('Error'),
         ],
       ];
       $form['filters']['advanced_options']['profile'] = [

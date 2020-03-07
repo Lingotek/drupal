@@ -107,6 +107,7 @@ class LingotekManagementForm extends LingotekManagementFormBase {
         $needingUploadStatuses = [
           Lingotek::STATUS_EDITED,
           Lingotek::STATUS_REQUEST,
+          Lingotek::STATUS_CANCELLED,
           Lingotek::STATUS_ERROR,
         ];
         $metadata_type = $this->entityTypeManager->getDefinition('lingotek_content_metadata');

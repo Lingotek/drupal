@@ -2167,6 +2167,14 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $this->assertLingotekUploadLink();
     $this->clickLink('EN');
 
+    $this->assertOption('filters[advanced_options][source_status]', 'All');
+    $this->assertOption('filters[advanced_options][source_status]', 'UPLOAD_NEEDED');
+    $this->assertOption('filters[advanced_options][source_status]', 'CURRENT');
+    $this->assertOption('filters[advanced_options][source_status]', 'IMPORTING');
+    $this->assertOption('filters[advanced_options][source_status]', 'EDITED');
+    $this->assertOption('filters[advanced_options][source_status]', 'CANCELLED');
+    $this->assertOption('filters[advanced_options][source_status]', 'ERROR');
+
     // After we filter by "IMPORTING", there is no pager and the rows
     // selected are the ones expected.
     $edit = [
@@ -2210,6 +2218,16 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     // Ensure there is a link to upload and click it.
     $this->assertLingotekUploadLink();
     $this->clickLink('EN');
+
+    $this->assertOption('filters[advanced_options][target_status]', 'All');
+    $this->assertOption('filters[advanced_options][target_status]', 'CURRENT');
+    $this->assertOption('filters[advanced_options][target_status]', 'EDITED');
+    $this->assertOption('filters[advanced_options][target_status]', 'PENDING');
+    $this->assertOption('filters[advanced_options][target_status]', 'READY');
+    $this->assertOption('filters[advanced_options][target_status]', 'INTERMEDIATE');
+    $this->assertOption('filters[advanced_options][target_status]', 'REQUEST');
+    $this->assertOption('filters[advanced_options][target_status]', 'CANCELLED');
+    $this->assertOption('filters[advanced_options][target_status]', 'ERROR');
 
     // After we filter by "PENDING", there is no pager and the rows
     // selected are the ones expected.
@@ -2263,6 +2281,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
       Node::create(['title' => 'Article current interim ready'] + $node_defaults),
       Node::create(['title' => 'CustomType error null null', 'type' => 'custom_type'] + $node_defaults),
       Node::create(['title' => 'CustomType current current ready', 'type' => 'custom_type'] + $node_defaults),
+      Node::create(['title' => 'Article cancelled cancelled cancelled'] + $node_defaults),
     ];
     foreach ($nodes as $node) {
       $node->save();
@@ -2283,6 +2302,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
       ['translation_status' => [['language' => 'en', 'value' => 'current'], ['language' => 'de', 'value' => 'interim'], ['language' => 'es', 'value' => 'ready']]] + $metadata_defaults,
       ['translation_status' => [['language' => 'en', 'value' => 'error']]] + $metadata_defaults,
       ['translation_status' => [['language' => 'en', 'value' => 'current'], ['language' => 'de', 'value' => 'current'], ['language' => 'es', 'value' => 'ready']]] + $metadata_defaults,
+      ['translation_status' => [['language' => 'en', 'value' => 'cancelled'], ['language' => 'de', 'value' => 'cancelled'], ['language' => 'es', 'value' => 'cancelled']]] + $metadata_defaults,
     ];
     $index = 0;
     foreach ($metadatas as $metadata_data) {
@@ -2297,7 +2317,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     Node::create(['title' => 'CustomType nothing nothing nothing', 'type' => 'custom_type'] + $node_defaults)->save();
     Node::create(['title' => 'NotConfigured nothing nothing nothing', 'type' => 'not_configured'] + $node_defaults)->save();
 
-    $this->assertEquals(11, count(LingotekContentMetadata::loadMultiple()));
+    $this->assertEquals(12, count(LingotekContentMetadata::loadMultiple()));
 
     $this->goToContentBulkManagementForm();
 
@@ -2313,6 +2333,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $this->assertText('CustomType current current ready');
     $this->assertNoText('CustomType nothing nothing nothing');
     $this->assertNoText('NotConfigured nothing nothing nothing');
+    $this->assertNoText('Article cancelled cancelled cancelled');
 
     // Change page limit
     \Drupal::service('tempstore.private')->get('lingotek.management.items_per_page')->set('limit', 50);
@@ -2330,6 +2351,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $this->assertText('CustomType current current ready');
     $this->assertText('CustomType nothing nothing nothing');
     $this->assertText('NotConfigured nothing nothing nothing');
+    $this->assertText('Article cancelled cancelled cancelled');
 
     $edit = [
       'filters[advanced_options][source_status]' => 'UPLOAD_NEEDED',
@@ -2348,6 +2370,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $this->assertNoText('CustomType current current ready');
     $this->assertText('CustomType nothing nothing nothing');
     $this->assertText('NotConfigured nothing nothing nothing');
+    $this->assertText('Article cancelled cancelled cancelled');
 
     $edit = [
       'filters[advanced_options][source_status]' => 'UPLOAD_NEEDED',
@@ -2367,6 +2390,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $this->assertNoText('CustomType current current ready');
     $this->assertText('CustomType nothing nothing nothing');
     $this->assertText('NotConfigured nothing nothing nothing');
+    $this->assertNoText('Article cancelled cancelled cancelled');
 
     $edit = [
       'filters[advanced_options][source_status]' => 'UPLOAD_NEEDED',
@@ -2387,6 +2411,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $this->assertNoText('CustomType current current ready');
     $this->assertText('CustomType nothing nothing nothing');
     $this->assertText('NotConfigured nothing nothing nothing');
+    $this->assertNoText('Article cancelled cancelled cancelled');
 
     $edit = [
       'filters[advanced_options][source_status]' => 'UPLOAD_NEEDED',
@@ -2408,6 +2433,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $this->assertNoText('CustomType current current ready');
     $this->assertNoText('CustomType nothing nothing nothing');
     $this->assertNoText('NotConfigured nothing nothing nothing');
+    $this->assertNoText('Article cancelled cancelled cancelled');
 
     $edit = [
       'filters[advanced_options][source_status]' => 'UPLOAD_NEEDED',
@@ -2430,6 +2456,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $this->assertNoText('CustomType current current ready');
     $this->assertNoText('CustomType nothing nothing nothing');
     $this->assertNoText('NotConfigured nothing nothing nothing');
+    $this->assertNoText('Article cancelled cancelled cancelled');
   }
 
 }
