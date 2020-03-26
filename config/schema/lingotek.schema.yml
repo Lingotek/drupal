@@ -51,6 +51,9 @@ lingotek.settings:
           type: string
         content_cloud_import_status:
           type: integer
+        split_download_all:
+          label: 'Use a different batch per locale when downloading all translations'
+          type: boolean
         contrib:
           label: 'Contributed modules integrations settings'
           type: mapping

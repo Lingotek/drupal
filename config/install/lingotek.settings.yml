@@ -15,6 +15,7 @@ preference:
   content_cloud_import_format: 'article'
   content_cloud_import_status: 0
   enable_download_source: false
+  split_download_all: false
   contrib:
     paragraphs:
       enable_bulk_management: false

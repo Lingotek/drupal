@@ -4,6 +4,7 @@ namespace Drupal\Tests\lingotek\Functional;
 
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
+use Drupal\lingotek\Lingotek;
 
 /**
  * Tests translating a node into locales using the bulk management form.
@@ -109,7 +110,6 @@ class LingotekNodeBulkLocaleTranslationTest extends LingotekTestBase {
 
     // Download the Spanish translation.
     $this->assertLingotekDownloadTargetLink('es_AR');
-    $this->assertLingotekDownloadTargetLink('es_AR');
     $this->clickLink('ES');
     $this->assertText('The translation of node Llamas are cool into es_AR has been downloaded.');
 
@@ -153,6 +153,89 @@ class LingotekNodeBulkLocaleTranslationTest extends LingotekTestBase {
 
     // Check that the source status has been updated.
     $this->assertNoLingotekCheckSourceStatusLink();
+  }
+
+  /**
+   * Tests that download uses one batch for downloading all translations.
+   */
+  public function testDownloadAllWithoutSplitDownload() {
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'automatic';
+    $this->saveAndPublishNodeForm($edit);
+
+    $this->goToContentBulkManagementForm();
+
+    // There is a link for checking status.
+    $this->assertLingotekCheckSourceStatusLink();
+    // And we can already request a translation.
+    $this->assertLingotekRequestTranslationLink('de_AT', 'dummy-document-hash-id');
+
+    // Request the German (AT) translation.
+    $this->assertLingotekRequestTranslationLink('de_AT', 'dummy-document-hash-id');
+    $this->clickLink('ES-ES');
+    $this->assertText("Locale 'es_ES' was added as a translation target for node Llamas are cool.");
+    $this->clickLink('DE-AT');
+    $this->assertText("Locale 'de_AT' was added as a translation target for node Llamas are cool.");
+
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForDownloadTranslations('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    $this->assertTargetStatus('DE-AT', Lingotek::STATUS_CURRENT);
+    $this->assertTargetStatus('ES-ES', Lingotek::STATUS_CURRENT);
+    $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
+  }
+
+  /**
+   * Tests that download uses one batch for downloading all translations.
+   */
+  public function testDownloadAllWithSplitDownload() {
+    $this->drupalGet('admin/lingotek/settings');
+    $edit = ['split_download_all' => TRUE];
+    $this->submitForm($edit, 'Save', 'lingoteksettings-tab-preferences-form');
+
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'automatic';
+    $this->saveAndPublishNodeForm($edit);
+
+    $this->goToContentBulkManagementForm();
+
+    // There is a link for checking status.
+    $this->assertLingotekCheckSourceStatusLink();
+    // And we can already request a translation.
+    $this->assertLingotekRequestTranslationLink('de_AT', 'dummy-document-hash-id');
+
+    // Request the German (AT) translation.
+    $this->assertLingotekRequestTranslationLink('de_AT', 'dummy-document-hash-id');
+    $this->clickLink('ES-ES');
+    $this->assertText("Locale 'es_ES' was added as a translation target for node Llamas are cool.");
+    $this->clickLink('DE-AT');
+    $this->assertText("Locale 'de_AT' was added as a translation target for node Llamas are cool.");
+
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForDownloadTranslations('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    $this->assertTargetStatus('DE-AT', Lingotek::STATUS_CURRENT);
+    $this->assertTargetStatus('ES-ES', Lingotek::STATUS_CURRENT);
+    $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
   }
 
 }

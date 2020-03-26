@@ -983,6 +983,15 @@ function lingotek_update_8219() {
   }
 }
 
+/**
+ * Adds split_download_all preference to lingotek.settings.
+ */
+function lingotek_update_8220() {
+  $lingotekSettings = \Drupal::configFactory()->getEditable('lingotek.settings');
+  $lingotekSettings->set('preference.split_download_all', FALSE);
+  $lingotekSettings->save();
+}
+
 function _lingotek_find_key(&$keys, $id, array $array) {
   foreach ($array as $x => $y) {
     // if (!in_array($x, ['enabled', 'profile'])) {}

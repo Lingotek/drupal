@@ -638,7 +638,22 @@ abstract class LingotekManagementFormBase extends FormBase {
     $entities = $this->getSelectedEntities($values);
 
     foreach ($entities as $entity) {
-      $operations[] = [[$this, $operation], [$entity, $language, $job_id]];
+      $split_download_all = $this->lingotekConfiguration->getPreference('split_download_all');
+      if ($operation == 'downloadTranslations' && $split_download_all) {
+
+        $languages = $this->languageManager->getLanguages();
+        foreach ($languages as $langcode => $language) {
+          if ($langcode !== $entity->language()->getId()) {
+            $operations[] = [
+              [$this, 'downloadTranslation'],
+              [$entity, $langcode, $job_id],
+            ];
+          }
+        }
+      }
+      else {
+        $operations[] = [[$this, $operation], [$entity, $language, $job_id]];
+      }
     }
     $batch = [
       'title' => $title,

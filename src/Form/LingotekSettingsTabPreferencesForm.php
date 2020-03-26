@@ -153,6 +153,13 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
       '#default_value' => $lingotek_config->getPreference('append_type_to_title') ?: FALSE,
     ];
 
+    $form['prefs']['split_download_all'] = [
+      '#type' => 'checkbox',
+      '#title' => t('Use a different batch per locale when downloading all translations'),
+      '#description' => t('Uses a different batch process per locale. This option can be used to prevent timeouts during download all translations.'),
+      '#default_value' => $lingotek_config->getPreference('split_download_all') ?: FALSE,
+    ];
+
     $form['prefs']['actions']['#type'] = 'actions';
     $form['prefs']['actions']['submit'] = [
       '#type' => 'submit',
@@ -182,6 +189,7 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
     $lingotek_config->setPreference('append_type_to_title', $form_values['append_type_to_title']);
     $lingotek_config->setPreference('target_download_status', $form_values['target_download_status']);
     $lingotek_config->setPreference('enable_download_source', $form_values['enable_download_source']);
+    $lingotek_config->setPreference('split_download_all', $form_values['split_download_all']);
     parent::submitForm($form, $form_state);
   }
 
