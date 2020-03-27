@@ -367,8 +367,11 @@ abstract class LingotekTestBase extends BrowserTestBase {
     }
   }
 
-  protected function saveAndKeepPublishedThisTranslationNodeForm(array $edit, $nid) {
+  protected function saveAndKeepPublishedThisTranslationNodeForm(array $edit, $nid, $prefix = NULL) {
     $path = ($nid !== NULL) ? "node/$nid/edit" : NULL;
+    if ($path !== NULL && $prefix !== NULL) {
+      $path = $prefix . '/' . $path;
+    }
     if (floatval(\Drupal::VERSION) >= 8.4) {
       $edit['status[value]'] = TRUE;
       $this->drupalPostForm($path, $edit, t('Save (this translation)'));

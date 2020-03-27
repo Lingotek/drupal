@@ -670,6 +670,50 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
   }
 
   /**
+   * Tests that a node can be translated using the links on the management page.
+   */
+  public function testEditedTranslationIsMarkedAsTargetEditedAndNotTheSource() {
+    // We need a node with translations first.
+    $this->testNodeTranslationUsingLinks();
+
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
+    // Edit the node translation.
+    $edit = [];
+    $edit['title[0][value]'] = 'Las llamas son chulas EDITED';
+    $this->saveAndKeepPublishedThisTranslationNodeForm($edit, 1, 'es');
+
+    $this->assertText('Las llamas son chulas EDITED');
+
+    // Login as translation manager.
+    $this->drupalLogin($this->translationManagerUser);
+
+    $this->goToContentBulkManagementForm();
+
+    // Check the source status is edited.
+    $this->assertSourceStatus('EN', Lingotek::STATUS_CURRENT);
+    $this->assertTargetStatus('ES', Lingotek::STATUS_EDITED);
+
+    // Recheck status.
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForCheckTranslations('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $this->assertTargetStatus('ES', Lingotek::STATUS_READY);
+
+    // Download the translation.
+    $this->clickLink('ES');
+    $this->assertText('The translation of node Llamas are cool into es_MX has been downloaded.');
+    $this->assertTargetStatus('ES', Lingotek::STATUS_CURRENT);
+
+    $this->drupalGet('es/node/1');
+    $this->assertNoText('Las llamas son chulas EDITED');
+  }
+
+  /**
    * Tests that a config can be translated using the links on the management page.
    */
   public function testFormWorksAfterRemovingLanguageWithStatuses() {

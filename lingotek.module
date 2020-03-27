@@ -320,85 +320,101 @@ function lingotek_entity_update(EntityInterface $entity) {
           }
         }
       }
-
-      // If workbench moderation is enabled, we need to prevent that content is
-      // processed if not the right state.
-      /** @var \Drupal\lingotek\Moderation\LingotekModerationFactoryInterface $moderation_factory */
-      $moderation_factory = \Drupal::service('lingotek.moderation_factory');
-      $moderation_handler = $moderation_factory->getModerationHandler();
-      $preventUpload = $moderation_handler->shouldModerationPreventUpload($entity);
-
       /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
       $translation_service = \Drupal::service('lingotek.content_translation');
+      if ($entity->isDefaultTranslation()) {
+        // If workbench moderation is enabled, we need to prevent that content is
+        // processed if not the right state.
+        /** @var \Drupal\lingotek\Moderation\LingotekModerationFactoryInterface $moderation_factory */
+        $moderation_factory = \Drupal::service('lingotek.moderation_factory');
+        $moderation_handler = $moderation_factory->getModerationHandler();
+        $preventUpload = $moderation_handler->shouldModerationPreventUpload($entity);
 
-      $profile = $configuration_service->getEntityProfile($entity);
-      if ($profile->id() === Lingotek::PROFILE_DISABLED) {
-        $translation_service->setSourceStatus($entity, Lingotek::STATUS_DISABLED);
-        $translation_service->setTargetStatuses($entity, Lingotek::STATUS_DISABLED);
-        return;
-      }
-      elseif ($translation_service->getSourceStatus($entity) === Lingotek::STATUS_CANCELLED) {
-        return;
-      }
-      elseif ($translation_service->getSourceStatus($entity) === Lingotek::STATUS_DISABLED) {
-        if ($translation_service->getDocumentId($entity) !== NULL) {
-          $translation_service->setSourceStatus($entity, Lingotek::STATUS_CURRENT);
+        $profile = $configuration_service->getEntityProfile($entity);
+        if ($profile->id() === Lingotek::PROFILE_DISABLED) {
+          $translation_service->setSourceStatus($entity, Lingotek::STATUS_DISABLED);
+          $translation_service->setTargetStatuses($entity, Lingotek::STATUS_DISABLED);
+          return;
         }
-        else {
-          $translation_service->setSourceStatus($entity, Lingotek::STATUS_CURRENT);
+        elseif ($translation_service->getSourceStatus($entity) === Lingotek::STATUS_CANCELLED) {
+          return;
         }
-        $translation_service->checkTargetStatuses($entity);
-        return;
-      }
-
-      $has_autoupload = !$preventUpload && $profile->hasAutomaticUpload();
-
-      $source_status = $translation_service->getSourceStatus($entity);
-      $entity_has_changed = $translation_service->hasEntityChanged($entity);
-
-      if ($has_autoupload) {
-        // New entity with auto-upload
-        if ($source_status == NULL || $source_status == Lingotek::STATUS_UNTRACKED) {
-          $translation_service->setSourceStatus($entity, Lingotek::STATUS_EDITED);
-          try {
-            $document_id = $translation_service->uploadDocument($entity);
-            \Drupal::messenger()->addStatus(t('<em>@title</em> sent to Lingotek successfully.', ['@title' => $entity->label()]));
+        elseif ($translation_service->getSourceStatus($entity) === Lingotek::STATUS_DISABLED) {
+          if ($translation_service->getDocumentId($entity) !== NULL) {
+            $translation_service->setSourceStatus($entity, Lingotek::STATUS_CURRENT);
           }
-          catch (LingotekApiException $exception) {
-            \Drupal::messenger()->addError(t('The upload for @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
+          else {
+            $translation_service->setSourceStatus($entity, Lingotek::STATUS_CURRENT);
+          }
+          $translation_service->checkTargetStatuses($entity);
+          return;
+        }
+
+        $has_autoupload = !$preventUpload && $profile->hasAutomaticUpload();
+
+        $source_status = $translation_service->getSourceStatus($entity);
+        $entity_has_changed = $translation_service->hasEntityChanged($entity);
+
+        if ($has_autoupload) {
+          // New entity with auto-upload
+          if ($source_status == NULL || $source_status == Lingotek::STATUS_UNTRACKED) {
+            $translation_service->setSourceStatus($entity, Lingotek::STATUS_EDITED);
+            try {
+              $document_id = $translation_service->uploadDocument($entity);
+              \Drupal::messenger()->addStatus(t('<em>@title</em> sent to Lingotek successfully.', ['@title' => $entity->label()]));
+            }
+            catch (LingotekApiException $exception) {
+              \Drupal::messenger()->addError(t('The upload for @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
+            }
+          }
+          // Updated entity with auto-upload
+          elseif ($entity_has_changed) {
+            $translation_service->setSourceStatus($entity, Lingotek::STATUS_EDITED);
+            try {
+              $response = $translation_service->updateDocument($entity);
+              $translation_service->setSourceStatus($entity, Lingotek::STATUS_IMPORTING);
+              $translation_service->markTranslationsAsDirty($entity);
+              \Drupal::messenger()->addStatus(t('<em>@title</em> was updated and sent to Lingotek successfully.', ['@title' => $entity->label()]));
+            }
+            catch (LingotekDocumentArchivedException $exception) {
+              \Drupal::messenger()->addError(t('Document @entity_type %title has been archived. Please upload again.', [
+                '@entity_type' => $entity->getEntityTypeId(),
+                '%title' => $entity->label(),
+              ]));
+            }
+            catch (LingotekDocumentLockedException $exception) {
+              \Drupal::messenger()->addError(t('Document @entity_type %title has a new version. The document id has been updated for all future interactions. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
+            }
+            catch (LingotekPaymentRequiredException $exception) {
+              \Drupal::messenger()->addError(t('Community has been disabled. Please contact support@lingotek.com to re-enable your community.'));
+            }
+            catch (LingotekApiException $exception) {
+              \Drupal::messenger()->addError(t('The update for @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
+            }
           }
         }
-        // Updated entity with auto-upload
-        elseif ($entity_has_changed) {
-          $translation_service->setSourceStatus($entity, Lingotek::STATUS_EDITED);
-          try {
-            $response = $translation_service->updateDocument($entity);
-            $translation_service->setSourceStatus($entity, Lingotek::STATUS_IMPORTING);
+        // Updated entity with manual-upload
+        elseif (!$has_autoupload) {
+          if ($entity_has_changed && $source_status !== Lingotek::STATUS_UNTRACKED) {
+            $translation_service->setSourceStatus($entity, Lingotek::STATUS_EDITED);
             $translation_service->markTranslationsAsDirty($entity);
-            \Drupal::messenger()->addStatus(t('<em>@title</em> was updated and sent to Lingotek successfully.', ['@title' => $entity->label()]));
-          }
-          catch (LingotekDocumentArchivedException $exception) {
-            \Drupal::messenger()->addError(t('Document @entity_type %title has been archived. Please upload again.', [
-              '@entity_type' => $entity->getEntityTypeId(),
-              '%title' => $entity->label(),
-            ]));
-          }
-          catch (LingotekDocumentLockedException $exception) {
-            \Drupal::messenger()->addError(t('Document @entity_type %title has a new version. The document id has been updated for all future interactions. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
-          }
-          catch (LingotekPaymentRequiredException $exception) {
-            \Drupal::messenger()->addError(t('Community has been disabled. Please contact support@lingotek.com to re-enable your community.'));
-          }
-          catch (LingotekApiException $exception) {
-            \Drupal::messenger()->addError(t('The update for @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
           }
         }
       }
-      // Updated entity with manual-upload
-      elseif (!$has_autoupload) {
-        if ($entity_has_changed && $source_status !== Lingotek::STATUS_UNTRACKED) {
-          $translation_service->setSourceStatus($entity, Lingotek::STATUS_EDITED);
-          $translation_service->markTranslationsAsDirty($entity);
+      else {
+        $langcode = $entity->language()->getId();
+        // Edited a translation.
+        if ($current_status = $translation_service->getTargetStatus($entity, $langcode)) {
+          // Only mark as out of date the current ones.
+          $to_change = [
+            Lingotek::STATUS_CURRENT,
+            // Lingotek::STATUS_PENDING,
+            // Lingotek::STATUS_INTERMEDIATE,
+            // Lingotek::STATUS_READY,
+          ];
+          if (in_array($current_status, $to_change)) {
+            $translation_service->setTargetStatus($entity, $langcode, Lingotek::STATUS_EDITED);
+          }
         }
       }
     }
