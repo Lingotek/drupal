@@ -97,6 +97,13 @@ class LingotekProfileFormBase extends EntityForm {
       '#disabled' => $profile->isLocked(),
       '#default_value' => $profile->hasAutomaticUpload(),
     ];
+    $form['auto_request'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Request Translations Automatically'),
+      '#description' => $this->t('When enabled, translations will automatically be requested from Lingotek. When disabled, you are required to manually request translations by clicking the "Request translation" button on the Translations tab.'),
+      '#disabled' => $profile->isLocked(),
+      '#default_value' => $profile->hasAutomaticRequest(),
+    ];
     $form['auto_download'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Download Translations Automatically'),
@@ -262,6 +269,13 @@ class LingotekProfileFormBase extends EntityForm {
             '#options' => ['default' => 'Default (' . $workflows[$default_workflow] . ')'] + $workflows,
             '#description' => $this->t('The default Workflow which would be used for translations.'),
             '#default_value' => $profile->hasCustomSettingsForTarget($langcode) ? $profile->getWorkflowForTarget($langcode) : 'default',
+          ],
+          'auto_request' => [
+            '#type' => 'checkbox',
+            '#title' => $this->t('Request Translations Automatically'),
+            '#description' => $this->t('When enabled, translations will automatically be requested from Lingotek. When disabled, you are required to manually request translations by clicking the "Request translation" button on the Translations tab.'),
+            '#disabled' => $profile->isLocked(),
+            '#default_value' => $profile->hasAutomaticRequestForTarget($langcode),
           ],
           'auto_download' => [
             '#type' => 'checkbox',

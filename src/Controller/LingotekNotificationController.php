@@ -7,7 +7,9 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Form\FormBuilderInterface;
+use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Render\HtmlResponse;
+use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\lingotek\LanguageLocaleMapperInterface;
 use Drupal\lingotek\Lingotek;
 use Drupal\lingotek\LingotekConfigTranslationServiceInterface;
@@ -172,8 +174,21 @@ class LingotekNotificationController extends LingotekControllerBase {
           }
           $http_status_code = Response::HTTP_OK;
           $translation_service->setSourceStatus($entity, Lingotek::STATUS_CURRENT);
-          $result['request_translations'] = ($profile->hasAutomaticUpload()) ?
-             $translation_service->requestTranslations($entity) : [];
+          $languages = [];
+          $target_languages = $this->languageManager()->getLanguages();
+          $target_languages = array_filter($target_languages, function (LanguageInterface $language) {
+            $configLanguage = ConfigurableLanguage::load($language->getId());
+            return $this->lingotekConfiguration->isLanguageEnabled($configLanguage);
+          });
+          foreach ($target_languages as $target_language) {
+            if ($profile->hasAutomaticRequestForTarget($target_language->getId())) {
+              $target_locale = $this->languageLocaleMapper->getLocaleForLangcode($target_language->getId());
+              if ($translation_service->addTarget($entity, $target_locale)) {
+                $languages[] = $target_language->getId();
+              }
+            }
+          }
+          $result['request_translations'] = $languages;
         }
         else {
           $http_status_code = Response::HTTP_NO_CONTENT;
@@ -182,12 +197,29 @@ class LingotekNotificationController extends LingotekControllerBase {
         break;
       case 'document_updated':
         $entity = $this->getEntity($request->query->get('document_id'));
+        /** @var \Drupal\lingotek\Entity\LingotekProfile $profile */
+        $profile = $this->getProfile($entity);
         if ($entity) {
           if ($entity instanceof ConfigEntityInterface) {
             $translation_service = $this->lingotekConfigTranslation;
           }
           $http_status_code = Response::HTTP_OK;
           $translation_service->setSourceStatus($entity, Lingotek::STATUS_CURRENT);
+          $languages = [];
+          $target_languages = $this->languageManager()->getLanguages();
+          $target_languages = array_filter($target_languages, function (LanguageInterface $language) {
+            $configLanguage = ConfigurableLanguage::load($language->getId());
+            return $this->lingotekConfiguration->isLanguageEnabled($configLanguage);
+          });
+          foreach ($target_languages as $target_language) {
+            if ($profile->hasAutomaticRequestForTarget($target_language->getId())) {
+              $target_locale = $this->languageLocaleMapper->getLocaleForLangcode($target_language->getId());
+              if ($translation_service->addTarget($entity, $target_locale)) {
+                $languages[] = $target_language;
+              }
+            }
+          }
+          $result['request_translations'] = $languages;
         }
         else {
           $http_status_code = Response::HTTP_NO_CONTENT;

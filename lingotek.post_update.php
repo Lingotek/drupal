@@ -10,6 +10,7 @@ use Drupal\Core\Site\Settings;
 use Drupal\lingotek\Entity\LingotekConfigMetadata;
 use Drupal\lingotek\Entity\LingotekContentMetadata;
 use Drupal\lingotek\Exception\LingotekApiException;
+use Drupal\lingotek\LingotekProfileInterface;
 use Drupal\user\Entity\Role;
 
 /**
@@ -117,5 +118,23 @@ function lingotek_post_update_lingotek_config_metadata_job_id(&$sandbox = NULL) 
         return TRUE;
       }
       return FALSE;
+    });
+}
+
+/**
+ * Update auto_request new setting with the value of auto_download for all profiles.
+ */
+function lingotek_post_update_lingotek_profile_auto_request(&$sandbox = NULL) {
+  \Drupal::classResolver(ConfigEntityUpdater::class)
+    ->update($sandbox, 'lingotek_profile', function (LingotekProfileInterface $profile) {
+      $profile->setAutomaticRequest($profile->hasAutomaticDownload());
+      $languages = \Drupal::languageManager()->getLanguages();
+      foreach ($languages as $language) {
+        $langcode = $language->getId();
+        if ($profile->hasCustomSettingsForTarget($language->getId())) {
+          $profile->setAutomaticRequestForTarget($langcode, $profile->hasAutomaticDownloadForTarget($langcode));
+        }
+      }
+      return TRUE;
     });
 }

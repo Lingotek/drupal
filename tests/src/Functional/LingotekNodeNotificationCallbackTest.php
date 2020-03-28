@@ -392,12 +392,14 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
       'id' => 'profile2',
       'label' => 'Profile with overrides',
       'auto_upload' => TRUE,
+      'auto_request' => TRUE,
       'auto_download' => TRUE,
       'auto_download_worker' => FALSE,
       'language_overrides' => [
         'es' => [
           'overrides' => 'custom',
           'custom' => [
+            'auto_request' => FALSE,
             'auto_download' => FALSE,
           ],
         ],
@@ -406,6 +408,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     $profile->save();
 
     ConfigurableLanguage::createFromLangcode('de')->save();
+    ConfigurableLanguage::createFromLangcode('it')->save();
 
     // Login as admin.
     $this->drupalLogin($this->rootUser);
@@ -447,7 +450,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
       'http_errors' => FALSE,
     ]);
     $response = json_decode($request->getBody(), TRUE);
-    $this->assertIdentical(['de', 'es'], $response['result']['request_translations'], 'Spanish and German language has been requested after notification automatically.');
+    $this->assertIdentical(['de', 'it'], $response['result']['request_translations'], 'German and Italian languages has been requested after notification automatically.');
 
     $this->goToContentBulkManagementForm();
 
@@ -456,10 +459,12 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     // Assert the content is imported.
     $this->assertIdentical(Lingotek::STATUS_CURRENT, $content_translation_service->getSourceStatus($node));
     // Assert the target is pending.
-    $this->assertIdentical(Lingotek::STATUS_PENDING, $content_translation_service->getTargetStatus($node, 'es'));
+    $this->assertIdentical(Lingotek::STATUS_REQUEST, $content_translation_service->getTargetStatus($node, 'es'));
     $this->assertIdentical(Lingotek::STATUS_PENDING, $content_translation_service->getTargetStatus($node, 'de'));
 
     $this->goToContentBulkManagementForm();
+    // Request Spanish manually.
+    $this->clickLink('ES');
 
     // Simulate the notification of content successfully translated.
     $url = Url::fromRoute('lingotek.notify', [], [
@@ -525,6 +530,152 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     // Assert the target is current.
     $this->assertIdentical(Lingotek::STATUS_CURRENT, $content_translation_service->getTargetStatus($node, 'es'));
     $this->assertIdentical(Lingotek::STATUS_CURRENT, $content_translation_service->getTargetStatus($node, 'de'));
+  }
+
+  /**
+   * Tests that a node can be translated using the links on the management page.
+   */
+  public function testProfileRequestTargetOverridesNotificationNodeTranslation() {
+    $profile = LingotekProfile::create([
+      'id' => 'profile2',
+      'label' => 'Profile with overrides',
+      'auto_upload' => TRUE,
+      'auto_request' => FALSE,
+      'auto_download' => TRUE,
+      'auto_download_worker' => FALSE,
+      'language_overrides' => [
+        'es' => [
+          'overrides' => 'custom',
+          'custom' => [
+            'auto_request' => TRUE,
+            'auto_download' => FALSE,
+          ],
+        ],
+      ],
+    ]);
+    $profile->save();
+
+    ConfigurableLanguage::createFromLangcode('de')->save();
+    ConfigurableLanguage::createFromLangcode('it')->save();
+
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'profile2';
+    $this->saveAndPublishNodeForm($edit);
+
+    /** @var \Drupal\node\NodeInterface $node */
+    $node = Node::load(1);
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $content_translation_service */
+    $content_translation_service = \Drupal::service('lingotek.content_translation');
+
+    // Assert the content is importing.
+    $this->assertIdentical(Lingotek::STATUS_IMPORTING, $content_translation_service->getSourceStatus($node));
+
+    $this->goToContentBulkManagementForm();
+
+    // Simulate the notification of content successfully uploaded.
+    $url = Url::fromRoute('lingotek.notify', [], [
+      'query' => [
+        'project_id' => 'test_project',
+        'document_id' => 'dummy-document-hash-id',
+        'complete' => 'false',
+        'type' => 'document_uploaded',
+        'progress' => '0',
+      ],
+    ])->setAbsolute()->toString();
+    $request = $this->client->post($url, [
+      'cookies' => $this->cookies,
+      'headers' => [
+        'Accept' => 'application/json',
+        'Content-Type' => 'application/json',
+      ],
+      'http_errors' => FALSE,
+    ]);
+    $response = json_decode($request->getBody(), TRUE);
+    $this->assertIdentical(['es'], $response['result']['request_translations'], 'Spanish language has been requested after notification automatically.');
+
+    $this->goToContentBulkManagementForm();
+
+    $node = $this->resetStorageCachesAndReloadNode();
+
+    // Assert the content is imported.
+    $this->assertIdentical(Lingotek::STATUS_CURRENT, $content_translation_service->getSourceStatus($node));
+    // Assert the target is pending.
+    $this->assertIdentical(Lingotek::STATUS_PENDING, $content_translation_service->getTargetStatus($node, 'es'));
+    $this->assertIdentical(Lingotek::STATUS_REQUEST, $content_translation_service->getTargetStatus($node, 'de'));
+
+    $this->goToContentBulkManagementForm();
+
+    // Simulate the notification of content successfully translated.
+    $url = Url::fromRoute('lingotek.notify', [], [
+      'query' => [
+        'project_id' => 'test_project',
+        'document_id' => 'dummy-document-hash-id',
+        'locale_code' => 'es-ES',
+        'locale' => 'es_ES',
+        'complete' => 'true',
+        'type' => 'target',
+        'progress' => '100',
+      ],
+    ])->setAbsolute()->toString();
+    $request = $this->client->post($url, [
+      'cookies' => $this->cookies,
+      'headers' => [
+        'Accept' => 'application/json',
+        'Content-Type' => 'application/json',
+      ],
+      'http_errors' => FALSE,
+    ]);
+    $response = json_decode($request->getBody(), TRUE);
+    $this->verbose($request);
+    $this->assertFalse($response['result']['download'], 'No translations has been downloaded after notification automatically.');
+
+    $url = Url::fromRoute('lingotek.notify', [], [
+      'query' => [
+        'project_id' => 'test_project',
+        'document_id' => 'dummy-document-hash-id',
+        'locale_code' => 'de-DE',
+        'locale' => 'de_DE',
+        'complete' => 'true',
+        'type' => 'target',
+        'progress' => '100',
+      ],
+    ])->setAbsolute()->toString();
+    $request = $this->client->post($url, [
+      'cookies' => $this->cookies,
+      'headers' => [
+        'Accept' => 'application/json',
+        'Content-Type' => 'application/json',
+      ],
+      'http_errors' => FALSE,
+    ]);
+    $response = json_decode($request->getBody(), TRUE);
+    $this->verbose($request);
+    $this->assertFalse($response['result']['download'], 'No translations has been downloaded after notification automatically.');
+
+    $this->goToContentBulkManagementForm();
+
+    $node = $this->resetStorageCachesAndReloadNode();
+
+    // Assert the target is ready.
+    $this->assertIdentical(Lingotek::STATUS_READY, $content_translation_service->getTargetStatus($node, 'es'));
+    $this->assertIdentical(Lingotek::STATUS_READY, $content_translation_service->getTargetStatus($node, 'de'));
+
+    // Go to the bulk node management page and download them.
+    $this->goToContentBulkManagementForm();
+    $this->clickLink('ES');
+
+    $node = $this->resetStorageCachesAndReloadNode();
+
+    // Assert the target is current.
+    $this->assertIdentical(Lingotek::STATUS_CURRENT, $content_translation_service->getTargetStatus($node, 'es'));
+    $this->assertIdentical(Lingotek::STATUS_READY, $content_translation_service->getTargetStatus($node, 'de'));
   }
 
   /**

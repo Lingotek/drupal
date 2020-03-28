@@ -1,0 +1,14 @@
+uuid: ab1728a2-3b68-4b37-8c5a-501de1ce442c
+langcode: en
+status: true
+dependencies:
+  module:
+    - lingotek
+third_party_settings:
+  lingotek:
+    locale: ca_ES
+id: ca
+label: Catalan
+direction: ltr
+weight: 0
+locked: false

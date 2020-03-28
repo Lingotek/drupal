@@ -389,12 +389,14 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
       'id' => 'profile2',
       'label' => 'Profile with overrides',
       'auto_upload' => TRUE,
+      'auto_request' => TRUE,
       'auto_download' => TRUE,
       'auto_download_worker' => FALSE,
       'language_overrides' => [
         'es' => [
           'overrides' => 'custom',
           'custom' => [
+            'auto_request' => FALSE,
             'auto_download' => FALSE,
           ],
         ],
@@ -403,6 +405,7 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
     $profile->save();
 
     ConfigurableLanguage::createFromLangcode('de')->save();
+    ConfigurableLanguage::createFromLangcode('it')->save();
 
     // Login as admin.
     $this->drupalLogin($this->rootUser);
@@ -455,7 +458,7 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
       'http_errors' => FALSE,
     ]);
     $response = json_decode($request->getBody(), TRUE);
-    $this->assertIdentical(['de', 'es'], $response['result']['request_translations'], 'Spanish and German language has been requested after notification automatically.');
+    $this->assertIdentical(['de', 'it'], $response['result']['request_translations'], 'German and Italian languages has been requested after notification automatically.');
 
     // Go to the bulk config management page.
     $this->goToConfigBulkManagementForm();
@@ -467,11 +470,13 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
     // Assert the content is imported.
     $this->assertIdentical(Lingotek::STATUS_CURRENT, $config_translation_service->getSourceStatus($entity));
     // Assert the target is pending.
-    $this->assertIdentical(Lingotek::STATUS_PENDING, $config_translation_service->getTargetStatus($entity, 'es'));
+    $this->assertIdentical(Lingotek::STATUS_REQUEST, $config_translation_service->getTargetStatus($entity, 'es'));
     $this->assertIdentical(Lingotek::STATUS_PENDING, $config_translation_service->getTargetStatus($entity, 'de'));
 
     // Go to the bulk config management page.
     $this->goToConfigBulkManagementForm();
+    // Request Spanish manually.
+    $this->clickLink('ES');
 
     // Simulate the notification of content successfully translated.
     $url = Url::fromRoute('lingotek.notify', [], [
@@ -541,6 +546,173 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
     // Assert the target is current.
     $this->assertIdentical(Lingotek::STATUS_CURRENT, $config_translation_service->getTargetStatus($entity, 'es'));
     $this->assertIdentical(Lingotek::STATUS_CURRENT, $config_translation_service->getTargetStatus($entity, 'de'));
+  }
+
+  /**
+   * Tests that a node can be translated using the links on the management page.
+   */
+  public function testProfileRequestTargetOverridesNotificationContentTypeTranslation() {
+    $profile = LingotekProfile::create([
+      'id' => 'profile2',
+      'label' => 'Profile with overrides',
+      'auto_upload' => TRUE,
+      'auto_request' => FALSE,
+      'auto_download' => TRUE,
+      'auto_download_worker' => FALSE,
+      'language_overrides' => [
+        'es' => [
+          'overrides' => 'custom',
+          'custom' => [
+            'auto_request' => TRUE,
+            'auto_download' => FALSE,
+          ],
+        ],
+      ],
+    ]);
+    $profile->save();
+
+    ConfigurableLanguage::createFromLangcode('de')->save();
+    ConfigurableLanguage::createFromLangcode('it')->save();
+
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
+    // Enable translation for the current entity type and ensure the change is
+    // picked up.
+    $this->saveLingotekConfigTranslationSettings([
+      'node_type' => 'profile2',
+    ]);
+
+    // Create Article node types.
+    // We cannot use drupalCreateContentType(), as it asserts that the last entity
+    // created returns SAVED_NEW, but it will return SAVED_UPDATED as we will
+    // save the third party settings.
+    $type = \Drupal::entityTypeManager()->getStorage('node_type')->create(['type' => 'article', 'name' => 'Article']);
+    $type->save();
+    \Drupal::service('router.builder')->rebuild();
+
+    /** @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface $node_storage */
+    $node_storage = $this->container->get('entity_type.manager')->getStorage('node_type');
+
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $config_translation_service */
+    $config_translation_service = \Drupal::service('lingotek.config_translation');
+
+    $entity = \Drupal::entityTypeManager()->getStorage('node_type')->load('article');
+
+    // Assert the content is importing.
+    $this->assertIdentical(Lingotek::STATUS_IMPORTING, $config_translation_service->getSourceStatus($entity));
+
+    // Go to the bulk config management page.
+    $this->goToConfigBulkManagementForm('node_type');
+
+    // Simulate the notification of content successfully uploaded.
+    $url = Url::fromRoute('lingotek.notify', [], [
+      'query' => [
+        'project_id' => 'test_project',
+        'document_id' => 'dummy-document-hash-id',
+        'complete' => 'false',
+        'type' => 'document_uploaded',
+        'progress' => '0',
+      ],
+    ])->setAbsolute()->toString();
+    $request = $this->client->post($url, [
+      'body' => http_build_query([]),
+      'cookies' => $this->cookies,
+      'headers' => [
+        'Accept' => 'application/json',
+        'Content-Type' => 'application/json',
+      ],
+      'http_errors' => FALSE,
+    ]);
+    $response = json_decode($request->getBody(), TRUE);
+    $this->assertIdentical(['es'], $response['result']['request_translations'], 'Spanish language has been requested after notification automatically.');
+
+    // Go to the bulk config management page.
+    $this->goToConfigBulkManagementForm();
+
+    // The node cache needs to be reset before reload.
+    $node_storage->resetCache();
+    $entity = $node_storage->load('article');
+
+    // Assert the content is imported.
+    $this->assertIdentical(Lingotek::STATUS_CURRENT, $config_translation_service->getSourceStatus($entity));
+    // Assert the target is pending.
+    $this->assertIdentical(Lingotek::STATUS_PENDING, $config_translation_service->getTargetStatus($entity, 'es'));
+    $this->assertIdentical(Lingotek::STATUS_REQUEST, $config_translation_service->getTargetStatus($entity, 'de'));
+
+    // Go to the bulk config management page.
+    $this->goToConfigBulkManagementForm();
+    // Request Spanish manually.
+    $this->clickLink('ES');
+
+    // Simulate the notification of content successfully translated.
+    $url = Url::fromRoute('lingotek.notify', [], [
+      'query' => [
+        'project_id' => 'test_project',
+        'document_id' => 'dummy-document-hash-id',
+        'locale_code' => 'es-ES',
+        'locale' => 'es_ES',
+        'complete' => 'true',
+        'type' => 'target',
+        'progress' => '100',
+      ],
+    ])->setAbsolute()->toString();
+    $request = $this->client->post($url, [
+      'body' => http_build_query([]),
+      'cookies' => $this->cookies,
+      'headers' => [
+        'Accept' => 'application/json',
+        'Content-Type' => 'application/json',
+      ],
+      'http_errors' => FALSE,
+    ]);
+    $response = json_decode($request->getBody(), TRUE);
+    $this->assertFalse($response['result']['download'], 'No translations has been downloaded after notification automatically.');
+
+    $url = Url::fromRoute('lingotek.notify', [], [
+      'query' => [
+        'project_id' => 'test_project',
+        'document_id' => 'dummy-document-hash-id',
+        'locale_code' => 'de-DE',
+        'locale' => 'de_DE',
+        'complete' => 'true',
+        'type' => 'target',
+        'progress' => '100',
+      ],
+    ])->setAbsolute()->toString();
+    $request = $this->client->post($url, [
+      'cookies' => $this->cookies,
+      'headers' => [
+        'Accept' => 'application/json',
+        'Content-Type' => 'application/json',
+      ],
+      'http_errors' => FALSE,
+    ]);
+    $response = json_decode($request->getBody(), TRUE);
+    $this->assertFalse($response['result']['download'], 'No translations has been downloaded after notification automatically.');
+
+    // Go to the bulk config management page.
+    $this->goToConfigBulkManagementForm();
+
+    // The node cache needs to be reset before reload.
+    $node_storage->resetCache();
+    $entity = $node_storage->load('article');
+
+    // Assert the target is ready.
+    $this->assertIdentical(Lingotek::STATUS_READY, $config_translation_service->getTargetStatus($entity, 'es'));
+    $this->assertIdentical(Lingotek::STATUS_READY, $config_translation_service->getTargetStatus($entity, 'de'));
+
+    // Go to the bulk config management page.
+    $this->goToConfigBulkManagementForm();
+
+    $this->clickLink('ES');
+
+    // The node cache needs to be reset before reload.
+    $node_storage->resetCache();
+    $entity = $node_storage->load('article');
+    // Assert the target is current.
+    $this->assertIdentical(Lingotek::STATUS_CURRENT, $config_translation_service->getTargetStatus($entity, 'es'));
+    $this->assertIdentical(Lingotek::STATUS_READY, $config_translation_service->getTargetStatus($entity, 'de'));
   }
 
   /**

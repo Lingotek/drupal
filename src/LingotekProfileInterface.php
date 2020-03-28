@@ -94,6 +94,24 @@ interface LingotekProfileInterface extends ConfigEntityInterface, LingotekFilter
   public function setAutomaticUpload($auto_upload);
 
   /**
+   * Returns whether this profile indicates automatic request of translations.
+   *
+   * @return bool
+   *   Whether the profile indicates automatic request or not.
+   */
+  public function hasAutomaticRequest();
+
+  /**
+   * Sets whether this profile indicates automatic request of translations.
+   *
+   * @param bool $auto_request
+   *   Whether the profile indicates automatic request or not.
+   *
+   * @return $this
+   */
+  public function setAutomaticRequest($auto_request);
+
+  /**
    * Returns whether this profile indicates automatic download of translations.
    *
    * @return bool
@@ -190,6 +208,31 @@ interface LingotekProfileInterface extends ConfigEntityInterface, LingotekFilter
   public function setWorkflow($workflow);
 
   /**
+   * Returns whether this profile indicates automatic request of translations for
+   * an specific target language.
+   *
+   * @param string $langcode
+   *   The language code.
+   *
+   * @return bool
+   *   Whether the profile indicates automatic request or not.
+   */
+  public function hasAutomaticRequestForTarget($langcode);
+
+  /**
+   * Sets whether this profile indicates automatic request of translations for
+   * an specific target language.
+   *
+   * @param string $langcode
+   *   The language code.
+   * @param bool $value
+   *   TRUE if translation should be automatically requested, FALSE if not.
+   *
+   * @return $this
+   */
+  public function setAutomaticRequestForTarget($langcode, $value);
+
+  /**
    * Returns whether this profile indicates automatic download of translations for
    * an specific target language.
    *
@@ -202,6 +245,19 @@ interface LingotekProfileInterface extends ConfigEntityInterface, LingotekFilter
   public function hasAutomaticDownloadForTarget($langcode);
 
   /**
+   * Sets whether this profile indicates automatic download of translations for
+   * an specific target language.
+   *
+   * @param string $langcode
+   *   The language code.
+   * @param bool $value
+   *   TRUE if translation should be automatically downloaded, FALSE if not.
+   *
+   * @return $this
+   */
+  public function setAutomaticDownloadForTarget($langcode, $value);
+
+  /**
    * Gets the workflow to be used for a given language.
    *
    * @param string $langcode
@@ -212,6 +268,19 @@ interface LingotekProfileInterface extends ConfigEntityInterface, LingotekFilter
    *   default site workflow should be used.
    */
   public function getWorkflowForTarget($langcode);
+
+  /**
+   * Sets the workflow to be used for a given language.
+   *
+   * @param string $langcode
+   *   The language code.
+   * @param string $value
+   *   The workflow identifier, used to request translation. If 'default', the
+   *   default site workflow should be used.
+   *
+   * @return $this
+   */
+  public function setWorkflowForTarget($langcode, $value);
 
   /**
    * Checks if the profile has custom settings for a given target language.

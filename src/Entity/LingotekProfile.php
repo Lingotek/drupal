@@ -33,6 +33,7 @@ use Drupal\lingotek\LingotekProfileInterface;
  *     "weight",
  *     "locked",
  *     "auto_upload",
+ *     "auto_request",
  *     "auto_download",
  *     "auto_download_worker",
  *     "append_type_to_title",
@@ -87,6 +88,13 @@ class LingotekProfile extends ConfigEntityBase implements LingotekProfileInterfa
    * @var bool
    */
   protected $auto_upload = FALSE;
+
+  /**
+   * Entities using this profile may automatically request translations.
+   *
+   * @var bool
+   */
+  protected $auto_request = FALSE;
 
   /**
    * Entities using this profile may automatically download translations.
@@ -689,6 +697,21 @@ class LingotekProfile extends ConfigEntityBase implements LingotekProfileInterfa
   /**
    * {@inheritdoc}
    */
+  public function hasAutomaticRequest() {
+    return (bool) $this->auto_request;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setAutomaticRequest($auto_request) {
+    $this->auto_request = $auto_request;
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function hasAutomaticDownload() {
     return (bool) $this->auto_download;
   }
@@ -792,12 +815,47 @@ class LingotekProfile extends ConfigEntityBase implements LingotekProfileInterfa
   /**
    * {@inheritdoc}
    */
+  public function setWorkflowForTarget($langcode, $value) {
+    $this->language_overrides[$langcode]['custom']['workflow'] = $value;
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function hasAutomaticRequestForTarget($langcode) {
+    $auto_request = $this->hasAutomaticRequest();
+    if (isset($this->language_overrides[$langcode]) && $this->hasCustomSettingsForTarget($langcode)) {
+      $auto_request = $this->language_overrides[$langcode]['custom']['auto_request'];
+    }
+    return $auto_request;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setAutomaticRequestForTarget($langcode, $value) {
+    $this->language_overrides[$langcode]['custom']['auto_request'] = $value;
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function hasAutomaticDownloadForTarget($langcode) {
     $auto_download = $this->hasAutomaticDownload();
     if (isset($this->language_overrides[$langcode]) && $this->hasCustomSettingsForTarget($langcode)) {
       $auto_download = $this->language_overrides[$langcode]['custom']['auto_download'];
     }
     return $auto_download;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setAutomaticDownloadForTarget($langcode, $value) {
+    $this->language_overrides[$langcode]['custom']['auto_download'] = $value;
+    return $this;
   }
 
   /**

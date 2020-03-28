@@ -64,6 +64,7 @@ class LingotekNodeNotificationCallbackQueueWorkerTest extends LingotekTestBase {
       'id' => 'automatic_worker',
       'label' => 'Custom profile',
       'auto_upload' => TRUE,
+      'auto_request' => TRUE,
       'auto_download' => TRUE,
       'auto_download_worker' => TRUE,
     ]);

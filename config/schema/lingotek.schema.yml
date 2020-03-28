@@ -251,6 +251,9 @@ lingotek.profile.*:
     auto_upload:
       type: boolean
       label: 'Automatic Upload'
+    auto_request:
+      type: boolean
+      label: 'Automatic request of translations'
     auto_download:
       type: boolean
       label: 'Automatic Download'
@@ -379,6 +382,9 @@ lingotek.profile.*:
               workflow:
                 type: string
                 label: 'TM Workflow'
+              auto_request:
+                type: boolean
+                label: 'Automatic request of translation'
               auto_download:
                 type: boolean
                 label: 'Automatic Download'

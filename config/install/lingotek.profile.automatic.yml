@@ -3,6 +3,7 @@ label: Automatic
 weight: 30
 locked: true
 auto_upload: true
+auto_request: true
 auto_download: true
 append_type_to_title: global_setting
 vault: default

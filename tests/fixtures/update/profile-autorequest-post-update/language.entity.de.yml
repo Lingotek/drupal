@@ -1,0 +1,14 @@
+uuid: 14a47f7d-ccab-4610-a202-503c7987bf1a
+langcode: en
+status: true
+dependencies:
+  module:
+    - lingotek
+third_party_settings:
+  lingotek:
+    locale: de_DE
+id: de
+label: German
+direction: ltr
+weight: 0
+locked: false
