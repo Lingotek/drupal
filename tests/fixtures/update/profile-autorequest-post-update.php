@@ -29,3 +29,11 @@ $connection->insert('config')
       __DIR__ . '/profile-autorequest-post-update' . '/lingotek.profile.auto_download.yml'))),
   ])
   ->execute();
+$connection->insert('config')
+  ->fields([
+    'collection' => '',
+    'name' => 'lingotek.profile.auto_upload.yml',
+    'data' => serialize(Yaml::decode(file_get_contents(
+      __DIR__ . '/profile-autorequest-post-update' . '/lingotek.profile.auto_upload.yml'))),
+  ])
+  ->execute();

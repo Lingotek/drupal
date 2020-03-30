@@ -30,9 +30,15 @@ class LingotekProfileAutoRequestTranslationsPostUpdateTest extends UpdatePathTes
     $this->runUpdates();
 
     $profile = LingotekProfile::load('auto_download');
+    $this->assertFalse($profile->hasAutomaticRequest());
+    $this->assertFalse($profile->hasAutomaticRequestForTarget('ca'));
+    $this->assertFalse($profile->hasAutomaticRequestForTarget('it'));
+
+    $profile = LingotekProfile::load('auto_upload');
     $this->assertTrue($profile->hasAutomaticRequest());
     $this->assertTrue($profile->hasAutomaticRequestForTarget('ca'));
-    $this->assertFalse($profile->hasAutomaticRequestForTarget('it'));
+    $this->assertTrue($profile->hasAutomaticRequestForTarget('it'));
+
   }
 
 }

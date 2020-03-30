@@ -127,12 +127,15 @@ function lingotek_post_update_lingotek_config_metadata_job_id(&$sandbox = NULL) 
 function lingotek_post_update_lingotek_profile_auto_request(&$sandbox = NULL) {
   \Drupal::classResolver(ConfigEntityUpdater::class)
     ->update($sandbox, 'lingotek_profile', function (LingotekProfileInterface $profile) {
-      $profile->setAutomaticRequest($profile->hasAutomaticDownload());
+      // Default to automatic upload, which was the previous behavior already.
+      $profile->setAutomaticRequest($profile->hasAutomaticUpload());
       $languages = \Drupal::languageManager()->getLanguages();
       foreach ($languages as $language) {
         $langcode = $language->getId();
         if ($profile->hasCustomSettingsForTarget($language->getId())) {
-          $profile->setAutomaticRequestForTarget($langcode, $profile->hasAutomaticDownloadForTarget($langcode));
+          // Default to automatic upload, which was the previous behavior already,
+          // and it's not dependent on the target.
+          $profile->setAutomaticRequestForTarget($langcode, $profile->hasAutomaticUpload());
         }
       }
       return TRUE;
