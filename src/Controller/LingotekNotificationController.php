@@ -409,7 +409,7 @@ class LingotekNotificationController extends LingotekControllerBase {
               break;
             }
           }
-          $lock->wait($lock_name, rand(1, 12));
+          $lock->wait($lock_name, rand(1, 3));
         } while (TRUE);
 
         try {
