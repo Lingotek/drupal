@@ -123,7 +123,7 @@ class LingotekNotificationControllerTest extends LingotekTestBase {
 
     $response = json_decode($request->getBody(), TRUE);
     $this->verbose($request);
-    $this->assertIdentical([], $response['result']['request_translations'], 'Spanish language has been requested after notification automatically.');
+    $this->assertIdentical(['es'], $response['result']['request_translations'], 'Spanish language has been requested after notification automatically.');
   }
 
   /**

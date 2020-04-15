@@ -502,10 +502,11 @@ class LingotekNotificationController extends LingotekControllerBase {
       'messages' => $messages,
     ];
 
-    return CacheableJsonResponse::create($response, $http_status_code)
+    $response = CacheableJsonResponse::create($response, $http_status_code)
       ->setMaxAge(0)
-      ->setSharedMaxAge(0)
-      ->getCacheableMetadata()->addCacheContexts(['url.query_args']);
+      ->setSharedMaxAge(0);
+    $response->getCacheableMetadata()->addCacheContexts(['url.query_args']);
+    return $response;
   }
 
   protected function getProfile($entity) {
