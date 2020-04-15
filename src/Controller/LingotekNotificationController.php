@@ -481,6 +481,9 @@ class LingotekNotificationController extends LingotekControllerBase {
         break;
       // ignore
       default:
+        $this->logger->log(LogLevel::WARNING, 'Unmanaged notification callback from the TMS. Arguments were: @arguments.', [
+          '@arguments' => var_export($request->query->all(), TRUE),
+        ]);
         $http_status_code = Response::HTTP_ACCEPTED;
         $response = new HtmlResponse('It works, but nothing to look here.', $http_status_code);
         $response->setMaxAge(0)
