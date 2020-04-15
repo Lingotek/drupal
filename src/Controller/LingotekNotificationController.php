@@ -3,6 +3,7 @@
 namespace Drupal\lingotek\Controller;
 
 use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Core\Cache\CacheableJsonResponse;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
@@ -19,7 +20,6 @@ use Drupal\lingotek\LingotekInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -486,8 +486,10 @@ class LingotekNotificationController extends LingotekControllerBase {
         ]);
         $http_status_code = Response::HTTP_ACCEPTED;
         $response = new HtmlResponse('It works, but nothing to look here.', $http_status_code);
-        $response->setMaxAge(0)
-          ->setSharedMaxAge(0);
+        $response
+          ->setMaxAge(0)
+          ->setSharedMaxAge(0)
+          ->getCacheableMetadata()->addCacheContexts(['url.query_args']);
         return $response;
       break;
     }
@@ -500,9 +502,10 @@ class LingotekNotificationController extends LingotekControllerBase {
       'messages' => $messages,
     ];
 
-    return JsonResponse::create($response, $http_status_code)
+    return CacheableJsonResponse::create($response, $http_status_code)
       ->setMaxAge(0)
-      ->setSharedMaxAge(0);
+      ->setSharedMaxAge(0)
+      ->getCacheableMetadata()->addCacheContexts(['url.query_args']);
   }
 
   protected function getProfile($entity) {
