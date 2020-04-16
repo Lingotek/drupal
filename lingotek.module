@@ -57,15 +57,18 @@ function lingotek_module_implements_alter(&$implementations, $hook) {
  */
 function lingotek_entity_presave(EntityInterface $entity) {
   $configuration_service = \Drupal::service('lingotek.configuration');
-  if ($entity instanceof ContentEntityInterface && $configuration_service->isEnabled($entity->getEntityTypeId(), $entity->bundle())) {
-    if ($entity->lingotek_metadata->entity === NULL) {
-      $metadata = LingotekContentMetadata::create();
-      $metadata->save();
-      $entity->lingotek_metadata = $metadata;
-    }
 
-    $translation_service = \Drupal::service('lingotek.content_translation');
-    $translation_service->updateEntityHash($entity);
+  if ($entity instanceof ContentEntityInterface && $configuration_service->isEnabled($entity->getEntityTypeId(), $entity->bundle())) {
+    if ($entity->language() === $entity->getUntranslated()->language()) {
+      if ($entity->lingotek_metadata->entity === NULL) {
+        $metadata = LingotekContentMetadata::create();
+        $metadata->save();
+        $entity->lingotek_metadata = $metadata;
+      }
+
+      $translation_service = \Drupal::service('lingotek.content_translation');
+      $translation_service->updateEntityHash($entity);
+    }
   }
 }
 
