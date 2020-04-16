@@ -1225,6 +1225,9 @@ abstract class LingotekManagementFormBase extends FormBase {
    *   The language to download.
    */
   public function downloadTranslation(ContentEntityInterface $entity, $langcode, $job_id, &$context) {
+    // We need to reload the entity, just in case we are using the split bulk upload. The metadata isn't true anymore.
+    // ToDo: Look for a better way of invalidating already loaded metadata.
+    $entity = $this->entityTypeManager->getStorage($entity->getEntityTypeId())->load($entity->id());
     $context['message'] = $this->t('Downloading translation for @type %label in language @language.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label(), '@language' => $langcode]);
     $locale = $this->languageLocaleMapper->getLocaleForLangcode($langcode);
     if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE)) {
