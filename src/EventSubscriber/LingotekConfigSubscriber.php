@@ -15,6 +15,7 @@ use Drupal\lingotek\Lingotek;
 use Drupal\lingotek\LingotekConfigTranslationServiceInterface;
 use Drupal\lingotek\LingotekConfigurationServiceInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Drupal\Core\Installer\InstallerKernel;
 
 /**
  * Updates config Lingotek translation status when saved.
@@ -115,7 +116,7 @@ class LingotekConfigSubscriber implements EventSubscriberInterface {
    *   The configuration event.
    */
   public function onConfigSave(ConfigCrudEvent $event) {
-    if (!drupal_installation_attempted()) {
+    if (!InstallerKernel::installationAttempted()) {
       $config = $event->getConfig();
       if (!$config instanceof ConfigEntityInterface) {
         $name = $config->getName();
@@ -207,7 +208,7 @@ class LingotekConfigSubscriber implements EventSubscriberInterface {
    *   The configuration event.
    */
   public function onConfigLanguageOverrideDelete(LanguageConfigOverrideCrudEvent $event) {
-    if (!drupal_installation_attempted()) {
+    if (!InstallerKernel::installationAttempted()) {
       /** @var \Drupal\lingotek\LanguageLocaleMapperInterface $languageMapper */
       $languageMapper = \Drupal::service('lingotek.language_locale_mapper');
 
