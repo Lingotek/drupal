@@ -24,6 +24,7 @@ use Drupal\lingotek\Exception\LingotekContentEntityStorageException;
 use Drupal\lingotek\Exception\LingotekDocumentArchivedException;
 use Drupal\lingotek\Exception\LingotekDocumentLockedException;
 use Drupal\lingotek\Exception\LingotekPaymentRequiredException;
+use Drupal\node\NodeInterface;
 use Drupal\user\UserInterface;
 
 /**
@@ -1541,7 +1542,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       if ($status_field_definition !== NULL && $status_field_definition->isTranslatable()) {
         $status_setting = $this->lingotekConfiguration->getPreference('target_download_status');
         if ($status_setting !== "same-as-source") {
-          $status_value = ($status_setting === 'published') ? NODE_PUBLISHED : NODE_NOT_PUBLISHED;
+          $status_value = ($status_setting === 'published') ? NodeInterface::PUBLISHED : NodeInterface::NOT_PUBLISHED;
           $translation->set($status_field, $status_value);
         }
       }
