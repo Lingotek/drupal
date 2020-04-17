@@ -5,6 +5,7 @@ namespace Drupal\lingotek\Form;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Routing\UrlGeneratorInterface;
 use Drupal\Core\Url;
 use Drupal\lingotek\Exception\LingotekApiException;
 use Drupal\lingotek\LingotekFilterManagerInterface;
@@ -32,9 +33,11 @@ class LingotekSettingsTabAccountForm extends LingotekConfigFormBase {
    *   The factory for configuration objects.
    * @param \Drupal\lingotek\LingotekFilterManagerInterface $lingotek_filter_manager
    *   The Lingotek Filter manager.
+   * @param \Drupal\Core\Routing\UrlGeneratorInterface $url_generator
+   *   The url generator.
    */
-  public function __construct(LingotekInterface $lingotek, ConfigFactoryInterface $config, LingotekFilterManagerInterface $lingotek_filter_manager) {
-    parent::__construct($lingotek, $config);
+  public function __construct(LingotekInterface $lingotek, ConfigFactoryInterface $config, LingotekFilterManagerInterface $lingotek_filter_manager, UrlGeneratorInterface $url_generator = NULL) {
+    parent::__construct($lingotek, $config, $url_generator);
     $this->lingotekFilterManager = $lingotek_filter_manager;
   }
 
@@ -45,7 +48,8 @@ class LingotekSettingsTabAccountForm extends LingotekConfigFormBase {
     return new static(
       $container->get('lingotek'),
       $container->get('config.factory'),
-      $container->get('lingotek.filter_manager')
+      $container->get('lingotek.filter_manager'),
+      $container->get('url_generator')
     );
   }
 

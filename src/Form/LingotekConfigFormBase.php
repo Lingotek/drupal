@@ -2,6 +2,7 @@
 
 namespace Drupal\lingotek\Form;
 
+use Drupal\Core\Routing\UrlGeneratorInterface;
 use Drupal\lingotek\LingotekInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Form\ConfigFormBase;
@@ -18,10 +19,17 @@ abstract class LingotekConfigFormBase extends ConfigFormBase {
    * @param \Drupal\lingotek\LingotekInterface $lingotek
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config
    *   The factory for configuration objects.
+   * @param \Drupal\Core\Routing\UrlGeneratorInterface $url_generator
+   *   The url generator.
    */
-  public function __construct(LingotekInterface $lingotek, ConfigFactoryInterface $config) {
-    $this->lingotek = $lingotek;
+  public function __construct(LingotekInterface $lingotek, ConfigFactoryInterface $config, UrlGeneratorInterface $url_generator = NULL) {
     parent::__construct($config);
+    $this->lingotek = $lingotek;
+    if (!$url_generator) {
+      @trigger_error('The url_generator service must be passed to LingotekConfigFormBase::__construct, it is required before Lingotek 9.x-1.0.', E_USER_DEPRECATED);
+      $url_generator = \Drupal::service('url_generator');
+    }
+    $this->urlGenerator = $url_generator;
   }
 
   /**
@@ -30,7 +38,8 @@ abstract class LingotekConfigFormBase extends ConfigFormBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('lingotek'),
-      $container->get('config.factory')
+      $container->get('config.factory'),
+      $container->get('url_generator')
     );
   }
 

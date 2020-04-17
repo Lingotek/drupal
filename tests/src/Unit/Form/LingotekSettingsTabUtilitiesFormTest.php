@@ -5,6 +5,7 @@ namespace Drupal\Tests\lingotek\Unit\Form {
   use Drupal\Core\Config\ConfigFactoryInterface;
   use Drupal\Core\Form\FormStateInterface;
   use Drupal\Core\Routing\RouteBuilderInterface;
+  use Drupal\Core\Routing\UrlGeneratorInterface;
   use Drupal\Core\State\StateInterface;
   use Drupal\lingotek\Form\LingotekSettingsTabUtilitiesForm;
   use Drupal\lingotek\LingotekInterface;
@@ -46,6 +47,13 @@ namespace Drupal\Tests\lingotek\Unit\Form {
    */
     protected $form;
 
+    /**
+     * The url generator.
+     *
+     * @var \Drupal\Core\Routing\UrlGeneratorInterface
+     */
+    protected $urlGenerator;
+
     protected function setUp() {
       parent::setUp();
 
@@ -53,12 +61,14 @@ namespace Drupal\Tests\lingotek\Unit\Form {
       $this->configFactory = $this->createMock(ConfigFactoryInterface::class);
       $this->state = $this->createMock(StateInterface::class);
       $this->routeBuilder = $this->createMock(RouteBuilderInterface::class);
+      $this->urlGenerator = $this->createMock(UrlGeneratorInterface::class);
 
       $this->form = new LingotekSettingsTabUtilitiesForm(
       $this->lingotek,
       $this->configFactory,
       $this->state,
-      $this->routeBuilder
+      $this->routeBuilder,
+      $this->urlGenerator
       );
       $this->form->setStringTranslation($this->getStringTranslationStub());
     }
