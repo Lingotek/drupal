@@ -2,6 +2,7 @@
 
 namespace Drupal\lingotek\Form;
 
+use Drupal\block\BlockRepositoryInterface;
 use Drupal\Core\Url;
 use Drupal\Core\Form\FormStateInterface;
 
@@ -200,7 +201,7 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
   protected function retrieveLanguageSwitcher() {
     if (\Drupal::moduleHandler()->moduleExists('block')) {
       $theme_default = $this->config('system.theme')->get('default');
-      $this->lang_regions = system_region_list($theme_default, REGIONS_VISIBLE);
+      $this->lang_regions = system_region_list($theme_default, BlockRepositoryInterface::REGIONS_VISIBLE);
       $ids = \Drupal::entityQuery('block')
         ->condition('plugin', 'language_block:language_interface')
         ->condition('theme', $theme_default)
