@@ -8,6 +8,7 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Routing\RouteBuilderInterface;
 use Drupal\Core\Routing\UrlGeneratorInterface;
+use Drupal\Core\Utility\LinkGeneratorInterface;
 use Drupal\lingotek\LingotekInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -50,9 +51,11 @@ class LingotekSettingsTabIntegrationsForm extends LingotekConfigFormBase {
    * @param \Drupal\Core\Cache\CacheBackendInterface $render_cache
    * @param \Drupal\Core\Routing\UrlGeneratorInterface $url_generator
    *   The url generator.
+   * @param \Drupal\Core\Utility\LinkGeneratorInterface $link_generator
+   *   The link generator.
    */
-  public function __construct(LingotekInterface $lingotek, ConfigFactoryInterface $config, ModuleHandlerInterface $module_handler, RouteBuilderInterface $router_builder, CacheBackendInterface $render_cache, UrlGeneratorInterface $url_generator = NULL) {
-    parent::__construct($lingotek, $config, $url_generator);
+  public function __construct(LingotekInterface $lingotek, ConfigFactoryInterface $config, ModuleHandlerInterface $module_handler, RouteBuilderInterface $router_builder, CacheBackendInterface $render_cache, UrlGeneratorInterface $url_generator = NULL, LinkGeneratorInterface $link_generator = NULL) {
+    parent::__construct($lingotek, $config, $url_generator, $link_generator);
     $this->moduleHandler = $module_handler;
     $this->routerBuilder = $router_builder;
     $this->renderCache = $render_cache;
@@ -68,7 +71,8 @@ class LingotekSettingsTabIntegrationsForm extends LingotekConfigFormBase {
       $container->get('module_handler'),
       $container->get('router.builder'),
       $container->get('cache.render'),
-      $container->get('url_generator')
+      $container->get('url_generator'),
+      $container->get('link_generator')
     );
   }
 

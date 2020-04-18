@@ -8,34 +8,11 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\group\Entity\Group;
 use Drupal\lingotek\Lingotek;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Form for bulk management of content.
  */
 class LingotekManagementForm extends LingotekManagementFormBase {
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('database'),
-      $container->get('entity_type.manager'),
-      $container->get('language_manager'),
-      $container->get('lingotek'),
-      $container->get('lingotek.configuration'),
-      $container->get('lingotek.language_locale_mapper'),
-      $container->get('content_translation.manager'),
-      $container->get('lingotek.content_translation'),
-      $container->get('tempstore.private'),
-      $container->get('state'),
-      $container->get('module_handler'),
-      \Drupal::routeMatch()->getParameter('entity_type_id'),
-      $container->get('entity_field.manager'),
-      $container->get('entity_type.bundle.info')
-    );
-  }
 
   /**
    * {@inheritdoc}

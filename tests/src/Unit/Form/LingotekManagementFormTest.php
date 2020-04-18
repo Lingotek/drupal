@@ -16,6 +16,7 @@ namespace Drupal\Tests\lingotek\Unit\Form {
   use Drupal\Core\Language\LanguageManagerInterface;
   use Drupal\Core\State\StateInterface;
   use Drupal\Core\TempStore\PrivateTempStoreFactory;
+  use Drupal\Core\Utility\LinkGeneratorInterface;
   use Drupal\language\ConfigurableLanguageInterface;
   use Drupal\lingotek\Form\LingotekManagementForm;
   use Drupal\lingotek\LanguageLocaleMapperInterface;
@@ -134,6 +135,13 @@ namespace Drupal\Tests\lingotek\Unit\Form {
      */
     protected $state;
 
+    /**
+     * The link generator.
+     *
+     * @var \Drupal\Core\Utility\LinkGeneratorInterface|\PHPUnit_Framework_MockObject_MockObject
+     */
+    protected $linkGenerator;
+
     protected function setUp() {
       parent::setUp();
 
@@ -154,6 +162,7 @@ namespace Drupal\Tests\lingotek\Unit\Form {
         ->getMock();
       $this->state = $this->createMock(StateInterface::class);
       $this->moduleHandler = $this->createMock(ModuleHandlerInterface::class);
+      $this->linkGenerator = $this->createMock(LinkGeneratorInterface::class);
 
       $this->form = new LingotekManagementForm(
         $this->connection,
@@ -169,7 +178,8 @@ namespace Drupal\Tests\lingotek\Unit\Form {
         $this->moduleHandler,
         'node',
         $this->entityFieldManager,
-        $this->entityTypeBundleInfo
+        $this->entityTypeBundleInfo,
+        $this->linkGenerator
       );
       $this->form->setConfigFactory($this->getConfigFactoryStub(
         [

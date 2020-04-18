@@ -16,6 +16,7 @@ use Drupal\Core\Routing\LocalRedirectResponse;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Drupal\Core\Url;
+use Drupal\Core\Utility\LinkGeneratorInterface;
 use Drupal\file\Entity\File;
 use Drupal\lingotek\Exception\LingotekApiException;
 use Drupal\lingotek\Exception\LingotekContentEntityStorageException;
@@ -30,6 +31,7 @@ use Drupal\lingotek\LingotekContentTranslationServiceInterface;
 use Drupal\lingotek\LingotekInterface;
 use Drupal\lingotek\LingotekLocale;
 use Drupal\lingotek\LingotekSetupTrait;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Form for bulk management of content.
@@ -154,8 +156,10 @@ abstract class LingotekManagementFormBase extends FormBase {
    *   The entity field manager.
    * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entity_type_bundle_info
    *   The entity type bundle info.
+   * @param \Drupal\Core\Utility\LinkGeneratorInterface $link_generator
+   *   The link generator.
    */
-  public function __construct(Connection $connection, EntityTypeManagerInterface $entity_type_manager, LanguageManagerInterface $language_manager, LingotekInterface $lingotek, LingotekConfigurationServiceInterface $lingotek_configuration, LanguageLocaleMapperInterface $language_locale_mapper, ContentTranslationManagerInterface $content_translation_manager, LingotekContentTranslationServiceInterface $translation_service, PrivateTempStoreFactory $temp_store_factory, StateInterface $state, ModuleHandlerInterface $module_handler, $entity_type_id, EntityFieldManagerInterface $entity_field_manager = NULL, EntityTypeBundleInfoInterface $entity_type_bundle_info = NULL) {
+  public function __construct(Connection $connection, EntityTypeManagerInterface $entity_type_manager, LanguageManagerInterface $language_manager, LingotekInterface $lingotek, LingotekConfigurationServiceInterface $lingotek_configuration, LanguageLocaleMapperInterface $language_locale_mapper, ContentTranslationManagerInterface $content_translation_manager, LingotekContentTranslationServiceInterface $translation_service, PrivateTempStoreFactory $temp_store_factory, StateInterface $state, ModuleHandlerInterface $module_handler, $entity_type_id, EntityFieldManagerInterface $entity_field_manager = NULL, EntityTypeBundleInfoInterface $entity_type_bundle_info = NULL, LinkGeneratorInterface $link_generator = NULL) {
     $this->connection = $connection;
     $this->entityTypeManager = $entity_type_manager;
     $this->languageManager = $language_manager;
@@ -177,8 +181,36 @@ abstract class LingotekManagementFormBase extends FormBase {
       @trigger_error('The entity_type.bundle.info service must be passed to LingotekManagementFormBase::__construct, it is required before Lingotek 9.x-1.0. See https://www.drupal.org/node/2549139.', E_USER_DEPRECATED);
       $entity_type_bundle_info = \Drupal::service('entity_type.bundle.info');
     }
+    if (!$link_generator) {
+      @trigger_error('The link_generator service must be passed to LingotekManagementFormBase::__construct, it is required before Lingotek 9.x-1.0. See https://www.drupal.org/node/2549139.', E_USER_DEPRECATED);
+      $link_generator = \Drupal::service('link_generator');
+    }
     $this->entityFieldManager = $entity_field_manager;
     $this->entityTypeBundleInfo = $entity_type_bundle_info;
+    $this->linkGenerator = $link_generator;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('database'),
+      $container->get('entity_type.manager'),
+      $container->get('language_manager'),
+      $container->get('lingotek'),
+      $container->get('lingotek.configuration'),
+      $container->get('lingotek.language_locale_mapper'),
+      $container->get('content_translation.manager'),
+      $container->get('lingotek.content_translation'),
+      $container->get('tempstore.private'),
+      $container->get('state'),
+      $container->get('module_handler'),
+      \Drupal::routeMatch()->getParameter('entity_type_id'),
+      $container->get('entity_field.manager'),
+      $container->get('entity_type.bundle.info'),
+      $container->get('link_generator')
+    );
   }
 
   /**
@@ -517,7 +549,7 @@ abstract class LingotekManagementFormBase extends FormBase {
     }
 
     $row += [
-      'title' => $entity->hasLinkTemplate('canonical') ? $this->getLinkGenerator()
+      'title' => $entity->hasLinkTemplate('canonical') ? $this->linkGenerator
         ->generate($entity->label(), Url::fromRoute($entity->toUrl()
           ->getRouteName(), [$entityTypeId => $entity->id()])) : $entity->id(),
       'source' => $source,

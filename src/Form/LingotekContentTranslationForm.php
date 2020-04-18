@@ -5,6 +5,7 @@ namespace Drupal\lingotek\Form;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Routing\UrlGeneratorInterface;
+use Drupal\Core\Utility\LinkGeneratorInterface;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\lingotek\LanguageLocaleMapperInterface;
 use Drupal\lingotek\Lingotek;
@@ -43,9 +44,11 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
    *   The factory for configuration objects.
    * @param \Drupal\Core\Routing\UrlGeneratorInterface $url_generator
    *   The url generator.
+   * @param \Drupal\Core\Utility\LinkGeneratorInterface $link_generator
+   *   The link generator.
    */
-  public function __construct(LingotekInterface $lingotek, LanguageLocaleMapperInterface $language_locale_mapper, LingotekConfigurationServiceInterface $lingotek_configuration, ConfigFactoryInterface $config, UrlGeneratorInterface $url_generator = NULL) {
-    parent::__construct($lingotek, $config, $url_generator);
+  public function __construct(LingotekInterface $lingotek, LanguageLocaleMapperInterface $language_locale_mapper, LingotekConfigurationServiceInterface $lingotek_configuration, ConfigFactoryInterface $config, UrlGeneratorInterface $url_generator = NULL, LinkGeneratorInterface $link_generator = NULL) {
+    parent::__construct($lingotek, $config, $url_generator, $link_generator);
     $this->languageLocaleMapper = $language_locale_mapper;
     $this->lingotekConfiguration = $lingotek_configuration;
   }
@@ -59,7 +62,8 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
       $container->get('lingotek.language_locale_mapper'),
       $container->get('lingotek.configuration'),
       $container->get('config.factory'),
-      $container->get('url_generator')
+      $container->get('url_generator'),
+      $container->get('link_generator')
     );
   }
 

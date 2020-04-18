@@ -7,6 +7,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Routing\RouteBuilderInterface;
 use Drupal\Core\Routing\UrlGeneratorInterface;
 use Drupal\Core\State\StateInterface;
+use Drupal\Core\Utility\LinkGeneratorInterface;
 use Drupal\lingotek\LingotekInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -40,9 +41,11 @@ class LingotekSettingsTabUtilitiesForm extends LingotekConfigFormBase {
    *   The route builder service.
    * @param \Drupal\Core\Routing\UrlGeneratorInterface $url_generator
    *   The url generator.
+   * @param \Drupal\Core\Utility\LinkGeneratorInterface $link_generator
+   *   The link generator.
    */
-  public function __construct(LingotekInterface $lingotek, ConfigFactoryInterface $config, StateInterface $state, RouteBuilderInterface $route_builder, UrlGeneratorInterface $url_generator = NULL) {
-    parent::__construct($lingotek, $config, $url_generator);
+  public function __construct(LingotekInterface $lingotek, ConfigFactoryInterface $config, StateInterface $state, RouteBuilderInterface $route_builder, UrlGeneratorInterface $url_generator = NULL, LinkGeneratorInterface $link_generator = NULL) {
+    parent::__construct($lingotek, $config, $url_generator, $link_generator);
     $this->state = $state;
     $this->routeBuilder = $route_builder;
   }
@@ -56,7 +59,8 @@ class LingotekSettingsTabUtilitiesForm extends LingotekConfigFormBase {
       $container->get('config.factory'),
       $container->get('state'),
       $container->get('router.builder'),
-      $container->get('url_generator')
+      $container->get('url_generator'),
+      $container->get('link_generator')
     );
   }
 
