@@ -38,10 +38,6 @@ lingotek.translation_job_info.config:
   base_route: lingotek.translation_job_info.content
   class: 'Drupal\lingotek\Plugin\Menu\JobConfigLocalTask'
 
-lingotek.import:
-  deriver: 'Drupal\lingotek\Plugin\Derivative\DynamicLocalTasks'
-  weight: -4
-
 lingotek.manage.content:
   deriver: 'Drupal\lingotek\Plugin\Derivative\ContentTranslationLocalTasks'
   weight: 100

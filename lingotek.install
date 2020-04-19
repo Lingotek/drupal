@@ -992,6 +992,17 @@ function lingotek_update_8220() {
   $lingotekSettings->save();
 }
 
+/**
+ * Removes Lingotek Content Cloud unused settings.
+ */
+function lingotek_update_8221() {
+  $lingotekSettings = \Drupal::configFactory()->getEditable('lingotek.settings');
+  $lingotekSettings->clear('preference.enable_content_cloud');
+  $lingotekSettings->clear('preference.content_cloud_import_format');
+  $lingotekSettings->clear('preference.content_cloud_import_status');
+  $lingotekSettings->save();
+}
+
 function _lingotek_find_key(&$keys, $id, array $array) {
   foreach ($array as $x => $y) {
     // if (!in_array($x, ['enabled', 'profile'])) {}

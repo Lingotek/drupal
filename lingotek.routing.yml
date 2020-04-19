@@ -111,14 +111,6 @@ lingotek.manage_config:
   requirements:
     _permission: 'manage lingotek translations,translate configuration'
 
-lingotek.import:
-  path: '/admin/lingotek/import'
-  defaults:
-    _controller: '\Drupal\lingotek\Controller\LingotekImportController::content'
-    _title: 'Content Cloud Import'
-  requirements:
-    _permission: 'administer lingotek'
-
 lingotek.confirm_disassociate:
   path: '/admin/lingotek/confirm_disassociate'
   defaults:

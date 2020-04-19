@@ -11,9 +11,6 @@ preference:
   always_show_translate_tabs: false
   target_download_status: same-as-source
   append_type_to_title: global_setting
-  enable_content_cloud: false
-  content_cloud_import_format: 'article'
-  content_cloud_import_status: 0
   enable_download_source: false
   split_download_all: false
   contrib:
