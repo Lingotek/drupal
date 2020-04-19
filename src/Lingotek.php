@@ -116,15 +116,15 @@ class Lingotek implements LingotekInterface {
   }
 
   public function getDefaults() {
-    return $this->get('default');
+    return $this->configFactory->get(static::SETTINGS)->get('default');
   }
 
   public function getCommunities($force = FALSE) {
     $resources_key = 'account.resources.community';
-    $data = $this->get($resources_key);
+    $data = $this->configFactory->get(static::SETTINGS)->get($resources_key);
     if (empty($data) || $force) {
       $data = $this->api->getCommunities($force);
-      $this->set($resources_key, $data);
+      $this->configFactory->getEditable(static::SETTINGS)->set($resources_key, $data)->save();
     }
     return $data;
   }
@@ -178,6 +178,9 @@ class Lingotek implements LingotekInterface {
     return $this->configFactory->get(static::SETTINGS)->get($key);
   }
 
+  /**
+   * @deprecated
+   */
   public function getEditable($key) {
     return $this->configFactory->getEditable(static::SETTINGS)->get($key);
   }
@@ -202,7 +205,7 @@ class Lingotek implements LingotekInterface {
     // the handling of the upload call itself to the API.
     $defaults = [
       'format' => 'JSON',
-      'project_id' => $this->get('default.project'),
+      'project_id' => $this->configFactory->get(static::SETTINGS)->get('default.project'),
       'fprm_id' => $this->lingotekFilterManager->getFilterId($profile),
       'fprm_subfilter_id' => $this->lingotekFilterManager->getSubfilterId($profile),
       'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0',
@@ -220,7 +223,7 @@ class Lingotek implements LingotekInterface {
 
     if ($profile !== NULL && $vault = $profile->getVault()) {
       if ($vault === 'default') {
-        $vault = $this->get('default.vault');
+        $vault = $this->configFactory->get(static::SETTINGS)->get('default.vault');
       }
       $defaults['vault_id'] = $vault;
       // If we use the project workflow template default vault, we omit the
@@ -449,7 +452,7 @@ class Lingotek implements LingotekInterface {
 
     if ($profile !== NULL && $workflow_id = $profile->getWorkflowForTarget($drupal_language->getId())) {
       if ($workflow_id === 'default') {
-        $workflow_id = $this->get('default.workflow');
+        $workflow_id = $this->configFactory->get(static::SETTINGS)->get('default.workflow');
       }
     }
 
@@ -506,11 +509,11 @@ class Lingotek implements LingotekInterface {
   }
 
   protected function getResource($resources_key, $func, $force = FALSE) {
-    $data = $this->get($resources_key);
+    $data = $this->configFactory->get(static::SETTINGS)->get($resources_key);
     if (empty($data) || $force) {
-      $community_id = $this->get('default.community');
+      $community_id = $this->configFactory->get(static::SETTINGS)->get('default.community');
       $data = $this->api->$func($community_id);
-      $this->set($resources_key, $data);
+      $this->configFactory->getEditable(static::SETTINGS)->set($resources_key, $data)->save();
       $keys = explode(".", $resources_key);
       $default_key = 'default.' . end($keys);
       $this->setValidDefaultIfNotSet($default_key, $data);
@@ -519,14 +522,14 @@ class Lingotek implements LingotekInterface {
   }
 
   protected function setValidDefaultIfNotSet($default_key, $resources) {
-    $default_value = $this->get($default_key);
+    $default_value = $this->configFactory->get(static::SETTINGS)->get($default_key);
     $valid_resource_ids = array_keys($resources);
     if ($default_key === 'default.filter') {
       $valid_resource_ids[] = 'drupal_default';
     }
     if (empty($default_value) || !in_array($default_value, $valid_resource_ids)) {
       $value = current($valid_resource_ids);
-      $this->set($default_key, $value);
+      $this->configFactory->getEditable(static::SETTINGS)->set($default_key, $value)->save();
     }
   }
 
