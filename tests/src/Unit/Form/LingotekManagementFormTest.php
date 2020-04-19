@@ -80,13 +80,6 @@ namespace Drupal\Tests\lingotek\Unit\Form {
     protected $languageManager;
 
     /**
-     * The entity query factory service.
-     *
-     * @var \Drupal\Core\Entity\Query\QueryFactory|\PHPUnit_Framework_MockObject_MockObject
-     */
-    protected $entityQuery;
-
-    /**
      * The Lingotek configuration service.
      *
      * @var \Drupal\lingotek\LingotekConfigurationServiceInterface|\PHPUnit_Framework_MockObject_MockObject

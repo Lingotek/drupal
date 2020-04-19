@@ -10,7 +10,7 @@ services:
     arguments: ['@lingotek.http_client', '@logger.channel.lingotek']
   lingotek.language_locale_mapper:
     class: Drupal\lingotek\LanguageLocaleMapper
-    arguments: ['@entity.query']
+    arguments: ['@entity_type.manager', '@entity_type.manager']
   lingotek.language_form:
     class: Drupal\lingotek\Form\LingotekLanguageForm
     arguments: ['@lingotek', '@lingotek.language_locale_mapper']
@@ -55,7 +55,7 @@ services:
     arguments: ['@lingotek', '@lingotek.language_locale_mapper', '@lingotek.configuration', '@entity_type.manager', '@language_manager', '@plugin.manager.config_translation.mapper']
   lingotek.profile_usage:
     class: Drupal\lingotek\LingotekProfileUsage
-    arguments: ['@lingotek.configuration', '@entity.query', '@plugin.manager.config_translation.mapper', '@entity_type.bundle.info']
+    arguments: ['@lingotek.configuration', '@entity_type.manager', '@plugin.manager.config_translation.mapper', '@entity_type.bundle.info', '@entity_type.manager']
   lingotek.content_translation_subscriber:
     class: Drupal\lingotek\Routing\LingotekRouteSubscriber
     arguments: ['@entity_type.manager']

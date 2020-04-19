@@ -1598,7 +1598,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
           // Hack for fields, the entity is field config.
           $mapper_id = 'field_config';
         }
-        $id = \Drupal::service('entity.query')->get('lingotek_config_metadata')
+        $id = $this->entityTypeManager->getStorage('lingotek_config_metadata')->getQuery()
           ->condition('document_id', $document_id)
           ->execute();
         if (!empty($id)) {

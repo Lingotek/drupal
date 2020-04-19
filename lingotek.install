@@ -128,7 +128,7 @@ function lingotek_update_8001() {
     if ($mapper instanceof ConfigEntityMapper &&
       !$mapper instanceof ConfigFieldMapper) {
 
-      $ids = \Drupal::service('entity.query')->get($mapper_id)
+      $ids = \Drupal::entityTypeManager()->getStorage($mapper_id)->getQuery()
         ->exists('third_party_settings.lingotek.lingotek_document_id')
         ->execute();
 
@@ -155,7 +155,7 @@ function lingotek_update_8001() {
     }
   }
   // Take care of fields now.
-  $ids = \Drupal::service('entity.query')->get('field_config')
+  $ids = \Drupal::entityTypeManager()->getStorage('field_config')->getQuery()
     ->exists('third_party_settings.lingotek.lingotek_document_id')
     ->execute();
   if (!empty($ids)) {
