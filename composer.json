@@ -32,6 +32,13 @@
     "irc": "irc://irc.freenode.org/drupal-contribute",
     "source": "http://cgit.drupalcode.org/lingotek"
   },
+  "extra": {
+    "drush": {
+      "services": {
+        "drush.services.yml": "^9 || ^10"
+      }
+    }
+  },
   "minimum-stability": "dev",
   "require-dev": {
     "drupal/metatag": "*",
