@@ -2,7 +2,7 @@ name: Lingotek Translation
 type: module
 description: 'Translates content, configuration, and interface using the Lingotek Translation Management System.'
 package: Multilingual
-core: 8.x
+core_version_requirement: ^8.8 || ^9
 hidden: false
 configure: lingotek.settings
 dependencies:
