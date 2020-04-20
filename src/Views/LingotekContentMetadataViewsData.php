@@ -27,22 +27,6 @@ class LingotekContentMetadataViewsData extends EntityViewsData {
   protected $lingotekConfigService;
 
   /**
-   * The entity manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   * @ToDo: Remove after 8.7.x compatibility is dropped. Since 8.8.x is in EntityViewsData
-   */
-  protected $entityTypeManager;
-
-  /**
-   * The entity field manager.
-   *
-   * @var \Drupal\Core\Entity\EntityFieldManagerInterface
-   * @ToDo: Remove after 8.7.x compatibility is dropped. Since 8.8.x is in EntityViewsData
-   */
-  protected $entityFieldManager;
-
-  /**
    * Constructs an EntityViewsData object.
    *
    * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
@@ -59,11 +43,7 @@ class LingotekContentMetadataViewsData extends EntityViewsData {
    *   The lingotek configuration service.
    */
   public function __construct(EntityTypeInterface $entity_type, SqlEntityStorageInterface $storage_controller, EntityTypeManagerInterface $entity_type_manager, ModuleHandlerInterface $module_handler, TranslationInterface $translation_manager, LingotekConfigurationServiceInterface $lingotek_configuration, EntityFieldManagerInterface $entity_field_manager = NULL) {
-    $entity_manager = \Drupal::service('entity.manager');
-    parent::__construct($entity_type, $storage_controller, $entity_manager, $module_handler, $translation_manager);
-    // @ToDo: Remove after 8.7.x compatibility is dropped. Since 8.8.x is in EntityViewsData
-    $this->entityTypeManager = $entity_type_manager;
-    $this->entityFieldManager = $entity_field_manager;
+    parent::__construct($entity_type, $storage_controller, $entity_type_manager, $module_handler, $translation_manager, $entity_field_manager);
     $this->lingotekConfigService = $lingotek_configuration;
   }
 
