@@ -47,7 +47,8 @@ abstract class LingotekConfigFormBase extends ConfigFormBase {
     return new static(
       $container->get('lingotek'),
       $container->get('config.factory'),
-      $container->get('url_generator')
+      $container->get('url_generator'),
+      $container->get('link_generator')
     );
   }
 

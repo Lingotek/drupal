@@ -52,7 +52,8 @@ class LingotekSettingsTabAccountForm extends LingotekConfigFormBase {
       $container->get('lingotek'),
       $container->get('config.factory'),
       $container->get('lingotek.filter_manager'),
-      $container->get('url_generator')
+      $container->get('url_generator'),
+      $container->get('link_generator')
     );
   }
 
