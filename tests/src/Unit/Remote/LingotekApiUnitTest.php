@@ -110,39 +110,6 @@ class LingotekApiUnitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::deleteDocument
-   */
-  public function testDeleteDocument() {
-    $response = $this->getMockBuilder(ResponseInterface::class)
-      ->disableOriginalConstructor()
-      ->getMock();
-    $response->expects($this->any())
-      ->method('getStatusCode')
-      ->willReturn(Response::HTTP_ACCEPTED);
-
-    $this->client->expects($this->at(0))
-      ->method('delete')
-      ->with('/api/document/fancy-document-id')
-      ->will($this->returnValue($response));
-
-    $response = $this->lingotek_api->deleteDocument('fancy-document-id');
-    $this->assertEquals($response->getStatusCode(), Response::HTTP_ACCEPTED);
-  }
-
-  /**
-   * @covers ::deleteDocument
-   */
-  public function testDeleteDocumentThatDoesntExist() {
-    $this->client->expects($this->at(0))
-      ->method('delete')
-      ->with('/api/document/fancy-document-id')
-      ->will($this->throwException(new \Exception('', Response::HTTP_NOT_FOUND)));
-
-    $response = $this->lingotek_api->deleteDocument('fancy-document-id');
-    $this->assertEquals($response->getStatusCode(), Response::HTTP_NOT_FOUND);
-  }
-
-  /**
    * @covers ::cancelDocument
    */
   public function testCancelDocument() {

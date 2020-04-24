@@ -114,27 +114,6 @@ class LingotekApi implements LingotekApiInterface {
   /**
    * {@inheritdoc}
    */
-  public function deleteDocument($id) {
-    try {
-      $this->logger->debug('Lingotek::deleteDocument called with id ' . $id);
-      $response = $this->lingotekClient->delete('/api/document/' . $id);
-    }
-    catch (\Exception $e) {
-      $http_status_code = $e->getCode();
-      if ($http_status_code === Response::HTTP_NOT_FOUND) {
-        $this->logger->error('Error deleting document: %message.', ['%message' => $e->getMessage()]);
-        return new Response($e->getMessage(), Response::HTTP_NOT_FOUND);
-      }
-      $this->logger->error('Error deleting document: %message.', ['%message' => $e->getMessage()]);
-      throw new LingotekApiException('Failed to delete document: ' . $e->getMessage(), $http_status_code, $e);
-    }
-    $this->logger->debug('deleteDocument response received, code %code and body %body', ['%code' => $response->getStatusCode(), '%body' => (string) $response->getBody(TRUE)]);
-    return $response;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function cancelDocument($id) {
     try {
       $this->logger->debug('Lingotek::cancelDocument called with id ' . $id);

@@ -1133,13 +1133,6 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
   /**
    * {@inheritdoc}
    */
-  public function deleteDocument(ContentEntityInterface &$entity) {
-    return $this->lingotek->deleteDocument($this->getDocumentId($entity));
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function cancelDocument(ContentEntityInterface &$entity) {
     $result = FALSE;
     $doc_id = $this->getDocumentId($entity);

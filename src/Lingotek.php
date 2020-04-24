@@ -381,18 +381,6 @@ class Lingotek implements LingotekInterface {
   /**
    * {@inheritdoc}
    */
-  public function deleteDocument($doc_id) {
-    $response = $this->api->deleteDocument($doc_id);
-    $status_code = $response->getStatusCode();
-    if ($status_code == Response::HTTP_NO_CONTENT || $status_code == Response::HTTP_ACCEPTED) {
-      return TRUE;
-    }
-    return FALSE;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function cancelDocument($doc_id) {
     $result = FALSE;
     try {

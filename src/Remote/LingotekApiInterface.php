@@ -28,18 +28,6 @@ interface LingotekApiInterface {
   public function patchDocument($id, $args);
 
   /**
-   * Delete a document on Lingotek.
-   *
-   * @param string $id
-   *   The document id.
-   *
-   * @return mixed
-   *
-   * @deprecated in 8.x-2.14, will be removed in 8.x-2.16. Use ::cancelDocument instead.
-   */
-  public function deleteDocument($id);
-
-  /**
    * Cancels a document on Lingotek.
    *
    * @param string $document_id
