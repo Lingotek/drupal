@@ -41,7 +41,7 @@ function hook_lingotek_content_entity_translation_presave(ContentEntityInterface
   if ($translation->getEntityTypeId() === 'node' && $translation->bundle() === 'press_release') {
     if ($translation->isNewTranslation()) {
       /** @var \Drupal\node\NodeInterface $translation */
-      $translation->setPublished(FALSE);
+      $translation->setUnpublished();
     }
   }
 }
