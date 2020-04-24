@@ -17,6 +17,11 @@ abstract class LingotekFunctionalJavascriptTestBase extends WebDriverTestBase {
   /**
    * {@inheritdoc}
    */
+  protected $defaultTheme = 'classy';
+
+  /**
+   * {@inheritdoc}
+   */
   public static $modules = ['lingotek', 'lingotek_test'];
 
   /**
