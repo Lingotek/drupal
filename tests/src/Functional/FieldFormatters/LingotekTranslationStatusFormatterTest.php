@@ -65,7 +65,7 @@ class LingotekTranslationStatusFormatterTest extends LingotekTestBase {
 
     $this->drupalGet('/metadata/1');
     $this->assertSession()->responseContains('Lingotek translation status');
-    $this->assertSession()->responseContains('<div class="field__item"><a href="' . $basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX?destination=' . $basepath . '/metadata/1" class="language-icon target-request" title="Spanish - Request translation">ES</a></div>');
+    $this->assertSession()->responseContains('<div><a href="' . $basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX?destination=' . $basepath . '/metadata/1" class="language-icon target-request" title="Spanish - Request translation">ES</a></div>');
   }
 
   public function testStatusForMissingLanguage() {
@@ -87,7 +87,7 @@ class LingotekTranslationStatusFormatterTest extends LingotekTestBase {
 
     $this->drupalGet('/metadata/1');
     $this->assertSession()->responseContains('Lingotek translation status');
-    $this->assertSession()->responseContains('<div class="field__item"><a href="' . $basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX?destination=' . $basepath . '/metadata/1" class="language-icon target-request" title="Spanish - Request translation">ES</a></div>');
+    $this->assertSession()->responseContains('<div><a href="' . $basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX?destination=' . $basepath . '/metadata/1" class="language-icon target-request" title="Spanish - Request translation">ES</a></div>');
 
   }
 

@@ -19,6 +19,13 @@ class LingotekContentTranslationPreSaveHookTest extends LingotekTestBase {
 
   /**
    * {@inheritdoc}
+   *
+   * Use 'classy' here, as we depend on 'node--unpublished' class.
+   */
+  protected $defaultTheme = 'classy';
+
+  /**
+   * {@inheritdoc}
    */
   public static $modules = ['block', 'node', 'image'];
 

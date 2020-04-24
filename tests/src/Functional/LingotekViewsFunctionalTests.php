@@ -14,6 +14,13 @@ class LingotekViewsFunctionalTests extends LingotekTestBase {
 
   /**
    * {@inheritdoc}
+   *
+   * Use 'classy' here, as we depend on views classesa added there.
+   */
+  protected $defaultTheme = 'classy';
+
+  /**
+   * {@inheritdoc}
    */
   public static $modules = ['block', 'node', 'views'];
 

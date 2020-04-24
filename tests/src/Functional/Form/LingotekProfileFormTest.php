@@ -19,6 +19,16 @@ class LingotekProfileFormTest extends LingotekTestBase {
 
   /**
    * {@inheritdoc}
+   *
+   * Use 'classy' here, as we depend on that for querying the selects in the
+   * target overriddes class.
+   *
+   * @see testProfileSettingsOverride()
+   */
+  protected $defaultTheme = 'classy';
+
+  /**
+   * {@inheritdoc}
    */
   public static $modules = ['node'];
 

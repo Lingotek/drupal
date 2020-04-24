@@ -94,7 +94,7 @@ class LingotekMediaBulkFormTest extends LingotekTestBase {
     $this->goToContentBulkManagementForm('media');
 
     $this->assertText('Thumbnail');
-    $elements = $this->xpath("//img[@class='image-style-thumbnail' and @alt='Llamas are cool']");
+    $elements = $this->xpath("//img[@alt='Llamas are cool']");
     $this->assertEqual(1, count($elements), "Found thumbnail.");
   }
 

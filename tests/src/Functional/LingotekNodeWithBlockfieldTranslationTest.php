@@ -165,7 +165,7 @@ class LingotekNodeWithBlockfieldTranslationTest extends LingotekTestBase {
     $this->saveAndKeepPublishedNodeForm($edit, 1);
 
     $this->assertText('Current theme overridden title block');
-    $this->assertText('Current theme: classy');
+    $this->assertText('Current theme: stark');
 
     $this->node = Node::load(1);
 
@@ -210,7 +210,7 @@ class LingotekNodeWithBlockfieldTranslationTest extends LingotekTestBase {
     $this->assertText('Las llamas son chulas');
     $this->assertText('Las llamas son muy chulas');
     $this->assertText('Tema actual titulo sobreescrito del bloque');
-    $this->assertText('Current theme: classy');
+    $this->assertText('Current theme: stark');
   }
 
   /**

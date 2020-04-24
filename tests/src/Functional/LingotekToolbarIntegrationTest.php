@@ -13,6 +13,15 @@ class LingotekToolbarIntegrationTest extends LingotekTestBase {
 
   /**
    * {@inheritdoc}
+   *
+   * Use 'classy' here, as we depend on that for querying the nav structure.
+   *
+   * @see testProfileSettingsOverride()
+   */
+  protected $defaultTheme = 'classy';
+
+  /**
+   * {@inheritdoc}
    */
   public static $modules = [
     'lingotek',
