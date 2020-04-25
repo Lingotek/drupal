@@ -503,7 +503,8 @@ class LingotekProfileFormTest extends LingotekTestBase {
     $this->assertTrue($profile->hasIntelligenceMetadataOverrides());
     $this->assertTrue($profile->getAuthorPermission());
     $this->assertTrue($profile->getAuthorEmailPermission());
-    $this->assertFalse($profile->getContactEmailForAuthorPermission());
+    // As the value returned here can be FALSE and NULL, use assertEmpty().
+    $this->assertEmpty($profile->getContactEmailForAuthorPermission());
     $this->assertTrue($profile->getBusinessUnitPermission());
     $this->assertTrue($profile->getBusinessDivisionPermission());
     $this->assertTrue($profile->getCampaignIdPermission());

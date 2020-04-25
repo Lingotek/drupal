@@ -365,7 +365,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     ]);
     $response = json_decode($request->getBody(), TRUE);
     $this->verbose($request);
-    $this->assertFalse($response['result']['download'], 'No translations has been downloaded after notification automatically.');
+    $this->assertEmpty($response['result']['download'], 'No translations has been downloaded after notification automatically.');
 
     $this->goToContentBulkManagementForm();
 
@@ -488,7 +488,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     ]);
     $response = json_decode($request->getBody(), TRUE);
     $this->verbose($request);
-    $this->assertFalse($response['result']['download'], 'No translations has been downloaded after notification automatically.');
+    $this->assertEmpty($response['result']['download'], 'No translations has been downloaded after notification automatically.');
 
     $url = Url::fromRoute('lingotek.notify', [], [
       'query' => [
@@ -634,7 +634,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     ]);
     $response = json_decode($request->getBody(), TRUE);
     $this->verbose($request);
-    $this->assertFalse($response['result']['download'], 'No translations has been downloaded after notification automatically.');
+    $this->assertEmpty($response['result']['download'], 'No translations has been downloaded after notification automatically.');
 
     $url = Url::fromRoute('lingotek.notify', [], [
       'query' => [
@@ -657,7 +657,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     ]);
     $response = json_decode($request->getBody(), TRUE);
     $this->verbose($request);
-    $this->assertFalse($response['result']['download'], 'No translations has been downloaded after notification automatically.');
+    $this->assertEmpty($response['result']['download'], 'No translations has been downloaded after notification automatically.');
 
     $this->goToContentBulkManagementForm();
 
@@ -1379,7 +1379,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     ]);
     $response = json_decode($request->getBody(), TRUE);
     $this->verbose($request);
-    $this->assertTrue($response['messages'], 'Document Llamas are cool was archived in Lingotek.');
+    $this->assertNotEmpty($response['messages'], 'Document Llamas are cool was archived in Lingotek.');
 
     $this->goToContentBulkManagementForm();
 

@@ -237,7 +237,7 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
       'http_errors' => FALSE,
     ]);
     $response = json_decode($request->getBody(), TRUE);
-    $this->assertFalse($response['result']['download'], 'No translations has been downloaded after notification automatically.');
+    $this->assertEmpty($response['result']['download'], 'No translations has been downloaded after notification automatically.');
 
     // Go to the bulk config management page.
     $this->goToConfigBulkManagementForm();
@@ -500,7 +500,7 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
       'http_errors' => FALSE,
     ]);
     $response = json_decode($request->getBody(), TRUE);
-    $this->assertFalse($response['result']['download'], 'No translations has been downloaded after notification automatically.');
+    $this->assertEmpty($response['result']['download'], 'No translations has been downloaded after notification automatically.');
 
     $url = Url::fromRoute('lingotek.notify', [], [
       'query' => [
@@ -667,7 +667,7 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
       'http_errors' => FALSE,
     ]);
     $response = json_decode($request->getBody(), TRUE);
-    $this->assertFalse($response['result']['download'], 'No translations has been downloaded after notification automatically.');
+    $this->assertEmpty($response['result']['download'], 'No translations has been downloaded after notification automatically.');
 
     $url = Url::fromRoute('lingotek.notify', [], [
       'query' => [
@@ -689,7 +689,7 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
       'http_errors' => FALSE,
     ]);
     $response = json_decode($request->getBody(), TRUE);
-    $this->assertFalse($response['result']['download'], 'No translations has been downloaded after notification automatically.');
+    $this->assertEmpty($response['result']['download'], 'No translations has been downloaded after notification automatically.');
 
     // Go to the bulk config management page.
     $this->goToConfigBulkManagementForm();

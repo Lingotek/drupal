@@ -120,8 +120,9 @@ class LingotekSettingsTabContentFormTest extends LingotekTestBase {
     $this->assertTrue($config_data['translate']['entity']['node']['article']['field']['title']);
     $this->assertTrue($config_data['translate']['entity']['node']['article']['field']['body']);
     $this->assertTrue($config_data['translate']['entity']['node']['article']['field']['field_image']);
-    $this->assertTrue($config_data['translate']['entity']['node']['article']['field']['field_image:properties']['alt']);
-    $this->assertFalse($config_data['translate']['entity']['node']['article']['field']['field_image:properties']['title']);
+    // As the schema here is sequence:ignore, there is no boolean casting.
+    $this->assertEqual($config_data['translate']['entity']['node']['article']['field']['field_image:properties']['alt'], '1');
+    $this->assertEqual($config_data['translate']['entity']['node']['article']['field']['field_image:properties']['title'], '0');
     $this->assertFalse(array_key_exists('revision_log', $config_data['translate']['entity']['node']['article']['field']));
     $this->assertEqual('automatic', $config_data['translate']['entity']['node']['article']['profile']);
   }
