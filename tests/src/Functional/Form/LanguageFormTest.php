@@ -16,6 +16,11 @@ class LanguageFormTest extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
+  protected $defaultTheme = 'stark';
+
+  /**
+   * {@inheritdoc}
+   */
   public static $modules = ['lingotek', 'lingotek_test'];
 
   /**
