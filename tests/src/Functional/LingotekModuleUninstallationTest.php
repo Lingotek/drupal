@@ -14,6 +14,11 @@ class LingotekModuleUninstallationTest extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
+  protected $defaultTheme = 'stark';
+
+  /**
+   * {@inheritdoc}
+   */
   protected static $modules = ['block', 'lingotek'];
 
   protected function setUp() {

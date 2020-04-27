@@ -14,6 +14,11 @@ use Drupal\Tests\BrowserTestBase;
  */
 class LingotekLocaleTest extends BrowserTestBase {
 
+  /**
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'stark';
+
   public function testConvertDrupal2Lingotek() {
     // ToDo: Improve testing coverage.
     $this->assertIdentical('zh-hans', LingotekLocale::convertLingotek2Drupal('zh_CN'));

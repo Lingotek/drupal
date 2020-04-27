@@ -12,6 +12,11 @@ use Drupal\Tests\BrowserTestBase;
 class LingotekModuleInstallationTest extends BrowserTestBase {
 
   /**
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'stark';
+
+  /**
    * Tests that the module can be enabled.
    */
   public function testEnableModule() {
