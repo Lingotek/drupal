@@ -648,10 +648,16 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       elseif ($field_type === 'path') {
         if ($entity->id()) {
           $source = '/' . $entity->toUrl()->getInternalPath();
-          $path = \Drupal::service('path.alias_storage')->load(['source' => $source, 'langcode' => $entity->language()->getId()]);
-          $alias = $path['alias'];
-          if ($alias !== NULL) {
-            $data[$k][0]['alias'] = $alias;
+          /** @var \Drupal\Core\Entity\EntityStorageInterface $aliasStorage */
+          $alias_storage = $this->entityTypeManager->getStorage('path_alias');
+          /** @var \Drupal\path_alias\PathAliasInterface[] $paths */
+          $paths = $alias_storage->loadByProperties(['path' => $source, 'langcode' => $entity->language()->getId()]);
+          if (count($paths) > 0) {
+            $path = reset($paths);
+            $alias = $path->getAlias();
+            if ($alias !== NULL) {
+              $data[$k][0]['alias'] = $alias;
+            }
           }
         }
       }
@@ -1403,20 +1409,24 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
           elseif ($field_type === 'path') {
             $pid = NULL;
             $source = '/' . $entity->toUrl()->getInternalPath();
-            /** @var \Drupal\Core\Path\AliasStorageInterface $aliasStorage */
-            $alias_storage = \Drupal::service('path.alias_storage');
-            $path = $alias_storage->load(['source' => $source, 'langcode' => $langcode]);
-            $original_path = $alias_storage->load(['source' => $source, 'langcode' => $entity->getUntranslated()->language()->getId()]);
-            if ($path) {
-              $pid = $path['pid'];
-            }
+            /** @var \Drupal\Core\Entity\EntityStorageInterface $aliasStorage */
+            $alias_storage = $this->entityTypeManager->getStorage('path_alias');
+            /** @var \Drupal\path_alias\PathAliasInterface[] $original_paths */
+            $original_paths = $alias_storage->loadByProperties(['path' => $source, 'langcode' => $entity->getUntranslated()->language()->getId()]);
+            $original_path = NULL;
             $alias = $field_data[0]['alias'];
             // Validate the alias before saving.
             if (!UrlHelper::isValid($alias)) {
               \Drupal::logger('lingotek')->warning($this->t('Alias for %type %label in language %langcode not saved, invalid uri "%uri"',
                 ['%type' => $entity->getEntityTypeId(), '%label' => $entity->label(), '%langcode' => $langcode, '%uri' => $alias]));
               // Default to the original path.
-              $alias = $original_path ? $original_path['alias'] : $source;
+              if (count($original_paths) > 0) {
+                $original_path = reset($original_paths);
+                $alias = $original_path->getAlias();
+              }
+              else {
+                $alias = $source;
+              }
               if (\Drupal::moduleHandler()->moduleExists('pathauto')) {
                 $alias = '';
                 $translation->get($name)->offsetGet(0)->set('alias', $alias);
