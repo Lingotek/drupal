@@ -49,7 +49,7 @@ class LingotekFieldBodyBulkDebugTest extends LingotekTestBase {
     $this->goToConfigBulkManagementForm();
 
     // There is no 'debug' option group.
-    $this->assertFalse($this->xpath('//select[@id=:id]//optgroup[@label=:label]', [':id' => 'edit-operation', ':label' => 'debug']), 'There is no debug group.');
+    $this->assertEmpty($this->xpath('//select[@id=:id]//optgroup[@label=:label]', [':id' => 'edit-operation', ':label' => 'debug']), 'There is no debug group.');
 
     // Enable the debug operations.
     $this->drupalGet('admin/lingotek/settings');
@@ -59,8 +59,8 @@ class LingotekFieldBodyBulkDebugTest extends LingotekTestBase {
     $this->goToConfigBulkManagementForm();
 
     // There should be a 'debug' option group with the right operation.
-    $this->assertTrue($this->xpath('//select[@id=:id]//optgroup[@label=:label]', [':id' => 'edit-operation', ':label' => 'debug']), 'There is a debug group.');
-    $this->assertTrue($this->xpath('//select[@id=:id]//option[@value=:value]', [':id' => 'edit-operation', ':value' => 'debug.export']), 'There is a debug export option.');
+    $this->assertNotEmpty($this->xpath('//select[@id=:id]//optgroup[@label=:label]', [':id' => 'edit-operation', ':label' => 'debug']), 'There is a debug group.');
+    $this->assertNotEmpty($this->xpath('//select[@id=:id]//option[@value=:value]', [':id' => 'edit-operation', ':value' => 'debug.export']), 'There is a debug export option.');
   }
 
   public function testDebugExport() {
