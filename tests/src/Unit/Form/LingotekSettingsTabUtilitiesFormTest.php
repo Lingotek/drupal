@@ -4,6 +4,7 @@ namespace Drupal\Tests\lingotek\Unit\Form {
 
   use Drupal\Core\Config\ConfigFactoryInterface;
   use Drupal\Core\Form\FormStateInterface;
+  use Drupal\Core\Messenger\MessengerInterface;
   use Drupal\Core\Routing\RouteBuilderInterface;
   use Drupal\Core\Routing\UrlGeneratorInterface;
   use Drupal\Core\State\StateInterface;
@@ -71,6 +72,7 @@ namespace Drupal\Tests\lingotek\Unit\Form {
       $this->routeBuilder = $this->createMock(RouteBuilderInterface::class);
       $this->urlGenerator = $this->createMock(UrlGeneratorInterface::class);
       $this->linkGenerator = $this->createMock(LinkGeneratorInterface::class);
+      $messenger = $this->createMock(MessengerInterface::class);
 
       $this->form = new LingotekSettingsTabUtilitiesForm(
       $this->lingotek,
@@ -81,6 +83,7 @@ namespace Drupal\Tests\lingotek\Unit\Form {
       $this->linkGenerator
       );
       $this->form->setStringTranslation($this->getStringTranslationStub());
+      $this->form->setMessenger($messenger);
     }
 
     /**
