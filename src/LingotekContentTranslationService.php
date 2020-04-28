@@ -149,7 +149,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       }
       else {
         // TODO: change to actual last_uploaded timestamp rather than surrogate.
-        if ($entity->getEntityType()->isSubclassOf(EntityChangedInterface::class)) {
+        if ($entity->getEntityType()->entityClassImplements(EntityChangedInterface::class)) {
           $last_uploaded_time = $entity->getChangedTime();
           // If document has not successfully imported after MAX_IMPORT_TIME
           // then move to ERROR state.
