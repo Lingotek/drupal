@@ -43,6 +43,10 @@ class LingotekContentEntityGetProfileHookTest extends LingotekTestBase {
       'type' => 'article',
       'name' => 'Article',
     ]);
+    $this->drupalCreateContentType([
+      'type' => 'null_profile',
+      'name' => 'NullProfileContentType',
+    ]);
 
     // Add a language.
     ConfigurableLanguage::createFromLangcode('es')->setThirdPartySetting('lingotek', 'locale', 'es_MX')->save();
@@ -61,6 +65,9 @@ class LingotekContentEntityGetProfileHookTest extends LingotekTestBase {
     ContentLanguageSettings::loadByEntityTypeBundle('node', 'article')->setLanguageAlterable(TRUE)->save();
     \Drupal::service('content_translation.manager')->setEnabled('node', 'article', TRUE);
 
+    ContentLanguageSettings::loadByEntityTypeBundle('node', 'null_profile')->setLanguageAlterable(TRUE)->save();
+    \Drupal::service('content_translation.manager')->setEnabled('node', 'null_profile', TRUE);
+
     ContentLanguageSettings::loadByEntityTypeBundle('comment', 'comment')->setLanguageAlterable(FALSE)->save();
     \Drupal::service('content_translation.manager')->setEnabled('comment', 'comment', TRUE);
 
@@ -70,7 +77,12 @@ class LingotekContentEntityGetProfileHookTest extends LingotekTestBase {
     // Rebuild the container so that the new languages are picked up by services
     // that hold a list of languages.
     $this->rebuildContainer();
+  }
 
+  /**
+   * Tests that a profile can be overridden before uploading.
+   */
+  public function testProfileOverrideOnUploadTranslation() {
     $this->saveLingotekContentTranslationSettings([
       'node' => [
         'article' => [
@@ -90,12 +102,7 @@ class LingotekContentEntityGetProfileHookTest extends LingotekTestBase {
         ],
       ],
     ]);
-  }
 
-  /**
-   * Tests that a profile can be overridden before uploading.
-   */
-  public function testProfileOverrideOnUploadTranslation() {
     $profile1 = LingotekProfile::create([
       'id' => 'group_1',
       'label' => 'Group 1',
@@ -163,6 +170,80 @@ class LingotekContentEntityGetProfileHookTest extends LingotekTestBase {
     $this->assertUploadedDataFieldCount($data, 1);
     $this->assertTrue(isset($data['comment_body'][0]['value']));
     $this->assertEquals('Group 2', $data['_lingotek_metadata']['_intelligence']['business_division']);
+  }
+
+  /**
+   * Tests that a profile can be overridden before uploading.
+   */
+  public function testGetProfileWithoutParentProfile() {
+    // Create a node with group 1 profile.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $this->saveAndPublishNodeForm($edit);
+
+    // Save a comment.
+    $edit = [];
+    $edit['subject[0][value]'] = 'First test';
+    $edit['comment_body[0][value]'] = 'First test body';
+    $this->drupalPostForm(NULL, $edit, 'Save');
+
+    $this->saveLingotekContentTranslationSettings([
+      'node' => [
+        'article' => [
+          'profiles' => 'manual',
+          'fields' => [
+            'title' => 1,
+            'body' => 1,
+          ],
+        ],
+      ],
+      'comment' => [
+        'comment' => [
+          'profiles' => 'manual',
+          'fields' => [
+            'comment_body' => 1,
+          ],
+        ],
+      ],
+    ]);
+
+    $this->goToContentBulkManagementForm('comment');
+
+    $this->drupalGet('node/1');
+
+    // Save another comment.
+    $edit = [];
+    $edit['subject[0][value]'] = 'Second test';
+    $edit['comment_body[0][value]'] = 'Second test body';
+    $this->drupalPostForm(NULL, $edit, 'Save');
+
+    $this->goToContentBulkManagementForm('comment');
+  }
+
+  /**
+   * Tests that a profile can be overridden before uploading.
+   */
+  public function testProfileWithNullProfile() {
+    $this->saveLingotekContentTranslationSettings([
+      'node' => [
+        'null_profile' => [
+          'profiles' => 'manual',
+          'fields' => [
+            'title' => 1,
+          ],
+        ],
+      ],
+    ]);
+
+    // Create a node with group 1 profile.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['langcode[0][value]'] = 'en';
+    $this->saveAndPublishNodeForm($edit, 'null_profile');
+
+    $this->goToContentBulkManagementForm();
   }
 
 }

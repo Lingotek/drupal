@@ -14,6 +14,7 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\lingotek\Entity\LingotekContentMetadata;
+use Drupal\lingotek\Entity\LingotekProfile;
 use Drupal\lingotek\Exception\LingotekApiException;
 use Drupal\lingotek\Exception\LingotekDocumentArchivedException;
 use Drupal\lingotek\Exception\LingotekDocumentLockedException;
@@ -91,6 +92,12 @@ function lingotek_entity_insert(EntityInterface $entity) {
     }
     if ($translation_service->isEnabled($entity_type_id) && !in_array($entity->language()->getId(), [LanguageInterface::LANGCODE_NOT_SPECIFIED, LanguageInterface::LANGCODE_NOT_APPLICABLE])) {
       $profile = $configuration_service->getConfigEntityProfile($entity);
+      if ($profile === NULL) {
+        // If for whatever reason there is no profile, we better be cautious and
+        // do nothing. This can happen e.g. if there are modules implementing
+        // hook_lingotek_content_entity_get_profile().
+        return;
+      }
       if ($profile->id() === Lingotek::PROFILE_DISABLED) {
         $translation_service->setSourceStatus($entity, Lingotek::STATUS_DISABLED);
         $translation_service->setTargetStatuses($entity, Lingotek::STATUS_DISABLED);
@@ -167,6 +174,12 @@ function lingotek_entity_insert(EntityInterface $entity) {
       }
 
       $profile = $configuration_service->getEntityProfile($entity);
+      if ($profile === NULL) {
+        // If for whatever reason there is no profile, we better be cautious and
+        // do nothing. This can happen e.g. if there are modules implementing
+        // hook_lingotek_content_entity_get_profile().
+        return;
+      }
 
       $has_autoupload = $profile->hasAutomaticUpload();
 
@@ -256,6 +269,12 @@ function lingotek_entity_update(EntityInterface $entity) {
     }
     if ($translation_service->isEnabled($entity_type_id) && !in_array($entity->language()->getId(), [LanguageInterface::LANGCODE_NOT_SPECIFIED, LanguageInterface::LANGCODE_NOT_APPLICABLE])) {
       $profile = $configuration_service->getConfigEntityProfile($entity);
+      if ($profile === NULL) {
+        // If for whatever reason there is no profile, we better be cautious and
+        // do nothing. This can happen e.g. if there are modules implementing
+        // hook_lingotek_content_entity_get_profile().
+        return;
+      }
       if ($profile->id() === Lingotek::PROFILE_DISABLED) {
         $translation_service->setSourceStatus($entity, Lingotek::STATUS_DISABLED);
         $translation_service->setTargetStatuses($entity, Lingotek::STATUS_DISABLED);
@@ -334,6 +353,12 @@ function lingotek_entity_update(EntityInterface $entity) {
         $preventUpload = $moderation_handler->shouldModerationPreventUpload($entity);
 
         $profile = $configuration_service->getEntityProfile($entity);
+        if ($profile === NULL) {
+          // If for whatever reason there is no profile, we better be cautious and
+          // do nothing. This can happen e.g. if there are modules implementing
+          // hook_lingotek_content_entity_get_profile().
+          return;
+        }
         if ($profile->id() === Lingotek::PROFILE_DISABLED) {
           $translation_service->setSourceStatus($entity, Lingotek::STATUS_DISABLED);
           $translation_service->setTargetStatuses($entity, Lingotek::STATUS_DISABLED);
@@ -477,6 +502,10 @@ function lingotek_form_alter(&$form, FormStateInterface $form_state, $form_id) {
     }
 
     $default_profile = $lingotek_config->getEntityProfile($entity);
+    // We need to ensure it can't be NULL.
+    if ($default_profile === NULL) {
+      $default_profile = LingotekProfile::load(Lingotek::PROFILE_MANUAL);
+    }
     $profile_options = $lingotek_config->getProfileOptions();
     $current_user = \Drupal::currentUser();
     $can_assign_profile = $current_user->hasPermission('assign lingotek translation profiles') ||

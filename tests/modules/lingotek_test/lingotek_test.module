@@ -38,6 +38,9 @@ function lingotek_test_lingotek_content_entity_get_profile(ContentEntityInterfac
     $lingotek_config = \Drupal::service('lingotek.configuration');
     $profile = $lingotek_config->getEntityProfile($commented, FALSE);
   }
+  if ($entity->getEntityTypeId() === 'node' && $entity->bundle() === 'null_profile') {
+    $profile = NULL;
+  }
 }
 
 /**
