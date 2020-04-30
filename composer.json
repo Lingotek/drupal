@@ -46,7 +46,7 @@
     "drupal/pathauto": "dev-1.x",
     "drupal/workbench_moderation": "dev-1.x",
     "drupal/group": "dev-1.x",
-    "drupal/bricks": "dev-1.x",
+    "drupal/bricks": "dev-2.x",
     "drupal/search_api": "dev-1.x",
     "drupal/block_field": "dev-1.x",
     "drupal/entity_usage": "dev-2.x",
