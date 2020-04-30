@@ -44,6 +44,7 @@
     "drupal/metatag": "*",
     "drupal/paragraphs": "dev-1.x",
     "drupal/pathauto": "1.6",
+    "drupal/token": "1.6",
     "drupal/workbench_moderation": "dev-1.x",
     "drupal/group": "dev-1.x",
     "drupal/bricks": "dev-1.x",
