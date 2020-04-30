@@ -7,7 +7,6 @@ use Drupal\Core\Config\ConfigEvents;
 use Drupal\Core\Field\FieldConfigInterface;
 use Drupal\lingotek\LingotekConfigurationServiceInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Drupal\Core\Installer\InstallerKernel;
 
 /**
  * Updates Lingotek config if a field is deleted.
@@ -47,7 +46,7 @@ class LingotekFieldDeletedConfigSubscriber implements EventSubscriberInterface {
    *   The configuration event.
    */
   public function onConfigDelete(ConfigCrudEvent $event) {
-    if (!InstallerKernel::installationAttempted()) {
+    if (!drupal_installation_attempted()) {
       $config = $event->getConfig();
       if ($config instanceof FieldConfigInterface) {
         $field_name = $config->getName();
