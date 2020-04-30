@@ -6,7 +6,7 @@ use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\system\Entity\Action;
 use Drupal\Tests\lingotek\Functional\LingotekTestBase;
-use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
+use Drupal\Tests\taxonomy\Functional\TaxonomyTestTrait;
 
 /**
  * Tests for Lingotek actions creation.
