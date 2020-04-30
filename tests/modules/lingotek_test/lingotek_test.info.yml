@@ -1,6 +1,7 @@
 name: Lingotek Translation Test Helper
 type: module
 package: Testing
+core: 8.x
 
 dependencies:
   - lingotek
