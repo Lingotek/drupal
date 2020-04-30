@@ -297,6 +297,19 @@ interface LingotekConfigTranslationServiceInterface {
   public function downloadDocument(ConfigEntityInterface $entity, $locale);
 
   /**
+   * Deletes a document from the server and all related local data.
+   *
+   * @param \Drupal\Core\Config\Entity\ConfigEntityInterface $entity
+   *   The entity which we want to delete.
+   *
+   * @return ContentEntityInterface
+   *   The entity.
+   *
+   * @deprecated in 8.x-2.14, will be removed in 8.x-2.16. Use ::cancelDocument instead.
+   */
+  public function deleteDocument(ConfigEntityInterface &$entity);
+
+  /**
    * Cancels a document from the server.
    *
    * @param \Drupal\Core\Config\Entity\ConfigEntityInterface &$entity
@@ -544,6 +557,16 @@ interface LingotekConfigTranslationServiceInterface {
    *   TRUE if the document was downloaded successfully, FALSE if not.
    */
   public function downloadConfig($mapper_id, $locale);
+
+  /**
+   * Deletes a document from the server and all related local data.
+   *
+   * @param string $mapper_id
+   *   The entity being uploaded.
+   *
+   * @deprecated in 8.x-2.14, will be removed in 8.x-2.16. Use ::cancelConfigDocument instead.
+   */
+  public function deleteConfigDocument($mapper_id);
 
   /**
    * Cancels a document from the server.

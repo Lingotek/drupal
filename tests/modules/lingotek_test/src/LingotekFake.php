@@ -384,6 +384,20 @@ class LingotekFake implements LingotekInterface {
   /**
    * {@inheritDoc}
    */
+  public function deleteDocument($doc_id) {
+    throw new LingotekApiException('Delete shouldn\'t happen. Documents must be cancelled.');
+    if (\Drupal::state()->get('lingotek.must_error_in_disassociate', FALSE)) {
+      throw new LingotekApiException('Error was forced.');
+    }
+    $deleted_docs = \Drupal::state()->get('lingotek.deleted_docs', []);
+    $deleted_docs[] = $doc_id;
+    \Drupal::state()->set('lingotek.deleted_docs', $deleted_docs);
+    return TRUE;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
   public function cancelDocument($doc_id) {
     if (\Drupal::state()->get('lingotek.must_error_in_cancel', FALSE)) {
       throw new LingotekApiException('Error was forced.');

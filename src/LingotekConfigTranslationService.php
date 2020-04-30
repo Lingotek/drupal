@@ -788,6 +788,13 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
   /**
    * {@inheritdoc}
    */
+  public function deleteDocument(ConfigEntityInterface &$entity) {
+    return $this->lingotek->deleteDocument($this->getDocumentId($entity));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function cancelDocument(ConfigEntityInterface &$entity) {
     $result = FALSE;
     $doc_id = $this->getDocumentId($entity);
@@ -1405,6 +1412,14 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
       $this->setConfigTargetStatuses($mapper, Lingotek::STATUS_DISABLED);
     }
     return FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function deleteConfigDocument($mapper_id) {
+    $mapper = $this->mappers[$mapper_id];
+    return $this->lingotek->deleteDocument($this->getConfigDocumentId($mapper));
   }
 
   /**

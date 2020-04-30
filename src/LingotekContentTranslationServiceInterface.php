@@ -285,6 +285,19 @@ interface LingotekContentTranslationServiceInterface {
   public function updateDocument(ContentEntityInterface &$entity, $job_id = NULL);
 
   /**
+   * Deletes a document from the server and all related local data.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface &$entity
+   *   The entity which we want to delete.
+   *
+   * @return \Drupal\Core\Entity\ContentEntityInterface
+   *   The entity.
+   *
+   * @deprecated in 8.x-2.14, will be removed in 8.x-2.16. Use ::cancelDocument instead.
+   */
+  public function deleteDocument(ContentEntityInterface &$entity);
+
+  /**
    * Cancels a document from the server.
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface &$entity

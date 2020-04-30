@@ -160,6 +160,18 @@ interface LingotekInterface {
   public function downloadDocument($doc_id, $locale);
 
   /**
+   * Deletes the document with this document id from the Lingotek service.
+   *
+   * @param string $doc_id
+   *   The document id in Lingotek.
+   * @return bool
+   *   TRUE if the document was successfully deleted. FALSE if not.
+   *
+   * @deprecated in 8.x-2.14, will be removed in 8.x-2.16. Use ::cancelDocument instead.
+   */
+  public function deleteDocument($doc_id);
+
+  /**
    * Cancels the document with this document id from the Lingotek service.
    *
    * @param string $doc_id

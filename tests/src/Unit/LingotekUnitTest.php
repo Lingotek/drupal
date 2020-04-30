@@ -954,6 +954,41 @@ class LingotekUnitTest extends UnitTestCase {
   }
 
   /**
+   * @covers ::deleteDocument
+   */
+  public function testDeleteDocument() {
+    $response = $this->getMockBuilder(ResponseInterface::class)
+      ->disableOriginalConstructor()
+      ->getMock();
+    // Both HTTP_ACCEPTED (202) AND HTTP_NO_CONTENT (204) are success statuses.
+    $response->expects($this->at(0))
+      ->method('getStatusCode')
+      ->willReturn(Response::HTTP_ACCEPTED);
+    $response->expects($this->at(1))
+      ->method('getStatusCode')
+      ->willReturn(Response::HTTP_NO_CONTENT);
+
+    // Test returning an error.
+    $response->expects($this->at(2))
+      ->method('getStatusCode')
+      ->willReturn(Response::HTTP_INTERNAL_SERVER_ERROR);
+
+    $response->expects($this->at(3))
+      ->method('getStatusCode')
+      ->willReturn(Response::HTTP_NOT_FOUND);
+
+    $this->api->expects($this->any())
+      ->method('deleteDocument')
+      ->with('my_doc_id')
+      ->will($this->returnValue($response));
+
+    $this->assertTrue($this->lingotek->deleteDocument('my_doc_id'));
+    $this->assertTrue($this->lingotek->deleteDocument('my_doc_id'));
+    $this->assertFalse($this->lingotek->deleteDocument('my_doc_id'));
+    $this->assertFalse($this->lingotek->deleteDocument('my_doc_id'));
+  }
+
+  /**
    * @covers ::cancelDocument
    */
   public function testCancelDocument() {
