@@ -10,7 +10,7 @@ use Drupal\FunctionalTests\Update\UpdatePathTestBase;
  * @group lingotek
  * @group legacy
  */
-class LingotekRemoveContentCloudSettingsUpdate8221Test extends UpdatePathTestBase {
+class LingotekUpgrade8221RemoveContentCloudSettingsTest extends UpdatePathTestBase {
 
   /**
    * The Lingotek configuration service.
@@ -32,7 +32,7 @@ class LingotekRemoveContentCloudSettingsUpdate8221Test extends UpdatePathTestBas
    */
   protected function setDatabaseDumpFiles() {
     $this->databaseDumpFiles = [
-      __DIR__ . '/../../../fixtures/update/drupal-8.lingotek.standard.pre8217.php.gz',
+      __DIR__ . '/../../../fixtures/update/drupal-87x.lingotek-2x20.standard.php.gz',
     ];
   }
 
