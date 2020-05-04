@@ -2,10 +2,12 @@
 
 namespace Drupal\lingotek\Form;
 
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Entity\EntityConstraintViolationListInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityRepositoryInterface;
+use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
@@ -52,6 +54,10 @@ class LingotekMetadataEditForm extends ContentEntityForm {
    *
    * @param \Drupal\Core\Entity\EntityRepositoryInterface $entity_repository
    *   The entity repository.
+   * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entity_type_bundle_info
+   *   The entity type bundle service.
+   * @param \Drupal\Component\Datetime\TimeInterface $time
+   *   The time service.
    * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
    *   The language manager.
    * @param \Drupal\lingotek\LanguageLocaleMapperInterface $language_locale_mapper
@@ -61,8 +67,8 @@ class LingotekMetadataEditForm extends ContentEntityForm {
    * @param string $entity_type_id
    *   The entity type id.
    */
-  public function __construct(EntityRepositoryInterface $entity_repository, LanguageManagerInterface $language_manager, LanguageLocaleMapperInterface $language_locale_mapper, LingotekContentTranslationServiceInterface $translation_service, ModuleHandlerInterface $module_handler, $entity_type_id) {
-    parent::__construct($entity_repository);
+  public function __construct(EntityRepositoryInterface $entity_repository, EntityTypeBundleInfoInterface $entity_type_bundle_info, TimeInterface $time, LanguageManagerInterface $language_manager, LanguageLocaleMapperInterface $language_locale_mapper, LingotekContentTranslationServiceInterface $translation_service, ModuleHandlerInterface $module_handler, $entity_type_id) {
+    parent::__construct($entity_repository, $entity_type_bundle_info, $time);
 
     $this->languageManager = $language_manager;
     $this->languageLocaleMapper = $language_locale_mapper;
@@ -85,6 +91,8 @@ class LingotekMetadataEditForm extends ContentEntityForm {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('entity.repository'),
+      $container->get('entity_type.bundle.info'),
+      $container->get('datetime.time'),
       $container->get('language_manager'),
       $container->get('lingotek.language_locale_mapper'),
       $container->get('lingotek.content_translation'),
