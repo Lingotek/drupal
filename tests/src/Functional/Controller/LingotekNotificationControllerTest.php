@@ -104,7 +104,7 @@ class LingotekNotificationControllerTest extends LingotekTestBase {
       'http_errors' => FALSE,
     ]);
     $cache_control_header = $request->getHeader('Cache-Control');
-    $this->assertContains('max-age=0', $cache_control_header[0]);
+    $this->assertStringContainsString('max-age=0', $cache_control_header[0]);
 
     $response = json_decode($request->getBody(), TRUE);
     $this->verbose($request);
@@ -119,7 +119,7 @@ class LingotekNotificationControllerTest extends LingotekTestBase {
       'http_errors' => FALSE,
     ]);
     $cache_control_header = $request->getHeader('Cache-Control');
-    $this->assertContains('max-age=0', $cache_control_header[0]);
+    $this->assertStringContainsString('max-age=0', $cache_control_header[0]);
 
     $response = json_decode($request->getBody(), TRUE);
     $this->verbose($request);
@@ -145,7 +145,7 @@ class LingotekNotificationControllerTest extends LingotekTestBase {
       'http_errors' => FALSE,
     ]);
     $cache_control_header = $request->getHeader('Cache-Control');
-    $this->assertContains('max-age=0', $cache_control_header[0]);
+    $this->assertStringContainsString('max-age=0', $cache_control_header[0]);
 
     $response = (string) $request->getBody();
     $this->assertIdentical($response, 'It works, but nothing to look here.');
@@ -159,7 +159,7 @@ class LingotekNotificationControllerTest extends LingotekTestBase {
       'http_errors' => FALSE,
     ]);
     $cache_control_header = $request->getHeader('Cache-Control');
-    $this->assertContains('max-age=0', $cache_control_header[0]);
+    $this->assertStringContainsString('max-age=0', $cache_control_header[0]);
 
     $response = (string) $request->getBody();
     $this->assertIdentical($response, 'It works, but nothing to look here.');
