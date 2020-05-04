@@ -24,6 +24,15 @@ class LingotekNodeWithBlockfieldTranslationTest extends LingotekTestBase {
 
   /**
    * {@inheritdoc}
+   *
+   * We need this to be classy, as we depend on markup and want this to pass on
+   * 8.7.x
+   * ToDo: Can be removed when 8.7.x is not supported.
+   */
+  protected $defaultTheme = 'classy';
+
+  /**
+   * {@inheritdoc}
    */
   public static $modules = ['block', 'node', 'dblog', 'block_content', 'block_field'];
 
@@ -165,7 +174,8 @@ class LingotekNodeWithBlockfieldTranslationTest extends LingotekTestBase {
     $this->saveAndKeepPublishedNodeForm($edit, 1);
 
     $this->assertText('Current theme overridden title block');
-    $this->assertText('Current theme: stark');
+    // ToDo: Can be changed when 8.7.x is not supported.
+    $this->assertText('Current theme: classy');
 
     $this->node = Node::load(1);
 
@@ -210,7 +220,8 @@ class LingotekNodeWithBlockfieldTranslationTest extends LingotekTestBase {
     $this->assertText('Las llamas son chulas');
     $this->assertText('Las llamas son muy chulas');
     $this->assertText('Tema actual titulo sobreescrito del bloque');
-    $this->assertText('Current theme: stark');
+    // ToDo: Can be changed when 8.7.x is not supported.
+    $this->assertText('Current theme: classy');
   }
 
   /**
