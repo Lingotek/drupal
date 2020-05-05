@@ -420,9 +420,12 @@ class LingotekNotificationController extends LingotekControllerBase {
             if ($entity instanceof ConfigEntityInterface) {
               $translation_service = $this->lingotekConfigTranslation;
             }
-            $translation_service->setTargetStatus($entity, $langcode, Lingotek::STATUS_READY);
-
-            if ($profile->hasAutomaticDownloadForTarget($langcode) && $profile->hasAutomaticDownloadWorker()) {
+            $allowInterimDownloads = $this->lingotekConfiguration->getPreference('enable_download_interim');
+            $progressCompleted = ($request->query->get('progress') == '100');
+            if ($progressCompleted) {
+              $translation_service->setTargetStatus($entity, $langcode, Lingotek::STATUS_READY);
+            }
+            if ($profile->hasAutomaticDownloadForTarget($langcode) && $profile->hasAutomaticDownloadWorker() && ($progressCompleted || $allowInterimDownloads)) {
               $queue = \Drupal::queue('lingotek_downloader_queue_worker');
               $item = [
                 'entity_type_id' => $entity->getEntityTypeId(),
@@ -432,7 +435,7 @@ class LingotekNotificationController extends LingotekControllerBase {
               ];
               $result['download_queued'] = $queue->createItem($item);
             }
-            elseif ($profile->hasAutomaticDownloadForTarget($langcode) && !$profile->hasAutomaticDownloadWorker()) {
+            elseif ($profile->hasAutomaticDownloadForTarget($langcode) && !$profile->hasAutomaticDownloadWorker() && ($progressCompleted || $allowInterimDownloads)) {
               $result['download'] = $translation_service->downloadDocument($entity, $locale);
             }
             else {
@@ -448,6 +451,13 @@ class LingotekNotificationController extends LingotekControllerBase {
                 '@document' => $document_id,
               ]);
               $result['download_queued'] = TRUE;
+              $http_status_code = Response::HTTP_OK;
+            }
+            elseif (!$allowInterimDownloads && !$progressCompleted) {
+              $messages[] = new FormattableMarkup('Interim downloads are disabled, so no download for target @locale happened in document @document.', [
+                '@locale' => $locale,
+                '@document' => $document_id,
+              ]);
               $http_status_code = Response::HTTP_OK;
             }
             else {

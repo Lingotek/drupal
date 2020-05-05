@@ -1003,6 +1003,17 @@ function lingotek_update_8221() {
   $lingotekSettings->save();
 }
 
+/**
+ * Adds enable_download_interim preference to lingotek.settings.
+ */
+function lingotek_update_8222() {
+  // Default will be FALSE, but as we want to maintain the current behavior we
+  // set this to TRUE.
+  $lingotekSettings = \Drupal::configFactory()->getEditable('lingotek.settings');
+  $lingotekSettings->set('preference.enable_download_interim', TRUE);
+  $lingotekSettings->save();
+}
+
 function _lingotek_find_key(&$keys, $id, array $array) {
   foreach ($array as $x => $y) {
     // if (!in_array($x, ['enabled', 'profile'])) {}
