@@ -48,6 +48,9 @@ lingotek.settings:
           deprecated: 'Removed in Lingotek 8.x-2.21'
         enable_download_source:
           type: boolean
+        enable_download_interim:
+          label: 'Allow to download interim translations (translations that are pending some phases)'
+          type: boolean
         content_cloud_import_format:
           type: string
           deprecated: 'Removed in Lingotek 8.x-2.21'

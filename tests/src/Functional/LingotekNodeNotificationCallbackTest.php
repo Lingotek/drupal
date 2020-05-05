@@ -281,6 +281,209 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
   }
 
   /**
+   * Tests that a node reacts to incomplete target and phase notifications
+   * and does not download interim translations based on the settings.
+   */
+  public function aaatestIncompletePhaseNotificationWithNoInterimNodeTranslation() {
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
+    $this->saveAndPublishNodeForm($edit);
+
+    /** @var \Drupal\node\NodeInterface $node */
+    $node = Node::load(1);
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $content_translation_service */
+    $content_translation_service = \Drupal::service('lingotek.content_translation');
+
+    // Assert the content is importing.
+    $this->assertIdentical(Lingotek::STATUS_IMPORTING, $content_translation_service->getSourceStatus($node));
+
+    $this->goToContentBulkManagementForm();
+    $this->clickLink('ES');
+
+    // Ensure we won't get a completed document because there are phases pending.
+    \Drupal::state()->set('lingotek.document_completion', 40);
+
+    // Simulate the notification of content ready to download.
+    $url = Url::fromRoute('lingotek.notify', [], [
+      'query' => [
+        'project_id' => 'test_project',
+        'document_id' => 'dummy-document-hash-id',
+        'locale_code' => 'es-ES',
+        'locale' => 'es_ES',
+        'complete' => 'true',
+        'type' => 'phase',
+        'progress' => '50',
+      ],
+    ])->setAbsolute()->toString();
+    $request = $this->client->post($url, [
+      'cookies' => $this->cookies,
+      'headers' => [
+        'Accept' => 'application/json',
+        'Content-Type' => 'application/json',
+      ],
+      'http_errors' => FALSE,
+    ]);
+    $response = json_decode($request->getBody(), TRUE);
+    $this->assertFalse($response['result']['download'], 'Spanish language has not been downloaded after notification automatically, as it is interim.');
+    $this->assertEqual($response['messages'][0], 'Interim downloads are disabled, so no download for target es_ES happened in document dummy-document-hash-id.', 'Spanish language has not been downloaded after notification automatically, as it is interim.');
+
+    $this->goToContentBulkManagementForm();
+
+    $node = $this->resetStorageCachesAndReloadNode();
+
+    // Assert the content is imported.
+    $this->assertIdentical(Lingotek::STATUS_CURRENT, $content_translation_service->getSourceStatus($node));
+    // Assert the target is pending.
+    $this->assertIdentical(Lingotek::STATUS_PENDING, $content_translation_service->getTargetStatus($node, 'es'));
+
+    // Simulate the notification of content successfully translated.
+    $url = Url::fromRoute('lingotek.notify', [], [
+      'query' => [
+        'project_id' => 'test_project',
+        'document_id' => 'dummy-document-hash-id',
+        'locale_code' => 'es-ES',
+        'locale' => 'es_ES',
+        'complete' => 'true',
+        'type' => 'target',
+        'progress' => '50',
+      ],
+    ])->setAbsolute()->toString();
+    $request = $this->client->post($url, [
+      'cookies' => $this->cookies,
+      'headers' => [
+        'Accept' => 'application/json',
+        'Content-Type' => 'application/json',
+      ],
+      'http_errors' => FALSE,
+    ]);
+    $response = json_decode($request->getBody(), TRUE);
+    $this->verbose($request);
+    $this->assertFalse($response['result']['download'], 'Spanish language has not been downloaded after notification automatically, as it is interim.');
+    $this->assertEqual($response['messages'][0], 'Interim downloads are disabled, so no download for target es_ES happened in document dummy-document-hash-id.', 'Spanish language has not been downloaded after notification automatically, as it is interim.');
+
+    $node = $this->resetStorageCachesAndReloadNode();
+
+    // Assert the target is pending.
+    $this->assertIdentical(Lingotek::STATUS_PENDING, $content_translation_service->getTargetStatus($node, 'es'));
+  }
+
+  /**
+   * Tests that a node reacts to incomplete target and phase notifications
+   * and downloads interim translations based on the settings.
+   */
+  public function testIncompletePhaseNotificationWithInterimNodeTranslation() {
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
+    $this->drupalGet('admin/lingotek/settings');
+    $edit = ['enable_download_interim' => TRUE];
+    $this->submitForm($edit, 'Save', 'lingoteksettings-tab-preferences-form');
+
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
+    $this->saveAndPublishNodeForm($edit);
+
+    /** @var \Drupal\node\NodeInterface $node */
+    $node = Node::load(1);
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $content_translation_service */
+    $content_translation_service = \Drupal::service('lingotek.content_translation');
+
+    // Assert the content is importing.
+    $this->assertIdentical(Lingotek::STATUS_IMPORTING, $content_translation_service->getSourceStatus($node));
+
+    $this->goToContentBulkManagementForm();
+    $this->clickLink('ES');
+
+    // Ensure we won't get a completed document because there are phases pending.
+    \Drupal::state()->set('lingotek.document_completion', 40);
+
+    // Simulate the notification of content ready to download.
+    $url = Url::fromRoute('lingotek.notify', [], [
+      'query' => [
+        'project_id' => 'test_project',
+        'document_id' => 'dummy-document-hash-id',
+        'locale_code' => 'es-ES',
+        'locale' => 'es_ES',
+        'complete' => 'true',
+        'type' => 'phase',
+        'progress' => '50',
+      ],
+    ])->setAbsolute()->toString();
+    $request = $this->client->post($url, [
+      'cookies' => $this->cookies,
+      'headers' => [
+        'Accept' => 'application/json',
+        'Content-Type' => 'application/json',
+      ],
+      'http_errors' => FALSE,
+    ]);
+    $response = json_decode($request->getBody(), TRUE);
+    $this->assertTrue($response['result']['download'], 'Spanish language has been downloaded after notification automatically.');
+
+    $this->goToContentBulkManagementForm();
+
+    $node = $this->resetStorageCachesAndReloadNode();
+
+    // Assert the content is imported.
+    $this->assertIdentical(Lingotek::STATUS_CURRENT, $content_translation_service->getSourceStatus($node));
+    // Assert the target is intermediate.
+    $this->assertIdentical(Lingotek::STATUS_INTERMEDIATE, $content_translation_service->getTargetStatus($node, 'es'));
+
+    // Assert a translation has been downloaded.
+    $this->drupalGet('node/1/translations');
+    $this->assertLink('Las llamas son chulas');
+
+    // There are no phases pending anymore.
+    \Drupal::state()->set('lingotek.document_completion', TRUE);
+
+    $this->goToContentBulkManagementForm();
+
+    // Simulate the notification of content successfully translated.
+    $url = Url::fromRoute('lingotek.notify', [], [
+      'query' => [
+        'project_id' => 'test_project',
+        'document_id' => 'dummy-document-hash-id',
+        'locale_code' => 'es-ES',
+        'locale' => 'es_ES',
+        'complete' => 'true',
+        'type' => 'target',
+        'progress' => '50',
+      ],
+    ])->setAbsolute()->toString();
+    $request = $this->client->post($url, [
+      'cookies' => $this->cookies,
+      'headers' => [
+        'Accept' => 'application/json',
+        'Content-Type' => 'application/json',
+      ],
+      'http_errors' => FALSE,
+    ]);
+    $response = json_decode($request->getBody(), TRUE);
+    $this->verbose($request);
+    $this->assertTrue($response['result']['download'], 'Spanish language has been downloaded after notification automatically.');
+
+    $this->goToContentBulkManagementForm();
+
+    $node = $this->resetStorageCachesAndReloadNode();
+
+    // Assert the target is ready.
+    $this->assertIdentical(Lingotek::STATUS_CURRENT, $content_translation_service->getTargetStatus($node, 'es'));
+
+    $this->goToContentBulkManagementForm();
+  }
+
+  /**
    * Tests that a node can be translated using the links on the management page.
    */
   public function testManualNotificationNodeTranslation() {
