@@ -13,7 +13,6 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
 
   protected $lang_switcher_value = 0;
   protected $top_level_value = 0;
-  protected $show_import_tab = 0;
   protected $lang_switcher;
   protected $lang_switcher_region;
   protected $lang_regions;
@@ -34,7 +33,6 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
     /** @var \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_config */
     $lingotek_config = \Drupal::service('lingotek.configuration');
 
-    $this->retrieveImportSetting();
     $this->retrieveLanguageSwitcher();
     $this->retrieveAdminMenu();
 
@@ -194,10 +192,6 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
     parent::submitForm($form, $form_state);
   }
 
-  protected function retrieveImportSetting() {
-    $this->show_import_tab = $this->lingotek->get('preference.enable_content_cloud');
-  }
-
   protected function retrieveLanguageSwitcher() {
     if (\Drupal::moduleHandler()->moduleExists('block')) {
       $theme_default = $this->config('system.theme')->get('default');
@@ -264,11 +258,6 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
 
     /** @var \Drupal\Core\Menu\MenuLinkManager $menu_link_manager */
     $menu_link_manager = \Drupal::service('plugin.manager.menu.link');
-
-    if ($this->show_import_tab != $form_values['enable_content_cloud']) {
-      $this->lingotek->set('preference.enable_content_cloud', $form_values['enable_content_cloud']);
-      $should_reset_cache = TRUE;
-    }
 
     // Only run if there's been a change to avoid clearing the cache if we don't have to
     if ($this->top_level_value != $form_values['hide_top_level']) {
