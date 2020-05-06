@@ -32,7 +32,7 @@ class LingotekUpgrade8221RemoveContentCloudSettingsTest extends UpdatePathTestBa
    */
   protected function setDatabaseDumpFiles() {
     $this->databaseDumpFiles = [
-      __DIR__ . '/../../../fixtures/update/drupal-87x.lingotek-2x20.standard.php.gz',
+      __DIR__ . '/../../../fixtures/update/drupal-88x.lingotek-2x20.standard.php.gz',
     ];
   }
 
