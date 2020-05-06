@@ -98,19 +98,14 @@ class LingotekSettingsTabAccountFormTest extends LingotekTestBase {
    *   messages: use \Drupal\Component\Utility\SafeMarkup::format() to embed
    *   variables in the message text, not t(). If left blank, a default message
    *   will be displayed.
-   * @param $group
-   *   (optional) The group this message is in, which is displayed in a column
-   *   in test output. Use 'Debug' to indicate this is debugging output. Do not
-   *   translate this string. Defaults to 'Other'; most tests do not override
-   *   this default.
    *
    * @return
    *   TRUE if the assertion succeeded, FALSE otherwise.
    */
-  protected function assertTableValue($field, $expected, $message = '', $group = 'Other') {
-    $xpathValue = $this->xpath('//tr[@data-drupal-selector="edit-account-table-' . $field . '-row"]//td[2]/text()');
-    $value = $xpathValue[0]->getHtml();
-    return $this->assertEqual($expected, $value, $message, $group);
+  protected function assertTableValue($field, $expected, $message = '') {
+    $xpathValue = $this->xpath('//tr[@data-drupal-selector="edit-account-table-' . $field . '-row"]//td[2]');
+    $value = $xpathValue[0]->getText();
+    return $this->assertEquals($expected, $value, $message);
   }
 
   /**
