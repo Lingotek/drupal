@@ -322,7 +322,7 @@ class LingotekContentModerationTest extends LingotekTestBase {
 
     // The status is draft.
     $value = $this->xpath('//div[@id="edit-current"]/text()');
-    $value = trim($value[1]->getHtml());
+    $value = trim($value[1]->getText());
     $this->assertEqual($value, 'Draft', 'Workbench current status is draft');
 
     // Moderate to Needs review, so it's uploaded.
@@ -331,7 +331,7 @@ class LingotekContentModerationTest extends LingotekTestBase {
 
     // The status is needs review.
     $value = $this->xpath('//div[@id="edit-current"]/text()');
-    $value = trim($value[1]->getHtml());
+    $value = trim($value[1]->getText());
     $this->assertEqual($value, 'Needs Review', 'Workbench current status is Needs Review');
 
     $this->goToContentBulkManagementForm();
@@ -385,7 +385,7 @@ class LingotekContentModerationTest extends LingotekTestBase {
 
     // The status is draft.
     $value = $this->xpath('//div[@id="edit-current"]/text()');
-    $value = trim($value[1]->getHtml());
+    $value = trim($value[1]->getText());
     $this->assertEqual($value, 'Draft', 'Workbench current status is draft');
 
     // Moderate to Needs review, so it's uploaded.
@@ -407,7 +407,7 @@ class LingotekContentModerationTest extends LingotekTestBase {
     // Let's see the current status is unmodified.
     $this->clickLink('Llamas are cool');
     $value = $this->xpath('//div[@id="edit-current"]/text()');
-    $value = trim($value[1]->getHtml());
+    $value = trim($value[1]->getText());
     $this->assertEqual($value, 'Draft', 'The transition to a new content moderation status didn\'t happen because the source wasn\'t the expected.');
   }
 
