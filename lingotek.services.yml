@@ -13,7 +13,7 @@ services:
     arguments: ['@entity_type.manager', '@entity_type.manager']
   lingotek.language_form:
     class: Drupal\lingotek\Form\LingotekLanguageForm
-    arguments: ['@lingotek', '@lingotek.language_locale_mapper']
+    arguments: ['@lingotek', '@lingotek.language_locale_mapper', '@lingotek.configuration']
   lingotek.language_content_settings_form:
     class: Drupal\lingotek\Form\LingotekLanguageContentSettingsForm
     arguments: ['@entity_type.bundle.info']
