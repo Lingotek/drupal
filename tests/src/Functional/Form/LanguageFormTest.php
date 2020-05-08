@@ -102,6 +102,8 @@ class LanguageFormTest extends BrowserTestBase {
 
     // Assert that the locale is empty.
     $this->assertFieldByName('lingotek_locale', '', 'The Lingotek locale is empty by default.');
+    // The Lingotek locale is enabled by default.
+    $this->getSession()->getPage()->hasUncheckedField('lingotek_disabled');
 
     $edit = [
       'predefined_langcode' => 'custom',
@@ -122,6 +124,70 @@ class LanguageFormTest extends BrowserTestBase {
     $locale_mapper = \Drupal::service('lingotek.language_locale_mapper');
     $this->assertEqual('es_ES', $locale_mapper->getLocaleForLangcode('es-DE'), 'The language locale mapper correctly guesses the locale.');
     $this->assertEqual('es-DE', $locale_mapper->getConfigurableLanguageForLocale('es_ES')->getId(), 'The language locale mapper correctly guesses the langcode.');
+  }
+
+  /**
+   * Tests disabling for Lingotek a custom language that was enabled.
+   */
+  public function testDisablingCustomLanguage() {
+    $this->testAddingCustomLanguage();
+
+    // Check that there is a select for locales.
+    $this->drupalGet('/admin/config/regional/language');
+
+    // Click on edit for Spanish (Germany).
+    $this->clickLink('Edit', 1);
+    // The Lingotek locale is enabled by default.
+    $this->getSession()->getPage()->hasUncheckedField('lingotek_disabled');
+
+    $edit = [
+      'lingotek_disabled' => TRUE,
+    ];
+    $this->drupalPostForm(NULL, $edit, 'Save language');
+
+    // Ensure the language is disabled.
+    $language = ConfigurableLanguage::load('es-DE');
+    $this->assertTrue($language->getThirdPartySetting('lingotek', 'disabled'), 'The Lingotek locale has been disabled successfully.');
+
+    // Check that there is a select for locales.
+    $this->drupalGet('/admin/config/regional/language');
+
+    // Click on edit for Spanish (Germany).
+    $this->clickLink('Edit', 1);
+    $this->getSession()->getPage()->hasCheckedField('lingotek_disabled');
+  }
+
+  /**
+   * Tests enabling for Lingotek a custom language that was disabled.
+   */
+  public function testEnablingCustomLanguage() {
+    ConfigurableLanguage::create(['id' => 'de-at', 'label' => 'German (AT)'])
+      ->setThirdPartySetting('lingotek', 'disabled', TRUE)
+      ->save();
+
+    // Check that there is a select for locales.
+    $this->drupalGet('/admin/config/regional/language');
+
+    // Click on edit for German (AT).
+    $this->clickLink('Edit', 1);
+    // The Lingotek locale is enabled by default.
+    $this->getSession()->getPage()->hasCheckedField('lingotek_disabled');
+
+    $edit = [
+      'lingotek_disabled' => FALSE,
+    ];
+    $this->drupalPostForm(NULL, $edit, 'Save language');
+
+    // Ensure the language is disabled.
+    $language = ConfigurableLanguage::load('de-at');
+    $this->assertFalse($language->getThirdPartySetting('lingotek', 'disabled'), 'The Lingotek locale has been enabled successfully.');
+
+    // Check that there is a select for locales.
+    $this->drupalGet('/admin/config/regional/language');
+
+    // Click on edit for German (AT).
+    $this->clickLink('Edit', 1);
+    $this->getSession()->getPage()->hasUncheckedField('lingotek_disabled');
   }
 
   /**

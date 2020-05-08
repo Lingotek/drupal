@@ -7,6 +7,7 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\language\ConfigurableLanguageInterface;
 use Drupal\lingotek\Exception\LingotekApiException;
 use Drupal\lingotek\LanguageLocaleMapperInterface;
+use Drupal\lingotek\LingotekConfigurationServiceInterface;
 use Drupal\lingotek\LingotekInterface;
 
 /**
@@ -33,16 +34,30 @@ class LingotekLanguageForm {
   protected $languageLocaleMapper;
 
   /**
-   * Constructs a new LingotekConfigTranslationService object.
+   * The Lingotek configuration service.
+   *
+   * @var \Drupal\lingotek\LingotekConfigurationServiceInterface
+   */
+  protected $lingotekConfiguration;
+
+  /**
+   * Constructs a new LingotekLanguageForm object.
    *
    * @param \Drupal\lingotek\LingotekInterface $lingotek
    *   A lingotek object.
    * @param \Drupal\lingotek\LanguageLocaleMapperInterface $language_locale_mapper
    *   The language-locale mapper.
+   * @param \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_configuration
+   *   The Lingotek configuration service.
    */
-  public function __construct(LingotekInterface $lingotek, LanguageLocaleMapperInterface $language_locale_mapper) {
+  public function __construct(LingotekInterface $lingotek, LanguageLocaleMapperInterface $language_locale_mapper, LingotekConfigurationServiceInterface $lingotek_configuration = NULL) {
     $this->lingotek = $lingotek;
     $this->languageLocaleMapper = $language_locale_mapper;
+    if (!$lingotek_configuration) {
+      @trigger_error('The lingotek.configuration service must be passed to LingotekLanguageForm::__construct, it is required before Lingotek 3.1.0.', E_USER_DEPRECATED);
+      $lingotek_configuration = \Drupal::service('lingotek.configuration');
+    }
+    $this->lingotekConfiguration = $lingotek_configuration;
   }
 
   /**
@@ -58,12 +73,25 @@ class LingotekLanguageForm {
     $language = $form_state->getFormObject()->getEntity();
     $langcode = $language->getId();
 
-    $form['custom_language']['lingotek_locale'] = [
+    $form['custom_language']['lingotek'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Lingotek translation'),
+      '#weight' => 0,
+    ];
+
+    $form['custom_language']['lingotek']['lingotek_disabled'] = [
+      '#type' => 'checkbox',
+      '#title' => t('Disabled for Lingotek translation'),
+      // If we have a langcode, check if there is a locale or default to the one we can guess.
+      '#default_value' => $langcode !== NULL ? (!$this->lingotekConfiguration->isLanguageEnabled($language)) : FALSE,
+      '#description' => $this->t('Check this if you want Lingotek to ignore this language or locale.'),
+    ];
+
+    $form['custom_language']['lingotek']['lingotek_locale'] = [
       '#type' => 'textfield',
       '#title' => t('Locale'),
       // If we have a langcode, check if there is a locale or default to the one we can guess.
       '#default_value' => $langcode !== NULL ? str_replace("_", "-", $this->languageLocaleMapper->getLocaleForLangcode($langcode)) : '',
-      '#weight' => 0,
       '#description' => $this->t('The Lingotek locale this language maps to.') . ' ' .
         $this->t('Use language codes as <a href=":w3ctags">defined by the W3C</a> for interoperability. <em>Examples: "en", "en-gb" and "zh-hant".</em>', [':w3ctags' => 'http://www.w3.org/International/articles/language-tags/']),
     ];
@@ -94,9 +122,14 @@ class LingotekLanguageForm {
    * @see lingotek_form_language_admin_edit_form_alter()
    */
   public static function languageEntityBuilder($entity_type, ConfigurableLanguageInterface $language, array &$form, FormStateInterface $form_state) {
-    $form_key = ['lingotek_locale'];
-    if ($value = $form_state->getValue($form_key)) {
-      $language->setThirdPartySetting('lingotek', 'locale', str_replace("-", "_", $value));
+    // We need to check if the value exists, as we are enabling by default those
+    // predefined languages in Drupal.
+    if ($form_state->hasValue(['lingotek_locale'])) {
+      $lingotek_locale = $form_state->getValue(['lingotek_locale']);
+      $lingotekDisabled = $form_state->getValue(['lingotek_disabled']);
+
+      $language->setThirdPartySetting('lingotek', 'locale', str_replace("-", "_", $lingotek_locale));
+      $language->setThirdPartySetting('lingotek', 'disabled', $lingotekDisabled);
     }
   }
 
