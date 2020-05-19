@@ -159,7 +159,6 @@ class LingotekContentModerationHandler implements LingotekModerationHandlerInter
    */
   public function setModerationState(ContentEntityInterface $entity, $state) {
     $entity->set('moderation_state', $state);
-    $entity->save();
   }
 
   /**
