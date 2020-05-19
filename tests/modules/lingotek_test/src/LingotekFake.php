@@ -419,6 +419,41 @@ class LingotekFake implements LingotekInterface {
     return ['es-ES', 'de-AT', 'de-DE'];
   }
 
+  /**
+   * {@inheritDoc}
+   */
+  public function getLocalesInfo() {
+    if (\Drupal::state()->get('lingotek.locales_error', FALSE)) {
+      throw new LingotekApiException('{"messages":["HTTP 401 Unauthorized"]}', 401);
+    }
+    return [
+      'es-ES' => [
+        'code' => 'es-ES',
+        'language_code' => 'ES',
+        'title' => 'Spanish (Spain)',
+        'language' => 'Spanish',
+        'country_code' => 'ES',
+        'country' => 'Spain',
+      ],
+      'de-AT' => [
+        'code' => 'de-AT',
+        'language_code' => 'DE',
+        'title' => 'German (Austria)',
+        'language' => 'German',
+        'country_code' => 'AT',
+        'country' => 'Austria',
+      ],
+      'de-DE' => [
+        'code' => 'de-DE',
+        'language_code' => 'DE',
+        'title' => 'German (Germany)',
+        'language' => 'German',
+        'country_code' => 'DE',
+        'country' => 'Germany',
+      ],
+    ];
+  }
+
   public function getDocumentTranslationStatuses($doc_id) {
     if (\Drupal::state()->get('lingotek.must_error_in_check_target_status', FALSE)) {
       throw new LingotekApiException('Error was forced.');

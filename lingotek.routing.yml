@@ -336,3 +336,11 @@ lingotek.translation_job_info.config:
     _title_callback: '\Drupal\lingotek\Controller\LingotekJobManagementController::titleConfig'
   requirements:
     _permission: 'manage lingotek translations,translate configuration'
+
+lingotek.supported_locales:
+  path: '/admin/lingotek/supported-locales'
+  defaults:
+    _controller: '\Drupal\lingotek\Controller\LingotekSupportedLocalesController::content'
+    _title: 'Supported Lingotek locales'
+  requirements:
+    _permission: 'manage lingotek translations'

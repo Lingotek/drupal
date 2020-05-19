@@ -496,6 +496,34 @@ class Lingotek implements LingotekInterface {
     return $locales;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getLocalesInfo() {
+    $data = $this->api->getLocales();
+    $locales = [];
+    if ($data) {
+      foreach ($data['entities'] as $locale) {
+        $languageCode = $locale['properties']['language_code'];
+        $countryCode = $locale['properties']['country_code'];
+        $title = $locale['properties']['title'];
+        $language = $locale['properties']['language'];
+        $country = $locale['properties']['country'];
+        $code = $locale['properties']['code'];
+
+        $locales[$code] = [
+          'code' => $code,
+          'language_code' => $languageCode,
+          'title' => $title,
+          'language' => $language,
+          'country_code' => $countryCode,
+          'country' => $country,
+        ];
+      }
+    }
+    return $locales;
+  }
+
   protected function getResource($resources_key, $func, $force = FALSE) {
     $data = $this->configFactory->get(static::SETTINGS)->get($resources_key);
     if (empty($data) || $force) {
