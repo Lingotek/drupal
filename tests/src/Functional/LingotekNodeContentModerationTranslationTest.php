@@ -229,8 +229,7 @@ class LingotekNodeContentModerationTranslationTest extends LingotekTestBase {
       ->pager(50)
       ->count()
       ->execute();
-    // ToDo: This should be 2. We are adding an extra revision!
-    $this->assertEqual(3, $result, 'A new revision is stored.');
+    $this->assertEqual(2, $result, 'A new revision is stored.');
   }
 
 }
