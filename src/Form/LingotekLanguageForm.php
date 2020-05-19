@@ -2,8 +2,10 @@
 
 namespace Drupal\lingotek\Form;
 
+use Drupal\Component\Serialization\Json;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\Url;
 use Drupal\language\ConfigurableLanguageInterface;
 use Drupal\lingotek\Exception\LingotekApiException;
 use Drupal\lingotek\LanguageLocaleMapperInterface;
@@ -93,8 +95,27 @@ class LingotekLanguageForm {
       // If we have a langcode, check if there is a locale or default to the one we can guess.
       '#default_value' => $langcode !== NULL ? str_replace("_", "-", $this->languageLocaleMapper->getLocaleForLangcode($langcode)) : '',
       '#description' => $this->t('The Lingotek locale this language maps to.') . ' ' .
-        $this->t('Use language codes as <a href=":w3ctags">defined by the W3C</a> for interoperability. <em>Examples: "en", "en-gb" and "zh-hant".</em>', [':w3ctags' => 'http://www.w3.org/International/articles/language-tags/']),
+        $this->t('Use locale codes as <a href=":w3ctags">defined by the W3C</a> for interoperability. <em>Examples: "en", "en-gb" and "zh-hant".</em>', [':w3ctags' => 'http://www.w3.org/International/articles/language-tags/']),
     ];
+    $form['custom_language']['lingotek']['lingotek_locale_link'] = [
+      '#type' => 'link',
+      '#title' => $this->t('Lingotek supported locales list'),
+      '#url' => Url::fromRoute('lingotek.supported_locales'),
+      '#ajax' => [
+        'class' => ['use-ajax'],
+      ],
+      '#attributes' => [
+        'class' => ['use-ajax'],
+        'data-dialog-type' => 'dialog',
+        'data-dialog-options' => Json::encode([
+          'width' => 861,
+          'height' => 700,
+          'draggable' => TRUE,
+          'autoResize' => FALSE,
+        ]),
+      ],
+    ];
+
     // Buttons are different if adding or editing a language. We need validation
     // on both cases.
     if ($langcode) {

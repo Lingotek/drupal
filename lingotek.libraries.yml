@@ -55,3 +55,12 @@ lingotek.job:
     - core/drupal
     - core/drupalSettings
     - core/drupal.form
+
+lingotek.locales_listing:
+  version: VERSION
+  js:
+    js/lingotek-locales.listing.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/jquery.once

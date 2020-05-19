@@ -20,6 +20,17 @@ interface LingotekInterface {
    */
   public function getLocales();
 
+  /**
+   * Get the available locales on Lingotek.
+   *
+   * @return array
+   *   Array of locales. Empty array if there is an error.
+   *   The array has the locale as key, and the value is a nested array with
+   *   the following keys: code, language_code, title, language, country_code,
+   *   and country.
+   */
+  public function getLocalesInfo();
+
   public function getAccountInfo();
 
   public function getResources($force = FALSE);
