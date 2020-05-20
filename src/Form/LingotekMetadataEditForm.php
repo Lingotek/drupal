@@ -143,7 +143,30 @@ class LingotekMetadataEditForm extends ContentEntityForm {
     $form['metadata']['lingotek_job_id'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Lingotek Job ID'),
-      '#default_value' => $metadata->getJobId(),
+      '#default_value' => $metadata ? $metadata->getJobId() : '',
+    ];
+
+    $encodedMetadata = 'NULL';
+    if ($metadata) {
+      $encodedMetadata = json_encode($metadata->toArray(), JSON_PRETTY_PRINT);
+    }
+    $form['metadata']['verbatim_area'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Lingotek Verbatim Metadata'),
+      "#collapsible" => TRUE,
+      "#collapsed" => TRUE,
+      '#tree' => TRUE,
+      '#weight' => 50,
+    ];
+    $form['metadata']['verbatim_area']['verbatim'] = [
+      '#type' => 'textarea',
+      '#title' => $this->t('Lingotek Verbatim Metadata'),
+      '#title_display' => 'invisible',
+      '#readonly' => TRUE,
+      '#cols' => '80',
+      '#rows' => '20',
+      '#default_value' => $encodedMetadata,
+      '#attributes' => ['readonly' => TRUE],
     ];
 
     $form['actions'] = [];
@@ -168,23 +191,31 @@ class LingotekMetadataEditForm extends ContentEntityForm {
   public function saveMetadata(array &$form, FormStateInterface $form_state) {
     $entity = $this->getEntity();
 
-    $input = $form_state->getUserInput();
-    $lingotek_document_id = $input['lingotek_document_id'];
-    $source_status = $input['lingotek_source_status'];
+    /** @var \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_config */
+    $lingotek_config = \Drupal::service('lingotek.configuration');
 
-    $this->translationService->setDocumentId($entity, $lingotek_document_id);
-    $this->translationService->setSourceStatus($entity, $source_status);
-    foreach ($this->languageManager->getLanguages() as $langcode => $language) {
-      $this->translationService->setTargetStatus($entity, $langcode, $input[$langcode]);
+    if ($lingotek_config->isEnabled($entity->getEntityTypeId(), $entity->bundle())) {
+      $input = $form_state->getUserInput();
+      $lingotek_document_id = $input['lingotek_document_id'];
+      $source_status = $input['lingotek_source_status'];
+      $profile = $input['lingotek_source_status'];
+      $this->translationService->setDocumentId($entity, $lingotek_document_id);
+      $this->translationService->setSourceStatus($entity, $source_status);
+      foreach ($this->languageManager->getLanguages() as $langcode => $language) {
+        $this->translationService->setTargetStatus($entity, $langcode, $input[$langcode]);
+      }
+      /** @var \Drupal\lingotek\Entity\LingotekContentMetadata|NULL $metadata */
+      $metadata = $entity->hasField('lingotek_metadata') ? $entity->lingotek_metadata->entity : NULL;
+      if ($metadata !== NULL) {
+        $metadata->setProfile($input['lingotek_translation_management']['lingotek_translation_profile']);
+        $metadata->setJobId($input['lingotek_job_id']);
+        $metadata->save();
+      }
+      $this->messenger()->addStatus($this->t('Metadata saved successfully'));
     }
-    /** @var \Drupal\lingotek\Entity\LingotekContentMetadata|NULL $metadata */
-    $metadata = $entity->hasField('lingotek_metadata') ? $entity->lingotek_metadata->entity : NULL;
-    if ($metadata !== NULL) {
-      $metadata->setJobId($input['lingotek_job_id']);
-      $metadata->save();
+    else {
+      $this->messenger()->addError($this->t('This entity cannot be managed in Lingotek. Please check your configuration.'));
     }
-
-    $this->messenger()->addStatus($this->t('Metadata saved successfully'));
   }
 
   /**
