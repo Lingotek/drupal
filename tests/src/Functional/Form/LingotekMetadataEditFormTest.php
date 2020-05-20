@@ -164,7 +164,8 @@ class LingotekMetadataEditFormTest extends LingotekTestBase {
     ],
     "job_id": []
 }
-JSON);
+JSON
+    );
     $this->assertFieldByName('lingotek_translation_management[lingotek_translation_profile]', 'automatic');
 
     $edit = [
@@ -234,7 +235,8 @@ JSON);
         }
     ]
 }
-JSON);
+JSON
+    );
     $this->assertFieldByName('lingotek_translation_management[lingotek_translation_profile]', 'manual');
 
     /** @var \Drupal\lingotek\LingotekConfigurationServiceInterface $configuration_service */
