@@ -923,7 +923,6 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
         \Drupal::logger('lingotek')->error($this->t('Error happened downloading %document_id %locale: %message', ['%document_id' => $document_id, '%locale' => $locale, '%message' => $exception->getMessage()]));
         $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_ERROR);
         throw $exception;
-        return FALSE;
       }
 
       if ($data) {
@@ -1321,7 +1320,8 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
           if ($field_type === 'entity_reference' || $field_type === 'er_viewmode' || $field_type === 'bricks') {
             $target_entity_type_id = $field_definition->getFieldStorageDefinition()
               ->getSetting('target_type');
-            $index = -1;
+            $translation->{$name} = NULL;
+            $delta = 0;
             foreach ($field_data as $index => $field_item) {
               if (isset($field_item['_lingotek_metadata'])) {
                 $target_entity_type_id = $field_item['_lingotek_metadata']['_entity_type_id'];
@@ -1355,20 +1355,8 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
                 }
                 // Now the embedded entity is saved, but we need to ensure
                 // the reference will be saved too.
-                $translation->{$name}->set($index, $embedded_entity_id);
-              }
-            }
-            if ($index === -1) {
-              // Remove the rest of deltas that were no longer found in the document downloaded from lingotek.
-              ++$index;
-              $continue = TRUE;
-              while ($continue) {
-                if ($translation->get($name)->offsetExists($index)) {
-                  $translation->get($name)->removeItem($index);
-                }
-                else {
-                  $continue = FALSE;
-                }
+                $translation->{$name}->set($delta, $embedded_entity_id);
+                $delta++;
               }
             }
           }
@@ -1376,7 +1364,9 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
           elseif ($field_type === 'entity_reference_revisions') {
             $target_entity_type_id = $field_definition->getFieldStorageDefinition()
               ->getSetting('target_type');
-            $index = -1;
+            $translation->{$name} = NULL;
+            $delta = 0;
+            $fieldValues = [];
             foreach ($field_data as $index => $field_item) {
               $embedded_entity_id = $revision->{$name}->get($index)
                 ->get('target_id')
@@ -1388,22 +1378,11 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
                 $this->saveTargetData($embedded_entity, $langcode, $field_item);
                 // Now the embedded entity is saved, but we need to ensure
                 // the reference will be saved too. Ensure it's the same revision.
-                $translation->{$name}->set($index, ['target_id' => $embedded_entity_id, 'target_revision_id' => $embedded_entity->getRevisionId()]);
+                $fieldValues[$delta] = ['target_id' => $embedded_entity_id, 'target_revision_id' => $embedded_entity->getRevisionId()];
+                $delta++;
               }
             }
-            if ($index === -1) {
-              // Remove the rest of deltas that were no longer found in the document downloaded from lingotek.
-              ++$index;
-              $continue = TRUE;
-              while ($continue) {
-                if ($translation->get($name)->offsetExists($index)) {
-                  $translation->get($name)->removeItem($index);
-                }
-                else {
-                  $continue = FALSE;
-                }
-              }
-            }
+            $translation->{$name} = $fieldValues;
           }
           // If there is a path item, we need to handle it separately. See
           // https://www.drupal.org/node/2681241
@@ -1446,6 +1425,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
             }
           }
           elseif ($field_type === 'block_field') {
+            $translation->{$name} = NULL;
             foreach ($field_data as $index => $field_item) {
               /** @var \Drupal\Core\Block\BlockPluginInterface $block */
               $block = $revision->get($name)->get($index)->getBlock();

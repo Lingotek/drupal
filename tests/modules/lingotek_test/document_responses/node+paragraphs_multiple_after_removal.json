@@ -1,7 +1,7 @@
 {
   "title": [
     {
-      "value": "Las llamas son chulas"
+      "value": "Las llamas son chulas EDITADO"
     }
   ],
   "field_paragraphs_demo": [
@@ -9,38 +9,38 @@
       "field_image_demo": [],
       "field_text_demo": [
         {
-          "value": "Las llamas son chulas por primera vez."
+          "value": "Las llamas son muy chulas por primera vez EDITADO."
         }
       ],
       "_lingotek_metadata": {
         "_entity_type_id": "paragraph",
         "_entity_id": "1",
-        "_entity_revision": "1"
+        "_entity_revision": "7"
       }
     },
     {
       "field_image_demo": [],
       "field_text_demo": [
         {
-          "value": "Las llamas son chulas por segunda vez."
+          "value": "Las llamas son muy chulas por tercera vez EDITADO."
         }
       ],
       "_lingotek_metadata": {
         "_entity_type_id": "paragraph",
-        "_entity_id": "2",
-        "_entity_revision": "2"
+        "_entity_id": "3",
+        "_entity_revision": "8"
       }
     }
   ],
   "_lingotek_metadata": {
     "_entity_type_id": "node",
     "_entity_id": "1",
-    "_entity_revision": "1",
+    "_entity_revision": "3",
     "_intelligence": {
       "external_document_id": "1",
       "content_type": "node - paragraphed_content_demo",
-      "domain": "http:\/\/lingod8.test",
-      "reference_url": "http:\/\/lingod8.test\/node\/1",
+      "domain": "http:\\/\\/lingod8.test",
+      "reference_url": "http:\\/\\/lingod8.test\\/node\\/1",
       "author_name": "admin",
       "author_email": "admin@example.com",
       "business_unit": null,

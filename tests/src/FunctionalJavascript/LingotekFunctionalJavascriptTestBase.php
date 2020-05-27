@@ -223,8 +223,8 @@ abstract class LingotekFunctionalJavascriptTestBase extends WebDriverTestBase {
           }
         }
         if (isset($bundle_settings['moderation']) && $bundle_settings['moderation'] !== NULL) {
-          $page->selectFieldOption('#edit-' . str_replace('_', '-', $entity_type) . '-' . str_replace('_', '-', $bundle_id) . '-moderation-upload-status', $bundle_settings['moderation']['upload_status']);
-          $page->selectFieldOption('#edit-' . str_replace('_', '-', $entity_type) . '-' . str_replace('_', '-', $bundle_id) . '-moderation-download-transition', $bundle_settings['moderation']['download_transition']);
+          $page->selectFieldOption('edit-' . str_replace('_', '-', $entity_type) . '-' . str_replace('_', '-', $bundle_id) . '-moderation-upload-status', $bundle_settings['moderation']['upload_status']);
+          $page->selectFieldOption('edit-' . str_replace('_', '-', $entity_type) . '-' . str_replace('_', '-', $bundle_id) . '-moderation-download-transition', $bundle_settings['moderation']['download_transition']);
         }
       }
     }
