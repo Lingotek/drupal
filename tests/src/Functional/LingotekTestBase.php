@@ -5,6 +5,7 @@ namespace Drupal\Tests\lingotek\Functional;
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\lingotek\Lingotek;
+use Drupal\node\Entity\Node;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\system\Functional\Entity\Traits\EntityDefinitionTestTrait;
 use Drupal\workflows\Entity\Workflow;
@@ -273,8 +274,11 @@ abstract class LingotekTestBase extends BrowserTestBase {
    * @param string $bundle
    *   The bundle of the node to be created.
    */
-  protected function saveAndPublishNodeForm(array $edit, $bundle = 'article') {
-    $path = ($bundle !== NULL) ? "node/add/$bundle" : NULL;
+  protected function saveAndPublishNodeForm(array $edit, $bundle = 'article', $usePath = TRUE) {
+    $path = NULL;
+    if ($usePath) {
+      $path = ($bundle !== NULL) ? "node/add/$bundle" : NULL;
+    }
     if (floatval(\Drupal::VERSION) >= 8.4) {
       $entity_definition = \Drupal::entityTypeManager()->getDefinition('node');
       if (\Drupal::moduleHandler()->moduleExists('content_moderation') &&
@@ -297,11 +301,24 @@ abstract class LingotekTestBase extends BrowserTestBase {
     }
   }
 
-  protected function saveAndUnpublishNodeForm(array $edit, $nid) {
-    $path = ($nid !== NULL) ? "node/$nid/edit" : NULL;
+  protected function saveAndUnpublishNodeForm(array $edit, $nid, $usePath = TRUE) {
+    $path = NULL;
+    if ($usePath) {
+      $path = ($nid !== NULL) ? "node/$nid/edit" : NULL;
+    }
     if (floatval(\Drupal::VERSION) >= 8.4) {
-      $edit['status[value]'] = FALSE;
-      $this->drupalPostForm($path, $edit, t('Save'));
+      $entity_definition = \Drupal::entityTypeManager()->getDefinition('node');
+      $node = Node::load($nid);
+      $bundle = $node->bundle();
+      if (\Drupal::moduleHandler()->moduleExists('content_moderation') &&
+        \Drupal::service('content_moderation.moderation_information')->shouldModerateEntitiesOfBundle($entity_definition, $bundle)) {
+        $edit['moderation_state[0][state]'] = 'draft';
+        $this->drupalPostForm($path, $edit, t('Save'));
+      }
+      else {
+        $edit['status[value]'] = FALSE;
+        $this->drupalPostForm($path, $edit, t('Save'));
+      }
     }
     else {
       $this->drupalPostForm($path, $edit, t('Save and unpublish'));
@@ -361,11 +378,24 @@ abstract class LingotekTestBase extends BrowserTestBase {
     }
   }
 
-  protected function saveAndKeepPublishedNodeForm(array $edit, $nid) {
-    $path = ($nid !== NULL) ? "node/$nid/edit" : NULL;
+  protected function saveAndKeepPublishedNodeForm(array $edit, $nid, $usePath = TRUE) {
+    $path = NULL;
+    if ($usePath) {
+      $path = ($nid !== NULL) ? "node/$nid/edit" : NULL;
+    }
     if (floatval(\Drupal::VERSION) >= 8.4) {
-      $edit['status[value]'] = TRUE;
-      $this->drupalPostForm($path, $edit, t('Save'));
+      $entity_definition = \Drupal::entityTypeManager()->getDefinition('node');
+      $node = Node::load($nid);
+      $bundle = $node->bundle();
+      if (\Drupal::moduleHandler()->moduleExists('content_moderation') &&
+          \Drupal::service('content_moderation.moderation_information')->shouldModerateEntitiesOfBundle($entity_definition, $bundle)) {
+        $edit['moderation_state[0][state]'] = 'published';
+        $this->drupalPostForm($path, $edit, t('Save'));
+      }
+      else {
+        $edit['status[value]'] = TRUE;
+        $this->drupalPostForm($path, $edit, t('Save'));
+      }
     }
     else {
       $this->drupalPostForm($path, $edit, t('Save and keep published'));
@@ -610,6 +640,64 @@ abstract class LingotekTestBase extends BrowserTestBase {
       }
     }
     $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], 'lingoteksettings-tab-content-form');
+  }
+
+  /**
+   * Save Lingotek content translation settings.
+   *
+   * Example:
+   * @code
+   *   $this->saveLingotekContentTranslationSettings([
+   *     'node' => [
+   *       'article' => [
+   *         'profiles' => 'automatic',
+   *         'fields' => [
+   *           'title' => 1,
+   *           'body' => 1,
+   *         ],
+   *         'moderation' => [
+   *           'upload_status' => 'draft',
+   *           'download_transition' => 'request_review',
+   *         ],
+   *       ],
+   *    ],
+   *     'paragraph' => [
+   *       'image_text' => [
+   *         'fields' => [
+   *           'field_image_demo' => ['title', 'alt'],
+   *           'field_text_demo' => 1,
+   *         ],
+   *       ],
+   *     ],
+   *   ]);
+   * @endcode
+   *
+   * @param array $settings
+   *   The settings we want to save.
+   */
+  protected function saveLingotekContentTranslationSettingsViaConfig($settings) {
+    $config = \Drupal::configFactory()->getEditable('lingotek.settings');
+    foreach ($settings as $entity_type_id => $entity_type_settings) {
+      foreach ($entity_type_settings as $bundle => $bundle_settings) {
+        $config->set('translate.entity.' . $entity_type_id . '.' . $bundle . '.enabled', TRUE);
+        if (isset($bundle_settings['profiles']) && $bundle_settings['profiles'] !== NULL) {
+          $config->set('translate.entity.' . $entity_type_id . '.' . $bundle . '.profile', $bundle_settings['profiles']);
+        }
+        foreach ($bundle_settings['fields'] as $field_id => $field_properties) {
+          $config->set('translate.entity.' . $entity_type_id . '.' . $bundle . '.field.' . $field_id, TRUE);
+          if (is_array($field_properties)) {
+            foreach ($field_properties as $field_property) {
+              $config->set('translate.entity.' . $entity_type_id . '.' . $bundle . '.field.' . $field_id . ':properties.' . $field_property, $field_property);
+            }
+          }
+        }
+        if (isset($bundle_settings['moderation']) && $bundle_settings['moderation'] !== NULL) {
+          $config->set('translate.entity.' . $entity_type_id . '.' . $bundle . '.content_moderation.upload_status', $bundle_settings['moderation']['upload_status']);
+          $config->set('translate.entity.' . $entity_type_id . '.' . $bundle . '.content_moderation.download_transition', $bundle_settings['moderation']['download_transition']);
+        }
+      }
+    }
+    $config->save();
   }
 
   /**

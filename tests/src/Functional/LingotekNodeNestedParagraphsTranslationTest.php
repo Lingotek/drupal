@@ -47,6 +47,7 @@ class LingotekNodeNestedParagraphsTranslationTest extends LingotekTestBase {
     ContentLanguageSettings::loadByEntityTypeBundle('paragraph', 'image_text')->setLanguageAlterable(TRUE)->save();
     \Drupal::service('content_translation.manager')->setEnabled('node', 'paragraphed_nested_content', TRUE);
     \Drupal::service('content_translation.manager')->setEnabled('paragraph', 'paragraph_container', TRUE);
+    \Drupal::service('content_translation.manager')->setEnabled('paragraph', 'image_text', TRUE);
 
     drupal_static_reset();
     \Drupal::entityTypeManager()->clearCachedDefinitions();
@@ -54,8 +55,6 @@ class LingotekNodeNestedParagraphsTranslationTest extends LingotekTestBase {
     // Rebuild the container so that the new languages are picked up by services
     // that hold a list of languages.
     $this->rebuildContainer();
-
-    $this->drupalGet('/admin/config/regional/content-language');
 
     $edit = [];
     $edit['settings[node][paragraphed_nested_content][fields][field_paragraph_container]'] = 1;
@@ -313,7 +312,7 @@ class LingotekNodeNestedParagraphsTranslationTest extends LingotekTestBase {
     $edit['field_paragraph_container[0][subform][field_paragraphs_demo][0][subform][field_text_demo][0][value]'] = 'Dogs are very cool for the first time';
     $edit['field_paragraph_container[0][subform][field_paragraphs_demo][1][subform][field_text_demo][0][value]'] = 'Dogs are very cool for the second time';
 
-    $this->saveAndKeepPublishedNodeForm($edit, NULL);
+    $this->saveAndKeepPublishedNodeForm($edit, 1, FALSE);
 
     $this->assertText('Paragraphed nested content Dogs are cool has been updated.');
     $this->assertText('Dogs are very cool for the first time');
@@ -405,7 +404,7 @@ class LingotekNodeNestedParagraphsTranslationTest extends LingotekTestBase {
     $edit['field_paragraph_container[0][subform][field_paragraphs_demo][0][subform][field_text_demo][0][value]'] = 'Cats are very cool for the first time';
     $edit['field_paragraph_container[0][subform][field_paragraphs_demo][1][subform][field_text_demo][0][value]'] = 'Cats are very cool for the second time';
     $edit['revision'] = 1;
-    $this->saveAndUnpublishNodeForm($edit, NULL);
+    $this->saveAndUnpublishNodeForm($edit, 1, FALSE);
 
     $this->assertText('Paragraphed nested content Cats are cool has been updated.');
     $this->assertText('Cats are very cool for the first time');
@@ -602,7 +601,7 @@ class LingotekNodeNestedParagraphsTranslationTest extends LingotekTestBase {
     $edit['field_paragraph_container[1][subform][field_paragraphs_demo][1][subform][field_text_demo][0][value]'] = 'Cats are very cool for the third time';
     $edit['field_paragraph_container[1][subform][field_paragraphs_demo][1][_weight]'] = 1;
     $edit['field_paragraph_container[1][subform][field_paragraphs_demo][2][subform][field_text_demo][0][value]'] = 'Cats are very cool for the FOURTH time';
-    $this->saveAndKeepPublishedNodeForm($edit, NULL);
+    $this->saveAndKeepPublishedNodeForm($edit, 1, FALSE);
 
     $this->assertNoText('Llamas are very cool for the first time');
     $this->assertNoText('Llamas are very cool for the second time');

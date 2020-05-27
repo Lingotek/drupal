@@ -159,7 +159,7 @@ class LingotekNodeNestedParagraphsEditedTranslationTest extends LingotekTestBase
     $edit['field_paragraph_container[0][subform][field_paragraphs_demo][0][subform][field_text_demo][0][value]'] = 'Dogs are very cool for the first time';
     $edit['field_paragraph_container[0][subform][field_paragraphs_demo][1][subform][field_text_demo][0][value]'] = 'Dogs are very cool for the second time';
 
-    $this->saveAndKeepPublishedNodeForm($edit, NULL);
+    $this->saveAndKeepPublishedNodeForm($edit, 1, FALSE);
 
     $this->assertText('Paragraphed nested content Llamas are cool has been updated.');
     $this->assertText('Dogs are very cool for the first time');
