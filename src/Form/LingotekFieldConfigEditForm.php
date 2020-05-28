@@ -84,7 +84,7 @@ class LingotekFieldConfigEditForm {
           $form['translatable_for_lingotek_properties_' . $content_translation_option_key] = [
             '#type' => 'checkbox',
             '#title' => $this->t('Use Lingotek to translate the %content_translation_option element', ['%content_translation_option' => $content_translation_option]),
-            '#default_value' => $properties_checkbox_choice[$content_translation_option_key],
+            '#default_value' => $properties_checkbox_choice ? $properties_checkbox_choice[$content_translation_option_key] : FALSE,
             '#weight' => 15,
             '#states' => [
               'visible' => [
@@ -92,9 +92,12 @@ class LingotekFieldConfigEditForm {
               ],
             ],
           ];
-          if ($properties_checkbox_choice[$content_translation_option_key]) {
+          if ($properties_checkbox_choice && $properties_checkbox_choice[$content_translation_option_key]) {
             $form['translatable_for_lingotek_properties_' . $content_translation_option_key]['#default_value'] = 1;
           }
+        }
+        if (!$properties_checkbox_choice) {
+          $properties_checkbox_choice = [];
         }
         $field->setThirdPartySetting('lingotek', 'translation_sync', $properties_checkbox_choice);
       }
