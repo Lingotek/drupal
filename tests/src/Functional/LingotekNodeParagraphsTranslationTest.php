@@ -617,8 +617,14 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     $this->assertNoText('Las llamas son muy chulas por segunda vez EDITADO');
     $this->assertText('Las llamas son muy chulas por tercera vez EDITADO');
 
+    // This is required for 8.7.x support, where classy adds an extra wrapper.
+    $currentTheme = $this->config('system.theme')->get('default');
+    $expectedParagraphs = 2;
+    if ($currentTheme === 'classy') {
+      $expectedParagraphs++;
+    }
     $paragraphs = $this->xpath('//div[contains(@class, "paragraph")]');
-    $this->assertCount(2, $paragraphs);
+    $this->assertCount($expectedParagraphs, $paragraphs);
   }
 
   /**
