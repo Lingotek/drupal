@@ -6,7 +6,7 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
-use Drupal\Core\Url;
+use Drupal\Core\Routing\UrlGeneratorInterface;
 use Drupal\lingotek\LanguageLocaleMapperInterface;
 use Drupal\lingotek\LingotekConfigurationServiceInterface;
 use Drupal\lingotek\LingotekInterface;
@@ -36,7 +36,14 @@ class LingotekDashboardController extends LingotekControllerBase {
   protected $lingotek_configuration;
 
   /**
-   * Constructs a LingotekControllerBase object.
+   * The URL generator.
+   *
+   * @var \Drupal\Core\Routing\UrlGeneratorInterface
+   */
+  protected $urlGenerator;
+
+  /**
+   * Constructs a LingotekDashboardController object.
    *
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   The Request instance.
@@ -56,12 +63,19 @@ class LingotekDashboardController extends LingotekControllerBase {
    *   The form builder.
    * @param \Psr\Log\LoggerInterface $logger
    *   A logger instance.
+   * @param \Drupal\Core\Routing\UrlGeneratorInterface $url_generator
+   *   The url generator.
    */
-  public function __construct(Request $request, ConfigFactoryInterface $config_factory, EntityTypeManagerInterface $entity_type_manager, LanguageManagerInterface $language_manager, LingotekInterface $lingotek, LanguageLocaleMapperInterface $language_locale_mapper, LingotekConfigurationServiceInterface $lingotek_configuration, FormBuilderInterface $form_builder, LoggerInterface $logger) {
+  public function __construct(Request $request, ConfigFactoryInterface $config_factory, EntityTypeManagerInterface $entity_type_manager, LanguageManagerInterface $language_manager, LingotekInterface $lingotek, LanguageLocaleMapperInterface $language_locale_mapper, LingotekConfigurationServiceInterface $lingotek_configuration, FormBuilderInterface $form_builder, LoggerInterface $logger, UrlGeneratorInterface $url_generator = NULL) {
     parent::__construct($request, $config_factory, $lingotek, $language_locale_mapper, $form_builder, $logger);
     $this->entityTypeManager = $entity_type_manager;
     $this->languageManager = $language_manager;
     $this->lingotek_configuration = $lingotek_configuration;
+    if (!$url_generator) {
+      @trigger_error('The url_generator service must be passed to LingotekDashboardController::__construct, it is included in lingotek:3.0.0 and required for lingotek:4.0.0.', E_USER_DEPRECATED);
+      $url_generator = \Drupal::service('url_generator');
+    }
+    $this->urlGenerator = $url_generator;
   }
 
   /**
@@ -77,7 +91,8 @@ class LingotekDashboardController extends LingotekControllerBase {
       $container->get('lingotek.language_locale_mapper'),
       $container->get('lingotek.configuration'),
       $container->get('form_builder'),
-      $container->get('logger.channel.lingotek')
+      $container->get('logger.channel.lingotek'),
+      $container->get('url_generator')
     );
   }
 
@@ -245,15 +260,16 @@ class LingotekDashboardController extends LingotekControllerBase {
 
   protected function getDashboardInfo() {
     global $base_url, $base_root;
+    $config = $this->configFactory->get('lingotek.settings');
     return [
-      "community_id" => $this->lingotek->get('default.community'),
-      "external_id" => $this->lingotek->get('account.login_id'),
-      "vault_id" => $this->lingotek->get('default.vault'),
-      "workflow_id" => $this->lingotek->get('default.workflow'),
-      "project_id" => $this->lingotek->get('default.project'),
+      "community_id" => $config->get('default.community'),
+      "external_id" => $config->get('account.login_id'),
+      "vault_id" => $config->get('default.vault'),
+      "workflow_id" => $config->get('default.workflow'),
+      "project_id" => $config->get('default.project'),
       "first_name" => 'Drupal User',
       "last_name" => '',
-      "email" => $this->lingotek->get('account.login_id'),
+      "email" => $config->get('account.login_id'),
       // CMS data that will be used for building the dashboard with JS.
       "cms_site_id" => $base_url,
       "cms_site_key" => $base_url,
@@ -264,7 +280,7 @@ class LingotekDashboardController extends LingotekControllerBase {
       // FIX: should be the currently selected locale
       "locale" => "en_US",
       "module_version" => '1.x',
-      "endpoint_url" => Url::fromRoute('lingotek.dashboard_endpoint')->toString(),
+      "endpoint_url" => $this->urlGenerator->generateFromRoute('lingotek.dashboard_endpoint'),
     ];
   }
 

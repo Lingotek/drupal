@@ -3,12 +3,12 @@
 namespace Drupal\Tests\lingotek\Unit\Controller;
 
 use Drupal\Core\Entity\EntityStorageInterface;
-use Drupal\Core\Entity\EntityTypeManager;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\Query\QueryInterface;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Language\Language;
 use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\Core\Routing\UrlGeneratorInterface;
 use Drupal\language\ConfigurableLanguageInterface;
 use Drupal\lingotek\Controller\LingotekDashboardController;
 use Drupal\lingotek\LanguageLocaleMapperInterface;
@@ -16,6 +16,7 @@ use Drupal\lingotek\LingotekConfigurationServiceInterface;
 use Drupal\lingotek\LingotekInterface;
 use Drupal\Tests\UnitTestCase;
 use Psr\Log\LoggerInterface;
+use ReflectionClass;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -96,6 +97,13 @@ class LingotekDashboardControllerTest extends UnitTestCase {
   protected $entityStorage;
 
   /**
+   * The url generator.
+   *
+   * @var \Drupal\Core\Routing\UrlGeneratorInterface|\PHPUnit_Framework_MockObject_MockObject
+   */
+  protected $urlGenerator;
+
+  /**
    * The controller under test.
    *
    * @var \Drupal\lingotek\Controller\LingotekDashboardController
@@ -117,6 +125,7 @@ class LingotekDashboardControllerTest extends UnitTestCase {
     $this->lingotekConfiguration = $this->createMock(LingotekConfigurationServiceInterface::class);
     $this->formBuilder = $this->createMock(FormBuilderInterface::class);
     $this->logger = $this->createMock(LoggerInterface::class);
+    $this->urlGenerator = $this->createMock(UrlGeneratorInterface::class);
 
     $this->controller = new LingotekDashboardController(
       $this->request,
@@ -127,9 +136,30 @@ class LingotekDashboardControllerTest extends UnitTestCase {
       $this->languageLocaleMapper,
       $this->lingotekConfiguration,
       $this->formBuilder,
-      $this->logger
+      $this->logger,
+      $this->urlGenerator
     );
     $this->controller->setStringTranslation($this->getStringTranslationStub());
+  }
+
+  /**
+   * Tests get dashboard info which includes data required by gmc library.
+   *
+   * @covers ::getDashboardInfo
+   */
+  public function testGetDashboardInfo() {
+    // This is a hack for testing protected methods.
+    $class = new ReflectionClass('\Drupal\lingotek\Controller\LingotekDashboardController');
+    $method = $class->getMethod('getDashboardInfo');
+    $method->setAccessible(TRUE);
+
+    $this->urlGenerator->expects($this->once())
+      ->method('generateFromRoute')
+      ->with('lingotek.dashboard_endpoint')
+      ->willReturn('/dashboard');
+
+    $result = $method->invokeArgs($this->controller, []);
+    $this->assertEquals('/dashboard', $result['endpoint_url']);
   }
 
   /**
