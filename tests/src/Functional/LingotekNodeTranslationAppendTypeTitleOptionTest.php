@@ -85,9 +85,7 @@ class LingotekNodeTranslationAppendTypeTitleOptionTest extends LingotekTestBase 
     $edit = [
       'append_type_to_title' => $value ? 1 : 0,
     ];
-    // ToDo: Remove this when 8.5.x is not supported anymore and replace with
-    // $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], 'lingoteksettings-tab-configuration-form');
-    $this->submitForm($edit, 'Save', 'lingoteksettings-tab-preferences-form');
+    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], 'lingoteksettings-tab-preferences-form');
   }
 
   /**

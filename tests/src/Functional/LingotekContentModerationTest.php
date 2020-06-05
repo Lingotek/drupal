@@ -435,34 +435,19 @@ class LingotekContentModerationTest extends LingotekTestBase {
    *   Machine name.
    */
   protected function enableModerationThroughUI($content_type_id) {
-    if (floatval(\Drupal::VERSION) >= 8.4) {
-      $this->drupalGet('/admin/config/workflow/workflows/manage/editorial/type/node');
-      $this->assertFieldByName("bundles[$content_type_id]");
-      $edit["bundles[$content_type_id]"] = TRUE;
-      $this->drupalPostForm(NULL, $edit, t('Save'));
-    }
-    else {
-      $this->drupalGet('admin/structure/types/manage/' . $content_type_id . '/moderation');
-      $this->assertFieldByName('workflow');
-      $edit['workflow'] = 'editorial';
-      $this->drupalPostForm(NULL, $edit, t('Save'));
-    }
+    $this->drupalGet('/admin/config/workflow/workflows/manage/editorial/type/node');
+    $this->assertFieldByName("bundles[$content_type_id]");
+    $edit["bundles[$content_type_id]"] = TRUE;
+    $this->drupalPostForm(NULL, $edit, t('Save'));
   }
 
   /**
    * Adds a review state to the editorial workflow.
-   *
-   * Needed because of differences in 8.3.x and 8.4.x.
    */
   protected function addReviewStateToEditorialWorkflow() {
     // Add a "Needs review" state to the editorial workflow.
     $workflow = Workflow::load('editorial');
-    if (floatval(\Drupal::VERSION) >= 8.4) {
-      $definition = $workflow->getTypePlugin();
-    }
-    else {
-      $definition = $workflow;
-    }
+    $definition = $workflow->getTypePlugin();
     $definition->addState('needs_review', 'Needs Review');
     $definition->addTransition('request_review', 'Request Review', ['draft'], 'needs_review');
     $definition->addTransition('publish_review', 'Publish Review', ['needs_review'], 'published');

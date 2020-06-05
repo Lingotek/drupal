@@ -15,8 +15,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Show a warning before disassociate all content.
- *
- * @deprecated in 8.x-2.14, will be removed in 8.x-2.16. Use \Drupal\lingotek\Form\LingotekCancelAllConfirmForm instead.
  */
 class LingotekDisassociateAllConfirmForm extends ConfirmFormBase {
 

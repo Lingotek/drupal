@@ -30,7 +30,7 @@ lingotek.settings:
           type: boolean
         delete_tms_documents_upon_disassociation:
           type: boolean
-          deprecated: "This option is unused since 8.x-2.14. Will be removed in 9.x-1.0"
+          deprecated: "This option is unused since lingotek:8.x-2.14. Will be removed in lingotek:4.0.0"
         show_language_labels:
           type: boolean
         allow_local_editing:
@@ -45,7 +45,7 @@ lingotek.settings:
           type: string
         enable_content_cloud:
           type: boolean
-          deprecated: 'Removed in Lingotek 8.x-2.21'
+          deprecated: "This option is unused since lingotek:8.x-2.21. Will be removed in lingotek:4.0.0"
         enable_download_source:
           type: boolean
         enable_download_interim:
@@ -53,10 +53,10 @@ lingotek.settings:
           type: boolean
         content_cloud_import_format:
           type: string
-          deprecated: 'Removed in Lingotek 8.x-2.21'
+          deprecated: "This option is unused since lingotek:8.x-2.21. Will be removed in lingotek:4.0.0"
         content_cloud_import_status:
           type: integer
-          deprecated: 'Removed in Lingotek 8.x-2.21'
+          deprecated: "This option is unused since lingotek:8.x-2.21. Will be removed in lingotek:4.0.0"
         split_download_all:
           label: 'Use a different batch per locale when downloading all translations'
           type: boolean
@@ -168,7 +168,8 @@ lingotek.settings:
           label: 'Use production'
         sandbox_host:
           type: string
-          label: 'Sandbox Host (deprecated)'
+          label: 'Sandbox Host'
+          deprecated: "This option is unused since lingotek:8.x-2.6. Will be removed in lingotek:4.0.0"
         host:
           type: string
           label: 'Lingotek Host'

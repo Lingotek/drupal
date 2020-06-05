@@ -182,6 +182,29 @@ trait LingotekManagementTestTrait {
   }
 
   /**
+   * Asserts there is NOT a link for checking the translation status for a given locale.
+   *
+   * @param string $locale
+   *   The locale.
+   * @param string $document_id
+   *   The Lingotek document ID. Optional, defaults to 'dummy-document-hash-id'.
+   * @param string $entity_type_id
+   *   The entity type ID. Optional, defaults to node.
+   * @param string|null $prefix
+   *   Language prefix if any. Optional, defaults to NULL.
+   */
+  protected function assertNoLingotekCheckTargetStatusLink($locale, $document_id = 'dummy-document-hash-id', $entity_type_id = 'node', $prefix = NULL, $destination_entity_type_id = NULL, $destination_entity_id = NULL) {
+    $basepath = \Drupal::request()->getBasePath();
+    $languagePrefix = ($prefix === NULL ? '' : '/' . $prefix);
+    $destination_entity_type_id = $destination_entity_type_id ?: $entity_type_id;
+    $href = $basepath . $languagePrefix . '/admin/lingotek/entity/check_target/' . $document_id . '/' . $locale;
+    if ($destination = $this->getDestination($destination_entity_type_id, $prefix)) {
+      $href .= $destination;
+    }
+    $this->assertNoLinkByHref($href);
+  }
+
+  /**
    * Asserts there is a link for downloading the translation for a given locale.
    *
    * @param string $locale
@@ -298,13 +321,6 @@ trait LingotekManagementTestTrait {
 
   protected function getBulkOperationNameForDownloadTranslation($langcode, $entity_type_id) {
     return 'download:' . $langcode;
-  }
-
-  /**
-   * @deprecated in 8.x-2.14, will be removed in 8.x-2.16. Use ::getBulkOperationNameForCancel instead.
-   */
-  protected function getBulkOperationNameForDisassociate($entity_type_id) {
-    return $this->getBulkOperationNameForCancel($entity_type_id);
   }
 
   protected function getBulkOperationNameForCancel($entity_type_id) {

@@ -246,29 +246,11 @@ interface LingotekConfigurationServiceInterface {
   public function setFieldPropertiesLingotekEnabled($entity_type_id, $bundle, $field_name, array $properties);
 
   /**
-   * Determines if remote documents must be deleted after disassociation.
-   *
-   * @return bool
-   *
-   * @deprecated in 8.x-2.14, will be removed in 8.x-2.16. We should cancel everytime.
-   */
-  public function mustDeleteRemoteAfterDisassociation();
-
-  /**
-   * Sets if remote documents must be deleted after disassociation.
-   *
-   * @param bool $delete
-   *   TRUE if remote documents must be deleted, FALSE otherwise.
-   *
-   * @deprecated in 8.x-2.14, will be removed in 8.x-2.16. They always be cancelled.
-   */
-  public function setDeleteRemoteAfterDisassociation($delete);
-
-  /**
    * Gets the value from the preferences configuration.
    *
    * @param string $preference_id
    *   The preference ID.
+   *
    * @return mixed
    */
   public function getPreference($preference_id);

@@ -29,9 +29,6 @@ class LingotekBulkDeleteTest extends LingotekTestBase {
 
   protected function setUp() {
     parent::setUp();
-    if ((float) \Drupal::VERSION >= 8.5) {
-      $this->markTestSkipped("We don't test the delete of content with core > 8.5.x. See https://www.drupal.org/project/lingotek/issues/2936994.");
-    }
 
     $this->drupalPlaceBlock('page_title_block', ['region' => 'header']);
 
@@ -105,13 +102,13 @@ class LingotekBulkDeleteTest extends LingotekTestBase {
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     // Ensure the confirmation page is shown.
-    $this->assertText(t('Are you sure you want to delete these items?'));
+    $this->assertText(t('Are you sure you want to delete these content items?'));
     $this->assertText('Llamas are cool');
     $this->assertText('Llamas are cool 2');
     $this->drupalPostForm(NULL, [], t('Delete'));
 
     // Only one node remains and we are back to the manage page.
-    $this->assertText('Deleted 2 posts.');
+    $this->assertText('Deleted 2 content items.');
     $this->assertNoLink('Llamas are cool 2');
     $this->assertNoLink('Llamas are cool');
     $this->assertLink('Llamas should stay');
@@ -141,7 +138,7 @@ class LingotekBulkDeleteTest extends LingotekTestBase {
       "taxonomy_term[$bundle][fields][description]" => 1,
     ];
 
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
+    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], 'lingoteksettings-tab-content-form');
 
     $this->goToContentBulkManagementForm('taxonomy_term');
 

@@ -7,6 +7,7 @@ use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\lingotek\Entity\LingotekContentMetadata;
 use Drupal\node\Entity\Node;
 use Drupal\paragraphs\Entity\Paragraph;
+use Drupal\Tests\content_moderation\Traits\ContentModerationTestTrait;
 
 /**
  * Tests translating a node with multiple locales including paragraphs.
@@ -15,6 +16,8 @@ use Drupal\paragraphs\Entity\Paragraph;
  * @group legacy
  */
 class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
+
+  use ContentModerationTestTrait;
 
   /**
    * {@inheritdoc}

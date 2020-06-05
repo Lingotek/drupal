@@ -110,21 +110,13 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    * @param \Drupal\Core\Database\Connection $connection
    *   The database connection object.
    */
-  public function __construct(LingotekInterface $lingotek, LanguageLocaleMapperInterface $language_locale_mapper, LingotekConfigurationServiceInterface $lingotek_configuration, LingotekConfigTranslationServiceInterface $lingotek_config_translation, EntityTypeManagerInterface $entity_type_manager, LanguageManagerInterface $language_manager, EntityFieldManagerInterface $entity_field_manager = NULL, Connection $connection = NULL) {
+  public function __construct(LingotekInterface $lingotek, LanguageLocaleMapperInterface $language_locale_mapper, LingotekConfigurationServiceInterface $lingotek_configuration, LingotekConfigTranslationServiceInterface $lingotek_config_translation, EntityTypeManagerInterface $entity_type_manager, LanguageManagerInterface $language_manager, EntityFieldManagerInterface $entity_field_manager, Connection $connection) {
     $this->lingotek = $lingotek;
     $this->languageLocaleMapper = $language_locale_mapper;
     $this->lingotekConfiguration = $lingotek_configuration;
     $this->lingotekConfigTranslation = $lingotek_config_translation;
     $this->entityTypeManager = $entity_type_manager;
     $this->languageManager = $language_manager;
-    if (!$entity_field_manager) {
-      @trigger_error('The entity_field.manager service must be passed to LingotekContentTranslationService::__construct, it is required before Lingotek 9.x-1.0. See https://www.drupal.org/node/2549139.', E_USER_DEPRECATED);
-      $entity_field_manager = \Drupal::service('entity_field.manager');
-    }
-    if (!$connection) {
-      @trigger_error('The database service must be passed to LingotekContentTranslationService::__construct, it is required before Lingotek 9.x-1.0. See https://www.drupal.org/node/2993033.', E_USER_DEPRECATED);
-      $connection = \Drupal::service('database');
-    }
     $this->entityFieldManager = $entity_field_manager;
     $this->connection = $connection;
   }

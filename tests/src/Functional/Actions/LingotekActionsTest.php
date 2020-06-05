@@ -76,20 +76,17 @@ class LingotekActionsTest extends LingotekTestBase {
       10 => 'user_unblock_user_action',
       11 => 'user_add_role_action.random_role_id',
       12 => 'user_remove_role_action.random_role_id',
+      13 => 'taxonomy_term_publish_action',
+      14 => 'taxonomy_term_unpublish_action',
     ];
-    $expected = 13;
-    if ((float) \Drupal::VERSION >= 8.8) {
-      $expected += 2;
-      $default_actions[] = 'taxonomy_term_publish_action';
-      $default_actions[] = 'taxonomy_term_unpublish_action';
-    }
+    $expected = 15;
     $this->assertCount($expected, $actions);
 
     // Enable Lingotek translation for nodes.
     $this->saveLingotekContentTranslationSettingsForNodeTypes();
 
     $actions = Action::loadMultiple();
-    // We expect 13 initial actions, plus 7 that are the entity bulk Lingotek
+    // We expect 15 initial actions, plus 7 that are the entity bulk Lingotek
     // actions for all targets, plus 5 per each target language.
     $this->assertCount($expected + 7 + 5 + 5, $actions);
 

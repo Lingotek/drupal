@@ -159,7 +159,7 @@ abstract class LingotekManagementFormBase extends FormBase {
    * @param \Drupal\Core\Utility\LinkGeneratorInterface $link_generator
    *   The link generator.
    */
-  public function __construct(Connection $connection, EntityTypeManagerInterface $entity_type_manager, LanguageManagerInterface $language_manager, LingotekInterface $lingotek, LingotekConfigurationServiceInterface $lingotek_configuration, LanguageLocaleMapperInterface $language_locale_mapper, ContentTranslationManagerInterface $content_translation_manager, LingotekContentTranslationServiceInterface $translation_service, PrivateTempStoreFactory $temp_store_factory, StateInterface $state, ModuleHandlerInterface $module_handler, $entity_type_id, EntityFieldManagerInterface $entity_field_manager = NULL, EntityTypeBundleInfoInterface $entity_type_bundle_info = NULL, LinkGeneratorInterface $link_generator = NULL) {
+  public function __construct(Connection $connection, EntityTypeManagerInterface $entity_type_manager, LanguageManagerInterface $language_manager, LingotekInterface $lingotek, LingotekConfigurationServiceInterface $lingotek_configuration, LanguageLocaleMapperInterface $language_locale_mapper, ContentTranslationManagerInterface $content_translation_manager, LingotekContentTranslationServiceInterface $translation_service, PrivateTempStoreFactory $temp_store_factory, StateInterface $state, ModuleHandlerInterface $module_handler, $entity_type_id, EntityFieldManagerInterface $entity_field_manager, EntityTypeBundleInfoInterface $entity_type_bundle_info, LinkGeneratorInterface $link_generator) {
     $this->connection = $connection;
     $this->entityTypeManager = $entity_type_manager;
     $this->languageManager = $language_manager;
@@ -173,18 +173,6 @@ abstract class LingotekManagementFormBase extends FormBase {
     $this->state = $state;
     $this->moduleHandler = $module_handler;
     $this->entityTypeId = $entity_type_id;
-    if (!$entity_field_manager) {
-      @trigger_error('The entity_field.manager service must be passed to LingotekManagementFormBase::__construct, it is required before Lingotek 9.x-1.0. See https://www.drupal.org/node/2549139.', E_USER_DEPRECATED);
-      $entity_field_manager = \Drupal::service('entity_field.manager');
-    }
-    if (!$entity_type_bundle_info) {
-      @trigger_error('The entity_type.bundle.info service must be passed to LingotekManagementFormBase::__construct, it is required before Lingotek 9.x-1.0. See https://www.drupal.org/node/2549139.', E_USER_DEPRECATED);
-      $entity_type_bundle_info = \Drupal::service('entity_type.bundle.info');
-    }
-    if (!$link_generator) {
-      @trigger_error('The link_generator service must be passed to LingotekManagementFormBase::__construct, it is required before Lingotek 9.x-1.0. See https://www.drupal.org/node/2549139.', E_USER_DEPRECATED);
-      $link_generator = \Drupal::service('link_generator');
-    }
     $this->entityFieldManager = $entity_field_manager;
     $this->entityTypeBundleInfo = $entity_type_bundle_info;
     $this->linkGenerator = $link_generator;
@@ -703,6 +691,7 @@ abstract class LingotekManagementFormBase extends FormBase {
    * @param $success
    * @param $results
    * @param $operations
+   *
    * @return \Drupal\Core\Routing\LocalRedirectResponse
    */
   public function batchFinished($success, $results, $operations) {
@@ -752,6 +741,7 @@ abstract class LingotekManagementFormBase extends FormBase {
    * @param $success
    * @param $results
    * @param $operations
+   *
    * @return \Drupal\Core\Routing\LocalRedirectResponse
    */
   public function debugExportFinished($success, $results, $operations) {
@@ -851,18 +841,6 @@ abstract class LingotekManagementFormBase extends FormBase {
   }
 
   /**
-   * Create and set a disassociate batch.
-   *
-   * @param array $values
-   *   Array of ids to disassociate.
-   *
-   * @deprecated in 8.x-2.14, will be removed in 8.x-2.16. Use ::createCancelBatch instead.
-   */
-  protected function createDisassociateBatch($values) {
-    $this->createBatch('disassociate', $values, $this->t('Disassociating content from Lingotek service'));
-  }
-
-  /**
    * Create and set a cancellation batch.
    *
    * @param array $values
@@ -901,10 +879,6 @@ abstract class LingotekManagementFormBase extends FormBase {
    *   Array of ids to delete.
    */
   protected function redirectToDeleteMultipleNodesForm($values, FormStateInterface $form_state) {
-    if (((float) \Drupal::VERSION) < 8.6) {
-      $this->messenger()->addError($this->t('Deletion of nodes is only available with Drupal > 8.6'));
-      return;
-    }
     $entityInfo = [];
     $entities = $this->getSelectedEntities($values);
     foreach ($entities as $entity) {
@@ -966,10 +940,6 @@ abstract class LingotekManagementFormBase extends FormBase {
    *   Array of ids to delete.
    */
   protected function redirectToDeleteTranslationForm($values, $langcode, FormStateInterface $form_state) {
-    if (((float) \Drupal::VERSION) < 8.6) {
-      $this->messenger()->addError($this->t('Deletion of translations is only available with Drupal > 8.6'));
-      return;
-    }
     $entityInfo = [];
     $entities = $this->getSelectedEntities($values);
     foreach ($entities as $entity) {
@@ -998,10 +968,6 @@ abstract class LingotekManagementFormBase extends FormBase {
    *   Array of ids to delete.
    */
   protected function redirectToDeleteMultipleTranslationsForm($values, FormStateInterface $form_state) {
-    if (((float) \Drupal::VERSION) < 8.6) {
-      $this->messenger()->addError($this->t('Deletion of translations is only available with Drupal > 8.6'));
-      return;
-    }
     $entityInfo = [];
     $entities = $this->getSelectedEntities($values);
     $languages = $this->languageManager->getLanguages();
@@ -1313,18 +1279,6 @@ abstract class LingotekManagementFormBase extends FormBase {
       $this->messenger()->addWarning($this->t('The @type %label has no profile assigned so it was not processed.',
         ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]));
     }
-  }
-
-  /**
-   * Disassociate the content from Lingotek.
-   *
-   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
-   *   The entity.
-   *
-   * @deprecated in 8.x-2.14, will be removed in 8.x-2.16. Use ::cancel instead.
-   */
-  public function disassociate(ContentEntityInterface $entity, $language, $job_id, &$context) {
-    return $this->cancel($entity, $language, $job_id, $context);
   }
 
   /**

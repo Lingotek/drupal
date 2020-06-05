@@ -2806,10 +2806,6 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
    * Tests that translations can be deleted using the actions on the management page.
    */
   public function testDeleteTranslation() {
-    if ((float) \Drupal::VERSION < 8.6) {
-      $this->markTestSkipped("This test doesn't apply for this version of Drupal Core.");
-    }
-
     $this->testNodeTranslationUsingActionsForMultipleLocales();
 
     $this->goToContentBulkManagementForm();
@@ -2830,10 +2826,6 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
    * Tests that translations can be deleted using the actions on the management page.
    */
   public function testDeleteMissingTranslation() {
-    if ((float) \Drupal::VERSION < 8.6) {
-      $this->markTestSkipped("This test doesn't apply for this version of Drupal Core.");
-    }
-
     // Create a node.
     $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
@@ -2868,10 +2860,6 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
    * Tests that translations can be deleted using the actions on the management page.
    */
   public function testDeleteTranslationsInBulk() {
-    if ((float) \Drupal::VERSION < 8.6) {
-      $this->markTestSkipped("This test doesn't apply for this version of Drupal Core.");
-    }
-
     $this->testNodeTranslationUsingActionsForMultipleLocales();
 
     // Add a language.

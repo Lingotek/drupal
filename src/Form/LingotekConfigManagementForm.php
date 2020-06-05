@@ -704,18 +704,6 @@ class LingotekConfigManagementForm extends FormBase {
   }
 
   /**
-   * Create and set a disassociate batch.
-   *
-   * @param array $values
-   *   Array of ids to disassociate.
-   *
-   * @deprecated in 8.x-2.14, will be removed in 8.x-2.16. Use ::createCancelBatch instead.
-   */
-  protected function createDisassociateBatch($values) {
-    $this->createBatch('disassociate', $values, $this->t('Disassociating content from Lingotek service'));
-  }
-
-  /**
    * Create and set a cancellation batch.
    *
    * @param array $values
@@ -1191,18 +1179,6 @@ class LingotekConfigManagementForm extends FormBase {
       $this->messenger()->addWarning($this->t('%label has no profile assigned so it was not processed.',
         ['%label' => $mapper->getTitle()]));
     }
-  }
-
-  /**
-   * Disassociate the content from Lingotek.
-   *
-   * @param \Drupal\config_translation\ConfigMapperInterface $mapper
-   *   The mapper.
-   *
-   * @deprecated in 8.x-2.14, will be removed in 8.x-2.16. Use ::cancel instead.
-   */
-  public function disassociate(ConfigMapperInterface $mapper, $langcode, $job_id, &$context) {
-    return $this->cancel($mapper, $langcode, $job_id, $context);
   }
 
   /**
@@ -1714,6 +1690,7 @@ class LingotekConfigManagementForm extends FormBase {
    *   The language to be passed to that operation.
    * @param $job_id
    *   The job ID to be passed to that operation.
+   *
    * @return array
    *   An array of operations suitable for a batch.
    */

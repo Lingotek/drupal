@@ -49,8 +49,6 @@ interface LingotekApiInterface {
    */
   public function cancelDocumentTarget($document_id, $locale);
 
-  public function getDocument($id);
-
   public function documentExists($id);
 
   public function getDocumentTranslationStatuses($id);

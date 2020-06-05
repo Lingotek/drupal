@@ -86,14 +86,9 @@ class LingotekContentModerationSettingsTest extends LingotekTestBase {
 
     // We show a message and link for enabling it.
     $this->assertText('This entity bundle is not enabled for moderation with content_moderation. You can change its settings here.');
-    if (floatval(\Drupal::VERSION) >= 8.4) {
-      $this->assertLinkByHref('/admin/config/workflow/workflows', 0);
-      $this->assertLinkByHref('/admin/config/workflow/workflows', 1);
-    }
-    else {
-      $this->assertLinkByHref('/admin/structure/types/manage/article/moderation');
-      $this->assertLinkByHref('/admin/structure/types/manage/page/moderation');
-    }
+
+    $this->assertLinkByHref('/admin/config/workflow/workflows', 0);
+    $this->assertLinkByHref('/admin/config/workflow/workflows', 1);
 
     // Let's enable it for articles.
     $this->enableModerationThroughUI('article', ['draft', 'needs_review', 'published'], 'draft');
@@ -118,13 +113,7 @@ class LingotekContentModerationSettingsTest extends LingotekTestBase {
       'The field for setting the transition that must happen after download does not exist as content moderation is not enabled for this bundle.');
     $this->assertText('This entity bundle is not enabled for moderation with content_moderation. You can change its settings here.');
 
-    if (floatval(\Drupal::VERSION) >= 8.4) {
-      $this->assertLinkByHref('/admin/config/workflow/workflows', 0);
-    }
-    else {
-      $this->assertNoLinkByHref('/admin/structure/types/manage/article/moderation');
-      $this->assertLinkByHref('/admin/structure/types/manage/page/moderation');
-    }
+    $this->assertLinkByHref('/admin/config/workflow/workflows', 0);
 
     // Let's save the settings for articles.
     $this->saveLingotekContentTranslationSettings([
@@ -169,18 +158,10 @@ class LingotekContentModerationSettingsTest extends LingotekTestBase {
    *   Machine name.
    */
   protected function enableModerationThroughUI($content_type_id) {
-    if (floatval(\Drupal::VERSION) >= 8.4) {
-      $this->drupalGet('/admin/config/workflow/workflows/manage/editorial/type/node');
-      $this->assertFieldByName("bundles[$content_type_id]");
-      $edit["bundles[$content_type_id]"] = TRUE;
-      $this->drupalPostForm(NULL, $edit, t('Save'));
-    }
-    else {
-      $this->drupalGet('admin/structure/types/manage/' . $content_type_id . '/moderation');
-      $this->assertFieldByName('workflow');
-      $edit['workflow'] = 'editorial';
-      $this->drupalPostForm(NULL, $edit, t('Save'));
-    }
+    $this->drupalGet('/admin/config/workflow/workflows/manage/editorial/type/node');
+    $this->assertFieldByName("bundles[$content_type_id]");
+    $edit["bundles[$content_type_id]"] = TRUE;
+    $this->drupalPostForm(NULL, $edit, t('Save'));
   }
 
 }

@@ -99,9 +99,10 @@ class LingotekSettingsTabUtilitiesForm extends LingotekConfigFormBase {
     ];
 
     // Update Callback URL row
+    $callback_url = $this->configFactory()->get('lingotek.settings')->get('account.callback_url');
     $update_callback_url_row = [];
     $update_callback_url_row['update_description'] = [
-      '#markup' => '<h5>' . $this->t('Update Notification Callback URL') . '</h5>' . '<p>' . $this->t('Update the notification callback URL. This can be run whenever your site is moved (e.g., domain name change or sub-directory re-location) or whenever you would like your security token re-generated.') . '</p>' . $this->t('<b>Current notification callback URL:</b> %callback_url', ['%callback_url' => $this->lingotek->get('account.callback_url')]),
+      '#markup' => '<h5>' . $this->t('Update Notification Callback URL') . '</h5>' . '<p>' . $this->t('Update the notification callback URL. This can be run whenever your site is moved (e.g., domain name change or sub-directory re-location) or whenever you would like your security token re-generated.') . '</p>' . $this->t('<b>Current notification callback URL:</b> %callback_url', ['%callback_url' => $callback_url]),
     ];
     $update_callback_url_row['actions']['update_url'] = [
       '#type' => 'submit',
@@ -167,8 +168,13 @@ class LingotekSettingsTabUtilitiesForm extends LingotekConfigFormBase {
 
   public function updateCallbackUrl() {
     $new_callback_url = \Drupal::urlGenerator()->generateFromRoute('lingotek.notify', [], ['absolute' => TRUE]);
-    $this->lingotek->set('account.callback_url', $new_callback_url);
-    $new_response = $this->lingotek->setProjectCallBackUrl($this->lingotek->get('default.project'), $new_callback_url);
+    $config = $this->configFactory()->get('lingotek.settings');
+    $configEditable = $this->configFactory()->getEditable('lingotek.settings');
+    $configEditable->set('account.callback_url', $new_callback_url);
+    $configEditable->save();
+
+    $defaultProject = $config->get('default.project');
+    $new_response = $this->lingotek->setProjectCallBackUrl($defaultProject, $new_callback_url);
 
     if ($new_response) {
       $this->messenger()->addStatus($this->t('The callback URL has been updated.'));

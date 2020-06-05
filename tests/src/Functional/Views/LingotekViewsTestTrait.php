@@ -68,13 +68,6 @@ trait LingotekViewsTestTrait {
     return $entity_type_id . '_' . $langcode . '_lingotek_download_translation_action';
   }
 
-  /**
-   * @deprecated in 8.x-2.14, will be removed in 8.x-2.16. Use ::getBulkOperationNameForCancel instead.
-   */
-  protected function getBulkOperationNameForDisassociate($entity_type_id) {
-    return $this->getBulkOperationNameForCancel($entity_type_id);
-  }
-
   protected function getBulkOperationNameForCancel($entity_type_id) {
     return $entity_type_id . '_lingotek_cancel_action';
   }

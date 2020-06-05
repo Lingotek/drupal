@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\lingotek\Unit\Form {
 
+  use Drupal\Core\Config\Config;
   use Drupal\Core\Config\ConfigFactoryInterface;
   use Drupal\Core\Form\FormStateInterface;
   use Drupal\Core\Messenger\MessengerInterface;
@@ -98,6 +99,15 @@ namespace Drupal\Tests\lingotek\Unit\Form {
    * @covers ::buildForm
    */
     public function testFormDebugUtilityWithDebugDisabled() {
+      $config = $this->createMock(Config::class);
+      $config->expects($this->once())
+        ->method('get')
+        ->with('account.callback_url')
+        ->willReturn('http://example.com/lingotek/notify');
+      $this->configFactory->expects($this->once())
+        ->method('get')
+        ->with('lingotek.settings')
+        ->willReturn($config);
       $this->state->expects($this->any())
         ->method('get')
         ->with('lingotek.enable_debug_utilities')
@@ -112,6 +122,15 @@ namespace Drupal\Tests\lingotek\Unit\Form {
    * @covers ::buildForm
    */
     public function testFormDebugUtilityWithDebugEnabled() {
+      $config = $this->createMock(Config::class);
+      $config->expects($this->once())
+        ->method('get')
+        ->with('account.callback_url')
+        ->willReturn('http://example.com/lingotek/notify');
+      $this->configFactory->expects($this->once())
+        ->method('get')
+        ->with('lingotek.settings')
+        ->willReturn($config);
       $this->state->expects($this->any())
         ->method('get')
         ->with('lingotek.enable_debug_utilities')

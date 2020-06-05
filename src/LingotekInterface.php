@@ -6,10 +6,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 interface LingotekInterface {
 
-  public function get($key);
-
-  public function set($key, $value);
-
   public static function create(ContainerInterface $container);
 
   /**
@@ -52,6 +48,7 @@ interface LingotekInterface {
    *
    * @param bool $force
    *   If we should force a refresh or we can use the local storage.
+   *
    * @return array
    *   Array of filters as in (id, label).
    */
@@ -111,14 +108,6 @@ interface LingotekInterface {
    * @throws \Drupal\lingotek\Exception\LingotekApiException
    */
   public function updateDocument($doc_id, $content, $url = NULL, $title = NULL, LingotekProfileInterface $profile = NULL, $job_id = NULL);
-
-  /**
-   * @param $doc_id
-   * @return mixed
-   *
-   * @deprecated in 8.x-1.4. Use ::getDocumentStatus() instead.
-   */
-  public function documentImported($doc_id);
 
   /**
    * Requests a translation to the Lingotek service.

@@ -172,27 +172,6 @@ class Lingotek implements LingotekInterface {
   }
 
   /**
-   * @deprecated
-   */
-  public function get($key) {
-    return $this->configFactory->get(static::SETTINGS)->get($key);
-  }
-
-  /**
-   * @deprecated
-   */
-  public function getEditable($key) {
-    return $this->configFactory->getEditable(static::SETTINGS)->get($key);
-  }
-
-  /**
-   * @deprecated
-   */
-  public function set($key, $value) {
-    $this->configFactory->getEditable(static::SETTINGS)->set($key, $value)->save();
-  }
-
-  /**
    * {@inheritdoc}
    */
   public function uploadDocument($title, $content, $locale, $url = NULL, LingotekProfileInterface $profile = NULL, $job_id = NULL) {
@@ -422,16 +401,6 @@ class Lingotek implements LingotekInterface {
       }
     }
     return $result;
-  }
-
-  /**
-   * @param $doc_id
-   * @return bool
-   *
-   * @deprecated in 8.x-1.4. Use ::getDocumentStatus() instead.
-   */
-  public function documentImported($doc_id) {
-    return $this->getDocumentStatus($doc_id);
   }
 
   public function addTarget($doc_id, $locale, LingotekProfileInterface $profile = NULL) {

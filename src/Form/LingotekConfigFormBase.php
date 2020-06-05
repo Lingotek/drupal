@@ -25,18 +25,10 @@ abstract class LingotekConfigFormBase extends ConfigFormBase {
    * @param \Drupal\Core\Utility\LinkGeneratorInterface $link_generator
    *   The link generator.
    */
-  public function __construct(LingotekInterface $lingotek, ConfigFactoryInterface $config, UrlGeneratorInterface $url_generator = NULL, LinkGeneratorInterface $link_generator = NULL) {
+  public function __construct(LingotekInterface $lingotek, ConfigFactoryInterface $config, UrlGeneratorInterface $url_generator, LinkGeneratorInterface $link_generator) {
     parent::__construct($config);
     $this->lingotek = $lingotek;
-    if (!$url_generator) {
-      @trigger_error('The url_generator service must be passed to LingotekConfigFormBase::__construct, it is required before Lingotek 9.x-1.0.', E_USER_DEPRECATED);
-      $url_generator = \Drupal::service('url_generator');
-    }
     $this->urlGenerator = $url_generator;
-    if (!$link_generator) {
-      @trigger_error('The link_generator service must be passed to LingotekConfigFormBase::__construct, it is required before Lingotek 9.x-1.0.', E_USER_DEPRECATED);
-      $link_generator = \Drupal::service('link_generator');
-    }
     $this->linkGenerator = $link_generator;
   }
 

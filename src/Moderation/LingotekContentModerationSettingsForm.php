@@ -73,7 +73,7 @@ class LingotekContentModerationSettingsForm implements LingotekModerationSetting
    * @param \Drupal\Core\Routing\UrlGeneratorInterface $url_generator
    *   The url generator.
    */
-  public function __construct(ModuleHandlerInterface $module_handler, EntityTypeManagerInterface $entity_type_manager, LingotekModerationConfigurationServiceInterface $moderation_configuration, EntityTypeBundleInfoInterface $entity_type_bundle_info, ContainerInterface $container, UrlGeneratorInterface $url_generator = NULL) {
+  public function __construct(ModuleHandlerInterface $module_handler, EntityTypeManagerInterface $entity_type_manager, LingotekModerationConfigurationServiceInterface $moderation_configuration, EntityTypeBundleInfoInterface $entity_type_bundle_info, ContainerInterface $container, UrlGeneratorInterface $url_generator) {
     $this->setModuleHandler($module_handler);
     $this->entityTypeManager = $entity_type_manager;
     $this->moderationConfiguration = $moderation_configuration;
@@ -82,10 +82,6 @@ class LingotekContentModerationSettingsForm implements LingotekModerationSetting
     // is not present. Ignore the error.
     if ($container->has('content_moderation.moderation_information')) {
       $this->moderationInfo = $container->get('content_moderation.moderation_information');
-    }
-    if (!$url_generator) {
-      @trigger_error('The url_generator service must be passed to LingotekContentModerationSettingsForm::__construct, it is required before Lingotek 9.x-1.0.', E_USER_DEPRECATED);
-      $url_generator = \Drupal::service('url_generator');
     }
     $this->urlGenerator = $url_generator;
   }
@@ -113,6 +109,7 @@ class LingotekContentModerationSettingsForm implements LingotekModerationSetting
    *   The entity type id.
    * @param string $bundle
    *   The bundle id.
+   *
    * @return \Drupal\workflows\WorkflowInterface|null
    */
   protected function getWorkflow($entity_type_id, $bundle) {
@@ -131,7 +128,7 @@ class LingotekContentModerationSettingsForm implements LingotekModerationSetting
     $workflow = $this->getWorkflow($entity_type_id, $bundle);
     $values = [];
     if ($workflow) {
-      $states = $this->getWorkflowStates($workflow);
+      $states = $workflow->getTypePlugin()->getStates();
       foreach ($states as $state_id => $state) {
         $values[$state_id] = $state->label();
       }
@@ -142,47 +139,39 @@ class LingotekContentModerationSettingsForm implements LingotekModerationSetting
   /**
    * Get workflow states helper method.
    *
-   * Needed because of differences in 8.3.x and 8.4.x.
-   *
    * @param \Drupal\workflows\WorkflowInterface $workflow
    *   The workflow.
    *
    * @return \Drupal\workflows\StateInterface[]
    *   The states.
+   *
+   * @deprecated in lingotek:3.0.0 and is removed from lingotek:4.0.0.
+   *   Use $workflow->getTypePlugin()->getStates() instead.
+   * @see \Drupal\workflows\WorkflowTypeInterface::getStates()
    */
   protected  function getWorkflowStates(WorkflowInterface $workflow) {
-    if (floatval(\Drupal::VERSION) >= 8.4) {
-      return $workflow->getTypePlugin()->getStates();
-    }
-    else {
-      return $workflow->getStates();
-    }
+    return $workflow->getTypePlugin()->getStates();
   }
 
   /**
    * Get workflow transitions helper method.
-   *
-   * Needed because of differences in 8.3.x and 8.4.x.
    *
    * @param \Drupal\workflows\WorkflowInterface $workflow
    *   The workflow.
    *
    * @return \Drupal\workflows\TransitionInterface[]
    *   An array of transition objects.
+   *
+   * @deprecated in lingotek:3.0.0 and is removed from lingotek:4.0.0.
+   *   Use $workflow->getTypePlugin()->getTransitions() instead.
+   * @see \Drupal\workflows\WorkflowTypeInterface::getTransitions()
    */
   protected  function getWorkflowTransitions(WorkflowInterface $workflow) {
-    if (floatval(\Drupal::VERSION) >= 8.4) {
-      return $workflow->getTypePlugin()->getTransitions();
-    }
-    else {
-      return $workflow->getTransitions();
-    }
+    return $workflow->getTypePlugin()->getTransitions();
   }
 
   /**
    * Get workflow transitions for a given state helper method.
-   *
-   * Needed because of differences in 8.3.x and 8.4.x.
    *
    * @param \Drupal\workflows\WorkflowInterface $workflow
    *   The workflow.
@@ -192,14 +181,13 @@ class LingotekContentModerationSettingsForm implements LingotekModerationSetting
    *
    * @return \Drupal\workflows\TransitionInterface[]
    *   An array of transition objects.
+   *
+   * @deprecated in lingotek:3.0.0 and is removed from lingotek:4.0.0.
+   *   Use $workflow->getTypePlugin()->getTransitionsForState($state) instead.
+   * @see \Drupal\workflows\WorkflowTypeInterface::getTransitionsForState()
    */
   protected  function getWorkflowTransitionsForState(WorkflowInterface $workflow, $state) {
-    if (floatval(\Drupal::VERSION) >= 8.4) {
-      return $workflow->getTypePlugin()->getTransitionsForState($state);
-    }
-    else {
-      return $workflow->getTransitionsForState($state);
-    }
+    return $workflow->getTypePlugin()->getTransitionsForState($state);
   }
 
   /**
@@ -209,7 +197,7 @@ class LingotekContentModerationSettingsForm implements LingotekModerationSetting
     $status = $this->moderationConfiguration->getUploadStatus($entity_type_id, $bundle);
     if (!$status) {
       $workflow = $this->getWorkflow($entity_type_id, $bundle);
-      $states = $this->getWorkflowStates($workflow);
+      $states = $workflow->getTypePlugin()->getStates();
       $published_statuses = array_filter($states, function (ContentModerationState $state) {
         return $state->isPublishedState();
       });
@@ -225,7 +213,7 @@ class LingotekContentModerationSettingsForm implements LingotekModerationSetting
    */
   public function getModerationDownloadTransitions($entity_type_id, $bundle) {
     $workflow = $this->getWorkflow($entity_type_id, $bundle);
-    $transitions = $this->getWorkflowTransitions($workflow);
+    $transitions = $workflow->getTypePlugin()->getTransitions();
     $values = [];
     foreach ($transitions as $transition_id => $transition) {
       $values[$transition_id] = $transition->label();
@@ -241,7 +229,7 @@ class LingotekContentModerationSettingsForm implements LingotekModerationSetting
 
     if (!$transition) {
       $workflow = $this->getWorkflow($entity_type_id, $bundle);
-      $transitions = $this->getWorkflowTransitionsForState($workflow, $this->getDefaultModerationUploadStatus($entity_type_id, $bundle));
+      $transitions = $workflow->getTypePlugin()->getTransitionsForState($this->getDefaultModerationUploadStatus($entity_type_id, $bundle));
 
       if (count($transitions) > 0) {
         /** @var \Drupal\workflows\TransitionInterface $potential_transition */
@@ -285,9 +273,8 @@ class LingotekContentModerationSettingsForm implements LingotekModerationSetting
       ];
     }
     elseif ($this->moderationInfo->canModerateEntitiesOfEntityType($entity_type_definition)) {
-      $bundle_type_id = $entity_type_definition->getBundleEntityType();
       $form = [
-        '#markup' => $this->t('This entity bundle is not enabled for moderation with content_moderation. You can change its settings <a href=":moderation">here</a>.', [':moderation' => $this->getContentModerationConfigurationLink($bundle, $bundle_type_id)]),
+        '#markup' => $this->t('This entity bundle is not enabled for moderation with content_moderation. You can change its settings <a href=":moderation">here</a>.', [':moderation' => $this->urlGenerator->generateFromRoute("entity.workflow.collection")]),
       ];
     }
     return $form;
@@ -309,8 +296,6 @@ class LingotekContentModerationSettingsForm implements LingotekModerationSetting
   /**
    * Get configure link for content moderation.
    *
-   * Needed because of differences in 8.3.x and 8.4.x.
-   *
    * @param string $bundle
    *   The bundle id.
    * @param string $bundle_type_id
@@ -318,14 +303,14 @@ class LingotekContentModerationSettingsForm implements LingotekModerationSetting
    *
    * @return \Drupal\Core\GeneratedUrl|string
    *   An url.
+   *
+   * @deprecated in lingotek:3.0.0 and is removed from lingotek:4.0.0.
+   *   Use $this->urlGenerator->generateFromRoute("entity.workflow.collection")
+   *   instead.
+   * @see \Drupal\workflows\Entity\Workflow
    */
   protected function getContentModerationConfigurationLink($bundle, $bundle_type_id) {
-    if (floatval(\Drupal::VERSION) >= 8.4) {
-      return $this->urlGenerator->generateFromRoute("entity.workflow.collection");
-    }
-    else {
-      return $this->urlGenerator->generateFromRoute("entity.$bundle_type_id.moderation", [$bundle_type_id => $bundle]);
-    }
+    return $this->urlGenerator->generateFromRoute("entity.workflow.collection");
   }
 
 }

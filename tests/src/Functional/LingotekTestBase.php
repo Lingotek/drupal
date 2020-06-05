@@ -8,7 +8,6 @@ use Drupal\lingotek\Lingotek;
 use Drupal\node\Entity\Node;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\system\Functional\Entity\Traits\EntityDefinitionTestTrait;
-use Drupal\workflows\Entity\Workflow;
 use GuzzleHttp\Cookie\CookieJar;
 
 /**
@@ -279,25 +278,16 @@ abstract class LingotekTestBase extends BrowserTestBase {
     if ($usePath) {
       $path = ($bundle !== NULL) ? "node/add/$bundle" : NULL;
     }
-    if (floatval(\Drupal::VERSION) >= 8.4) {
-      $entity_definition = \Drupal::entityTypeManager()->getDefinition('node');
-      if (\Drupal::moduleHandler()->moduleExists('content_moderation') &&
-          \Drupal::service('content_moderation.moderation_information')->shouldModerateEntitiesOfBundle($entity_definition, $bundle)) {
-        $edit['moderation_state[0][state]'] = 'published';
-        $this->drupalPostForm($path, $edit, t('Save'));
-      }
-      else {
-        $edit['status[value]'] = TRUE;
-        $this->drupalPostForm($path, $edit, t('Save'));
-      }
+    $entity_definition = \Drupal::entityTypeManager()->getDefinition('node');
+    if (\Drupal::moduleHandler()->moduleExists('content_moderation') &&
+      \Drupal::service('content_moderation.moderation_information')
+        ->shouldModerateEntitiesOfBundle($entity_definition, $bundle)) {
+      $edit['moderation_state[0][state]'] = 'published';
+      $this->drupalPostForm($path, $edit, t('Save'));
     }
     else {
-      if (\Drupal::moduleHandler()->moduleExists('content_moderation')) {
-        $this->drupalPostForm($path, $edit, t('Save and Publish'));
-      }
-      else {
-        $this->drupalPostForm($path, $edit, t('Save and publish'));
-      }
+      $edit['status[value]'] = TRUE;
+      $this->drupalPostForm($path, $edit, t('Save'));
     }
   }
 
@@ -306,76 +296,47 @@ abstract class LingotekTestBase extends BrowserTestBase {
     if ($usePath) {
       $path = ($nid !== NULL) ? "node/$nid/edit" : NULL;
     }
-    if (floatval(\Drupal::VERSION) >= 8.4) {
-      $entity_definition = \Drupal::entityTypeManager()->getDefinition('node');
-      $node = Node::load($nid);
-      $bundle = $node->bundle();
-      if (\Drupal::moduleHandler()->moduleExists('content_moderation') &&
-        \Drupal::service('content_moderation.moderation_information')->shouldModerateEntitiesOfBundle($entity_definition, $bundle)) {
-        $edit['moderation_state[0][state]'] = 'draft';
-        $this->drupalPostForm($path, $edit, t('Save'));
-      }
-      else {
-        $edit['status[value]'] = FALSE;
-        $this->drupalPostForm($path, $edit, t('Save'));
-      }
+    $entity_definition = \Drupal::entityTypeManager()->getDefinition('node');
+    $node = Node::load($nid);
+    $bundle = $node->bundle();
+    if (\Drupal::moduleHandler()->moduleExists('content_moderation') &&
+      \Drupal::service('content_moderation.moderation_information')
+        ->shouldModerateEntitiesOfBundle($entity_definition, $bundle)) {
+      $edit['moderation_state[0][state]'] = 'draft';
+      $this->drupalPostForm($path, $edit, t('Save'));
     }
     else {
-      $this->drupalPostForm($path, $edit, t('Save and unpublish'));
+      $edit['status[value]'] = FALSE;
+      $this->drupalPostForm($path, $edit, t('Save'));
     }
   }
 
   protected function saveAsUnpublishedNodeForm(array $edit, $bundle = 'article') {
     $path = ($bundle !== NULL) ? "node/add/$bundle" : NULL;
-    if (floatval(\Drupal::VERSION) >= 8.4) {
-      $edit['status[value]'] = FALSE;
-      $this->drupalPostForm($path, $edit, t('Save'));
-    }
-    else {
-      $this->drupalPostForm($path, $edit, t('Save as unpublished'));
-    }
+    $edit['status[value]'] = FALSE;
+    $this->drupalPostForm($path, $edit, t('Save'));
   }
 
   protected function saveAsRequestReviewNodeForm(array $edit, $bundle = 'article') {
     $path = ($bundle !== NULL) ? "node/add/$bundle" : NULL;
-    if (floatval(\Drupal::VERSION) >= 8.4) {
-      $edit['moderation_state[0][state]'] = 'needs_review';
-      $this->drupalPostForm($path, $edit, t('Save'));
-    }
-    else {
-      $this->drupalPostForm($path, $edit, t('Save and Request Review'));
-    }
+    $edit['moderation_state[0][state]'] = 'needs_review';
+    $this->drupalPostForm($path, $edit, t('Save'));
   }
 
   protected function editAsRequestReviewNodeForm($path, array $edit) {
-    if (floatval(\Drupal::VERSION) >= 8.4) {
-      $edit['moderation_state[0][state]'] = 'needs_review';
-      $this->drupalPostForm($path, $edit, t('Save'));
-    }
-    else {
-      $this->drupalPostForm($path, $edit, t('Save and Request Review (this translation)'));
-    }
+    $edit['moderation_state[0][state]'] = 'needs_review';
+    $this->drupalPostForm($path, $edit, t('Save'));
   }
 
   protected function saveAsNewDraftNodeForm(array $edit, $bundle = 'article') {
     $path = ($bundle !== NULL) ? "node/add/$bundle" : NULL;
-    if (floatval(\Drupal::VERSION) >= 8.4) {
-      $edit['moderation_state[0][state]'] = 'draft';
-      $this->drupalPostForm($path, $edit, t('Save'));
-    }
-    else {
-      $this->drupalPostForm($path, $edit, t('Save and Create New Draft'));
-    }
+    $edit['moderation_state[0][state]'] = 'draft';
+    $this->drupalPostForm($path, $edit, t('Save'));
   }
 
   protected function editAsNewDraftNodeForm($path, array $edit) {
-    if (floatval(\Drupal::VERSION) >= 8.4) {
-      $edit['moderation_state[0][state]'] = 'draft';
-      $this->drupalPostForm($path, $edit, t('Save'));
-    }
-    else {
-      $this->drupalPostForm($path, $edit, t('Save and Create New Draft (this translation)'));
-    }
+    $edit['moderation_state[0][state]'] = 'draft';
+    $this->drupalPostForm($path, $edit, t('Save'));
   }
 
   protected function saveAndKeepPublishedNodeForm(array $edit, $nid, $usePath = TRUE) {
@@ -383,22 +344,18 @@ abstract class LingotekTestBase extends BrowserTestBase {
     if ($usePath) {
       $path = ($nid !== NULL) ? "node/$nid/edit" : NULL;
     }
-    if (floatval(\Drupal::VERSION) >= 8.4) {
-      $entity_definition = \Drupal::entityTypeManager()->getDefinition('node');
-      $node = Node::load($nid);
-      $bundle = $node->bundle();
-      if (\Drupal::moduleHandler()->moduleExists('content_moderation') &&
-          \Drupal::service('content_moderation.moderation_information')->shouldModerateEntitiesOfBundle($entity_definition, $bundle)) {
-        $edit['moderation_state[0][state]'] = 'published';
-        $this->drupalPostForm($path, $edit, t('Save'));
-      }
-      else {
-        $edit['status[value]'] = TRUE;
-        $this->drupalPostForm($path, $edit, t('Save'));
-      }
+    $entity_definition = \Drupal::entityTypeManager()->getDefinition('node');
+    $node = Node::load($nid);
+    $bundle = $node->bundle();
+    if (\Drupal::moduleHandler()->moduleExists('content_moderation') &&
+      \Drupal::service('content_moderation.moderation_information')
+        ->shouldModerateEntitiesOfBundle($entity_definition, $bundle)) {
+      $edit['moderation_state[0][state]'] = 'published';
+      $this->drupalPostForm($path, $edit, t('Save'));
     }
     else {
-      $this->drupalPostForm($path, $edit, t('Save and keep published'));
+      $edit['status[value]'] = TRUE;
+      $this->drupalPostForm($path, $edit, t('Save'));
     }
   }
 
@@ -407,13 +364,8 @@ abstract class LingotekTestBase extends BrowserTestBase {
     if ($path !== NULL && $prefix !== NULL) {
       $path = $prefix . '/' . $path;
     }
-    if (floatval(\Drupal::VERSION) >= 8.4) {
-      $edit['status[value]'] = TRUE;
-      $this->drupalPostForm($path, $edit, t('Save (this translation)'));
-    }
-    else {
-      $this->drupalPostForm($path, $edit, t('Save and keep published (this translation)'));
-    }
+    $edit['status[value]'] = TRUE;
+    $this->drupalPostForm($path, $edit, t('Save (this translation)'));
   }
 
   /**
@@ -426,21 +378,12 @@ abstract class LingotekTestBase extends BrowserTestBase {
    *   Array in the form: [entity_type => [bundle1, bundle2]].
    */
   protected function configureContentModeration($workflow_id, array $entities_map) {
-    if (floatval(\Drupal::VERSION) >= 8.4) {
-      foreach ($entities_map as $entity_type_id => $bundles) {
-        $edit = [];
-        foreach ($bundles as $bundle) {
-          $edit["bundles[$bundle]"] = $bundle;
-        }
-        $this->drupalPostForm("/admin/config/workflow/workflows/manage/$workflow_id/type/$entity_type_id", $edit, 'Save');
+    foreach ($entities_map as $entity_type_id => $bundles) {
+      $edit = [];
+      foreach ($bundles as $bundle) {
+        $edit["bundles[$bundle]"] = $bundle;
       }
-    }
-    else {
-      if (isset($entities_map['node'])) {
-        foreach ($entities_map['node'] as $bundle) {
-          $this->drupalPostForm("/admin/structure/types/manage/$bundle/moderation", ['workflow' => $workflow_id], t('Save'));
-        }
-      }
+      $this->drupalPostForm("/admin/config/workflow/workflows/manage/$workflow_id/type/$entity_type_id", $edit, 'Save');
     }
   }
 
@@ -454,7 +397,9 @@ abstract class LingotekTestBase extends BrowserTestBase {
    * @param string $locale
    *   The Lingotek locale.
    *
-   * @deprecated Use ::assertLingotekWorkbenchLink instead.
+   * @deprecated in lingotek:3.0.0 and is removed from lingotek:4.0.0.
+   *   Use ::assertLingotekWorkbenchLink() instead.
+   * @see ::assertLingotekWorkbenchLink()
    */
   protected function assertLinkToWorkbenchInNewTabInSinglePage($document_id, $langcode, $locale) {
     $this->assertLingotekWorkbenchLink($locale, $document_id);
@@ -743,98 +688,12 @@ abstract class LingotekTestBase extends BrowserTestBase {
    *   The settings we want to save.
    */
   protected function saveLingotekConfigTranslationSettings($settings) {
-    // ToDo: Remove this when 8.5.x is not supported anymore.
-    $this->drupalGet('admin/lingotek/settings');
-
     $edit = [];
     foreach ($settings as $entity_type => $profile) {
       $edit['table[' . $entity_type . '][enabled]'] = 1;
       $edit['table[' . $entity_type . '][profile]'] = $profile;
     }
-    // ToDo: Remove this when 8.5.x is not supported anymore and replace with
-    // $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], 'lingoteksettings-tab-configuration-form');
-    $this->submitForm($edit, 'Save', 'lingoteksettings-tab-configuration-form');
-  }
-
-  /**
-   * Creates the editorial workflow.
-   *
-   * @deprecated ToDo: Remove when 8.5.x is unsupported.
-   * Copied from trait ContentModerationTestTrait in 8.6.x.
-   *
-   * @return \Drupal\workflows\Entity\Workflow
-   *   The editorial workflow entity.
-   */
-  protected function createEditorialWorkflow() {
-    if ($workflow = Workflow::load('editorial') === NULL) {
-      $workflow = Workflow::create([
-        'type' => 'content_moderation',
-        'id' => 'editorial',
-        'label' => 'Editorial',
-        'type_settings' => [
-          'states' => [
-            'archived' => [
-              'label' => 'Archived',
-              'weight' => 5,
-              'published' => FALSE,
-              'default_revision' => TRUE,
-            ],
-            'draft' => [
-              'label' => 'Draft',
-              'published' => FALSE,
-              'default_revision' => FALSE,
-              'weight' => -5,
-            ],
-            'published' => [
-              'label' => 'Published',
-              'published' => TRUE,
-              'default_revision' => TRUE,
-              'weight' => 0,
-            ],
-          ],
-          'transitions' => [
-            'archive' => [
-              'label' => 'Archive',
-              'from' => ['published'],
-              'to' => 'archived',
-              'weight' => 2,
-            ],
-            'archived_draft' => [
-              'label' => 'Restore to Draft',
-              'from' => ['archived'],
-              'to' => 'draft',
-              'weight' => 3,
-            ],
-            'archived_published' => [
-              'label' => 'Restore',
-              'from' => ['archived'],
-              'to' => 'published',
-              'weight' => 4,
-            ],
-            'create_new_draft' => [
-              'label' => 'Create New Draft',
-              'to' => 'draft',
-              'weight' => 0,
-              'from' => [
-                'draft',
-                'published',
-              ],
-            ],
-            'publish' => [
-              'label' => 'Publish',
-              'to' => 'published',
-              'weight' => 1,
-              'from' => [
-                'draft',
-                'published',
-              ],
-            ],
-          ],
-        ],
-      ]);
-      $workflow->save();
-    }
-    return $workflow;
+    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], 'lingoteksettings-tab-configuration-form');
   }
 
 }

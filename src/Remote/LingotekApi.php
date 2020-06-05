@@ -163,17 +163,6 @@ class LingotekApi implements LingotekApiInterface {
     return $response;
   }
 
-  /**
-   * @param $id
-   * @return mixed
-   * @throws \Drupal\lingotek\Exception\LingotekApiException
-   *
-   * @deprecated in 8.x-1.4. Use ::getDocumentStatus() instead.
-   */
-  public function getDocument($id) {
-    return $this->getDocumentStatus($id);
-  }
-
   public function documentExists($id) {
     // TODO
     throw new Exception('Not implemented');

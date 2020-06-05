@@ -78,22 +78,10 @@ class LingotekConfigSubscriber implements EventSubscriberInterface {
    * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
    *   The entity field manager.
    */
-  public function __construct(LingotekConfigTranslationServiceInterface $translation_service, ConfigMapperManagerInterface $mapper_manager, LingotekConfigurationServiceInterface $lingotek_configuration = NULL, EntityTypeManagerInterface $entity_type_manager = NULL, EntityFieldManagerInterface $entity_field_manager = NULL) {
+  public function __construct(LingotekConfigTranslationServiceInterface $translation_service, ConfigMapperManagerInterface $mapper_manager, LingotekConfigurationServiceInterface $lingotek_configuration, EntityTypeManagerInterface $entity_type_manager, EntityFieldManagerInterface $entity_field_manager) {
     $this->translationService = $translation_service;
     $this->mapperManager = $mapper_manager;
     $this->mappers = $mapper_manager->getMappers();
-    if (!$lingotek_configuration) {
-      @trigger_error('The lingotek.configuration service must be passed to LingotekConfigSubscriber::__construct, it is required before Lingotek 9.x-1.0. See https://www.drupal.org/node/2549139.', E_USER_DEPRECATED);
-      $lingotek_configuration = \Drupal::service('lingotek.configuration');
-    }
-    if (!$entity_type_manager) {
-      @trigger_error('The entity_type.manager service must be passed to LingotekConfigSubscriber::__construct, it is required before Lingotek 9.x-1.0. See https://www.drupal.org/node/2549139.', E_USER_DEPRECATED);
-      $entity_type_manager = \Drupal::service('entity_type.manager');
-    }
-    if (!$entity_field_manager) {
-      @trigger_error('The entity_field.manager service must be passed to LingotekManagementFormBase::__construct, it is required before Lingotek 9.x-1.0. See https://www.drupal.org/node/2549139.', E_USER_DEPRECATED);
-      $entity_field_manager = \Drupal::service('entity_field.manager');
-    }
     $this->lingotekConfiguration = $lingotek_configuration;
     $this->entityTypeManager = $entity_type_manager;
     $this->entityFieldManager = $entity_field_manager;

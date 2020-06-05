@@ -105,7 +105,7 @@ class LingotekContentModerationHandler implements LingotekModerationHandlerInter
           $workflow = $this->entityTypeManager->getStorage('workflow')
             ->load($bundles[$entity->bundle()]['workflow']);
           if ($workflow) {
-            $theTransition = $this->getWorkflowTransition($workflow, $transition);
+            $theTransition = $workflow->getTypePlugin()->getTransition($transition);
             if ($theTransition !== NULL) {
               // Ensure we can execute this transition.
               $state = $this->getModerationState($entity);
@@ -124,8 +124,6 @@ class LingotekContentModerationHandler implements LingotekModerationHandlerInter
   /**
    * Get workflow transition helper method.
    *
-   * Needed because of differences in 8.3.x and 8.4.x.
-   *
    * @param \Drupal\workflows\WorkflowInterface $workflow
    *   The workflow.
    * @param $transition_id
@@ -133,14 +131,13 @@ class LingotekContentModerationHandler implements LingotekModerationHandlerInter
    *
    * @return \Drupal\workflows\TransitionInterface
    *   A transition.
+   *
+   * @deprecated in lingotek:3.0.0 and is removed from lingotek:4.0.0.
+   *   Use $workflow->getTypePlugin()->getTransition($transition_id) instead.
+   * @see \Drupal\workflows\WorkflowTypeInterface::getTransition()
    */
   protected function getWorkflowTransition(WorkflowInterface $workflow, $transition_id) {
-    if (floatval(\Drupal::VERSION) >= 8.4) {
-      return $workflow->getTypePlugin()->getTransition($transition_id);
-    }
-    else {
-      return $workflow->getTransition($transition_id);
-    }
+    return $workflow->getTypePlugin()->getTransition($transition_id);
   }
 
   /**
