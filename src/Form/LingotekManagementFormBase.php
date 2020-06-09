@@ -1014,8 +1014,8 @@ abstract class LingotekManagementFormBase extends FormBase {
         'filename' => $filename,
         'uri' => 'public://' . $filename,
         'filemime' => 'text/plain',
-        'created' => REQUEST_TIME,
-        'changed' => REQUEST_TIME,
+        'created' => \Drupal::time()->getRequestTime(),
+        'changed' => \Drupal::time()->getRequestTime(),
       ]);
       file_put_contents($file->getFileUri(), $source_data);
       $file->save();

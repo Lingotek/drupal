@@ -145,7 +145,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
           $last_uploaded_time = $entity->getChangedTime();
           // If document has not successfully imported after MAX_IMPORT_TIME
           // then move to ERROR state.
-          if (REQUEST_TIME - $last_uploaded_time > $maxImportTime) {
+          if (\Drupal::time()->getRequestTime() - $last_uploaded_time > $maxImportTime) {
             $this->setSourceStatus($entity, Lingotek::STATUS_ERROR);
           }
           else {

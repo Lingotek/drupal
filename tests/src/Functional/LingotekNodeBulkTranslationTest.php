@@ -1553,7 +1553,7 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
 
     // The document has not been imported yet, and it was uploaded long ago.
     \Drupal::state()->set('lingotek.document_status_completion', FALSE);
-    Node::load(1)->setChangedTime(REQUEST_TIME - 100000)->save();
+    Node::load(1)->setChangedTime(\Drupal::time()->getRequestTime() - 100000)->save();
 
     $key = $this->getBulkSelectionKey('en', 1);
     $edit = [

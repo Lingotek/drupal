@@ -224,7 +224,7 @@ class LingotekFake implements LingotekInterface {
 
     // Save the timestamp of the upload.
     $timestamps = \Drupal::state()->get('lingotek.upload_timestamps', []);
-    $timestamps[$doc_id] = REQUEST_TIME;
+    $timestamps[$doc_id] = \Drupal::time()->getRequestTime();
     \Drupal::state()->set('lingotek.upload_timestamps', $timestamps);
 
     return $doc_id;
@@ -285,7 +285,7 @@ class LingotekFake implements LingotekInterface {
 
     // Save the timestamp of the upload.
     $timestamps = \Drupal::state()->get('lingotek.upload_timestamps', []);
-    $timestamps[$doc_id] = REQUEST_TIME;
+    $timestamps[$doc_id] = \Drupal::time()->getRequestTime();
     \Drupal::state()->set('lingotek.upload_timestamps', $timestamps);
 
     // Our document is always imported correctly.
