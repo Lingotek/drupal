@@ -90,7 +90,7 @@ class LingotekApiUnitTest extends UnitTestCase {
       )));
 
     $response = $this->lingotek_api->addTranslation('fancy-document-id', 'es_ES', 'my_workflow');
-    $this->assertEquals($response->getStatusCode(), REsponse::HTTP_CREATED, 'If the translation existed, we succeed instead of failing.');
+    $this->assertEquals($response->getStatusCode(), Response::HTTP_CREATED, 'If the translation existed, we succeed instead of failing.');
   }
 
   /**
