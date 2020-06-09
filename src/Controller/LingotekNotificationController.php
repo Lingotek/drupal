@@ -215,7 +215,7 @@ class LingotekNotificationController extends LingotekControllerBase {
             if ($profile->hasAutomaticRequestForTarget($target_language->getId())) {
               $target_locale = $this->languageLocaleMapper->getLocaleForLangcode($target_language->getId());
               if ($translation_service->addTarget($entity, $target_locale)) {
-                $languages[] = $target_language;
+                $languages[] = $target_language->getId();
               }
             }
           }
