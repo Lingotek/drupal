@@ -14,7 +14,7 @@ class LingotekSettingsTabIntegrationFormTest extends LingotekTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     // Login as admin.

@@ -22,7 +22,7 @@ class LingotekUpgrade8221RemoveContentCloudSettingsTest extends UpdatePathTestBa
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
     $this->lingotekConfiguration = $this->container->get('lingotek.configuration');
   }

@@ -21,7 +21,7 @@ class LingotekModuleUninstallationTest extends BrowserTestBase {
    */
   protected static $modules = ['block', 'lingotek'];
 
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
     // Place the actions and title block.
     $this->drupalPlaceBlock('page_title_block', ['region' => 'content', 'weight' => -5]);

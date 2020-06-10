@@ -135,7 +135,7 @@ namespace Drupal\Tests\lingotek\Unit\Form {
      */
     protected $linkGenerator;
 
-    protected function setUp() {
+    protected function setUp(): void {
       parent::setUp();
 
       $this->connection = $this->getMockBuilder(Connection::class)

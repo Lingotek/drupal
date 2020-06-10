@@ -27,7 +27,7 @@ class LingotekBulkDeleteTest extends LingotekTestBase {
    */
   protected $node;
 
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     $this->drupalPlaceBlock('page_title_block', ['region' => 'header']);

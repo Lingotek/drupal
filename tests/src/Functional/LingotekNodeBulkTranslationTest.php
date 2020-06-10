@@ -30,7 +30,7 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     // Create Article node types.

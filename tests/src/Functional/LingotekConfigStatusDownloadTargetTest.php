@@ -18,7 +18,7 @@ class LingotekConfigStatusDownloadTargetTest extends LingotekTestBase {
    */
   public static $modules = ['block', 'node', 'field_ui'];
 
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     // Create Article node types.

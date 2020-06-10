@@ -19,7 +19,7 @@ class LingotekConfigBulkProfileTest extends LingotekTestBase {
    */
   public static $modules = ['block', 'node'];
 
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     // Add a language.

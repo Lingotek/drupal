@@ -28,7 +28,7 @@ class LingotekNodeLocaleTranslationTest extends LingotekTestBase {
    */
   protected $node;
 
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     // Place the actions and title block.

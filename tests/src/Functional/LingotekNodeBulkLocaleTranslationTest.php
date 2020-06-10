@@ -25,7 +25,7 @@ class LingotekNodeBulkLocaleTranslationTest extends LingotekTestBase {
    */
   protected $node;
 
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     // Create a locale outside of Lingotek dashboard.

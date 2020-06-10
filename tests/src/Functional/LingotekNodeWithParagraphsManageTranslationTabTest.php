@@ -21,7 +21,7 @@ class LingotekNodeWithParagraphsManageTranslationTabTest extends LingotekTestBas
    */
   public static $modules = ['block', 'node', 'image', 'paragraphs', 'lingotek_paragraphs_test'];
 
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     // Place the actions and title block.

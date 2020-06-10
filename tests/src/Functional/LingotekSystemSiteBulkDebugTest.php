@@ -23,7 +23,7 @@ class LingotekSystemSiteBulkDebugTest extends LingotekTestBase {
    */
   protected $node;
 
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     // Add a language.

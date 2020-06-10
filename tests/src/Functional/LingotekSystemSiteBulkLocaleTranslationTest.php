@@ -18,7 +18,7 @@ class LingotekSystemSiteBulkLocaleTranslationTest extends LingotekTestBase {
    */
   public static $modules = ['node', 'comment'];
 
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     // Create a locale outside of Lingotek dashboard.

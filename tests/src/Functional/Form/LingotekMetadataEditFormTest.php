@@ -23,7 +23,7 @@ class LingotekMetadataEditFormTest extends LingotekTestBase {
    */
   public static $modules = ['block', 'node'];
 
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     // Place the actions and title block.
@@ -397,7 +397,7 @@ JSON
     ]
 }
 JSON
-);
+    );
 
     /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $content_translation_service */
     $content_translation_service = \Drupal::service('lingotek.content_translation');

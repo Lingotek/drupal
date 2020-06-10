@@ -16,7 +16,7 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     // Login as translations manager, but including the 'translate configuration'

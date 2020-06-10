@@ -22,7 +22,7 @@ class LingotekUpgrade8222EnableDownloadInterimPreferenceTest extends UpdatePathT
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
     $this->lingotekConfiguration = $this->container->get('lingotek.configuration');
   }

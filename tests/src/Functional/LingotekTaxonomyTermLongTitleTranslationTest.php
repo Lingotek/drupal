@@ -38,7 +38,7 @@ class LingotekTaxonomyTermLongTitleTranslationTest extends LingotekTestBase {
    */
   protected $term;
 
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     // Place the actions and title block.

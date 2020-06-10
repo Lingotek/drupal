@@ -21,7 +21,7 @@ class LingotekNodeExistingBulkViewsTranslationTest extends LingotekNodeExistingB
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     \Drupal::getContainer()

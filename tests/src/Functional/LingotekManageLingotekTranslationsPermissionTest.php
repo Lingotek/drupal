@@ -22,7 +22,7 @@ class LingotekManageLingotekTranslationsPermissionTest extends LingotekTestBase 
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     $roles = $this->translationManagerUser->getRoles(TRUE);

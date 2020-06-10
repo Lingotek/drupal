@@ -33,7 +33,7 @@ class LingotekNodeWithLinkTranslationTest extends LingotekTestBase {
    */
   protected $field_name = 'field_link';
 
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     // Create Article node types.

@@ -21,7 +21,7 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
    */
   public static $modules = ['block', 'node'];
 
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     // Create Article node types.

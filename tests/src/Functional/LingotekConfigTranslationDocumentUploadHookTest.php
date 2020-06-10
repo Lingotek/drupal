@@ -18,7 +18,7 @@ class LingotekConfigTranslationDocumentUploadHookTest extends LingotekTestBase {
    */
   public static $modules = ['block'];
 
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     // Add a language.

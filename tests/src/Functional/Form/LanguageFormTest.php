@@ -25,7 +25,7 @@ class LanguageFormTest extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  public function setUp() {
+  public function setUp(): void {
     parent::setUp();
 
     // User to add and remove language.

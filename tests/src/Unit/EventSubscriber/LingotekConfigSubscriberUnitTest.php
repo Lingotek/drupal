@@ -85,7 +85,7 @@ namespace Drupal\Tests\lingotek\Unit\EventSubscriber {
      */
     protected $configSubscriber;
 
-    protected function setUp() {
+    protected function setUp(): void {
       parent::setUp();
 
       $this->translationService = $this->createMock(LingotekConfigTranslationServiceInterface::class);

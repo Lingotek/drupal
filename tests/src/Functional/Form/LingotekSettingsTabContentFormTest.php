@@ -22,7 +22,7 @@ class LingotekSettingsTabContentFormTest extends LingotekTestBase {
    */
   public static $modules = ['block', 'node', 'field_ui', 'image'];
 
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     // Place the actions and title block.

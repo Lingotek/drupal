@@ -36,7 +36,7 @@ class LingotekContentTranslationPreSaveHookTest extends LingotekTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     // Place the actions and title block.

@@ -66,7 +66,7 @@ class LingotekUnitTest extends UnitTestCase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     $this->api = $this->createMock(LingotekApiInterface::class);
     $this->languageLocaleMapper = $this->createMock(LanguageLocaleMapperInterface::class);
     $this->config = $this->getMockBuilder(Config::class)

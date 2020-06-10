@@ -26,7 +26,7 @@ class LingotekConnectTest extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     // Login as admin.

@@ -19,7 +19,7 @@ class LingotekSystemSiteTranslationTest extends LingotekTestBase {
    */
   public static $modules = ['block', 'node', 'image'];
 
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     // Place the actions and title block.

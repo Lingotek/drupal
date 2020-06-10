@@ -24,7 +24,7 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     // Add a language.
