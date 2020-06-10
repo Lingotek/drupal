@@ -12,7 +12,6 @@ use Drupal\Tests\TestFileCreationTrait;
  * Tests the bulk management form integration with Media.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekMediaBulkFormTest extends LingotekTestBase {
 

@@ -12,7 +12,6 @@ use Drupal\Tests\content_moderation\Traits\ContentModerationTestTrait;
  * Tests setting up the integration with content moderation.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekContentModerationTest extends LingotekTestBase {
 

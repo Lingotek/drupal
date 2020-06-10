@@ -12,7 +12,6 @@ use Drupal\Tests\pathauto\Functional\PathautoTestHelperTrait;
  * Tests translating a node that contains a path.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekNodeWithPathautoTranslationTest extends LingotekTestBase {
 

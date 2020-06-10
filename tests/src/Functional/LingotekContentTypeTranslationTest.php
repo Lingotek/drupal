@@ -10,7 +10,6 @@ use Drupal\node\Entity\NodeType;
  * Tests translating a content type.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekContentTypeTranslationTest extends LingotekTestBase {
 

@@ -12,7 +12,6 @@ use Drupal\node\Entity\Node;
  * Tests translating a node with multiple locales including metatags.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekNodeMetatagsTranslationTest extends LingotekTestBase {
 

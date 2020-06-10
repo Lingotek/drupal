@@ -10,7 +10,6 @@ use Drupal\language\Entity\ContentLanguageSettings;
  * Tests the Lingotek content service extract data from entities correctly.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekGetSourceDataTest extends LingotekTestBase {
 

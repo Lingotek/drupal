@@ -14,7 +14,6 @@ use Drupal\Tests\system\Functional\Cache\AssertPageCacheContextsAndTagsTrait;
  * Tests the notification controller.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekNotificationControllerTest extends LingotekTestBase {
 

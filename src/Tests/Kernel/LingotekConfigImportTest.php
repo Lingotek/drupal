@@ -9,7 +9,6 @@ use Drupal\KernelTests\KernelTestBase;
  * Tests content translation updates performed during config import.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekConfigImportTest extends KernelTestBase {
 

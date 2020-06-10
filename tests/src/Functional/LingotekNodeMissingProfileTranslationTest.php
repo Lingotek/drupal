@@ -10,7 +10,6 @@ use Drupal\lingotek\Entity\LingotekProfile;
  * Tests translating a node with images using the bulk management form.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekNodeMissingProfileTranslationTest extends LingotekTestBase {
 

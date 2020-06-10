@@ -11,7 +11,6 @@ use Drupal\Tests\TestFileCreationTrait;
  * Tests the hooks a node.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekContentTranslationPreSaveHookTest extends LingotekTestBase {
 

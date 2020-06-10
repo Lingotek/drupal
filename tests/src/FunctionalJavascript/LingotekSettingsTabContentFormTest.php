@@ -7,7 +7,6 @@ use Drupal\language\Entity\ContentLanguageSettings;
 
 /**
  * @group lingotek
- * @group legacy
  */
 class LingotekSettingsTabContentFormTest extends LingotekFunctionalJavascriptTestBase {
 

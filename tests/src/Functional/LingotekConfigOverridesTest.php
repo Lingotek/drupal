@@ -6,7 +6,6 @@ namespace Drupal\Tests\lingotek\Functional;
  * Tests config overrides in settings.php are possible .
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekConfigOverridesTest extends LingotekTestBase {
 

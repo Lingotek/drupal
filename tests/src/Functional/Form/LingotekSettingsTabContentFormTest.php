@@ -12,7 +12,6 @@ use Drupal\Tests\lingotek\Functional\LingotekTestBase;
  * Tests the Lingotek content settings form.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekSettingsTabContentFormTest extends LingotekTestBase {
 

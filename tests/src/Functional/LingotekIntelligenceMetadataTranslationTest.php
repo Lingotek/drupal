@@ -11,7 +11,6 @@ use Drupal\Tests\lingotek\Functional\Form\IntelligenceMetadataFormTestTrait;
  * Tests if intelligence metadata is used when uploading and updating content.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekIntelligenceMetadataTranslationTest extends LingotekTestBase {
 

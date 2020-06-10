@@ -8,7 +8,6 @@ use Drupal\language\Entity\ConfigurableLanguage;
  * Tests debugging a config entity using the bulk management form.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekContentTypeBulkDebugTest extends LingotekTestBase {
 

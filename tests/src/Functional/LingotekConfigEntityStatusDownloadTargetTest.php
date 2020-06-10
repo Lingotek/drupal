@@ -8,7 +8,6 @@ use Drupal\language\Entity\ConfigurableLanguage;
  * Tests translating a field using the bulk management form.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekConfigEntityStatusDownloadTargetTest extends LingotekTestBase {
 
@@ -101,7 +100,6 @@ class LingotekConfigEntityStatusDownloadTargetTest extends LingotekTestBase {
     // $this->assertEqual(count($source_untracked), 1, 'Edited source is shown.');
     // $untracked = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-edited')  and contains(text(), 'ES')]");
     // $this->assertEqual(count($untracked), 1, 'Edited translation is shown.');
-
   }
 
 }

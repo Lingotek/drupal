@@ -12,7 +12,6 @@ use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
  * Tests the Lingotek integrations settings form with paragraphs.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekSettingsTabParagraphsIntegrationFormTest extends LingotekTestBase {
 

@@ -12,7 +12,6 @@ use Drupal\Tests\lingotek\Functional\LingotekTestBase;
  * Tests the bulk management form integration with Paragraphs.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekParagraphsBulkFormTest extends LingotekTestBase {
 

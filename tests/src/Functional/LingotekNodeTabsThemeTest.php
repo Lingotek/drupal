@@ -9,7 +9,6 @@ use Drupal\language\Entity\ContentLanguageSettings;
  * Tests the theme used in the Lingotek tabs for nodes.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekNodeTabsThemeTest extends LingotekTestBase {
 

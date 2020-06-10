@@ -11,7 +11,6 @@ use Drupal\Tests\lingotek\Functional\LingotekTestBase;
  * Tests the Lingotek profile form.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekProfileFormTest extends LingotekTestBase {
 
@@ -587,6 +586,7 @@ class LingotekProfileFormTest extends LingotekTestBase {
    *   Id of field to assert.
    * @param string $message
    *   Message to display.
+   *
    * @return bool
    *   TRUE on pass, FALSE on fail.
    */
@@ -603,6 +603,7 @@ class LingotekProfileFormTest extends LingotekTestBase {
    *   Id of field to assert.
    * @param $message
    *   Message to display.
+   *
    * @return bool
    *   TRUE on pass, FALSE on fail.
    */

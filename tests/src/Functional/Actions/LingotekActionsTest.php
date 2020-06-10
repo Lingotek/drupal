@@ -12,7 +12,6 @@ use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
  * Tests for Lingotek actions creation.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekActionsTest extends LingotekTestBase {
 

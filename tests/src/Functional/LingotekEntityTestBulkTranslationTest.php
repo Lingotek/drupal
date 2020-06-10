@@ -11,7 +11,6 @@ use Drupal\lingotek\Lingotek;
  * Tests translating the entity test using the bulk management form.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekEntityTestBulkTranslationTest extends LingotekTestBase {
 

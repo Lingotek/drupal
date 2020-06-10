@@ -16,7 +16,6 @@ use Drupal\node\Entity\Node;
  * Tests translating a node that contains a block field.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekNodeWithBlockfieldTranslationTest extends LingotekTestBase {
 

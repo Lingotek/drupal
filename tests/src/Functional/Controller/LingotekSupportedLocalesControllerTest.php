@@ -8,7 +8,6 @@ use Drupal\Tests\lingotek\Functional\LingotekTestBase;
  * Tests the supported locales controller.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekSupportedLocalesControllerTest extends LingotekTestBase {
 

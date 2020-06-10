@@ -9,7 +9,6 @@ use Drupal\lingotek\Lingotek;
  * Tests cancelling config entities using the bulk management form.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekContentTypeBulkCancelTest extends LingotekTestBase {
 

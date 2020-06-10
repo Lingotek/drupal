@@ -8,7 +8,6 @@ use Drupal\language\Entity\ConfigurableLanguage;
  * Tests changing a profile using the bulk management form.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekConfigEntityBulkProfileTest extends LingotekTestBase {
 

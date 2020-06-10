@@ -9,7 +9,6 @@ use Drupal\Tests\lingotek\Functional\LingotekNodeBulkTranslationTest;
  * Tests translating a node using the bulk management view.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekNodeBulkViewsTranslationTest extends LingotekNodeBulkTranslationTest {
 

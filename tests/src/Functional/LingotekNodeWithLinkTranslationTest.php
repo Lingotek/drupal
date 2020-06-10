@@ -13,7 +13,6 @@ use Drupal\node\Entity\Node;
  * Tests translating a node that contains a link field.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekNodeWithLinkTranslationTest extends LingotekTestBase {
 

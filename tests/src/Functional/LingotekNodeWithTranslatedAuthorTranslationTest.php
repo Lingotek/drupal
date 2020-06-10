@@ -10,7 +10,6 @@ use Drupal\node\Entity\Node;
  * Tests translating a node including author field.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekNodeWithTranslatedAuthorTranslationTest extends LingotekTestBase {
 

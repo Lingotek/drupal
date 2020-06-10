@@ -12,7 +12,6 @@ use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
  * Tests translating a taxonomy term with a very long title that doesn't fit.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekTaxonomyTermLongTitleTranslationTest extends LingotekTestBase {
 

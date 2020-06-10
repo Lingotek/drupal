@@ -11,7 +11,6 @@ use Drupal\node\Entity\NodeType;
  * Tests translating a config entity using the bulk management form.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
 

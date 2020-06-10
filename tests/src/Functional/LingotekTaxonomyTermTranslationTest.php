@@ -11,7 +11,6 @@ use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
  * Tests translating a taxonomy term.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekTaxonomyTermTranslationTest extends LingotekTestBase {
 

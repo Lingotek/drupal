@@ -10,7 +10,6 @@ use Drupal\Tests\content_moderation\Traits\ContentModerationTestTrait;
  * Tests translating a node with content moderation enabled.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekNodeContentModerationTranslationTest extends LingotekTestBase {
 

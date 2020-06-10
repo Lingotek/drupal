@@ -8,7 +8,6 @@ use Drupal\language\Entity\ConfigurableLanguage;
  * Tests the Lingotek config translation document upload hook.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekConfigObjectTranslationDocumentUploadHookTest extends LingotekTestBase {
 

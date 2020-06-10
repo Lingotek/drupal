@@ -11,7 +11,6 @@ use Drupal\lingotek\Lingotek;
  *
  * @package Drupal\lingotek\Tests
  * @group lingotek
- * @group legacy
  */
 class LingotekConfigDependenciesTest extends LingotekTestBase {
 

@@ -17,7 +17,6 @@ use Drupal\Tests\TestFileCreationTrait;
  * Tests translating a node with multiple locales embedding another entity.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekNodeEmbeddingTagsTranslationTest extends LingotekTestBase {
 

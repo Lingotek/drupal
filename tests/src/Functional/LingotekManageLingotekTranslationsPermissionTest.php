@@ -11,7 +11,6 @@ use Drupal\Core\Url;
  * Tests different permissions of the Lingotek module.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekManageLingotekTranslationsPermissionTest extends LingotekTestBase {
 

@@ -9,7 +9,6 @@ use Drupal\language\Entity\ContentLanguageSettings;
  * Tests translating into chinese locales.
  *
  * @group lingotek
- * @group legacy
  */
 class ChineseBulkTranslationTest extends LingotekTestBase {
 

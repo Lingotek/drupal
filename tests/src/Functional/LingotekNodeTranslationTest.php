@@ -13,7 +13,6 @@ use Drupal\Tests\TestFileCreationTrait;
  * Tests translating a node.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekNodeTranslationTest extends LingotekTestBase {
 

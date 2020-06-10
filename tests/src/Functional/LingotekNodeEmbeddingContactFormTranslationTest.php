@@ -14,7 +14,6 @@ use Drupal\node\Entity\Node;
  * Tests translating a node with multiple locales embedding another config entity.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekNodeEmbeddingContactFormTranslationTest extends LingotekTestBase {
 

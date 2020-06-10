@@ -8,7 +8,6 @@ use Drupal\language\Entity\ConfigurableLanguage;
  * Tests translating a config entity into locales using the bulk management form.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekContentTypeBulkLocaleTranslationTest extends LingotekTestBase {
 

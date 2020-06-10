@@ -8,7 +8,6 @@ use Drupal\language\Entity\ConfigurableLanguage;
  * Tests the Lingotek config translation pre save hook.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekConfigTranslationPreSaveHookTest extends LingotekTestBase {
 

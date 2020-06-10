@@ -10,7 +10,6 @@ use Drupal\lingotek\Entity\LingotekProfile;
  * Tests the append type to document title option.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekNodeTranslationAppendTypeTitleOptionTest extends LingotekTestBase {
 

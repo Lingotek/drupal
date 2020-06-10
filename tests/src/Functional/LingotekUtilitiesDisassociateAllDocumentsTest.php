@@ -14,7 +14,6 @@ use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
  * Tests disassociating all site documents.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekUtilitiesDisassociateAllDocumentsTest extends LingotekTestBase {
 

@@ -10,7 +10,6 @@ use Drupal\lingotek\Lingotek;
  * Tests translating a field.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekFieldBodyTranslationTest extends LingotekTestBase {
 

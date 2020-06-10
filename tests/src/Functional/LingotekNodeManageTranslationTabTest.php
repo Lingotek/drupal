@@ -16,7 +16,6 @@ use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
  * Tests translating a node using the bulk management form.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekNodeManageTranslationTabTest extends LingotekTestBase {
 

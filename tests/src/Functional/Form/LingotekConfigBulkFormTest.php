@@ -11,7 +11,6 @@ use Drupal\Tests\lingotek\Functional\LingotekTestBase;
  * Tests the config bulk management form.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekConfigBulkFormTest extends LingotekTestBase {
 

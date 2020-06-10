@@ -10,7 +10,6 @@ use Drupal\lingotek\Lingotek;
  * Tests translating a node.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekNodeStatusDownloadTargetTest extends LingotekTestBase {
 

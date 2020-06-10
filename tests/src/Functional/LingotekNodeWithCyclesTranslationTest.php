@@ -11,7 +11,6 @@ use Drupal\node\Entity\Node;
  * Tests translating a node.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekNodeWithCyclesTranslationTest extends LingotekTestBase {
 

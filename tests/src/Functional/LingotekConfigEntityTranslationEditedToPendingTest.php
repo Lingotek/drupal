@@ -9,7 +9,6 @@ use Drupal\lingotek\Lingotek;
  * Tests translating a field using the bulk management form.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekConfigEntityTranslationEditedToPendingTest extends LingotekTestBase {
 
@@ -119,7 +118,6 @@ class LingotekConfigEntityTranslationEditedToPendingTest extends LingotekTestBas
     // $this->assertEqual(count($es_pending), 1, 'Pending translation is shown.');
     // // Check the status is still request for German.
     // $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/field_config/node.article.body/de_AT?destination=' . $basepath .'/admin/lingotek/config/manage');
-
   }
 
 }

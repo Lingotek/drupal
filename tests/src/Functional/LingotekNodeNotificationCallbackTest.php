@@ -17,7 +17,6 @@ use Symfony\Component\HttpFoundation\Response;
  * Tests translating a node using the notification callback.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
 

@@ -9,7 +9,6 @@ use Drupal\lingotek\Lingotek;
  * Tests translating a field using the bulk management form.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekConfigTranslationEditedToPendingTest extends LingotekTestBase {
 

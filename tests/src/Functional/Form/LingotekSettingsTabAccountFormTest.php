@@ -8,7 +8,6 @@ use Drupal\Tests\lingotek\Functional\LingotekTestBase;
  * Tests the Lingotek account settings form.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekSettingsTabAccountFormTest extends LingotekTestBase {
 

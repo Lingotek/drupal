@@ -9,7 +9,6 @@ use Drupal\language\Entity\ContentLanguageSettings;
  * Tests config overrides in settings.php are possible .
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekConfigSubscriberTest extends LingotekTestBase {
 

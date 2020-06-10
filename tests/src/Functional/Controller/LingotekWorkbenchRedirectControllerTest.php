@@ -12,7 +12,6 @@ use Drupal\Tests\lingotek\Functional\LingotekTestBase;
  * Tests the workbench redirect controller.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekWorkbenchRedirectControllerTest extends LingotekTestBase {
 

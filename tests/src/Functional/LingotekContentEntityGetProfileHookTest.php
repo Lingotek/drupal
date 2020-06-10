@@ -12,7 +12,6 @@ use Drupal\lingotek\Entity\LingotekProfile;
  * Tests the hooks for getting content entity associated profile.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekContentEntityGetProfileHookTest extends LingotekTestBase {
 

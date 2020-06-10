@@ -13,7 +13,6 @@ use Symfony\Component\HttpFoundation\Response;
  * Tests translating a content type using the notification callback.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
 

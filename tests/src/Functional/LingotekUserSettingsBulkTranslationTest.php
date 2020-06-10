@@ -9,7 +9,6 @@ use Drupal\lingotek\Lingotek;
  * Tests translating user settings using the bulk management form.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekUserSettingsBulkTranslationTest extends LingotekTestBase {
 

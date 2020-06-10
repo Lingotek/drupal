@@ -12,7 +12,6 @@ use Drupal\node\Entity\Node;
  * Tests translating a node using the bulk management form.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekNodeBulkTranslationTest extends LingotekTestBase {
 

@@ -10,7 +10,6 @@ use Drupal\lingotek\Lingotek;
  * Tests what happens when uploading a not enabled node using the bulk management form.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekNotEnabledNodeBulkTranslationTest extends LingotekTestBase {
 

@@ -11,7 +11,6 @@ use Drupal\node\Entity\Node;
  * Tests translating a node that contains a path.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekNodeWithPathTranslationTest extends LingotekTestBase {
 

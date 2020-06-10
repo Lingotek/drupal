@@ -14,7 +14,6 @@ use Drupal\Tests\lingotek\Functional\LingotekTestBase;
  * Tests the bulk management form.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekNodeBulkFormTest extends LingotekTestBase {
 
