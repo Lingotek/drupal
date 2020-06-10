@@ -39,6 +39,9 @@ class LingotekApi implements LingotekApiInterface {
     $this->logger = $logger;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('lingotek.http_client'),
@@ -46,6 +49,9 @@ class LingotekApi implements LingotekApiInterface {
     );
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function getLocales() {
     $this->logger->debug('Starting Locales request: /api/locale with args [limit => 1000]');
     /** @var \Psr\Http\Message\ResponseInterface $response */
@@ -64,6 +70,9 @@ class LingotekApi implements LingotekApiInterface {
     return FALSE;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function getAccountInfo() {
     try {
       $access_token = $this->lingotekClient->getCurrentToken();
@@ -78,6 +87,9 @@ class LingotekApi implements LingotekApiInterface {
     return $response;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function addDocument($args) {
     try {
       $this->logger->debug('Lingotek::addDocument (POST /api/document) called with ' . var_export($args, TRUE));
@@ -98,6 +110,9 @@ class LingotekApi implements LingotekApiInterface {
     return $response;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function patchDocument($id, $args) {
     try {
       $this->logger->debug('Lingotek::patchDocument (PATCH /api/document) called with id %id and args %args', ['%id' => $id, '%args' => var_export($args, TRUE)]);
@@ -163,22 +178,9 @@ class LingotekApi implements LingotekApiInterface {
     return $response;
   }
 
-  public function documentExists($id) {
-    // TODO
-    throw new Exception('Not implemented');
-  }
-
-  public function getDocuments($args = []) {
-    try {
-      $this->logger->debug('Lingotek::getDocuments called');
-      $response = $this->lingotekClient->get('/api/document/', $args);
-    }
-    catch (\Exception $e) {
-      throw new LingotekApiException('Failed to get documents: ' . $e->getMessage());
-    }
-    return $response->getBody();
-  }
-
+  /**
+   * {@inheritdoc}
+   */
   public function getDocumentContent($doc_id) {
     try {
       $this->logger->debug('Lingotek::getDocumentContent called with id ' . $doc_id);
@@ -190,6 +192,9 @@ class LingotekApi implements LingotekApiInterface {
     return $response->getBody()->getContents();
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function getDocumentInfo($id) {
     try {
       $this->logger->debug('Lingotek::getDocumentInfo called with id ' . $id);
@@ -203,6 +208,9 @@ class LingotekApi implements LingotekApiInterface {
     return $response;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function getDocumentStatus($id) {
     try {
       $this->logger->debug('Lingotek::getDocumentStatus called with id ' . $id);
@@ -216,6 +224,9 @@ class LingotekApi implements LingotekApiInterface {
     return $response;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function getDocumentTranslationStatuses($id) {
     try {
       $this->logger->debug('Lingotek::getDocumentTranslationStatuses called with %id', ['%id' => $id]);
@@ -230,6 +241,9 @@ class LingotekApi implements LingotekApiInterface {
     return $response;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function getDocumentTranslationStatus($id, $locale) {
     try {
       $this->logger->debug('Lingotek::getDocumentTranslationStatus called with %id and %locale', ['%id' => $id, '%locale' => $locale]);
@@ -244,6 +258,9 @@ class LingotekApi implements LingotekApiInterface {
     return $response;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function addTranslation($id, $locale, $workflow_id = NULL) {
     try {
       $this->logger->debug('Lingotek::addTranslation called with id ' . $id . ' and locale ' . $locale);
@@ -271,6 +288,9 @@ class LingotekApi implements LingotekApiInterface {
     return $response;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function getTranslation($id, $locale, $useSource = FALSE) {
     try {
       $this->logger->debug('Lingotek::getTranslation called with id ' . $id . ' and locale ' . $locale);
@@ -285,6 +305,9 @@ class LingotekApi implements LingotekApiInterface {
     return $response;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function deleteTranslation($id, $locale) {
     try {
       $this->logger->debug('Lingotek::deleteTranslation called with id ' . $id . ' and locale ' . $locale);
@@ -299,6 +322,9 @@ class LingotekApi implements LingotekApiInterface {
     return $response;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function getCommunities() {
     try {
       $this->logger->debug('Lingotek::getCommunities called.');
@@ -312,6 +338,9 @@ class LingotekApi implements LingotekApiInterface {
     return $this->formatResponse($response);
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function getProject($project_id) {
     try {
       $this->logger->debug('Lingotek::getProject called with id ' . $project_id);
@@ -325,6 +354,9 @@ class LingotekApi implements LingotekApiInterface {
     return $response->json();
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function getProjects($community_id) {
     try {
       $this->logger->debug('Lingotek::getProjects called with id ' . $community_id);
@@ -355,6 +387,9 @@ class LingotekApi implements LingotekApiInterface {
     return $response;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function getVaults($community_id) {
     try {
       $this->logger->debug('Lingotek::getVaults called with id ' . $community_id);
@@ -369,6 +404,9 @@ class LingotekApi implements LingotekApiInterface {
     return $this->formatResponse($response);
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function getWorkflows($community_id) {
     try {
       $this->logger->debug('Lingotek::getWorkflows called with id ' . $community_id);
@@ -396,6 +434,16 @@ class LingotekApi implements LingotekApiInterface {
     return $this->formatResponse($response);
   }
 
+  /**
+   * Formats the response data as id => title based on the JSON returned
+   * properties.
+   *
+   * @param \Psr\Http\Message\ResponseInterface $response
+   *   A response.
+   *
+   * @return array
+   *   Array of titles keyed by id from the response entities.
+   */
   protected function formatResponse($response) {
     $formatted_response = [];
     $json_response = json_decode($response->getBody(), TRUE);

@@ -1116,17 +1116,6 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     return FALSE;
   }
 
-  public function downloadDocumentContent($document_id) {
-    try {
-      $data = $this->lingotek->downloadDocumentContent($document_id);
-    }
-    catch (LingotekApiException $exception) {
-      // TODO: log issue
-      return FALSE;
-    }
-    return $data;
-  }
-
   /**
    * {@inheritdoc}
    */

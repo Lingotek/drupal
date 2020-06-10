@@ -2,25 +2,75 @@
 
 namespace Drupal\lingotek\Remote;
 
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 
 /**
- * a simple interface to http functions
- *
- *@since 0.1
+ * Lingotek HTTP interface.
  */
-interface LingotekHttpInterface {
+interface LingotekHttpInterface extends ContainerInjectionInterface {
 
-  public static function create(ContainerInterface $container);
-
+  /**
+   * Send a GET request.
+   *
+   * @param string|\Psr\Http\Message\UriInterface $path
+   *   URI object or string.
+   * @param array $args
+   *   Request argument to add via query string.
+   *
+   * @return \Psr\Http\Message\ResponseInterface
+   *   A response.
+   */
   public function get($path, $args = []);
 
-  public function post($path, $args = []);
+  /**
+   * Send a POST request.
+   *
+   * @param string|\Psr\Http\Message\UriInterface $path
+   *   URI object or string.
+   * @param array $args
+   *   Request arguments to the POST request.
+   * @param bool $use_multipart
+   *   If TRUE, use multipart post arguments. If FALSE, uses form parameters.
+   *
+   * @return \Psr\Http\Message\ResponseInterface
+   *   A response.
+   */
+  public function post($path, $args = [], $use_multipart = FALSE);
 
+  /**
+   * Send a DELETE request.
+   *
+   * @param string|\Psr\Http\Message\UriInterface $path
+   *   URI object or string.
+   * @param array $args
+   *   Request argument to add via query string.
+   *
+   * @return \Psr\Http\Message\ResponseInterface
+   *   A response.
+   */
   public function delete($path, $args = []);
 
-  public function patch($path, $args = []);
+  /**
+   * Send a PATCH request.
+   *
+   * @param string|\Psr\Http\Message\UriInterface $path
+   *   URI object or string.
+   * @param array $args
+   *   Request arguments to the PATCH request.
+   * @param bool $use_multipart
+   *   If TRUE, use multipart post arguments. If FALSE, uses form parameters.
+   *
+   * @return \Psr\Http\Message\ResponseInterface
+   *   A response.
+   */
+  public function patch($path, $args = [], $use_multipart = FALSE);
 
+  /**
+   * Gets the current configured token.
+   *
+   * @return string
+   *   The token.
+   */
   public function getCurrentToken();
 
 }

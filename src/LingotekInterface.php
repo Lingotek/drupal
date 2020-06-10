@@ -2,11 +2,9 @@
 
 namespace Drupal\lingotek;
 
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 
-interface LingotekInterface {
-
-  public static function create(ContainerInterface $container);
+interface LingotekInterface extends ContainerInjectionInterface {
 
   /**
    * Get the available locales on Lingotek.
@@ -17,7 +15,7 @@ interface LingotekInterface {
   public function getLocales();
 
   /**
-   * Get the available locales on Lingotek.
+   * Get the available locales on Lingotek with extra information.
    *
    * @return array
    *   Array of locales. Empty array if there is an error.
@@ -27,20 +25,92 @@ interface LingotekInterface {
    */
   public function getLocalesInfo();
 
+  /**
+   * Get the account information.
+   *
+   * @return array|bool
+   *   Array with account info. FALSE in case of error.
+   *   The keys are user_id, username, login_id, email, and name.
+   */
   public function getAccountInfo();
 
+  /**
+   * Gets the account related resources.
+   *
+   * @param bool $force
+   *   Flag indicating if it must be forced to request from the API. If false,
+   *   will use local cached data.
+   *
+   * @return array|bool
+   *   Array with resources info. FALSE in case of error.
+   *   The keys are community, project, vault, workflow, and filter. Each of them
+   *   is a nested array with key the id, and value the name of the resource.
+   */
   public function getResources($force = FALSE);
 
+  /**
+   * Gets the account related workflows.
+   *
+   * @param bool $force
+   *   Flag indicating if it must be forced to request from the API. If false,
+   *   will use local cached data.
+   *
+   * @return array|bool
+   *   Array with workflows information. FALSE in case of error.
+   *   The keys are the ids, and values are the name of the resource.
+   */
   public function getWorkflows($force = FALSE);
 
+  /**
+   * Gets the account related vaults.
+   *
+   * @param bool $force
+   *   Flag indicating if it must be forced to request from the API. If false,
+   *   will use local cached data.
+   *
+   * @return array|bool
+   *   Array with vaults information. FALSE in case of error.
+   *   The keys are the ids, and values are the name of the resource.
+   */
   public function getVaults($force = FALSE);
 
+  /**
+   * Gets the account related communities.
+   *
+   * @param bool $force
+   *   Flag indicating if it must be forced to request from the API. If false,
+   *   will use local cached data.
+   *
+   * @return array|bool
+   *   Array with communities information. FALSE in case of error.
+   *   The keys are the ids, and values are the name of the resource.
+   */
   public function getCommunities($force = FALSE);
 
+  /**
+   * Gets the account related projects.
+   *
+   * @param bool $force
+   *   Flag indicating if it must be forced to request from the API. If false,
+   *   will use local cached data.
+   *
+   * @return array|bool
+   *   Array with projects information. FALSE in case of error.
+   *   The keys are the ids, and values are the name of the resource.
+   */
   public function getProjects($force = FALSE);
 
   public function getDefaults();
 
+  /**
+   * Gets the project with the given ID.
+   *
+   * @param string $project_id
+   *   The project ID.
+   *
+   * @return array|bool
+   *   Array with project information.
+   */
   public function getProject($project_id);
 
   /**
@@ -54,6 +124,17 @@ interface LingotekInterface {
    */
   public function getFilters($force = FALSE);
 
+  /**
+   * Sets the project callback url.
+   *
+   * @param string $project_id
+   *   The project id.
+   * @param string $callback_url
+   *   The callback url.
+   *
+   * @return bool
+   *   TRUE if successful, FALSE if not.
+   */
   public function setProjectCallBackUrl($project_id, $callback_url);
 
   /**
@@ -119,7 +200,8 @@ interface LingotekInterface {
    * @param \Drupal\lingotek\LingotekProfileInterface $profile
    *   The profile being used.
    *
-   * @return mixed
+   * @return bool
+   *   TRUE if the document was successfully updated. FALSE if not.
    *
    * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentArchivedException
@@ -128,6 +210,15 @@ interface LingotekInterface {
    */
   public function addTarget($doc_id, $locale, LingotekProfileInterface $profile = NULL);
 
+  /**
+   * Gets a document status.
+   *
+   * @param string $doc_id
+   *   The document id.
+   *
+   * @return bool
+   *   TRUE if the document exists. FALSE if not.
+   */
   public function getDocumentStatus($doc_id);
 
   /**
@@ -142,7 +233,7 @@ interface LingotekInterface {
   public function getUploadedTimestamp($doc_id);
 
   /**
-   * Checks the status of the translation.
+   * Gets the status of the translation.
    *
    * @param string $doc_id
    *   The document ID in Lingotek.
@@ -155,8 +246,28 @@ interface LingotekInterface {
    */
   public function getDocumentTranslationStatus($doc_id, $locale);
 
+  /**
+   * Gets the status of the translations.
+   *
+   * @param string $doc_id
+   *   The document ID in Lingotek.
+   *
+   * @return array
+   *   Returns array keyed by the locale with the percentage of completion.
+   */
   public function getDocumentTranslationStatuses($doc_id);
 
+  /**
+   * Gets the translation of a document for a given locale.
+   *
+   * @param string $doc_id
+   *   The document ID in Lingotek.
+   * @param $locale
+   *   The locale we want to know the translation status.
+   *
+   * @return array
+   *   Returns array with the content of the document.
+   */
   public function downloadDocument($doc_id, $locale);
 
   /**

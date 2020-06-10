@@ -84,12 +84,17 @@ class Lingotek implements LingotekInterface {
   }
 
   public static function create(ContainerInterface $container) {
-    if (empty(self::$instance)) {
-      self::$instance = new Lingotek($container->get('lingotek.api'), $container->get('lingotek.language_locale_mapper'), $container->get('config.factory'), $container->get('lingotek.filter_manager'));
-    }
-    return self::$instance;
+    return new static(
+      $container->get('lingotek.api'),
+      $container->get('lingotek.language_locale_mapper'),
+      $container->get('config.factory'),
+      $container->get('lingotek.filter_manager')
+    );
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function getAccountInfo() {
     try {
       $response = $this->api->getAccountInfo();
@@ -105,6 +110,9 @@ class Lingotek implements LingotekInterface {
     return FALSE;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function getResources($force = FALSE) {
     return [
         'community' => $this->getCommunities($force),
@@ -119,6 +127,9 @@ class Lingotek implements LingotekInterface {
     return $this->configFactory->get(static::SETTINGS)->get('default');
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function getCommunities($force = FALSE) {
     $resources_key = 'account.resources.community';
     $data = $this->configFactory->get(static::SETTINGS)->get($resources_key);
@@ -129,33 +140,44 @@ class Lingotek implements LingotekInterface {
     return $data;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function getVaults($force = FALSE) {
     return $this->getResource('account.resources.vault', 'getVaults', $force);
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function getProjects($force = FALSE) {
     return $this->getResource('account.resources.project', 'getProjects', $force);
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function getWorkflows($force = FALSE) {
     return $this->getResource('account.resources.workflow', 'getWorkflows', $force);
   }
 
-  public function getProjectStatus($project_id) {
-    return $this->api->getProjectStatus($project_id);
-  }
-
+  /**
+   * {@inheritdoc}
+   */
   public function getProject($project_id) {
     return $this->api->getProject($project_id);
   }
 
   /**
-  * {@inheritdoc}
-  */
+   * {@inheritdoc}
+   */
   public function getFilters($force = FALSE) {
     return $this->getResource('account.resources.filter', 'getFilters', $force);
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function setProjectCallBackUrl($project_id, $callback_url) {
     $args = [
       'format' => 'JSON',
@@ -403,6 +425,9 @@ class Lingotek implements LingotekInterface {
     return $result;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function addTarget($doc_id, $locale, LingotekProfileInterface $profile = NULL) {
     $workflow_id = NULL;
     $drupal_language = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale);
@@ -539,6 +564,9 @@ class Lingotek implements LingotekInterface {
     return $modified_date;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function getDocumentStatus($doc_id) {
     // For now, a passthrough to the API object so the controllers do not
     // need to include that class.
@@ -587,6 +615,9 @@ class Lingotek implements LingotekInterface {
     return $progress;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function getDocumentTranslationStatuses($doc_id) {
     $statuses = [];
     try {
@@ -612,6 +643,9 @@ class Lingotek implements LingotekInterface {
     return $statuses;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function downloadDocument($doc_id, $locale) {
     // For now, a passthrough to the API object so the controllers do not
     // need to include that class.
@@ -629,16 +663,6 @@ class Lingotek implements LingotekInterface {
       return FALSE;
     }
     return FALSE;
-  }
-
-  public function downloadDocumentContent($doc_id) {
-    $response = $this->api->getDocumentContent($doc_id);
-    return $response;
-  }
-
-  public function downloadDocuments($args = []) {
-    $response = $this->api->getDocuments($args);
-    return $response;
   }
 
 }

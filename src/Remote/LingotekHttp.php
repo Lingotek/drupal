@@ -41,7 +41,7 @@ class LingotekHttp implements LingotekHttpInterface {
   }
 
   /**
-   * Send a GET request.
+   * {@inheritdoc}
    */
   public function get($path, $args = []) {
     $options = [];
@@ -56,7 +56,7 @@ class LingotekHttp implements LingotekHttpInterface {
   }
 
   /**
-   * Send a POST request.
+   * {@inheritdoc}
    */
   public function post($path, $args = [], $use_multipart = FALSE) {
     $options = [];
@@ -78,7 +78,7 @@ class LingotekHttp implements LingotekHttpInterface {
   }
 
   /**
-   * Send a DELETE request.
+   * {@inheritdoc}
    */
   public function delete($path, $args = []) {
     // Let the post method masquerade as a DELETE
@@ -95,7 +95,7 @@ class LingotekHttp implements LingotekHttpInterface {
   }
 
   /**
-   * Send a PATCH request.
+   * {@inheritdoc}
    */
   public function patch($path, $args = [], $use_multipart = FALSE) {
     return $this->httpClient->patch($this->getBaseUrl() . $path,
@@ -108,18 +108,32 @@ class LingotekHttp implements LingotekHttpInterface {
     );
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function getCurrentToken() {
     return $this->config->get('account.access_token');
   }
 
+  /**
+   * Get the headers that are used in every request.
+   *
+   * @return string[]
+   */
   protected function getDefaultHeaders() {
     $headers = ['Accept' => '*/*'];
-    if ($token = $this->config->get('account.access_token')) {
+    if ($token = $this->getCurrentToken()) {
       $headers['Authorization'] = 'bearer ' . $token;
     }
     return $headers;
   }
 
+  /**
+   * Gets the API base url.
+   *
+   * @return string
+   *   The API base url.
+   */
   protected function getBaseUrl() {
     $base_url = $this->config->get('account.host');
     return $base_url;
