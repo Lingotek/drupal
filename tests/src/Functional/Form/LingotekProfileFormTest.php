@@ -72,6 +72,7 @@ class LingotekProfileFormTest extends LingotekTestBase {
       'id' => $profile_id,
       'label' => $profile_name,
       'auto_upload' => 1,
+      'auto_request' => 1,
       'auto_download' => 1,
       'append_type_to_title' => 'yes',
     ];
@@ -83,13 +84,16 @@ class LingotekProfileFormTest extends LingotekTestBase {
     $this->assertLinkByHref("/admin/lingotek/settings/profile/$profile_id/edit");
 
     $this->assertFieldChecked("edit-profile-$profile_id-auto-upload");
+    $this->assertFieldChecked("edit-profile-$profile_id-auto-request");
     $this->assertFieldChecked("edit-profile-$profile_id-auto-download");
     $this->assertFieldEnabled("edit-profile-$profile_id-auto-upload");
+    $this->assertFieldEnabled("edit-profile-$profile_id-auto-request");
     $this->assertFieldEnabled("edit-profile-$profile_id-auto-download");
 
     /** @var \Drupal\lingotek\LingotekProfileInterface $profile */
     $profile = LingotekProfile::load($profile_id);
     $this->assertTrue($profile->hasAutomaticUpload());
+    $this->assertTrue($profile->hasAutomaticRequest());
     $this->assertTrue($profile->hasAutomaticDownload());
     $this->assertIdentical('yes', $profile->getAppendContentTypeToTitle());
     $this->assertIdentical('default', $profile->getProject());
@@ -147,6 +151,71 @@ class LingotekProfileFormTest extends LingotekTestBase {
     $this->assertOptionSelected('edit-workflow', 'test_workflow');
     $this->assertOptionSelected('edit-filter', 'test_filter');
     $this->assertOptionSelected('edit-subfilter', 'another_filter');
+  }
+
+  /**
+   * Test editing profiles auto properties in the listing.
+   */
+  public function testEditingProfileInListing() {
+    /** @var \Drupal\lingotek\LingotekProfileInterface $profile */
+    $profile = LingotekProfile::create([
+      'id' => strtolower($this->randomMachineName()),
+      'label' => $this->randomString(),
+    ]);
+    $profile->save();
+    $profile_id = $profile->id();
+    $this->drupalGet("/admin/lingotek/settings");
+
+    $edit = [
+      "profile[$profile_id][auto_upload]" => 1,
+      "profile[$profile_id][auto_request]" => 0,
+      "profile[$profile_id][auto_download]" => 1,
+    ];
+    $this->drupalPostForm(NULL, $edit, 'Save configuration', [], 'lingotek-profile-admin-overview-form');
+
+    /** @var \Drupal\lingotek\LingotekProfileInterface $profile */
+    $profile = LingotekProfile::load($profile_id);
+    $this->assertTrue($profile->hasAutomaticUpload());
+    $this->assertFalse($profile->hasAutomaticRequest());
+    $this->assertTrue($profile->hasAutomaticDownload());
+
+    $this->assertFieldChecked("profile[$profile_id][auto_upload]");
+    $this->assertNoFieldChecked("profile[$profile_id][auto_request]");
+    $this->assertFieldChecked("profile[$profile_id][auto_download]");
+
+    $edit = [
+      "profile[$profile_id][auto_upload]" => 1,
+      "profile[$profile_id][auto_request]" => 1,
+      "profile[$profile_id][auto_download]" => 0,
+    ];
+    $this->drupalPostForm(NULL, $edit, 'Save configuration', [], 'lingotek-profile-admin-overview-form');
+
+    /** @var \Drupal\lingotek\LingotekProfileInterface $profile */
+    $profile = LingotekProfile::load($profile_id);
+    $this->assertTrue($profile->hasAutomaticUpload());
+    $this->assertTrue($profile->hasAutomaticRequest());
+    $this->assertFalse($profile->hasAutomaticDownload());
+
+    $this->assertFieldChecked("profile[$profile_id][auto_upload]");
+    $this->assertFieldChecked("profile[$profile_id][auto_request]");
+    $this->assertNoFieldChecked("profile[$profile_id][auto_download]");
+
+    $edit = [
+      "profile[$profile_id][auto_upload]" => 0,
+      "profile[$profile_id][auto_request]" => 1,
+      "profile[$profile_id][auto_download]" => 0,
+    ];
+    $this->drupalPostForm(NULL, $edit, 'Save configuration', [], 'lingotek-profile-admin-overview-form');
+
+    /** @var \Drupal\lingotek\LingotekProfileInterface $profile */
+    $profile = LingotekProfile::load($profile_id);
+    $this->assertFalse($profile->hasAutomaticUpload());
+    $this->assertTrue($profile->hasAutomaticRequest());
+    $this->assertFalse($profile->hasAutomaticDownload());
+
+    $this->assertNoFieldChecked("profile[$profile_id][auto_upload]");
+    $this->assertFieldChecked("profile[$profile_id][auto_request]");
+    $this->assertNoFieldChecked("profile[$profile_id][auto_download]");
   }
 
   /**

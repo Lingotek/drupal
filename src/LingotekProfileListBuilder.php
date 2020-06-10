@@ -93,6 +93,7 @@ class LingotekProfileListBuilder extends DraggableListBuilder {
     $header = [
         'label' => t('Name'),
         'auto_upload' => t('Automatic Upload'),
+        'auto_request' => t('Automatic Request'),
         'auto_download' => t('Automatic Download'),
       ] + parent::buildHeader();
     return $header;
@@ -102,6 +103,7 @@ class LingotekProfileListBuilder extends DraggableListBuilder {
    * {@inheritdoc}
    */
   public function buildRow(EntityInterface $entity) {
+    /** @var \Drupal\lingotek\LingotekProfileInterface $entity */
     $row['label'] = $entity->label();
     $row['auto_upload'] = [
       '#type' => 'checkbox',
@@ -109,6 +111,13 @@ class LingotekProfileListBuilder extends DraggableListBuilder {
       '#title_display' => 'invisible',
       '#disabled' => $entity->isLocked(),
       '#default_value' => $entity->hasAutomaticUpload(),
+    ];
+    $row['auto_request'] = [
+      '#type' => 'checkbox',
+      '#title' => t('Set @title for automatic request', ['@title' => $entity->label()]),
+      '#title_display' => 'invisible',
+      '#disabled' => $entity->isLocked(),
+      '#default_value' => $entity->hasAutomaticRequest(),
     ];
     $row['auto_download'] = [
       '#type' => 'checkbox',
@@ -137,11 +146,14 @@ class LingotekProfileListBuilder extends DraggableListBuilder {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     // Parent submit handler takes care of the weights, but not the checkboxes.
     parent::submitForm($form, $form_state);
+    /** @var \Drupal\lingotek\LingotekProfileInterface $entity */
     foreach ($this->entities as $entity_id => $entity) {
       if (!$entity->isLocked() && (
+          $entity->hasAutomaticRequest() != $form_state->getValue(['profile', $entity_id, 'auto_request']) ||
           $entity->hasAutomaticUpload() != $form_state->getValue(['profile', $entity_id, 'auto_upload']) ||
           $entity->hasAutomaticDownload() != $form_state->getValue(['profile', $entity_id, 'auto_download']))) {
         $entity->setAutomaticUpload($form_state->getValue(['profile', $entity_id, 'auto_upload']));
+        $entity->setAutomaticRequest($form_state->getValue(['profile', $entity_id, 'auto_request']));
         $entity->setAutomaticDownload($form_state->getValue(['profile', $entity_id, 'auto_download']));
         $entity->save();
       }
