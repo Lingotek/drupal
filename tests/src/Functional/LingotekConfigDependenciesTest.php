@@ -43,7 +43,7 @@ class LingotekConfigDependenciesTest extends LingotekTestBase {
 
     // Go to the settings page.
     $this->drupalGet('admin/lingotek/settings');
-    $this->assertResponse(200);
+    $this->assertSession()->statusCodeEquals(200);
 
     $this->saveLingotekContentTranslationSettingsForNodeTypes(['article'], 'manual');
     // Set up node types and node fields for translation.

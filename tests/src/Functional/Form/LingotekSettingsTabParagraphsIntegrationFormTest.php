@@ -183,13 +183,13 @@ class LingotekSettingsTabParagraphsIntegrationFormTest extends LingotekTestBase 
 
     // Now the taxonomy tab should be shown.
     $this->goToContentBulkManagementForm();
-    $this->assertResponse(200);
+    $this->assertSession()->statusCodeEquals(200);
     $this->assertLink('Content');
     $this->assertNoLink('Paragraph');
     $this->assertLink('Taxonomy term');
 
     $this->goToContentBulkManagementForm('taxonomy_term');
-    $this->assertResponse(200);
+    $this->assertSession()->statusCodeEquals(200);
     $this->assertLink('Content');
     $this->assertNoLink('Paragraph');
     $this->assertLink('Taxonomy term');

@@ -37,6 +37,8 @@ class LingotekConnectTest extends BrowserTestBase {
    * Tests connecting to Lingotek.
    */
   public function testConnectToLingotek() {
+    $assert_session = $this->assertSession();
+
     $this->drupalGet('admin/lingotek/setup/account');
     $this->clickLink('Connect Lingotek Account');
     $this->drupalPostForm(NULL, ['community' => 'test_community'], 'Next');
@@ -44,20 +46,20 @@ class LingotekConnectTest extends BrowserTestBase {
 
     // Assert there are options for filters.
     $this->assertFieldByName('filter');
-    $this->assertOptionSelected('edit-filter', 'drupal_default');
-    $this->assertOption('edit-filter', 'project_default');
-    $this->assertOption('edit-filter', 'drupal_default');
-    $this->assertOption('edit-filter', 'test_filter');
-    $this->assertOption('edit-filter', 'test_filter2');
-    $this->assertOption('edit-filter', 'test_filter3');
+    $option_field = $assert_session->optionExists('edit-filter', 'drupal_default');
+    $this->assertTrue($option_field->hasAttribute('selected'));
+    $assert_session->optionExists('edit-filter', 'project_default');
+    $assert_session->optionExists('edit-filter', 'test_filter');
+    $assert_session->optionExists('edit-filter', 'test_filter2');
+    $assert_session->optionExists('edit-filter', 'test_filter3');
 
     $this->assertFieldByName('subfilter');
-    $this->assertOptionSelected('edit-subfilter', 'drupal_default');
-    $this->assertOption('edit-subfilter', 'project_default');
-    $this->assertOption('edit-subfilter', 'drupal_default');
-    $this->assertOption('edit-subfilter', 'test_filter');
-    $this->assertOption('edit-subfilter', 'test_filter2');
-    $this->assertOption('edit-subfilter', 'test_filter3');
+    $option_field = $assert_session->optionExists('edit-subfilter', 'drupal_default');
+    $this->assertTrue($option_field->hasAttribute('selected'));
+    $assert_session->optionExists('edit-subfilter', 'project_default');
+    $assert_session->optionExists('edit-subfilter', 'test_filter');
+    $assert_session->optionExists('edit-subfilter', 'test_filter2');
+    $assert_session->optionExists('edit-subfilter', 'test_filter3');
 
     $this->drupalPostForm(NULL, [
       'project' => 'test_project',

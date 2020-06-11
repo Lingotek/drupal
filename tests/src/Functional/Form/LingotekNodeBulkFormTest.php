@@ -2151,6 +2151,8 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
    * Tests if source status filter works correctly
    */
   public function testSourceStatusFilter() {
+    $assert_session = $this->assertSession();
+
     // Create a node.
     $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
@@ -2166,13 +2168,13 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $this->assertLingotekUploadLink();
     $this->clickLink('EN');
 
-    $this->assertOption('filters[advanced_options][source_status]', 'All');
-    $this->assertOption('filters[advanced_options][source_status]', 'UPLOAD_NEEDED');
-    $this->assertOption('filters[advanced_options][source_status]', 'CURRENT');
-    $this->assertOption('filters[advanced_options][source_status]', 'IMPORTING');
-    $this->assertOption('filters[advanced_options][source_status]', 'EDITED');
-    $this->assertOption('filters[advanced_options][source_status]', 'CANCELLED');
-    $this->assertOption('filters[advanced_options][source_status]', 'ERROR');
+    $assert_session->optionExists('filters[advanced_options][source_status]', 'All');
+    $assert_session->optionExists('filters[advanced_options][source_status]', 'UPLOAD_NEEDED');
+    $assert_session->optionExists('filters[advanced_options][source_status]', 'CURRENT');
+    $assert_session->optionExists('filters[advanced_options][source_status]', 'IMPORTING');
+    $assert_session->optionExists('filters[advanced_options][source_status]', 'EDITED');
+    $assert_session->optionExists('filters[advanced_options][source_status]', 'CANCELLED');
+    $assert_session->optionExists('filters[advanced_options][source_status]', 'ERROR');
 
     // After we filter by "IMPORTING", there is no pager and the rows
     // selected are the ones expected.
@@ -2203,6 +2205,8 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     * Tests if target status filter works correctly
     */
   public function testTargetStatusFilter() {
+    $assert_session = $this->assertSession();
+
     // Create a node.
     $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
@@ -2218,15 +2222,15 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $this->assertLingotekUploadLink();
     $this->clickLink('EN');
 
-    $this->assertOption('filters[advanced_options][target_status]', 'All');
-    $this->assertOption('filters[advanced_options][target_status]', 'CURRENT');
-    $this->assertOption('filters[advanced_options][target_status]', 'EDITED');
-    $this->assertOption('filters[advanced_options][target_status]', 'PENDING');
-    $this->assertOption('filters[advanced_options][target_status]', 'READY');
-    $this->assertOption('filters[advanced_options][target_status]', 'INTERMEDIATE');
-    $this->assertOption('filters[advanced_options][target_status]', 'REQUEST');
-    $this->assertOption('filters[advanced_options][target_status]', 'CANCELLED');
-    $this->assertOption('filters[advanced_options][target_status]', 'ERROR');
+    $assert_session->optionExists('filters[advanced_options][target_status]', 'All');
+    $assert_session->optionExists('filters[advanced_options][target_status]', 'CURRENT');
+    $assert_session->optionExists('filters[advanced_options][target_status]', 'EDITED');
+    $assert_session->optionExists('filters[advanced_options][target_status]', 'PENDING');
+    $assert_session->optionExists('filters[advanced_options][target_status]', 'READY');
+    $assert_session->optionExists('filters[advanced_options][target_status]', 'INTERMEDIATE');
+    $assert_session->optionExists('filters[advanced_options][target_status]', 'REQUEST');
+    $assert_session->optionExists('filters[advanced_options][target_status]', 'CANCELLED');
+    $assert_session->optionExists('filters[advanced_options][target_status]', 'ERROR');
 
     // After we filter by "PENDING", there is no pager and the rows
     // selected are the ones expected.

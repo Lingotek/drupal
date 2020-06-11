@@ -605,47 +605,51 @@ class LingotekProfileFormTest extends LingotekTestBase {
    * Tests that filter is shown in the profile form when there are filters.
    */
   public function testFilters() {
+    $assert_session = $this->assertSession();
+
     $this->drupalGet('admin/lingotek/settings');
     $this->clickLink(t('Add new Translation Profile'));
 
     $this->assertFieldByName('filter');
     $this->assertFieldByName('subfilter');
-    $this->assertOption('edit-filter', 'default');
-    $this->assertOption('edit-filter', 'project_default');
-    $this->assertOption('edit-filter', 'drupal_default');
-    $this->assertOption('edit-filter', 'test_filter');
-    $this->assertOption('edit-filter', 'another_filter');
-    $this->assertOption('edit-subfilter', 'default');
-    $this->assertOption('edit-subfilter', 'project_default');
-    $this->assertOption('edit-subfilter', 'drupal_default');
-    $this->assertOption('edit-subfilter', 'test_filter');
-    $this->assertOption('edit-subfilter', 'another_filter');
+    $assert_session->optionExists('edit-filter', 'default');
+    $assert_session->optionExists('edit-filter', 'project_default');
+    $assert_session->optionExists('edit-filter', 'drupal_default');
+    $assert_session->optionExists('edit-filter', 'test_filter');
+    $assert_session->optionExists('edit-filter', 'another_filter');
+    $assert_session->optionExists('edit-subfilter', 'default');
+    $assert_session->optionExists('edit-subfilter', 'project_default');
+    $assert_session->optionExists('edit-subfilter', 'drupal_default');
+    $assert_session->optionExists('edit-subfilter', 'test_filter');
+    $assert_session->optionExists('edit-subfilter', 'another_filter');
   }
 
   /**
    * Tests that only three filters are given when no resource filters are available.
    */
   public function testNoFilters() {
+    $assert_session = $this->assertSession();
+
     \Drupal::configFactory()->getEditable('lingotek.settings')->set('account.resources.filter', [])->save();
 
     $this->drupalGet('admin/lingotek/settings');
     $this->clickLink(t('Add new Translation Profile'));
 
     $this->assertFieldByName('filter');
-    $this->assertOptionSelected('edit-filter', 'drupal_default');
-    $this->assertOption('edit-filter', 'default');
-    $this->assertOption('edit-filter', 'project_default');
-    $this->assertOption('edit-filter', 'drupal_default');
-    $this->assertNoOption('edit-filter', 'test_filter');
-    $this->assertNoOption('edit-filter', 'another_filter');
+    $option_field = $assert_session->optionExists('edit-filter', 'drupal_default');
+    $this->assertTrue($option_field->hasAttribute('selected'));
+    $assert_session->optionExists('edit-filter', 'default');
+    $assert_session->optionExists('edit-filter', 'project_default');
+    $assert_session->optionNotExists('edit-filter', 'test_filter');
+    $assert_session->optionNotExists('edit-filter', 'another_filter');
 
     $this->assertFieldByName('subfilter');
-    $this->assertOptionSelected('edit-subfilter', 'drupal_default');
-    $this->assertOption('edit-subfilter', 'default');
-    $this->assertOption('edit-subfilter', 'project_default');
-    $this->assertOption('edit-subfilter', 'drupal_default');
-    $this->assertNoOption('edit-subfilter', 'test_filter');
-    $this->assertNoOption('edit-subfilter', 'another_filter');
+    $option_field = $assert_session->optionExists('edit-subfilter', 'drupal_default');
+    $this->assertTrue($option_field->hasAttribute('selected'));
+    $assert_session->optionExists('edit-subfilter', 'default');
+    $assert_session->optionExists('edit-subfilter', 'project_default');
+    $assert_session->optionNotExists('edit-subfilter', 'test_filter');
+    $assert_session->optionNotExists('edit-subfilter', 'another_filter');
   }
 
   /**

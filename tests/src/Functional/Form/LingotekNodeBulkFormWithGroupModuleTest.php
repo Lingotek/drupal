@@ -295,7 +295,7 @@ class LingotekNodeBulkFormWithGroupModuleTest extends LingotekTestBase {
     $this->drupalGet('/group/' . $gid . '/content/add/group_node%3Aarticle');
     $edit = ['entity_id[0][target_id]' => $title . ' (' . $nid . ')'];
     $this->drupalPostForm(NULL, $edit, 'Save');
-    $this->assertTitle($title . ' | Drupal');
+    $this->assertSession()->titleEquals($title . ' | Drupal');
   }
 
 }

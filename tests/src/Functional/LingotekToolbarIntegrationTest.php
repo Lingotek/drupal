@@ -94,7 +94,7 @@ class LingotekToolbarIntegrationTest extends LingotekTestBase {
     // returns JSON for the rendered subtrees. This hash is provided to the
     // client in drupalSettings.
     $response = $this->drupalGet('/toolbar/subtrees/' . $settings['toolbar']['subtreesHash']);
-    $this->assertResponse('200');
+    $this->assertSession()->statusCodeEquals('200');
     $response = json_decode($response, TRUE);
     $this->assertEqual($response[0]['command'], 'setToolbarSubtrees', 'Subtrees response uses the correct command.');
     $this->assertTrue(array_key_exists('lingotek-config-dashboard', $response[0]['subtrees']), 'There is a subtree for Lingotek config.');
