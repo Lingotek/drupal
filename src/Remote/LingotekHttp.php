@@ -63,7 +63,14 @@ class LingotekHttp implements LingotekHttpInterface {
     if (count($args) && $use_multipart) {
       $multipart = [];
       foreach ($args as $name => $contents) {
-        $multipart[] = ['name' => $name, 'contents' => $contents];
+        if (is_array($contents)) {
+          foreach ($contents as $content) {
+            $multipart[] = ['name' => $name, 'contents' => $content];
+          }
+        }
+        else {
+          $multipart[] = ['name' => $name, 'contents' => $contents];
+        }
       }
       $options[RequestOptions::MULTIPART] = $multipart;
     }
@@ -98,13 +105,30 @@ class LingotekHttp implements LingotekHttpInterface {
    * {@inheritdoc}
    */
   public function patch($path, $args = [], $use_multipart = FALSE) {
+    $options = [];
+    if (count($args) && $use_multipart) {
+      $multipart = [];
+      foreach ($args as $name => $contents) {
+        if (is_array($contents)) {
+          foreach ($contents as $content) {
+            $multipart[] = ['name' => $name, 'contents' => $content];
+          }
+        }
+        else {
+          $multipart[] = ['name' => $name, 'contents' => $contents];
+        }
+      }
+      $options[RequestOptions::MULTIPART] = $multipart;
+    }
+    elseif (count($args) && !$use_multipart) {
+      $options[RequestOptions::FORM_PARAMS] = $args;
+    }
     return $this->httpClient->patch($this->getBaseUrl() . $path,
       [
-        RequestOptions::FORM_PARAMS => $args,
         RequestOptions::HEADERS => $this->getDefaultHeaders() +
           // Let the post method masquerade as a PATCH.
           ['X-HTTP-Method-Override' => 'PATCH'],
-      ]
+      ] + $options
     );
   }
 
