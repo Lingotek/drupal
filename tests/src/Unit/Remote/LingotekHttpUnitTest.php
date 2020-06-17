@@ -13,6 +13,8 @@ use Psr\Http\Message\ResponseInterface;
  * @coversDefaultClass \Drupal\lingotek\Remote\LingotekHttp
  * @group lingotek
  * @preserveGlobalState disabled
+ * @requires PHPUnit > 8
+ * We depend on MockBuilder::addMethods() which was introduced in PHPUnit 8.
  */
 class LingotekHttpUnitTest extends UnitTestCase {
 
