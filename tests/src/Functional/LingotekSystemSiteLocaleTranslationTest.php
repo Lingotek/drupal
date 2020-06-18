@@ -46,6 +46,8 @@ class LingotekSystemSiteLocaleTranslationTest extends LingotekTestBase {
    * Tests that a node type can be translated.
    */
   public function testSystemSiteTranslation() {
+    $assert_session = $this->assertSession();
+
     // This is a hack for avoiding writing different lingotek endpoint mocks.
     \Drupal::state()->set('lingotek.uploaded_content_type', 'system.site');
 
@@ -92,7 +94,7 @@ class LingotekSystemSiteLocaleTranslationTest extends LingotekTestBase {
 
     // Check that the edit link is there.
     $basepath = \Drupal::request()->getBasePath();
-    $this->assertLinkByHref($basepath . '/admin/config/system/site-information/translate/es-ar/edit');
+    $assert_session->linkByHrefExists($basepath . '/admin/config/system/site-information/translate/es-ar/edit');
   }
 
 }

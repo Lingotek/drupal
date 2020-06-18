@@ -48,6 +48,7 @@ class LingotekFieldBodyBulkCancelTest extends LingotekTestBase {
    * Tests that a field config can be cancelled using the bulk operations on the management page.
    */
   public function testFieldCancel() {
+    $assert_session = $this->assertSession();
     // Login as admin.
     $this->drupalLogin($this->rootUser);
 
@@ -86,9 +87,9 @@ class LingotekFieldBodyBulkCancelTest extends LingotekTestBase {
 
     // We cannot request again.
     $basepath = \Drupal::request()->getBasePath();
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/field_config/node.article.body?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/upload/field_config/node.article.body?destination=' . $basepath . '/admin/lingotek/config/manage');
 
-    $this->assertNoLinkByHref($basepath . '/admin/lingotek/config/request/field_config/node.article.body/es_ES?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefNotExists($basepath . '/admin/lingotek/config/request/field_config/node.article.body/es_ES?destination=' . $basepath . '/admin/lingotek/config/manage');
 
     $this->createAndTranslateFieldWithLinks();
   }
@@ -97,6 +98,8 @@ class LingotekFieldBodyBulkCancelTest extends LingotekTestBase {
    * Tests that a field config target can be cancelled using the bulk operations on the management page.
    */
   public function testFieldCancelTarget() {
+    $assert_session = $this->assertSession();
+
     // Login as admin.
     $this->drupalLogin($this->rootUser);
 
@@ -129,15 +132,17 @@ class LingotekFieldBodyBulkCancelTest extends LingotekTestBase {
 
     // We cannot request again.
     $basepath = \Drupal::request()->getBasePath();
-    $this->assertNoLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/es_ES?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefNotExists($basepath . '/admin/lingotek/config/request/node_type/article/es_ES?destination=' . $basepath . '/admin/lingotek/config/manage');
   }
 
   protected function createAndTranslateFieldWithLinks() {
+    $assert_session = $this->assertSession();
+
     // Go to the bulk config management page.
     $this->goToConfigBulkManagementForm('node_fields');
 
     $basepath = \Drupal::request()->getBasePath();
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/field_config/node.article.body?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/upload/field_config/node.article.body?destination=' . $basepath . '/admin/lingotek/config/manage');
 
     // Clicking English must init the upload of content.
     $this->clickLink('EN');
@@ -147,7 +152,7 @@ class LingotekFieldBodyBulkCancelTest extends LingotekTestBase {
     $this->clickLink('EN');
     $this->assertText('Body status checked successfully');
 
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/field_config/node.article.body/es_ES?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/request/field_config/node.article.body/es_ES?destination=' . $basepath . '/admin/lingotek/config/manage');
 
     // Request the Spanish translation.
     $this->clickLink('ES');

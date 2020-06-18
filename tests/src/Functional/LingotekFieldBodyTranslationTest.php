@@ -55,6 +55,8 @@ class LingotekFieldBodyTranslationTest extends LingotekTestBase {
    * Tests that a node can be translated.
    */
   public function testFieldTranslation() {
+    $assert_session = $this->assertSession();
+
     // Login as admin.
     $this->drupalLogin($this->rootUser);
 
@@ -91,7 +93,7 @@ class LingotekFieldBodyTranslationTest extends LingotekTestBase {
 
     // Check that the edit link is there.
     $basepath = \Drupal::request()->getBasePath();
-    $this->assertLinkByHref($basepath . '/admin/structure/types/manage/article/fields/node.article.body/translate/es/edit');
+    $assert_session->linkByHrefExists($basepath . '/admin/structure/types/manage/article/fields/node.article.body/translate/es/edit');
 
     // Check that the values are correct.
     $this->clickLink('Edit', 1);
@@ -103,6 +105,8 @@ class LingotekFieldBodyTranslationTest extends LingotekTestBase {
    * Tests that a config can be translated after edited.
    */
   public function testEditedFieldBodyTranslation() {
+    $assert_session = $this->assertSession();
+
     // We need a config with translations first.
     $this->testFieldTranslation();
 
@@ -119,8 +123,8 @@ class LingotekFieldBodyTranslationTest extends LingotekTestBase {
 
     // Check the status is not edited for Vasque, but available to request
     // translation.
-    $this->assertLinkByHref('/admin/lingotek/config/request/node_fields/node.article.body/eu_ES');
-    $this->assertNoLinkByHref('/admin/lingotek/config/request/node_fields/node.article.body/es_MX');
+    $assert_session->linkByHrefExists('/admin/lingotek/config/request/node_fields/node.article.body/eu_ES');
+    $assert_session->linkByHrefNotExists('/admin/lingotek/config/request/node_fields/node.article.body/es_MX');
 
     // Recheck status.
     $this->clickLink('Check Download');
@@ -135,6 +139,8 @@ class LingotekFieldBodyTranslationTest extends LingotekTestBase {
    * Tests that no translation can be requested if the language is disabled.
    */
   public function testLanguageDisabled() {
+    $assert_session = $this->assertSession();
+
     // Add a language.
     $italian = ConfigurableLanguage::createFromLangcode('it')
       ->setThirdPartySetting('lingotek', 'locale', 'it_IT');
@@ -171,10 +177,10 @@ class LingotekFieldBodyTranslationTest extends LingotekTestBase {
 
     // There are two links for requesting translations, or we can add them
     // manually.
-    $this->assertLinkByHref('/admin/lingotek/config/request/node_fields/node.article.body/it_IT');
-    $this->assertLinkByHref('/admin/lingotek/config/request/node_fields/node.article.body/es_MX');
-    $this->assertLinkByHref('/admin/structure/types/manage/article/fields/node.article.body/translate/it/add');
-    $this->assertLinkByHref('/admin/structure/types/manage/article/fields/node.article.body/translate/es/add');
+    $assert_session->linkByHrefExists('/admin/lingotek/config/request/node_fields/node.article.body/it_IT');
+    $assert_session->linkByHrefExists('/admin/lingotek/config/request/node_fields/node.article.body/es_MX');
+    $assert_session->linkByHrefExists('/admin/structure/types/manage/article/fields/node.article.body/translate/it/add');
+    $assert_session->linkByHrefExists('/admin/structure/types/manage/article/fields/node.article.body/translate/es/add');
 
     /** @var \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_config */
     $lingotek_config = \Drupal::service('lingotek.configuration');
@@ -185,10 +191,10 @@ class LingotekFieldBodyTranslationTest extends LingotekTestBase {
     $this->clickLink(t('Translate'));
 
     // Italian is not present anymore, but still can add a translation.
-    $this->assertNoLinkByHref('/admin/lingotek/config/request/node_fields/node.article.body/it_IT');
-    $this->assertLinkByHref('/admin/lingotek/config/request/node_fields/node.article.body/es_MX');
-    $this->assertLinkByHref('/admin/structure/types/manage/article/fields/node.article.body/translate/it/add');
-    $this->assertLinkByHref('/admin/structure/types/manage/article/fields/node.article.body/translate/es/add');
+    $assert_session->linkByHrefNotExists('/admin/lingotek/config/request/node_fields/node.article.body/it_IT');
+    $assert_session->linkByHrefExists('/admin/lingotek/config/request/node_fields/node.article.body/es_MX');
+    $assert_session->linkByHrefExists('/admin/structure/types/manage/article/fields/node.article.body/translate/it/add');
+    $assert_session->linkByHrefExists('/admin/structure/types/manage/article/fields/node.article.body/translate/es/add');
   }
 
   /**
@@ -311,6 +317,8 @@ class LingotekFieldBodyTranslationTest extends LingotekTestBase {
    * Test that we handle errors in update.
    */
   public function testUpdatingWithADocumentArchivedError() {
+    $assert_session = $this->assertSession();
+
     // Check that the translate tab is in the field.
     $this->drupalGet('/admin/config/regional/config-translation/node_fields');
     $this->clickLink(t('Translate'));
@@ -358,6 +366,8 @@ class LingotekFieldBodyTranslationTest extends LingotekTestBase {
    * Test that we handle errors in update.
    */
   public function testUpdatingWithADocumentArchivedErrorViaAutomaticUpload() {
+    $assert_session = $this->assertSession();
+
     // Check that the translate tab is in the field.
     $this->drupalGet('/admin/config/regional/config-translation/node_fields');
     $this->clickLink(t('Translate'));
@@ -398,6 +408,8 @@ class LingotekFieldBodyTranslationTest extends LingotekTestBase {
    * Test that we handle errors in update.
    */
   public function testUpdatingWithADocumentLockedError() {
+    $assert_session = $this->assertSession();
+
     // Check that the translate tab is in the field.
     $this->drupalGet('/admin/config/regional/config-translation/node_fields');
     $this->clickLink(t('Translate'));

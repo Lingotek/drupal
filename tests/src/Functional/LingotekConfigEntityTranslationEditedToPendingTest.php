@@ -45,6 +45,8 @@ class LingotekConfigEntityTranslationEditedToPendingTest extends LingotekTestBas
    * Tests that a config can be translated using the links on the management page.
    */
   public function testConfigEntityStatusDownloadTarget() {
+    $assert_session = $this->assertSession();
+
     // Login as admin.
     $this->drupalLogin($this->rootUser);
 
@@ -54,36 +56,36 @@ class LingotekConfigEntityTranslationEditedToPendingTest extends LingotekTestBas
     $basepath = \Drupal::request()->getBasePath();
 
     // Clicking English must init the upload of content.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/field_config/node.article.body?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/upload/field_config/node.article.body?destination=' . $basepath . '/admin/lingotek/config/manage');
     // And we cannot request yet a translation.
-    $this->assertNoLinkByHref($basepath . '/admin/lingotek/config/request/field_config/node.article.body/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
-    $this->assertNoLinkByHref($basepath . '/admin/lingotek/config/request/field_config/node.article.body/de_AT?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefNotExists($basepath . '/admin/lingotek/config/request/field_config/node.article.body/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefNotExists($basepath . '/admin/lingotek/config/request/field_config/node.article.body/de_AT?destination=' . $basepath . '/admin/lingotek/config/manage');
     $this->clickLink('EN');
     $this->assertText(t('Body uploaded successfully'));
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
 
     // There is a link for checking status.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_upload/field_config/node.article.body?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/check_upload/field_config/node.article.body?destination=' . $basepath . '/admin/lingotek/config/manage');
     // And we can already request a translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/field_config/node.article.body/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/field_config/node.article.body/de_AT?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/request/field_config/node.article.body/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/request/field_config/node.article.body/de_AT?destination=' . $basepath . '/admin/lingotek/config/manage');
     $this->clickLink('EN');
     $this->assertText('Body status checked successfully');
 
     // Request the Spanish translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/field_config/node.article.body/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/request/field_config/node.article.body/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
     $this->clickLink('ES');
     $this->assertText('Translation to es_MX requested successfully');
     $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.added_target_locale'));
 
     // Check status of the Spanish translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_download/field_config/node.article.body/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/check_download/field_config/node.article.body/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
     $this->clickLink('ES');
     $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.checked_target_locale'));
     $this->assertText('Translation to es_MX status checked successfully');
 
     // Download the Spanish translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/download/field_config/node.article.body/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/download/field_config/node.article.body/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
     $this->clickLink('ES');
     $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.checked_target_locale'));
     $this->assertText('Translation to es_MX downloaded successfully');
@@ -103,13 +105,13 @@ class LingotekConfigEntityTranslationEditedToPendingTest extends LingotekTestBas
     // TODO: once the config is following the correct translation flow then the
     // following tests will work, but for now it's not
     // Clicking English must init the upload of content.
-    // $this->assertLinkByHref($basepath . '/admin/lingotek/config/update/field_config/node.article.body?destination=' . $basepath .'/admin/lingotek/config/manage');
+    // $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/update/field_config/node.article.body?destination=' . $basepath .'/admin/lingotek/config/manage');
     // $this->clickLink('EN');
     // $this->assertText(t('Body updated successfully'));
     // $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
     //
     // // There is a link for checking status.
-    // $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_upload/field_config/node.article.body?destination=' . $basepath .'/admin/lingotek/config/manage');
+    // $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/check_upload/field_config/node.article.body?destination=' . $basepath .'/admin/lingotek/config/manage');
     // $this->clickLink('EN');
     // $this->assertText('Body checked successfully');
     //
@@ -117,7 +119,7 @@ class LingotekConfigEntityTranslationEditedToPendingTest extends LingotekTestBas
     // $es_pending = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-pending')  and contains(text(), 'ES')]");
     // $this->assertEqual(count($es_pending), 1, 'Pending translation is shown.');
     // // Check the status is still request for German.
-    // $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/field_config/node.article.body/de_AT?destination=' . $basepath .'/admin/lingotek/config/manage');
+    // $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/request/field_config/node.article.body/de_AT?destination=' . $basepath .'/admin/lingotek/config/manage');
   }
 
 }

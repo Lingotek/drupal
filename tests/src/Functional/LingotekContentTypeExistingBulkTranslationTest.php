@@ -43,6 +43,8 @@ class LingotekContentTypeExistingBulkTranslationTest extends LingotekTestBase {
    * Tests that a config can be translated using the links on the management page.
    */
   public function testContentTypeIsUntracked() {
+    $assert_session = $this->assertSession();
+
     // This is a hack for avoiding writing different lingotek endpoint mocks.
     \Drupal::state()->set('lingotek.uploaded_content_type', 'content_type');
 
@@ -57,9 +59,9 @@ class LingotekContentTypeExistingBulkTranslationTest extends LingotekTestBase {
     // Assert the untracked translation is shown.
     $this->assertTargetStatus('ES', 'untracked');
     // Clicking English must init the upload of content.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
     // And we cannot request yet a translation.
-    $this->assertNoLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefNotExists($basepath . '/admin/lingotek/config/request/node_type/article/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
     $this->clickLink('EN');
     $this->assertText(t('Article uploaded successfully'));
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
@@ -68,26 +70,26 @@ class LingotekContentTypeExistingBulkTranslationTest extends LingotekTestBase {
     $this->assertTargetStatus('ES', 'untracked');
 
     // There is a link for checking status.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/check_upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
     // And we can already request a translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/request/node_type/article/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
     $this->clickLink('EN');
     $this->assertText('Article status checked successfully');
 
     // Request the Spanish translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/request/node_type/article/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
     $this->clickLink('ES');
     $this->assertText("Translation to es_MX requested successfully");
     $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.added_target_locale'));
 
     // Check status of the Spanish translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_download/node_type/article/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/check_download/node_type/article/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
     $this->clickLink('ES');
     $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.checked_target_locale'));
     $this->assertText("Translation to es_MX status checked successfully");
 
     // Download the Spanish translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/download/node_type/article/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/download/node_type/article/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
     $this->clickLink('ES');
     $this->assertText('Translation to es_MX downloaded successfully');
     $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.downloaded_locale'));

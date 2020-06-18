@@ -76,6 +76,8 @@ class LingotekNodeWithTranslatedAuthorTranslationTest extends LingotekTestBase {
    * Tests that a node can be translated.
    */
   public function testNodeTranslation() {
+    $assert_session = $this->assertSession();
+
     // Create a node.
     $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
@@ -136,7 +138,7 @@ class LingotekNodeWithTranslatedAuthorTranslationTest extends LingotekTestBase {
     $this->assertText('Las llamas son muy chulas');
     // The author is still the same, even with a different value given by
     // Lingotek.
-    $this->assertLink('admin');
+    $assert_session->linkExists('admin');
   }
 
 }

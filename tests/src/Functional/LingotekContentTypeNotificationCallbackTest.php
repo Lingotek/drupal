@@ -266,6 +266,8 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
    * Tests that a node type reacts to a phase notification using the links on the management page.
    */
   public function testPhaseNotificationContentTypeTranslation() {
+    $assert_session = $this->assertSession();
+
     // Login as admin.
     $this->drupalLogin($this->rootUser);
 
@@ -333,7 +335,7 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
 
     // Assert a translation has been downloaded.
     $this->drupalGet('admin/structure/types/manage/article/translate');
-    $this->assertLinkByHref('admin/structure/types/manage/article/translate/es/edit');
+    $assert_session->linkByHrefExists('admin/structure/types/manage/article/translate/es/edit');
 
     // Go to the bulk config management page.
     $this->goToConfigBulkManagementForm();
@@ -385,6 +387,8 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
    * and does not download interim translations based on the settings.
    */
   public function aaatestIncompletePhaseNotificationWithNoInterimContentTypeTranslation() {
+    $assert_session = $this->assertSession();
+
     // Login as admin.
     $this->drupalLogin($this->rootUser);
 
@@ -496,6 +500,8 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
    * and downloads interim translations based on the settings.
    */
   public function testIncompletePhaseNotificationWithInterimContentTypeTranslation() {
+    $assert_session = $this->assertSession();
+
     // Login as admin.
     $this->drupalLogin($this->rootUser);
 
@@ -567,7 +573,7 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
 
     // Assert a translation has been downloaded.
     $this->drupalGet('admin/structure/types/manage/article/translate');
-    $this->assertLinkByHref('admin/structure/types/manage/article/translate/es/edit');
+    $assert_session->linkByHrefExists('admin/structure/types/manage/article/translate/es/edit');
 
     // Go to the bulk config management page.
     $this->goToConfigBulkManagementForm();

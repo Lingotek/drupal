@@ -20,6 +20,7 @@ class LingotekConfigDependenciesTest extends LingotekTestBase {
   public static $modules = ['lingotek', 'block', 'node', 'field_ui'];
 
   public function testExportingConfigDependencies() {
+    $assert_session = $this->assertSession();
 
     /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $config_translation_service */
     $config_translation_service = \Drupal::service('lingotek.config_translation');
@@ -43,7 +44,7 @@ class LingotekConfigDependenciesTest extends LingotekTestBase {
 
     // Go to the settings page.
     $this->drupalGet('admin/lingotek/settings');
-    $this->assertSession()->statusCodeEquals(200);
+    $assert_session->statusCodeEquals(200);
 
     $this->saveLingotekContentTranslationSettingsForNodeTypes(['article'], 'manual');
     // Set up node types and node fields for translation.

@@ -57,6 +57,8 @@ class LingotekBulkDeleteTest extends LingotekTestBase {
    * Tests that a node can be deleted in the management page.
    */
   public function testNodeBulkDelete() {
+    $assert_session = $this->assertSession();
+
     // Login as admin.
     $this->drupalLogin($this->rootUser);
 
@@ -88,9 +90,9 @@ class LingotekBulkDeleteTest extends LingotekTestBase {
     $this->assertIdentical(1, count($delete_option), 'Delete operation must be available');
 
     // Three nodes must be there.
-    $this->assertLink('Llamas are cool 2');
-    $this->assertLink('Llamas are cool');
-    $this->assertLink('Llamas should stay');
+    $assert_session->linkExists('Llamas are cool 2');
+    $assert_session->linkExists('Llamas are cool');
+    $assert_session->linkExists('Llamas should stay');
 
     // Mark the first two for deletion.
     $edit = [
@@ -109,9 +111,9 @@ class LingotekBulkDeleteTest extends LingotekTestBase {
 
     // Only one node remains and we are back to the manage page.
     $this->assertText('Deleted 2 content items.');
-    $this->assertNoLink('Llamas are cool 2');
-    $this->assertNoLink('Llamas are cool');
-    $this->assertLink('Llamas should stay');
+    $assert_session->linkNotExists('Llamas are cool 2');
+    $assert_session->linkNotExists('Llamas are cool');
+    $assert_session->linkExists('Llamas should stay');
     $this->assertUrl('admin/lingotek/manage/node');
   }
 
@@ -119,6 +121,8 @@ class LingotekBulkDeleteTest extends LingotekTestBase {
    * Tests that a taxonomy term cannot be deleted in the management page.
    */
   public function testTaxonomyTermBulkDelete() {
+    $assert_session = $this->assertSession();
+
     $vocabulary = $this->createVocabulary();
 
     // Enable translation for the current entity type and ensure the change is

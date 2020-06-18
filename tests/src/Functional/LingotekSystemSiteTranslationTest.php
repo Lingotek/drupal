@@ -39,6 +39,8 @@ class LingotekSystemSiteTranslationTest extends LingotekTestBase {
    * Tests that a node can be translated.
    */
   public function testSystemSiteTranslation() {
+    $assert_session = $this->assertSession();
+
     // Check that the translate tab is in the site information.
     $this->drupalGet('/admin/config/system/site-information');
     $this->clickLink('Translate system information');
@@ -83,7 +85,7 @@ class LingotekSystemSiteTranslationTest extends LingotekTestBase {
 
     // Check that the edit link is there.
     $basepath = \Drupal::request()->getBasePath();
-    $this->assertLinkByHref($basepath . '/admin/config/system/site-information/translate/es/edit');
+    $assert_session->linkByHrefExists($basepath . '/admin/config/system/site-information/translate/es/edit');
     // Edit the Spanish translation.
     $this->clickLink('Edit', 1);
     $this->assertFieldByName('translation[config_names][system.site][slogan]', 'Las llamas son muy chulas');
@@ -97,6 +99,8 @@ class LingotekSystemSiteTranslationTest extends LingotekTestBase {
    * Tests that a config can be translated after edited.
    */
   public function testEditedSystemConfigTranslation() {
+    $assert_session = $this->assertSession();
+
     // We need a config with translations first.
     $this->testSystemSiteTranslation();
 
@@ -116,7 +120,7 @@ class LingotekSystemSiteTranslationTest extends LingotekTestBase {
 
     // Check the status is not edited for Vasque, but available to request
     // translation.
-    $this->assertLinkByHref('admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/eu_ES');
+    $assert_session->linkByHrefExists('admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/eu_ES');
 
     // Recheck status.
     $this->clickLink('Check Download');
@@ -131,6 +135,8 @@ class LingotekSystemSiteTranslationTest extends LingotekTestBase {
    * Tests that no translation can be requested if the language is disabled.
    */
   public function testLanguageDisabled() {
+    $assert_session = $this->assertSession();
+
     // Add a language.
     $italian = ConfigurableLanguage::createFromLangcode('it')
       ->setThirdPartySetting('lingotek', 'locale', 'it_IT');
@@ -162,10 +168,10 @@ class LingotekSystemSiteTranslationTest extends LingotekTestBase {
 
     // There are two links for requesting translations, or we can add them
     // manually.
-    $this->assertLinkByHref('/admin/config/system/site-information/translate/it/add');
-    $this->assertLinkByHref('/admin/config/system/site-information/translate/es/add');
-    $this->assertLinkByHref('/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/it_IT');
-    $this->assertLinkByHref('/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/es_AR');
+    $assert_session->linkByHrefExists('/admin/config/system/site-information/translate/it/add');
+    $assert_session->linkByHrefExists('/admin/config/system/site-information/translate/es/add');
+    $assert_session->linkByHrefExists('/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/it_IT');
+    $assert_session->linkByHrefExists('/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/es_AR');
 
     /** @var \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_config */
     $lingotek_config = \Drupal::service('lingotek.configuration');
@@ -176,10 +182,10 @@ class LingotekSystemSiteTranslationTest extends LingotekTestBase {
     $this->clickLink('Translate system information');
 
     // Italian is not present anymore, but still can add a translation.
-    $this->assertLinkByHref('/admin/config/system/site-information/translate/it/add');
-    $this->assertLinkByHref('/admin/config/system/site-information/translate/es/add');
-    $this->assertNoLinkByHref('/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/it_IT');
-    $this->assertLinkByHref('/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/es_AR');
+    $assert_session->linkByHrefExists('/admin/config/system/site-information/translate/it/add');
+    $assert_session->linkByHrefExists('/admin/config/system/site-information/translate/es/add');
+    $assert_session->linkByHrefNotExists('/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/it_IT');
+    $assert_session->linkByHrefExists('/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/es_AR');
   }
 
   /**

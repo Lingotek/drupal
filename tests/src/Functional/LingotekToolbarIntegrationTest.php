@@ -63,12 +63,14 @@ class LingotekToolbarIntegrationTest extends LingotekTestBase {
   }
 
   public function testToolbarItems() {
+    $assert_session = $this->assertSession();
+
     // Login as translations manager.
     $this->drupalLogin($this->rootUser);
     $basepath = \Drupal::request()->getBasePath();
 
     // Ensure we have a first-level item in the toolbar.
-    $this->assertLink('Translation');
+    $assert_session->linkExists('Translation');
 
     // Let's navigate through configuration.
     $this->clickLink('Configuration');

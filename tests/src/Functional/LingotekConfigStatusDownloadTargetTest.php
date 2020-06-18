@@ -43,6 +43,8 @@ class LingotekConfigStatusDownloadTargetTest extends LingotekTestBase {
    * Tests that a config can be translated using the links on the management page.
    */
   public function testConfigStatusDownloadTarget() {
+    $assert_session = $this->assertSession();
+
     // Login as admin.
     $this->drupalLogin($this->rootUser);
 
@@ -52,9 +54,9 @@ class LingotekConfigStatusDownloadTargetTest extends LingotekTestBase {
     $basepath = \Drupal::request()->getBasePath();
 
     // Clicking English must init the upload of content.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/system.site_information_settings/system.site_information_settings?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/upload/system.site_information_settings/system.site_information_settings?destination=' . $basepath . '/admin/lingotek/config/manage');
     // And we cannot request yet a translation.
-    $this->assertNoLinkByHref($basepath . '/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefNotExists($basepath . '/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[system.site_information_settings]' => TRUE,
       $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('config'),
@@ -63,9 +65,9 @@ class LingotekConfigStatusDownloadTargetTest extends LingotekTestBase {
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
 
     // There is a link for checking status.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_upload/system.site_information_settings/system.site_information_settings?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/check_upload/system.site_information_settings/system.site_information_settings?destination=' . $basepath . '/admin/lingotek/config/manage');
     // And we can already request a translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[system.site_information_settings]' => TRUE,
       $this->getBulkOperationFormName() => $this->getBulkOperationNameForCheckUpload('config'),
@@ -74,13 +76,13 @@ class LingotekConfigStatusDownloadTargetTest extends LingotekTestBase {
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
 
     // Request the Spanish translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
     $this->clickLink('ES');
     $this->assertText('Translation to es_MX requested successfully');
     $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.added_target_locale'));
 
     // Check status of the Spanish translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_download/system.site_information_settings/system.site_information_settings/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/check_download/system.site_information_settings/system.site_information_settings/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
     $this->clickLink('ES');
     $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.checked_target_locale'));
     $this->assertText('Translation to es_MX checked successfully');

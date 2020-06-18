@@ -59,6 +59,7 @@ class LingotekNodeContentModerationTranslationTest extends LingotekTestBase {
    * Tests that new revisions are created when processing with Lingotek.
    */
   public function testNewRevisionCreatedWhenProcessing() {
+    $assert_session = $this->assertSession();
     // Login as admin.
     $this->drupalLogin($this->rootUser);
 
@@ -128,7 +129,7 @@ class LingotekNodeContentModerationTranslationTest extends LingotekTestBase {
     $this->clickLink('Llamas are cool');
 
     // There is a revisions tab as the translation creates a new revision.
-    $this->assertLink('Revisions');
+    $assert_session->linkExists('Revisions');
     $this->clickLink('Revisions');
     $this->drupalGet('es/node/1/revisions');
     $this->assertText('Document translated into ES by Lingotek.');

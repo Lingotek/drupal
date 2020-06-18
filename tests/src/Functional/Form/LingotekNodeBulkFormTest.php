@@ -67,6 +67,8 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
    * Tests that the bulk management pager works correctly.
    */
   public function testBulkPager() {
+    $assert_session = $this->assertSession();
+
     // Login as admin.
     $this->drupalLogin($this->rootUser);
 
@@ -122,6 +124,8 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
    * Tests that the bulk management profile filtering works correctly.
    */
   public function testProfileFilter() {
+    $assert_session = $this->assertSession();
+
     $nodes = [];
     // See https://www.drupal.org/project/drupal/issues/2925290.
     $indexes = "ABCDEFGHIJKLMNOPQ";
@@ -147,7 +151,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $this->goToContentBulkManagementForm();
 
     // Assert there is a pager.
-    $this->assertLinkByHref('?page=1');
+    $assert_session->linkByHrefExists('?page=1');
 
     // After we filter by automatic profile, there is no pager and the rows
     // listed are the ones expected.
@@ -158,8 +162,8 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
 
     foreach ([1, 5, 7, 11, 13] as $j) {
       // The filtered id is shown, but not others.
-      $this->assertLink('Llamas are cool ' . $indexes[$j]);
-      $this->assertNoLink('Llamas are cool 2');
+      $assert_session->linkExists('Llamas are cool ' . $indexes[$j]);
+      $assert_session->linkNotExists('Llamas are cool 2');
 
       // The value is retained in the filter.
       $this->assertFieldByName('filters[advanced_options][profile][]', 'automatic', 'The value is retained in the filter.');
@@ -174,8 +178,8 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
 
     foreach ([2, 4, 6, 8, 10, 12, 14] as $j) {
       // The filtered id is shown, but not others.
-      $this->assertLink('Llamas are cool ' . $indexes[$j]);
-      $this->assertNoLink('Llamas are cool 2');
+      $assert_session->linkExists('Llamas are cool ' . $indexes[$j]);
+      $assert_session->linkNotExists('Llamas are cool 2');
 
       // The value is retained in the filter.
       $this->assertFieldByName('filters[advanced_options][profile][]', 'manual', 'The value is retained in the filter.');
@@ -190,21 +194,23 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
 
     foreach ([3, 9] as $j) {
       // The filtered id is shown, but not others.
-      $this->assertLink('Llamas are cool ' . $indexes[$j]);
-      $this->assertNoLink('Llamas are cool 2');
+      $assert_session->linkExists('Llamas are cool ' . $indexes[$j]);
+      $assert_session->linkNotExists('Llamas are cool 2');
 
       // The value is retained in the filter.
       $this->assertFieldByName('filters[advanced_options][profile][]', 'disabled', 'The value is retained in the filter.');
     }
 
-    $this->assertNoLink('Llamas are cool 15');
-    $this->assertNoLinkByHref('?page=1');
+    $assert_session->linkNotExists('Llamas are cool 15');
+    $assert_session->linkByHrefNotExists('?page=1');
   }
 
   /**
    * Tests that the bulk management job filter works correctly.
    */
   public function testJobIdFilter() {
+    $assert_session = $this->assertSession();
+
     $nodes = [];
     // See https://www.drupal.org/project/drupal/issues/2925290.
     $indexes = "ABCDEFGHIJKLMNOPQ";
@@ -222,22 +228,22 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $this->goToContentBulkManagementForm();
 
     // Assert there is a pager.
-    $this->assertLinkByHref('?page=1');
+    $assert_session->linkByHrefExists('?page=1');
 
     // After we filter by an unexisting job, there is no content and no rows.
     $edit = [
       'filters[wrapper][job]' => 'this job does not exist',
     ];
     $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
-    $this->assertNoLink('Llamas are cool');
-    $this->assertNoLinkByHref('?page=1');
+    $assert_session->linkNotExists('Llamas are cool');
+    $assert_session->linkByHrefNotExists('?page=1');
 
     // After we reset, we get back to having a pager and all the content.
     $this->drupalPostForm(NULL, [], 'Reset');
     foreach (range(1, 10) as $j) {
-      $this->assertLink('Llamas are cool ' . $indexes[$j]);
+      $assert_session->linkExists('Llamas are cool ' . $indexes[$j]);
     }
-    $this->assertLinkByHref('?page=1');
+    $assert_session->linkByHrefExists('?page=1');
 
     // Show 50 results.
     \Drupal::service('tempstore.private')->get('lingotek.management.items_per_page')->set('limit', 50);
@@ -281,10 +287,10 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     ];
     $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
     foreach ([1, 2, 3, 5, 7, 11, 13] as $j) {
-      $this->assertLink('Llamas are cool ' . $indexes[$j]);
+      $assert_session->linkExists('Llamas are cool ' . $indexes[$j]);
     }
-    $this->assertNoLink('Page 2');
-    $this->assertNoLink('Llamas are cool ' . $indexes[4]);
+    $assert_session->linkNotExists('Page 2');
+    $assert_session->linkNotExists('Llamas are cool ' . $indexes[4]);
 
     $this->assertFieldByName('filters[wrapper][job]', 'prime', 'The value is retained in the filter.');
 
@@ -295,25 +301,27 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     ];
     $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
     foreach ([4, 6, 8, 10, 12, 14] as $j) {
-      $this->assertLink('Llamas are cool ' . $indexes[$j]);
+      $assert_session->linkExists('Llamas are cool ' . $indexes[$j]);
     }
-    $this->assertNoLinkByHref('?page=1');
-    $this->assertNoLink('Llamas are cool ' . $indexes[5]);
+    $assert_session->linkByHrefNotExists('?page=1');
+    $assert_session->linkNotExists('Llamas are cool ' . $indexes[5]);
 
     $this->assertFieldByName('filters[wrapper][job]', 'even', 'The value is retained in the filter.');
 
     // After we reset, we get back to having a pager and all the content.
     $this->drupalPostForm(NULL, [], 'Reset');
     foreach (range(1, 10) as $j) {
-      $this->assertLink('Llamas are cool ' . $indexes[$j]);
+      $assert_session->linkExists('Llamas are cool ' . $indexes[$j]);
     }
-    $this->assertLinkByHref('?page=1');
+    $assert_session->linkByHrefExists('?page=1');
   }
 
   /**
    * Tests that the bulk management label filtering works correctly.
    */
   public function testLabelFilter() {
+    $assert_session = $this->assertSession();
+
     $nodes = [];
     // Create a node.
     for ($i = 1; $i < 15; $i++) {
@@ -337,7 +345,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $this->goToContentBulkManagementForm();
 
     // Assert there is a pager.
-    $this->assertLinkByHref('?page=1');
+    $assert_session->linkByHrefExists('?page=1');
 
     // After we filter by label 'Llamas', there is no pager and the rows
     // selected are the ones expected.
@@ -346,10 +354,10 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     ];
     $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
     foreach ([1, 5, 7, 11, 13] as $j) {
-      $this->assertLink('Llamas are cool ' . $j);
+      $assert_session->linkExists('Llamas are cool ' . $j);
     }
-    $this->assertNoLinkByHref('?page=1');
-    $this->assertNoLink('Dogs are cool 2');
+    $assert_session->linkByHrefNotExists('?page=1');
+    $assert_session->linkNotExists('Dogs are cool 2');
 
     $this->assertFieldByName('filters[wrapper][label]', 'Llamas', 'The value is retained in the filter.');
 
@@ -360,10 +368,10 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     ];
     $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
     foreach ([2, 4, 6, 8, 10, 12, 14] as $j) {
-      $this->assertLink('Dogs are cool ' . $j);
+      $assert_session->linkExists('Dogs are cool ' . $j);
     }
-    $this->assertNoLink('Page 2');
-    $this->assertNoLink('Llamas are cool 1');
+    $assert_session->linkNotExists('Page 2');
+    $assert_session->linkNotExists('Llamas are cool 1');
 
     $this->assertFieldByName('filters[wrapper][label]', 'Dogs', 'The value is retained in the filter.');
 
@@ -374,10 +382,10 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     ];
     $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
     foreach ([3, 9] as $j) {
-      $this->assertLink('Cats are cool ' . $j);
+      $assert_session->linkExists('Cats are cool ' . $j);
     }
-    $this->assertNoLinkByHref('?page=1');
-    $this->assertNoLink('Dogs are cool 5');
+    $assert_session->linkByHrefNotExists('?page=1');
+    $assert_session->linkNotExists('Dogs are cool 5');
 
     $this->assertFieldByName('filters[wrapper][label]', 'Cats', 'The value is retained in the filter.');
 
@@ -385,22 +393,24 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     // limit of 10.
     $this->drupalPostForm(NULL, [], 'Reset');
     foreach ([1, 5, 7] as $j) {
-      $this->assertLink('Llamas are cool ' . $j);
+      $assert_session->linkExists('Llamas are cool ' . $j);
     }
     foreach ([2, 4, 6, 8, 10] as $j) {
-      $this->assertLink('Dogs are cool ' . $j);
+      $assert_session->linkExists('Dogs are cool ' . $j);
     }
     foreach ([3, 9] as $j) {
-      $this->assertLink('Cats are cool ' . $j);
+      $assert_session->linkExists('Cats are cool ' . $j);
     }
 
-    $this->assertLinkByHref('?page=1');
+    $assert_session->linkByHrefExists('?page=1');
   }
 
   /**
    * Tests that the bulk management language filtering works correctly.
    */
   public function testLanguageFilter() {
+    $assert_session = $this->assertSession();
+
     // Add a language.
     ConfigurableLanguage::createFromLangcode('it')->setThirdPartySetting('lingotek', 'locale', 'it_IT')->save();
 
@@ -427,7 +437,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $this->goToContentBulkManagementForm();
 
     // Assert there is a pager.
-    $this->assertLinkByHref('?page=1');
+    $assert_session->linkByHrefExists('?page=1');
 
     // After we filter by Spanish source language, there is no pager and the
     // rows selected are the ones expected.
@@ -436,10 +446,10 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     ];
     $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
     foreach ([1, 5, 7, 11, 13] as $j) {
-      $this->assertLink('Llamas are cool ES ' . $j);
+      $assert_session->linkExists('Llamas are cool ES ' . $j);
     }
-    $this->assertNoLinkByHref('?page=1');
-    $this->assertNoLink('Llamas are cool IT 2');
+    $assert_session->linkByHrefNotExists('?page=1');
+    $assert_session->linkNotExists('Llamas are cool IT 2');
 
     $this->assertFieldByName('filters[advanced_options][source_language]', 'es', 'The value is retained in the filter.');
 
@@ -450,10 +460,10 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     ];
     $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
     foreach ([2, 4, 6, 8, 10, 12, 14] as $j) {
-      $this->assertLink('Llamas are cool IT ' . $j);
+      $assert_session->linkExists('Llamas are cool IT ' . $j);
     }
-    $this->assertNoLink('Page 2');
-    $this->assertNoLink('Llamas are cool ES 1');
+    $assert_session->linkNotExists('Page 2');
+    $assert_session->linkNotExists('Llamas are cool ES 1');
 
     $this->assertFieldByName('filters[advanced_options][source_language]', 'it', 'The value is retained in the filter.');
 
@@ -464,31 +474,33 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     ];
     $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
     foreach ([3, 9] as $j) {
-      $this->assertLink('Llamas are cool EN ' . $j);
+      $assert_session->linkExists('Llamas are cool EN ' . $j);
     }
-    $this->assertNoLinkByHref('?page=1');
-    $this->assertNoLink('Llamas are cool ES 5');
+    $assert_session->linkByHrefNotExists('?page=1');
+    $assert_session->linkNotExists('Llamas are cool ES 5');
 
     $this->assertFieldByName('filters[advanced_options][source_language]', 'en', 'The value is retained in the filter.');
 
     // After we reset, we get back to having a pager and all the content.
     $this->drupalPostForm(NULL, [], 'Reset');
     foreach ([1, 5, 7] as $j) {
-      $this->assertLink('Llamas are cool ES ' . $j);
+      $assert_session->linkExists('Llamas are cool ES ' . $j);
     }
     foreach ([2, 4, 6, 8, 10] as $j) {
-      $this->assertLink('Llamas are cool IT ' . $j);
+      $assert_session->linkExists('Llamas are cool IT ' . $j);
     }
     foreach ([3, 9] as $j) {
-      $this->assertLink('Llamas are cool EN ' . $j);
+      $assert_session->linkExists('Llamas are cool EN ' . $j);
     }
-    $this->assertLinkByHref('?page=1');
+    $assert_session->linkByHrefExists('?page=1');
   }
 
   /**
    * Tests that the bulk management bundle filtering works correctly.
    */
   public function testBundleFilter() {
+    $assert_session = $this->assertSession();
+
     // Create Page node types.
     $this->drupalCreateContentType(['type' => 'page', 'name' => 'Page']);
 
@@ -533,7 +545,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $this->goToContentBulkManagementForm();
 
     // Assert there is a pager.
-    $this->assertLinkByHref('?page=1');
+    $assert_session->linkByHrefExists('?page=1');
 
     // After we filter by article, there is no pager and the rows selected are
     // the ones expected.
@@ -542,10 +554,10 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     ];
     $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
     foreach ([1, 5, 7, 11, 13] as $j) {
-      $this->assertLink('Llamas are cool page ' . $j);
+      $assert_session->linkExists('Llamas are cool page ' . $j);
     }
-    $this->assertNoLinkByHref('?page=1');
-    $this->assertNoLink('Llamas are cool article 3');
+    $assert_session->linkByHrefNotExists('?page=1');
+    $assert_session->linkNotExists('Llamas are cool article 3');
 
     $this->assertFieldByName('filters[wrapper][bundle][]', 'page', 'The value is retained in the filter.');
 
@@ -556,11 +568,11 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     ];
     $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
     foreach ([2, 4, 8, 10, 14] as $j) {
-      $this->assertLink('Llamas are cool custom_type ' . $j);
+      $assert_session->linkExists('Llamas are cool custom_type ' . $j);
     }
-    $this->assertNoLinkByHref('?page=1');
-    $this->assertNoLink('Llamas are cool article 3');
-    $this->assertNoLink('Llamas are cool page 1');
+    $assert_session->linkByHrefNotExists('?page=1');
+    $assert_session->linkNotExists('Llamas are cool article 3');
+    $assert_session->linkNotExists('Llamas are cool page 1');
 
     $this->assertFieldByName('filters[wrapper][bundle][]', 'custom_type', 'The value is retained in the filter.');
 
@@ -571,10 +583,10 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     ];
     $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
     foreach ([3, 6, 9, 12] as $j) {
-      $this->assertLink('Llamas are cool article ' . $j);
+      $assert_session->linkExists('Llamas are cool article ' . $j);
     }
-    $this->assertNoLink('Page 2');
-    $this->assertNoLink('Llamas are cool page 1');
+    $assert_session->linkNotExists('Page 2');
+    $assert_session->linkNotExists('Llamas are cool page 1');
 
     $this->assertFieldByName('filters[wrapper][bundle][]', 'article', 'The value is retained in the filter.');
 
@@ -587,24 +599,24 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
       ];
     $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
     foreach ([1, 5, 7] as $j) {
-      $this->assertLink('Llamas are cool page ' . $j);
+      $assert_session->linkExists('Llamas are cool page ' . $j);
     }
     foreach ([3, 9] as $j) {
-      $this->assertLink('Llamas are cool article ' . $j);
+      $assert_session->linkExists('Llamas are cool article ' . $j);
     }
 
     // After we reset, we get back to having a pager and all the content.
     $this->drupalPostForm(NULL, [], 'Reset');
     foreach ([1, 5, 7] as $j) {
-      $this->assertLink('Llamas are cool page ' . $j);
+      $assert_session->linkExists('Llamas are cool page ' . $j);
     }
     foreach ([2, 4, 8, 10] as $j) {
-      $this->assertLink('Llamas are cool custom_type ' . $j);
+      $assert_session->linkExists('Llamas are cool custom_type ' . $j);
     }
     foreach ([3, 6, 9] as $j) {
-      $this->assertLink('Llamas are cool article ' . $j);
+      $assert_session->linkExists('Llamas are cool article ' . $j);
     }
-    $this->assertLinkByHref('?page=1');
+    $assert_session->linkByHrefExists('?page=1');
   }
 
   /**
@@ -771,6 +783,8 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
    * Tests that default profile is used after cancelation.
    */
   public function testNoAutomaticUploadAfterCancelation() {
+    $assert_session = $this->assertSession();
+
     // Create a node.
     $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
@@ -821,6 +835,8 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
    * Tests if job id is uploaded on upload.
    */
   public function testJobIdOnUpload() {
+    $assert_session = $this->assertSession();
+
     // Create a node.
     $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
@@ -867,6 +883,8 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
    * Tests job id is uploaded on update.
    */
   public function testJobIdOnUpdate() {
+    $assert_session = $this->assertSession();
+
     // Create a node with automatic. This will trigger upload.
     $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
@@ -919,6 +937,8 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
    * Tests that can we assign job ids with the bulk operation.
    */
   public function testAssignJobIds() {
+    $assert_session = $this->assertSession();
+
     // Create a couple of nodes.
     $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
@@ -990,6 +1010,8 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
    * Tests that can we assign job ids with the bulk operation with TMS update.
    */
   public function testAssignJobIdsWithTMSUpdate() {
+    $assert_session = $this->assertSession();
+
     // Create a couple of nodes.
     $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
@@ -1064,6 +1086,8 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
    * Tests that can we assign job ids with the bulk operation with TMS update.
    */
   public function testAssignJobIdsWithTMSUpdateWithADocumentLockedError() {
+    $assert_session = $this->assertSession();
+
     // Create a couple of nodes.
     $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
@@ -1144,6 +1168,8 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
    * Tests that can we assign job ids with the bulk operation with TMS update.
    */
   public function testAssignJobIdsWithTMSUpdateWithADocumentArchivedError() {
+    $assert_session = $this->assertSession();
+
     // Create a couple of nodes.
     $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
@@ -1224,6 +1250,8 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
    * Tests that can we assign job ids with the bulk operation with TMS update.
    */
   public function testAssignJobIdsWithTMSUpdateWithAPaymentRequiredError() {
+    $assert_session = $this->assertSession();
+
     // Create a couple of nodes.
     $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
@@ -1304,6 +1332,8 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
    * Tests that can we assign job ids with the bulk operation with TMS update.
    */
   public function testAssignJobIdsWithTMSUpdateWithAnError() {
+    $assert_session = $this->assertSession();
+
     // Create a couple of nodes.
     $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
@@ -1383,6 +1413,8 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
    * Tests that we cannot assign job ids with invalid chars.
    */
   public function testAssignInvalidJobIdsWithTMSUpdate() {
+    $assert_session = $this->assertSession();
+
     // Create a couple of nodes.
     $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
@@ -1436,6 +1468,8 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
    * Tests that can we cancel assignation of job ids with the bulk operation.
    */
   public function testCancelAssignJobIds() {
+    $assert_session = $this->assertSession();
+
     // Create a couple of nodes.
     $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
@@ -1527,6 +1561,8 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
    * Tests clearing job ids.
    */
   public function testClearJobIds() {
+    $assert_session = $this->assertSession();
+
     // Create a couple of nodes.
     $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
@@ -1600,6 +1636,8 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
    * Tests clearing job ids with TMS update.
    */
   public function testClearJobIdsWithTMSUpdate() {
+    $assert_session = $this->assertSession();
+
     // Create a couple of nodes.
     $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
@@ -1673,6 +1711,8 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
    * Tests clearing job ids with TMS update.
    */
   public function testClearJobIdsWithTMSUpdateWithAnError() {
+    $assert_session = $this->assertSession();
+
     // Create a couple of nodes.
     $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
@@ -1750,6 +1790,8 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
    * Tests clearing job ids with TMS update.
    */
   public function testClearJobIdsWithTMSUpdateWithADocumentArchivedError() {
+    $assert_session = $this->assertSession();
+
     // Create a couple of nodes.
     $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
@@ -1827,6 +1869,8 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
    * Tests clearing job ids with TMS update.
    */
   public function testClearJobIdsWithTMSUpdateWithADocumentLockedError() {
+    $assert_session = $this->assertSession();
+
     // Create a couple of nodes.
     $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
@@ -1904,6 +1948,8 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
    * Tests clearing job ids with TMS update.
    */
   public function testClearJobIdsWithTMSUpdateWithAPaymentRequiredError() {
+    $assert_session = $this->assertSession();
+
     // Create a couple of nodes.
     $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
@@ -1981,6 +2027,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
    * Test if doc id filter works
    */
   public function testDocIdFilter() {
+    $assert_session = $this->assertSession();
 
     $nodes = [];
     // Create a node.
@@ -1997,16 +2044,16 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $this->goToContentBulkManagementForm();
 
     // Assert there is a pager.
-    $this->assertLinkByHref('?page=1');
+    $assert_session->linkByHrefExists('?page=1');
 
     // After we reset, we get back to having a pager and all the content.
     $this->drupalPostForm(NULL, [], 'Reset');
 
     foreach (range(1, 10) as $j) {
-      $this->assertLink('Llamas are cool ' . $j);
+      $assert_session->linkExists('Llamas are cool ' . $j);
     }
 
-    $this->assertLinkByHref('?page=1');
+    $assert_session->linkByHrefExists('?page=1');
 
     // After we filter by an existing document_id, there are filtered rows.
     $edit = [
@@ -2018,23 +2065,24 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     // Our fake doc ids are dummy-document-hash-id-X. We know we will find
     // dummy-document-hash-id, dummy-document-hash-id-1 and those after dummy-document-hash-id-10.
     foreach ([1, 2, 11, 12, 13, 14] as $j) {
-      $this->assertLink('Llamas are cool ' . $j);
+      $assert_session->linkExists('Llamas are cool ' . $j);
     }
 
     // And we won't find the others.
     foreach ([3, 4, 5, 6, 7, 8, 9, 10] as $j) {
-      $this->assertNoLink('Llamas are cool ' . $j);
+      $assert_session->linkNotExists('Llamas are cool ' . $j);
     }
 
     $this->assertFieldByName('filters[advanced_options][document_id]', 1, 'The value is retained in the filter.');
 
-    $this->assertNoLinkByHref('?page=1');
+    $assert_session->linkByHrefNotExists('?page=1');
   }
 
   /**
    * Test if doc id filter works with multiple values.
    */
   public function testDocIdFilterMultiple() {
+    $assert_session = $this->assertSession();
 
     $nodes = [];
     // Create a node.
@@ -2051,7 +2099,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $this->goToContentBulkManagementForm();
 
     // Assert there is a pager.
-    $this->assertLinkByHref('?page=1');
+    $assert_session->linkByHrefExists('?page=1');
 
     // After we filter by an existing document_id, there are filtered rows.
     $edit = [
@@ -2062,20 +2110,22 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
 
     // Our fake doc ids are dummy-document-hash-id-X. We know we will find
     // dummy-document-hash-id-2 and dummy-document-hash-id-3.
-    $this->assertLink('Llamas are cool 3');
-    $this->assertLink('Llamas are cool 4');
-    $this->assertNoLink('Llamas are cool 1');
+    $assert_session->linkExists('Llamas are cool 3');
+    $assert_session->linkExists('Llamas are cool 4');
+    $assert_session->linkNotExists('Llamas are cool 1');
 
     $this->assertFieldByName('filters[advanced_options][document_id]', 'dummy-document-hash-id-2, dummy-document-hash-id-3', 'The value is retained in the filter.');
 
     // Assert there is no pager.
-    $this->assertNoLinkByHref('?page=1');
+    $assert_session->linkByHrefNotExists('?page=1');
   }
 
   /**
    * Tests if entity id filter works with multiple values.
    */
   public function testEntityIdFilterMultiple() {
+    $assert_session = $this->assertSession();
+
     $nodes = [];
     // Create a node.
     for ($i = 1; $i < 15; $i++) {
@@ -2090,7 +2140,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $this->goToContentBulkManagementForm();
 
     // Assert there is a pager.
-    $this->assertLinkByHref('?page=1');
+    $assert_session->linkByHrefExists('?page=1');
 
     $edit = [
       'filters[advanced_options][entity_id]' => '1,2,4',
@@ -2098,20 +2148,22 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
 
     // The filtered id is shown, but not others.
-    $this->assertLink('Llamas are cool 1');
-    $this->assertLink('Llamas are cool 2');
-    $this->assertLink('Llamas are cool 4');
-    $this->assertNoLink('Llamas are cool 3');
+    $assert_session->linkExists('Llamas are cool 1');
+    $assert_session->linkExists('Llamas are cool 2');
+    $assert_session->linkExists('Llamas are cool 4');
+    $assert_session->linkNotExists('Llamas are cool 3');
 
     // The value is retained in the filter.
     $this->assertFieldByName('filters[advanced_options][entity_id]', '1,2,4', 'The value is retained in the filter.');
-    $this->assertNoLinkByHref('?page=1');
+    $assert_session->linkByHrefNotExists('?page=1');
   }
 
   /**
    * Tests if entity id filter works
    */
   public function testEntityIdFilter() {
+    $assert_session = $this->assertSession();
+
     $nodes = [];
     // Create a node.
     for ($i = 1; $i < 15; $i++) {
@@ -2127,7 +2179,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $this->goToContentBulkManagementForm();
 
     // Assert there is a pager.
-    $this->assertLinkByHref('?page=1');
+    $assert_session->linkByHrefExists('?page=1');
 
     foreach (range(1, 14) as $j) {
       $edit = [
@@ -2136,15 +2188,15 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
       $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
 
       // The filtered id is shown, but not others.
-      $this->assertLink('Llamas are cool ' . $j);
-      $this->assertNoLink('Llamas are cool ' . ($j + 1));
+      $assert_session->linkExists('Llamas are cool ' . $j);
+      $assert_session->linkNotExists('Llamas are cool ' . ($j + 1));
 
       // The value is retained in the filter.
       $this->assertFieldByName('filters[advanced_options][entity_id]', $j, 'The value is retained in the filter.');
     }
 
-    $this->assertNoLink('Llamas are cool 15');
-    $this->assertNoLinkByHref('?page=1');
+    $assert_session->linkNotExists('Llamas are cool 15');
+    $assert_session->linkByHrefNotExists('?page=1');
   }
 
   /**
@@ -2182,7 +2234,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
       'filters[advanced_options][source_status]' => 'IMPORTING',
     ];
     $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
-    $this->assertLink('Llamas are cool');
+    $assert_session->linkExists('Llamas are cool');
 
     $this->assertFieldByName('filters[advanced_options][source_status]', 'IMPORTING', 'The value is retained in the filter.');
 
@@ -2196,7 +2248,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
       'filters[advanced_options][source_status]' => 'CURRENT',
     ];
     $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
-    $this->assertLink('Llamas are cool');
+    $assert_session->linkExists('Llamas are cool');
 
     $this->assertFieldByName('filters[advanced_options][source_status]', 'CURRENT', 'The value is retained in the filter.');
   }
@@ -2239,7 +2291,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     ];
     $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
     $this->assertFieldByName('filters[advanced_options][target_status]', 'PENDING', 'The value is retained in the filter.');
-    $this->assertNoLink('Llamas are cool');
+    $assert_session->linkNotExists('Llamas are cool');
 
     // Reset filters.
     $this->drupalPostForm(NULL, [], 'Reset');
@@ -2255,7 +2307,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     ];
     $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
     $this->assertFieldByName('filters[advanced_options][target_status]', 'PENDING', 'The value is retained in the filter.');
-    $this->assertLink('Llamas are cool');
+    $assert_session->linkExists('Llamas are cool');
   }
 
   /**

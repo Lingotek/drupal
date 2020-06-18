@@ -79,8 +79,8 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     $this->assertEquals('It works, but nothing to look here.', (string) $request->getBody());
 
     $this->drupalGet('lingotek/notify');
-    $this->assertSession()->statusCodeEquals(Response::HTTP_ACCEPTED);
-    $this->assertSession()->responseContains('It works, but nothing to look here.');
+    $assert_session->statusCodeEquals(Response::HTTP_ACCEPTED);
+    $assert_session->responseContains('It works, but nothing to look here.');
   }
 
   /**
@@ -238,7 +238,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
 
     // Assert a translation has been downloaded.
     $this->drupalGet('node/1/translations');
-    $this->assertLink('Las llamas son chulas');
+    $assert_session->linkExists('Las llamas son chulas');
 
     // There are no phases pending anymore.
     \Drupal::state()->set('lingotek.document_completion', TRUE);
@@ -441,7 +441,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
 
     // Assert a translation has been downloaded.
     $this->drupalGet('node/1/translations');
-    $this->assertLink('Las llamas son chulas');
+    $assert_session->linkExists('Las llamas son chulas');
 
     // There are no phases pending anymore.
     \Drupal::state()->set('lingotek.document_completion', TRUE);

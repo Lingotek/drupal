@@ -50,6 +50,7 @@ class LingotekContentTypeTranslationTest extends LingotekTestBase {
    * Tests that a node can be translated.
    */
   public function testContentTypeTranslation() {
+    $assert_session = $this->assertSession();
     // This is a hack for avoiding writing different lingotek endpoint mocks.
     \Drupal::state()->set('lingotek.uploaded_content_type', 'content_type');
 
@@ -90,13 +91,14 @@ class LingotekContentTypeTranslationTest extends LingotekTestBase {
 
     // Check that the edit link is there.
     $basepath = \Drupal::request()->getBasePath();
-    $this->assertLinkByHref($basepath . '/admin/structure/types/manage/article/translate/es/edit');
+    $assert_session->linkByHrefExists($basepath . '/admin/structure/types/manage/article/translate/es/edit');
   }
 
   /**
    * Tests that a config can be translated after edited.
    */
   public function testEditedContentTypeTranslation() {
+    $assert_session = $this->assertSession();
     // We need a config with translations first.
     $this->testContentTypeTranslation();
 
@@ -113,8 +115,8 @@ class LingotekContentTypeTranslationTest extends LingotekTestBase {
 
     // Check the status is not edited for Vasque, but available to request
     // translation.
-    $this->assertLinkByHref('admin/lingotek/config/request/node_type/article/eu_ES');
-    $this->assertNoLinkByHref('admin/lingotek/config/request/node_type/article/es_MX');
+    $assert_session->linkByHrefExists('admin/lingotek/config/request/node_type/article/eu_ES');
+    $assert_session->linkByHrefNotExists('admin/lingotek/config/request/node_type/article/es_MX');
 
     // Recheck status.
     $this->clickLink('Check Download');
@@ -129,6 +131,7 @@ class LingotekContentTypeTranslationTest extends LingotekTestBase {
    * Tests that no translation can be requested if the language is disabled.
    */
   public function testLanguageDisabled() {
+    $assert_session = $this->assertSession();
     // Add a language.
     $italian = ConfigurableLanguage::createFromLangcode('it')
       ->setThirdPartySetting('lingotek', 'locale', 'it_IT');
@@ -165,10 +168,10 @@ class LingotekContentTypeTranslationTest extends LingotekTestBase {
 
     // There are two links for requesting translations, or we can add them
     // manually.
-    $this->assertLinkByHref('/admin/lingotek/config/request/node_type/article/it_IT');
-    $this->assertLinkByHref('/admin/lingotek/config/request/node_type/article/es_MX');
-    $this->assertLinkByHref('/admin/structure/types/manage/article/translate/it/add');
-    $this->assertLinkByHref('/admin/structure/types/manage/article/translate/es/add');
+    $assert_session->linkByHrefExists('/admin/lingotek/config/request/node_type/article/it_IT');
+    $assert_session->linkByHrefExists('/admin/lingotek/config/request/node_type/article/es_MX');
+    $assert_session->linkByHrefExists('/admin/structure/types/manage/article/translate/it/add');
+    $assert_session->linkByHrefExists('/admin/structure/types/manage/article/translate/es/add');
 
     /** @var \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_config */
     $lingotek_config = \Drupal::service('lingotek.configuration');
@@ -178,10 +181,10 @@ class LingotekContentTypeTranslationTest extends LingotekTestBase {
     $this->drupalGet('/admin/structure/types/manage/article/translate');
 
     // Italian is not present anymore, but still can add a translation.
-    $this->assertNoLinkByHref('/admin/lingotek/config/request/node_type/article/it_IT');
-    $this->assertLinkByHref('/admin/lingotek/config/request/node_type/article/es_MX');
-    $this->assertLinkByHref('/admin/structure/types/manage/article/translate/it/add');
-    $this->assertLinkByHref('/admin/structure/types/manage/article/translate/es/add');
+    $assert_session->linkByHrefNotExists('/admin/lingotek/config/request/node_type/article/it_IT');
+    $assert_session->linkByHrefExists('/admin/lingotek/config/request/node_type/article/es_MX');
+    $assert_session->linkByHrefExists('/admin/structure/types/manage/article/translate/it/add');
+    $assert_session->linkByHrefExists('/admin/structure/types/manage/article/translate/es/add');
   }
 
   /**

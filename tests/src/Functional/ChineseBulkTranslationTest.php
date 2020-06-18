@@ -61,6 +61,8 @@ class ChineseBulkTranslationTest extends LingotekTestBase {
    * Tests that a node can be translated using the links on the management page.
    */
   public function testNodeTranslationUsingLinks() {
+    $assert_session = $this->assertSession();
+
     // Login as admin.
     $this->drupalLogin($this->rootUser);
 
@@ -112,6 +114,8 @@ class ChineseBulkTranslationTest extends LingotekTestBase {
    * Tests that a node can be translated using the links on the management page.
    */
   public function testSystemSiteTranslationUsingLinks() {
+    $assert_session = $this->assertSession();
+
     // This is a hack for avoiding writing different lingotek endpoint mocks.
     \Drupal::state()->set('lingotek.uploaded_content_type', 'system.site');
 
@@ -124,36 +128,36 @@ class ChineseBulkTranslationTest extends LingotekTestBase {
     $basepath = \Drupal::request()->getBasePath();
 
     // Clicking English must init the upload of content.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/system.site_information_settings/system.site_information_settings?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/upload/system.site_information_settings/system.site_information_settings?destination=' . $basepath . '/admin/lingotek/config/manage');
     // And we cannot request yet a translation.
-    $this->assertNoLinkByHref($basepath . '/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/zh_CN?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefNotExists($basepath . '/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/zh_CN?destination=' . $basepath . '/admin/lingotek/config/manage');
 
     $this->clickLink('EN', 1);
     $this->assertText(t('System information uploaded successfully'));
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
 
     // There is a link for checking status.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_upload/system.site_information_settings/system.site_information_settings?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/check_upload/system.site_information_settings/system.site_information_settings?destination=' . $basepath . '/admin/lingotek/config/manage');
     // And we can already request a translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/zh_CN?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/zh_CN?destination=' . $basepath . '/admin/lingotek/config/manage');
     $this->clickLink('EN', 1);
     $this->assertText('System information status checked successfully');
 
     // Request the Chinese translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/zh_CN?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/zh_CN?destination=' . $basepath . '/admin/lingotek/config/manage');
     $this->clickLink('ZH');
     $this->assertText("Translation to zh_CN requested successfully");
     // Check that the requested locale is the right one.
     $this->assertIdentical('zh_CN', \Drupal::state()->get('lingotek.added_target_locale'));
 
     // Check status of the Chinese translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_download/system.site_information_settings/system.site_information_settings/zh_CN?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/check_download/system.site_information_settings/system.site_information_settings/zh_CN?destination=' . $basepath . '/admin/lingotek/config/manage');
     $this->clickLink('ZH');
     $this->assertIdentical('zh_CN', \Drupal::state()->get('lingotek.checked_target_locale'));
     $this->assertText("Translation to zh_CN checked successfully");
 
     // Download the Chinese translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/download/system.site_information_settings/system.site_information_settings/zh_CN?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/download/system.site_information_settings/system.site_information_settings/zh_CN?destination=' . $basepath . '/admin/lingotek/config/manage');
     $this->clickLink('ZH');
     $this->assertText('Translation to zh_CN downloaded successfully');
     $this->assertIdentical('zh_CN', \Drupal::state()->get('lingotek.downloaded_locale'));
@@ -166,6 +170,8 @@ class ChineseBulkTranslationTest extends LingotekTestBase {
    * Tests that a config can be translated using the links on the management page.
    */
   public function testContentTypeTranslationUsingLinks() {
+    $assert_session = $this->assertSession();
+
     // This is a hack for avoiding writing different lingotek endpoint mocks.
     \Drupal::state()->set('lingotek.uploaded_content_type', 'content_type');
 
@@ -178,34 +184,34 @@ class ChineseBulkTranslationTest extends LingotekTestBase {
     $basepath = \Drupal::request()->getBasePath();
 
     // Clicking English must init the upload of content.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
     // And we cannot request yet a translation.
-    $this->assertNoLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/zh_CN?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefNotExists($basepath . '/admin/lingotek/config/request/node_type/article/zh_CN?destination=' . $basepath . '/admin/lingotek/config/manage');
     $this->clickLink('EN');
     $this->assertText(t('Article uploaded successfully'));
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
 
     // There is a link for checking status.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/check_upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
     // And we can already request a translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/zh_CN?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/request/node_type/article/zh_CN?destination=' . $basepath . '/admin/lingotek/config/manage');
     $this->clickLink('EN');
     $this->assertText('Article status checked successfully');
 
     // Request the Spanish translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/zh_CN?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/request/node_type/article/zh_CN?destination=' . $basepath . '/admin/lingotek/config/manage');
     $this->clickLink('ZH');
     $this->assertText("Translation to zh_CN requested successfully");
     $this->assertIdentical('zh_CN', \Drupal::state()->get('lingotek.added_target_locale'));
 
     // Check status of the Spanish translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_download/node_type/article/zh_CN?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/check_download/node_type/article/zh_CN?destination=' . $basepath . '/admin/lingotek/config/manage');
     $this->clickLink('ZH');
     $this->assertIdentical('zh_CN', \Drupal::state()->get('lingotek.checked_target_locale'));
     $this->assertText("Translation to zh_CN status checked successfully");
 
     // Download the Spanish translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/download/node_type/article/zh_CN?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/download/node_type/article/zh_CN?destination=' . $basepath . '/admin/lingotek/config/manage');
     $this->clickLink('ZH');
     $this->assertText('Translation to zh_CN downloaded successfully');
     $this->assertIdentical('zh_CN', \Drupal::state()->get('lingotek.downloaded_locale'));
