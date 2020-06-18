@@ -1,7 +1,7 @@
 services:
   lingotek:
     class: Drupal\lingotek\Lingotek
-    arguments: ['@lingotek.api', '@lingotek.language_locale_mapper', '@config.factory', '@lingotek.filter_manager']
+    arguments: ['@lingotek.api', '@lingotek.language_locale_mapper', '@config.factory', '@lingotek.filter_manager', '@lingotek.configuration']
   lingotek.http_client:
     class: Drupal\lingotek\Remote\LingotekHttp
     arguments: ['@http_client', '@config.factory']

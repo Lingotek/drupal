@@ -39,6 +39,13 @@ class Lingotek implements LingotekInterface {
    */
   protected $lingotekFilterManager;
 
+  /**
+   * The Lingotek configuration service.
+   *
+   * @var \Drupal\lingotek\LingotekConfigurationServiceInterface
+   */
+  protected $lingotekConfiguration;
+
   // Translation Status.
   const STATUS_EDITED = 'EDITED';
   const STATUS_IMPORTING = 'IMPORTING';
@@ -76,11 +83,16 @@ class Lingotek implements LingotekInterface {
    * @param LingotekFilterManagerInterface $lingotek_filter_manager
    *   The Lingotek Filter manager.
    */
-  public function __construct(LingotekApiInterface $api, LanguageLocaleMapperInterface $language_locale_mapper, ConfigFactoryInterface $config_factory, LingotekFilterManagerInterface $lingotek_filter_manager) {
+  public function __construct(LingotekApiInterface $api, LanguageLocaleMapperInterface $language_locale_mapper, ConfigFactoryInterface $config_factory, LingotekFilterManagerInterface $lingotek_filter_manager, LingotekConfigurationServiceInterface $lingotek_configuration = NULL) {
     $this->api = $api;
     $this->languageLocaleMapper = $language_locale_mapper;
     $this->configFactory = $config_factory;
     $this->lingotekFilterManager = $lingotek_filter_manager;
+    if (!$lingotek_configuration) {
+      @trigger_error('The language_manager service must be passed to Lingotek::__construct, it is included in lingotek:3.1.0 and required for lingotek:4.0.0.', E_USER_DEPRECATED);
+      $lingotek_configuration = \Drupal::service('lingotek.configuration');
+    }
+    $this->lingotekConfiguration = $lingotek_configuration;
   }
 
   public static function create(ContainerInterface $container) {
@@ -88,7 +100,8 @@ class Lingotek implements LingotekInterface {
       $container->get('lingotek.api'),
       $container->get('lingotek.language_locale_mapper'),
       $container->get('config.factory'),
-      $container->get('lingotek.filter_manager')
+      $container->get('lingotek.filter_manager'),
+      $container->get('lingotek.configuration')
     );
   }
 
@@ -235,6 +248,34 @@ class Lingotek implements LingotekInterface {
     }
 
     $args = array_merge($metadata, $defaults);
+
+    $request_locales = [];
+    $request_workflows = [];
+
+    if ($profile) {
+      $languages = $this->lingotekConfiguration->getEnabledLanguages();
+      if (!empty($languages)) {
+        foreach ($languages as $language) {
+          if ($profile->hasAutomaticRequestForTarget($language->getId())) {
+            $target_locale = $this->languageLocaleMapper->getLocaleForLangcode($language->getId());
+            if ($target_locale !== $locale) {
+              $workflow_id = $profile->getWorkflowForTarget($language->getId());
+              if ($workflow_id === 'default') {
+                $workflow_id = $this->configFactory->get(static::SETTINGS)
+                  ->get('default.workflow');
+              }
+              $request_locales[] = $target_locale;
+              $request_workflows[] = $workflow_id;
+            }
+          }
+        }
+      }
+    }
+
+    if (!empty($request_locales) && !empty($request_workflows)) {
+      $args['translation_locale_code'] = $request_locales;
+      $args['translation_workflow_id'] = $request_workflows;
+    }
 
     $args = array_merge(['content' => json_encode($content), 'title' => $title, 'locale_code' => $locale], $args);
     if ($url !== NULL) {

@@ -266,6 +266,14 @@ interface LingotekConfigurationServiceInterface {
   public function setPreference($preference_id, $value);
 
   /**
+   * Returns all the languages that are Lingotek enabled.
+   *
+   * @return \Drupal\language\ConfigurableLanguageInterface[]
+   *   The languages.
+   */
+  public function getEnabledLanguages();
+
+  /**
    * Checks if a language is enabled in the Lingotek interface.
    *
    * @param \Drupal\language\ConfigurableLanguageInterface $language

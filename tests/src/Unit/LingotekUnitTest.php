@@ -11,6 +11,7 @@ use Drupal\lingotek\Exception\LingotekDocumentLockedException;
 use Drupal\lingotek\Exception\LingotekPaymentRequiredException;
 use Drupal\lingotek\LanguageLocaleMapperInterface;
 use Drupal\lingotek\Lingotek;
+use Drupal\lingotek\LingotekConfigurationServiceInterface;
 use Drupal\lingotek\LingotekFilterManagerInterface;
 use Drupal\lingotek\Remote\LingotekApiInterface;
 use Drupal\Tests\UnitTestCase;
@@ -25,7 +26,7 @@ use Symfony\Component\HttpFoundation\Response;
 class LingotekUnitTest extends UnitTestCase {
 
   /**
-   * @var \Drupal\lingotek\Lingotek|\PHPUnit_Framework_MockObject_MockObject
+   * @var \Drupal\lingotek\Lingotek
    */
   protected $lingotek;
 
@@ -64,6 +65,13 @@ class LingotekUnitTest extends UnitTestCase {
   protected $lingotekFilterManager;
 
   /**
+   * The Lingotek configuration service.
+   *
+   * @var \Drupal\lingotek\LingotekConfigurationServiceInterface|\PHPUnit_Framework_MockObject_MockObject
+   */
+  protected $lingotekConfiguration;
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp(): void {
@@ -87,7 +95,9 @@ class LingotekUnitTest extends UnitTestCase {
       ->with('lingotek.settings')
       ->will($this->returnValue($this->configEditable));
 
-    $this->lingotek = new Lingotek($this->api, $this->languageLocaleMapper, $this->configFactory, $this->lingotekFilterManager);
+    $this->lingotekConfiguration = $this->createMock(LingotekConfigurationServiceInterface::class);
+
+    $this->lingotek = new Lingotek($this->api, $this->languageLocaleMapper, $this->configFactory, $this->lingotekFilterManager, $this->lingotekConfiguration);
   }
 
   /**
@@ -439,7 +449,7 @@ class LingotekUnitTest extends UnitTestCase {
 
     $this->config->expects($this->any())
       ->method('get')
-      ->will($this->returnValueMap([['default.project', 'default_project'], ['default.vault', 'default_vault']]));
+      ->will($this->returnValueMap([['default.project', 'default_project'], ['default.vault', 'default_vault'], ['default.workflow', 'default_workflow']]));
 
     // Vault id has the original value.
     $this->api->expects($this->at(0))
@@ -569,6 +579,24 @@ class LingotekUnitTest extends UnitTestCase {
       ])
       ->will($this->returnValue($response));
 
+    $this->api->expects($this->at(8))
+      ->method('addDocument')
+      ->with([
+        'title' => 'title',
+        'content' => '{"content":"wedgiePlatypus"}',
+        'locale_code' => 'en_US',
+        'format' => 'JSON',
+        'project_id' => 'test_project',
+        'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
+        'fprm_id' => '4f91482b-5aa1-4a4a-a43f-712af7b39625',
+        'vault_id' => 'test_vault',
+        'job_id' => 'my_job_id',
+        'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0',
+        'translation_locale_code' => ['es_ES', 'ca_ES', 'it_IT'],
+        'translation_workflow_id' => ['es_workflow', 'ca_workflow', 'default_workflow'],
+      ])
+      ->will($this->returnValue($response));
+
     // We upload with a profile that has a vault and a project.
     $profile = new LingotekProfile(['id' => 'profile1', 'project' => 'my_test_project', 'vault' => 'my_test_vault'], 'lingotek_profile');
     $doc_id = $this->lingotek->uploadDocument('title', 'content', 'es', NULL, $profile);
@@ -607,6 +635,39 @@ class LingotekUnitTest extends UnitTestCase {
     // We upload with a job ID.
     $doc_id = $this->lingotek->uploadDocument('title', ['content' => 'wedgiePlatypus'], 'es', NULL, $profile, 'my_job_id');
     $this->assertEquals('my-document-id', $doc_id);
+
+    // We upload with a profile that specifies auto request of targets on upload.
+    $english = $this->createMock(ConfigurableLanguageInterface::class);
+    $english->expects($this->any())->method('getId')->willReturn('en');
+    $spanish = $this->createMock(ConfigurableLanguageInterface::class);
+    $spanish->expects($this->any())->method('getId')->willReturn('es');
+    $catalan = $this->createMock(ConfigurableLanguageInterface::class);
+    $catalan->expects($this->any())->method('getId')->willReturn('ca');
+    $italian = $this->createMock(ConfigurableLanguageInterface::class);
+    $italian->expects($this->any())->method('getId')->willReturn('it');
+    $this->lingotekConfiguration->expects($this->any())
+      ->method('getEnabledLanguages')
+      ->willReturn(['en' => $english, 'es' => $spanish, 'ca' => $catalan, 'it' => $italian]);
+    $this->languageLocaleMapper->expects($this->any())
+      ->method('getLocaleForLangcode')
+      ->willReturnMap([['es', 'es_ES'], ['ca', 'ca_ES'], ['en', 'en_US'], ['it', 'it_IT']]);
+
+    $profile = new LingotekProfile([
+    'id' => 'profile_with_requests',
+    'project' => 'test_project',
+    'vault' => 'test_vault',
+    'workflow' => 'test_workflow',
+      'language_overrides' => [
+        'es' => ['overrides' => 'custom', 'custom' => ['auto_request' => TRUE, 'workflow' => 'es_workflow']],
+        'ca' => ['overrides' => 'custom', 'custom' => ['auto_request' => TRUE, 'workflow' => 'ca_workflow']],
+        'it' => ['overrides' => 'custom', 'custom' => ['auto_request' => TRUE, 'workflow' => 'default']],
+      ],
+    ], 'lingotek_profile');
+    $profile->setAutomaticUpload(TRUE);
+    $profile->setAutomaticRequest(TRUE);
+    $doc_id = $this->lingotek->uploadDocument('title', ['content' => 'wedgiePlatypus'], 'en_US', NULL, $profile, 'my_job_id');
+    $this->assertEquals('my-document-id', $doc_id);
+
   }
 
   /**
