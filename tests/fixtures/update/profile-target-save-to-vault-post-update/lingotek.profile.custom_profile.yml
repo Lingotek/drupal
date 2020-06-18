@@ -1,0 +1,67 @@
+langcode: en
+status: true
+dependencies: { }
+id: custom_profile
+label: Custom Profile
+weight: 0
+locked: false
+auto_upload: false
+auto_download: false
+auto_download_worker: true
+append_type_to_title: global_setting
+vault: default
+project: default
+workflow: default
+intelligence_metadata:
+  use_author: true
+  use_author_email: true
+  use_contact_email_for_author: null
+  default_author_email: ''
+  use_business_unit: true
+  business_unit: ''
+  use_business_division: true
+  business_division: ''
+  use_campaign_id: true
+  campaign_id: ''
+  use_campaign_rating: true
+  campaign_rating: 0
+  use_channel: true
+  channel: ''
+  use_contact_name: true
+  contact_name: ''
+  use_contact_email: true
+  contact_email: ''
+  use_content_description: true
+  content_description: ''
+  use_base_domain: true
+  use_reference_url: true
+  use_external_style_id: true
+  external_style_id: ''
+  use_purchase_order: true
+  purchase_order: ''
+  use_region: true
+  region: ''
+  override: false
+filter: drupal_default
+subfilter: drupal_default
+language_overrides:
+  en:
+    overrides: custom
+    custom:
+      workflow: default
+      auto_download: true
+  es:
+    overrides: custom
+    custom:
+      workflow: default
+      auto_download: false
+  fr:
+    overrides: custom
+    custom:
+      workflow: default
+      auto_download: false
+  it:
+    overrides: custom
+    custom:
+      workflow: default
+      auto_download: false

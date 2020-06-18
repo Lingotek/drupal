@@ -311,4 +311,30 @@ interface LingotekProfileInterface extends ConfigEntityInterface, LingotekFilter
    */
   public function setIntelligenceMetadataOverrides($value);
 
+  /**
+   * Gets the vault to be used for a given language.
+   *
+   * @param string $langcode
+   *   The language code.
+   *
+   * @return string
+   *   The vault identifier, used to request translations. If 'default, the
+   *   default site vault should be used.
+   */
+  public function getVaultForTarget($langcode);
+
+  /**
+   * Set the vault to be used for a given language.
+   *
+   * @param string $langcode
+   *   The language code.
+   *
+   * @param string $value
+   *   The vault identifier, used to request translations. If'default', the
+   *   default site vault should be used.
+   *
+   * @return $this
+   */
+  public function setVaultForTarget($langcode, $value);
+
 }

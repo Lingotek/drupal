@@ -5,6 +5,27 @@
  * Post update functions for Lingotek.
  */
 
+use Drupal\Core\Config\Entity\ConfigEntityUpdater;
+use Drupal\lingotek\LingotekProfileInterface;
+
+/**
+ * Update target custom profile settings with default value.
+ */
+function lingotek_post_update_lingotek_profile_target_save_to_vault(&$sandbox = NULL) {
+  \Drupal::classResolver(ConfigEntityUpdater::class)
+    ->update($sandbox, 'lingotek_profile', function (LingotekProfileInterface $profile) {
+      // Default target save-to vaults to default
+      $languages = \Drupal::languageManager()->getLanguages();
+      foreach ($languages as $language) {
+        $langcode = $language->getId();
+        if ($profile->hasCustomSettingsForTarget($langcode)) {
+          $profile->setVaultForTarget($langcode, 'default');
+        }
+      }
+      return TRUE;
+    });
+}
+
 /**
  * Implements hook_removed_post_updates().
  */

@@ -392,9 +392,11 @@ class LingotekProfileFormTest extends LingotekTestBase {
       'language_overrides[es][overrides]' => 'custom',
       'language_overrides[es][custom][auto_download]' => FALSE,
       'language_overrides[es][custom][workflow]' => 'test_workflow',
+      'language_overrides[es][custom][vault]' => 'test_vault',
       'language_overrides[de][overrides]' => 'custom',
       'language_overrides[de][custom][auto_download]' => FALSE,
       'language_overrides[de][custom][workflow]' => 'default',
+      'language_overrides[de][custom][vault]' => 'default',
     ];
     $this->drupalPostForm(NULL, $edit, t('Save'));
 
@@ -407,6 +409,8 @@ class LingotekProfileFormTest extends LingotekTestBase {
     $this->assertIdentical('another_workflow', $profile->getWorkflow());
     $this->assertIdentical('test_workflow', $profile->getWorkflowForTarget('es'));
     $this->assertIdentical('default', $profile->getWorkflowForTarget('de'));
+    $this->assertIdentical('test_vault', $profile->getVaultForTarget('es'));
+    $this->assertIdentical('default', $profile->getVaultForTarget('de'));
     $this->assertFalse($profile->hasAutomaticDownloadForTarget('es'));
     $this->assertFalse($profile->hasAutomaticDownloadForTarget('de'));
 
@@ -429,7 +433,7 @@ class LingotekProfileFormTest extends LingotekTestBase {
     // Assert that the override languages are present and ordered alphabetically.
     $selects = $this->xpath('//details[@id="edit-language-overrides"]/*/*//select');
     // There must be 2 select options for each of the 3 languages.
-    $this->assertEqual(count($selects), 2 * 3, 'There are options for all the potential language overrides.');
+    $this->assertEqual(count($selects), 3 * 3, 'There are options for all the potential language overrides.');
     // And the first one must be German alphabetically.
     $this->assertEqual($selects[0]->getAttribute('id'), 'edit-language-overrides-de-overrides', 'Languages are ordered alphabetically.');
   }

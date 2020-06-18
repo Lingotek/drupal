@@ -258,15 +258,15 @@ class LingotekApi implements LingotekApiInterface {
     return $response;
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  public function addTranslation($id, $locale, $workflow_id = NULL) {
+  public function addTranslation($id, $locale, $workflow_id = NULL, $vault_id = NULL) {
     try {
       $this->logger->debug('Lingotek::addTranslation called with id ' . $id . ' and locale ' . $locale);
       $args = ['locale_code' => $locale];
       if ($workflow_id) {
         $args['workflow_id'] = $workflow_id;
+      }
+      if ($vault_id) {
+        $args['vault_id'] = $vault_id;
       }
       $response = $this->lingotekClient->post('/api/document/' . $id . '/translation', $args);
     }

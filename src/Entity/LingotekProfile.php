@@ -880,4 +880,23 @@ class LingotekProfile extends ConfigEntityBase implements LingotekProfileInterfa
     return $this;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getVaultForTarget($langcode) {
+    $vault = $this->getVault();
+    if (isset($this->language_overrides[$langcode]) && $this->hasCustomSettingsForTarget($langcode)) {
+      $vault = $this->language_overrides[$langcode]['custom']['vault'];
+    }
+    return $vault;
+  }
+
+  /**
+   * (@inheritdoc)
+   */
+  public function setVaultForTarget($langcode, $value) {
+    $this->language_overrides[$langcode]['custom']['vault'] = $value;
+    return $this;
+  }
+
 }

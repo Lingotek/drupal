@@ -270,6 +270,13 @@ class LingotekProfileFormBase extends EntityForm {
             '#description' => $this->t('The default Workflow which would be used for translations.'),
             '#default_value' => $profile->hasCustomSettingsForTarget($langcode) ? $profile->getWorkflowForTarget($langcode) : 'default',
           ],
+          'vault' => [
+            '#type' => 'select',
+            '#title' => $this->t('Target Save-To Vault'),
+            '#options' => ['default' => 'Default (' . $vaults[$default_vault] . ')'] + $vaults,
+            '#description' => $this->t("The Translation Memory Vault where this target's translations are saved."),
+            '#default_value' => $profile->hasCustomSettingsForTarget($langcode) ? $profile->getVaultForTarget($langcode) : 'default',
+          ],
           'auto_request' => [
             '#type' => 'checkbox',
             '#title' => $this->t('Request Translations Automatically'),

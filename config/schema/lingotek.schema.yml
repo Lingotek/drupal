@@ -389,6 +389,9 @@ lingotek.profile.*:
               workflow:
                 type: string
                 label: 'TM Workflow'
+              vault:
+                type: string
+                label: 'TM Vault'
               auto_request:
                 type: boolean
                 label: 'Automatic request of translation'

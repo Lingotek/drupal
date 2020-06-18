@@ -430,6 +430,7 @@ class Lingotek implements LingotekInterface {
    */
   public function addTarget($doc_id, $locale, LingotekProfileInterface $profile = NULL) {
     $workflow_id = NULL;
+    $vault_id = NULL;
     $drupal_language = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale);
 
     if ($profile !== NULL && $workflow_id = $profile->getWorkflowForTarget($drupal_language->getId())) {
@@ -438,7 +439,12 @@ class Lingotek implements LingotekInterface {
       }
     }
 
-    $response = $this->api->addTranslation($doc_id, $locale, $workflow_id);
+    if ($profile !== NULL && $vault_id = $profile->getVaultForTarget($drupal_language->getId())) {
+      if ($vault_id === 'default') {
+        $vault_id = NULL;
+      }
+    }
+    $response = $this->api->addTranslation($doc_id, $locale, $workflow_id, $vault_id);
     $statusCode = $response->getStatusCode();
     if ($statusCode == Response::HTTP_CREATED) {
       return TRUE;

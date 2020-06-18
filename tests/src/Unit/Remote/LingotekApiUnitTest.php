@@ -58,8 +58,14 @@ class LingotekApiUnitTest extends UnitTestCase {
       ->with('/api/document/fancy-document-id/translation', ['locale_code' => 'es_ES'])
       ->will($this->returnValue($response));
 
+    $this->client->expects($this->at(2))
+      ->method('post')
+      ->with('/api/document/fancy-document-id/translation', ['locale_code' => 'es_ES', 'workflow_id' => 'my_workflow', 'vault_id' => 'my_vault'])
+      ->will($this->returnValue($response));
+
     $this->lingotek_api->addTranslation('fancy-document-id', 'es_ES', 'my_workflow');
     $this->lingotek_api->addTranslation('fancy-document-id', 'es_ES', NULL);
+    $this->lingotek_api->addTranslation('fancy-document-id', 'es_ES', 'my_workflow', 'my_vault');
   }
 
   /**
