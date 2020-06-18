@@ -59,6 +59,8 @@ class LingotekMetadataEditFormTest extends LingotekTestBase {
    * Tests that if debug is not enabled, metadata tab is not available.
    */
   public function testMetadataLocalTaskNotAvailable() {
+    $assert_session = $this->assertSession();
+
     // Create a node.
     $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
@@ -69,13 +71,15 @@ class LingotekMetadataEditFormTest extends LingotekTestBase {
     $this->assertUrl('/node/1', [], 'Node has been created.');
 
     // The metadata local task should not be visible.
-    $this->assertNoLink(t('Lingotek Metadata'));
+    $assert_session->linkNotExists(t('Lingotek Metadata'));
   }
 
   /**
    * Tests that if debug is not enabled, metadata tab is not available.
    */
   public function testMetadataLocalTaskAvailable() {
+    $assert_session = $this->assertSession();
+
     // Enable debug operations.
     $this->drupalPostForm('admin/lingotek/settings', [], 'Enable debug operations');
 
@@ -90,7 +94,7 @@ class LingotekMetadataEditFormTest extends LingotekTestBase {
 
     // The metadata local task should be visible.
     $this->drupalGet('/node/1');
-    $this->assertLink(t('Lingotek Metadata'));
+    $assert_session->linkExists(t('Lingotek Metadata'));
   }
 
   /**

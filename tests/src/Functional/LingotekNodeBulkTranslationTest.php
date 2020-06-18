@@ -716,6 +716,8 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
    * Tests that a config can be translated using the links on the management page.
    */
   public function testFormWorksAfterRemovingLanguageWithStatuses() {
+    $assert_session = $this->assertSession();
+
     // We need a language added and requested.
     $this->testAddingLanguageAllowsRequesting();
 
@@ -725,8 +727,8 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     $this->goToContentBulkManagementForm();
 
     // There is no link for the Spanish translation.
-    $this->assertNoLink('ES');
-    $this->assertLink('CA');
+    $assert_session->linkNotExists('ES');
+    $assert_session->linkExists('CA');
   }
 
   /**

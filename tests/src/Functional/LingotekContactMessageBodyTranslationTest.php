@@ -61,6 +61,8 @@ class LingotekContactMessageBodyTranslationTest extends LingotekTestBase {
    * Tests that a node can be translated.
    */
   public function testFieldTranslation() {
+    $assert_session = $this->assertSession();
+
     // Login as admin.
     $this->drupalLogin($this->rootUser);
 
@@ -96,7 +98,7 @@ class LingotekContactMessageBodyTranslationTest extends LingotekTestBase {
 
     // Check that the edit link is there.
     $basepath = \Drupal::request()->getBasePath();
-    $this->assertLinkByHref($basepath . '/admin/structure/contact/manage/contact_message/fields/contact_message.contact_message.field_test/translate/es/edit');
+    $assert_session->linkByHrefExists($basepath . '/admin/structure/contact/manage/contact_message/fields/contact_message.contact_message.field_test/translate/es/edit');
   }
 
 }

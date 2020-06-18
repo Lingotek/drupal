@@ -59,6 +59,8 @@ class LingotekManageLingotekTranslationsPermissionTest extends LingotekTestBase 
    * Test that if user can see settings tab without right permissions
    */
   public function testCannotSeeSettingsTabWithoutRightPermission() {
+    $assert_session = $this->assertSession();
+
     $user = $this->drupalCreateUser([
       'administer lingotek',
       'assign lingotek translation profiles',
@@ -87,14 +89,16 @@ class LingotekManageLingotekTranslationsPermissionTest extends LingotekTestBase 
    * Tests that a user can navigate to the content bulk translation pages.
    */
   public function testNavigationThroughSiteForBulkContentTranslationAsTranslationsManager() {
+    $assert_session = $this->assertSession();
+
     // Login as translations manager.
     $this->drupalLogin($this->translationManagerUser);
 
     $this->drupalGet('/user');
 
     // Assert the toolbar has the proper links for configuration and translation.
-    $this->assertLink('Configuration');
-    $this->assertLink('Translation');
+    $assert_session->linkExists('Configuration');
+    $assert_session->linkExists('Translation');
 
     // Assert in the configuration panes we have access to Lingotek Translation.
     $this->clickLink('Configuration');
@@ -103,7 +107,7 @@ class LingotekManageLingotekTranslationsPermissionTest extends LingotekTestBase 
     $this->clickLink('Lingotek Translation');
 
     // Assert we see the dashboard and can navigate to content.
-    $this->assertLink('Content');
+    $assert_session->linkExists('Content');
     $this->clickLink('Content');
     $this->assertText('Manage Translations');
   }
@@ -112,14 +116,16 @@ class LingotekManageLingotekTranslationsPermissionTest extends LingotekTestBase 
    * Tests that a user can navigate to the config bulk translation pages.
    */
   public function testNavigationThroughSiteForBulkConfigTranslationAsTranslationsManager() {
+    $assert_session = $this->assertSession();
+
     // Login as translations manager.
     $this->drupalLogin($this->translationManagerUser);
 
     $this->drupalGet('/user');
 
     // Assert the toolbar has the proper links for configuration and translation.
-    $this->assertLink('Configuration');
-    $this->assertLink('Translation');
+    $assert_session->linkExists('Configuration');
+    $assert_session->linkExists('Translation');
 
     // Assert in the configuration panes we have access to Lingotek Translation.
     $this->clickLink('Configuration');
@@ -135,6 +141,8 @@ class LingotekManageLingotekTranslationsPermissionTest extends LingotekTestBase 
    * Tests that a user can navigate to the config bulk translation pages.
    */
   public function testNavigationThroughSiteForBulkConfigTranslationAsTranslationsManagerWithTranslateConfigPermission() {
+    $assert_session = $this->assertSession();
+
     // Login as translations manager, but including the 'translate configuration'
     // permission.
     $roles = $this->translationManagerUser->getRoles(TRUE);
@@ -146,8 +154,8 @@ class LingotekManageLingotekTranslationsPermissionTest extends LingotekTestBase 
     $this->drupalGet('/user');
 
     // Assert the toolbar has the proper links for configuration and translation.
-    $this->assertLink('Configuration');
-    $this->assertLink('Translation');
+    $assert_session->linkExists('Configuration');
+    $assert_session->linkExists('Translation');
 
     // Assert in the configuration panes we have access to Lingotek Translation.
     $this->clickLink('Configuration');
@@ -156,7 +164,7 @@ class LingotekManageLingotekTranslationsPermissionTest extends LingotekTestBase 
     $this->clickLink('Lingotek Translation');
 
     // Assert we see the dashboard and can navigate to config.
-    $this->assertLink('Config');
+    $assert_session->linkExists('Config');
     $this->clickLink('Config');
     $this->assertText('Manage Configuration Translation');
   }
@@ -165,6 +173,8 @@ class LingotekManageLingotekTranslationsPermissionTest extends LingotekTestBase 
    * Tests dashboard works as a translations manager.
    */
   public function testDashboardAsTranslationsManager() {
+    $assert_session = $this->assertSession();
+
     // Login as translations manager.
     $this->drupalLogin($this->translationManagerUser);
 
@@ -188,6 +198,8 @@ class LingotekManageLingotekTranslationsPermissionTest extends LingotekTestBase 
    * user is not a translation manager.
    */
   public function testNodeTranslateDoesntContainBulkActions() {
+    $assert_session = $this->assertSession();
+
     // Create a user that can create content and translate it, but not with the
     // Lingotek module.
     $contentManager = $this->createUser([
@@ -210,7 +222,7 @@ class LingotekManageLingotekTranslationsPermissionTest extends LingotekTestBase 
     $this->clickLink('Translate');
 
     // We don't have any operations or actions available.
-    $this->assertNoLink('Upload');
+    $assert_session->linkNotExists('Upload');
     $this->assertNoFieldByName('op');
   }
 
@@ -219,6 +231,8 @@ class LingotekManageLingotekTranslationsPermissionTest extends LingotekTestBase 
    * user is not a translation manager.
    */
   public function testConfigTranslateDoesntContainBulkActions() {
+    $assert_session = $this->assertSession();
+
     // Login as a user that can translate configuration, but cannot manage
     // Lingotek translations.
     $contentManager = $this->createUser([
@@ -234,7 +248,7 @@ class LingotekManageLingotekTranslationsPermissionTest extends LingotekTestBase 
     $this->clickLink('Translate system information');
 
     // We don't have any operations available.
-    $this->assertNoLink('Upload');
+    $assert_session->linkNotExists('Upload');
   }
 
 }

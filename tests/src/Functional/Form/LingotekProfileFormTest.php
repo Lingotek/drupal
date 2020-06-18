@@ -35,6 +35,8 @@ class LingotekProfileFormTest extends LingotekTestBase {
    * Test that default profiles are present.
    */
   public function testDefaultProfilesPresent() {
+    $assert_session = $this->assertSession();
+
     $this->drupalGet('admin/lingotek/settings');
 
     // Status of the checkbox matrix is as expected.
@@ -46,9 +48,9 @@ class LingotekProfileFormTest extends LingotekTestBase {
     $this->assertNoFieldChecked('edit-profile-disabled-auto-download');
 
     // We cannot edit them.
-    $this->assertNoLinkByHref('/admin/lingotek/settings/profile/automatic/edit');
-    $this->assertNoLinkByHref('/admin/lingotek/settings/profile/manual/edit');
-    $this->assertNoLinkByHref('/admin/lingotek/settings/profile/disabled/edit');
+    $assert_session->linkByHrefNotExists('/admin/lingotek/settings/profile/automatic/edit');
+    $assert_session->linkByHrefNotExists('/admin/lingotek/settings/profile/manual/edit');
+    $assert_session->linkByHrefNotExists('/admin/lingotek/settings/profile/disabled/edit');
 
     // The fields are disabled.
     $this->assertFieldDisabled('edit-profile-automatic-auto-upload');
@@ -63,6 +65,7 @@ class LingotekProfileFormTest extends LingotekTestBase {
    * Test adding a profile are present.
    */
   public function testAddingProfile() {
+    $assert_session = $this->assertSession();
     $this->drupalGet('admin/lingotek/settings');
     $this->clickLink(t('Add new Translation Profile'));
 
@@ -81,7 +84,7 @@ class LingotekProfileFormTest extends LingotekTestBase {
     $this->assertText(t('The Lingotek profile has been successfully saved.'));
 
     // We can edit them.
-    $this->assertLinkByHref("/admin/lingotek/settings/profile/$profile_id/edit");
+    $assert_session->linkByHrefExists("/admin/lingotek/settings/profile/$profile_id/edit");
 
     $this->assertFieldChecked("edit-profile-$profile_id-auto-upload");
     $this->assertFieldChecked("edit-profile-$profile_id-auto-request");
@@ -489,6 +492,8 @@ class LingotekProfileFormTest extends LingotekTestBase {
    * Tests that we can enable intelligence metadata overrides.
    */
   public function testEnableIntelligenceOverride() {
+    $assert_session = $this->assertSession();
+
     $this->drupalGet('admin/lingotek/settings');
     $this->clickLink(t('Add new Translation Profile'));
 
@@ -534,7 +539,7 @@ class LingotekProfileFormTest extends LingotekTestBase {
     $this->assertText(t('The Lingotek profile has been successfully saved.'));
 
     // We can edit them.
-    $this->assertLinkByHref("/admin/lingotek/settings/profile/$profile_id/edit");
+    $assert_session->linkByHrefExists("/admin/lingotek/settings/profile/$profile_id/edit");
 
     $this->assertFieldChecked("edit-profile-$profile_id-auto-upload");
     $this->assertFieldChecked("edit-profile-$profile_id-auto-download");

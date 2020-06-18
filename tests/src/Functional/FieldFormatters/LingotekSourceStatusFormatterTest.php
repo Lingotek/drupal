@@ -49,6 +49,7 @@ class LingotekSourceStatusFormatterTest extends LingotekTestBase {
    * Tests that if debug is not enabled, metadata tab is not available.
    */
   public function testLingotekSourceStatusFormatter() {
+    $assert_session = $this->assertSession();
     $basepath = \Drupal::request()->getBasePath();
 
     // Create a node.
@@ -58,10 +59,10 @@ class LingotekSourceStatusFormatterTest extends LingotekTestBase {
     $edit['langcode[0][value]'] = 'en';
     $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
     $this->saveAndPublishNodeForm($edit);
-    $this->assertSession()->addressEquals('/node/1');
+    $assert_session->addressEquals('/node/1');
 
     $this->drupalGet('/metadata/1');
-    $this->assertSession()->responseContains('<span class="language-icon source-importing" title="Source importing"><a href="' . $basepath . '/admin/lingotek/entity/check_upload/dummy-document-hash-id?destination=' . $basepath . '/metadata/1">EN</a></span>');
+    $assert_session->responseContains('<span class="language-icon source-importing" title="Source importing"><a href="' . $basepath . '/admin/lingotek/entity/check_upload/dummy-document-hash-id?destination=' . $basepath . '/metadata/1">EN</a></span>');
   }
 
 }

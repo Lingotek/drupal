@@ -56,6 +56,8 @@ class LingotekConfigBulkFormTest extends LingotekTestBase {
    * Tests that the config filtering works correctly.
    */
   public function testConfigFilter() {
+    $assert_session = $this->assertSession();
+
     $this->goToConfigBulkManagementForm();
 
     // Assert that there is a "Bundle" header on the second position.
@@ -68,6 +70,8 @@ class LingotekConfigBulkFormTest extends LingotekTestBase {
    * Tests that the field config filtering works correctly.
    */
   public function testFieldConfigFilter() {
+    $assert_session = $this->assertSession();
+
     $this->goToConfigBulkManagementForm();
 
     // Let's filter by node fields.
@@ -94,21 +98,23 @@ class LingotekConfigBulkFormTest extends LingotekTestBase {
    * Tests that the config bulk form doesn't show a language if it's disabled.
    */
   public function testDisabledLanguage() {
+    $assert_session = $this->assertSession();
+
     // Go and upload a field.
     $this->goToConfigBulkManagementForm('node_type');
 
     $basepath = \Drupal::request()->getBasePath();
 
     // Clicking English must init the upload of content.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
     // And we cannot request yet a translation.
     $this->assertNoLingotekRequestTranslationLink('es_MX');
     $this->clickLink('EN');
 
     // There is a link for checking status.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/check_upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
     // And we can already request a translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/request/node_type/article/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
 
     // Then we disable the Spanish language.
     /** @var \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotekConfig */
@@ -118,28 +124,30 @@ class LingotekConfigBulkFormTest extends LingotekTestBase {
 
     // And we check that Spanish is not there anymore.
     $this->goToConfigBulkManagementForm();
-    $this->assertNoLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefNotExists($basepath . '/admin/lingotek/config/request/node_type/article/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
 
     // We re-enable Spanish.
     $lingotekConfig->enableLanguage($language);
 
     // And Spanish should be back in the management form.
     $this->goToConfigBulkManagementForm();
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/request/node_type/article/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
   }
 
   /**
    * Tests job id is uploaded on upload.
    */
   public function testJobIdOnUpload() {
+    $assert_session = $this->assertSession();
+
     // Go and upload a field.
     $this->goToConfigBulkManagementForm('node_type');
 
     $basepath = \Drupal::request()->getBasePath();
 
     // I can init the upload of content.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/page?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/upload/node_type/page?destination=' . $basepath . '/admin/lingotek/config/manage');
 
     $edit = [
       'table[article]' => TRUE,
@@ -165,6 +173,8 @@ class LingotekConfigBulkFormTest extends LingotekTestBase {
    * Tests job id is uploaded on update.
    */
   public function testJobIdOnUpdate() {
+    $assert_session = $this->assertSession();
+
     // Create a node type with automatic. This will trigger upload.
     $this->drupalCreateContentType(['type' => 'banner', 'name' => 'Banner']);
     $this->drupalCreateContentType(['type' => 'book', 'name' => 'Book']);
@@ -183,8 +193,8 @@ class LingotekConfigBulkFormTest extends LingotekTestBase {
 
     // I can check the status of the upload. So next operation will perform an
     // update.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_upload/node_type/book?destination=' . $basepath . '/admin/lingotek/config/manage');
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_upload/node_type/recipe?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/check_upload/node_type/book?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/check_upload/node_type/recipe?destination=' . $basepath . '/admin/lingotek/config/manage');
 
     $edit = [
       'table[ingredient]' => TRUE,
@@ -212,13 +222,15 @@ class LingotekConfigBulkFormTest extends LingotekTestBase {
    * Tests that can we assign job ids with the bulk operation.
    */
   public function testAssignJobIds() {
+    $assert_session = $this->assertSession();
+
     $this->goToConfigBulkManagementForm('node_type');
 
     $basepath = \Drupal::request()->getBasePath();
 
     // I can init the upload of content.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/page?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/upload/node_type/page?destination=' . $basepath . '/admin/lingotek/config/manage');
 
     $edit = [
       'table[article]' => TRUE,
@@ -271,13 +283,15 @@ class LingotekConfigBulkFormTest extends LingotekTestBase {
    * Tests that can we assign job ids with the bulk operation with TMS update.
    */
   public function testAssignJobIdsWithTMSUpdate() {
+    $assert_session = $this->assertSession();
+
     $this->goToConfigBulkManagementForm('node_type');
 
     $basepath = \Drupal::request()->getBasePath();
 
     // I can init the upload of content.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/page?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/upload/node_type/page?destination=' . $basepath . '/admin/lingotek/config/manage');
 
     $edit = [
       'table[article]' => TRUE,
@@ -334,13 +348,15 @@ class LingotekConfigBulkFormTest extends LingotekTestBase {
    * Tests that can we assign job ids with the bulk operation with TMS update.
    */
   public function testAssignJobIdsWithTMSUpdateWithADocumentArchivedError() {
+    $assert_session = $this->assertSession();
+
     $this->goToConfigBulkManagementForm('node_type');
 
     $basepath = \Drupal::request()->getBasePath();
 
     // I can init the upload of content.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/page?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/upload/node_type/page?destination=' . $basepath . '/admin/lingotek/config/manage');
 
     $edit = [
       'table[article]' => TRUE,
@@ -402,13 +418,15 @@ class LingotekConfigBulkFormTest extends LingotekTestBase {
    * Tests that can we assign job ids with the bulk operation with TMS update.
    */
   public function testAssignJobIdsWithTMSUpdateWithADocumentLockedError() {
+    $assert_session = $this->assertSession();
+
     $this->goToConfigBulkManagementForm('node_type');
 
     $basepath = \Drupal::request()->getBasePath();
 
     // I can init the upload of content.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/page?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/upload/node_type/page?destination=' . $basepath . '/admin/lingotek/config/manage');
 
     $edit = [
       'table[article]' => TRUE,
@@ -470,13 +488,15 @@ class LingotekConfigBulkFormTest extends LingotekTestBase {
    * Tests that can we assign job ids with the bulk operation with TMS update.
    */
   public function testAssignJobIdsWithTMSUpdateWithAPaymentRequiredError() {
+    $assert_session = $this->assertSession();
+
     $this->goToConfigBulkManagementForm('node_type');
 
     $basepath = \Drupal::request()->getBasePath();
 
     // I can init the upload of content.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/page?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/upload/node_type/page?destination=' . $basepath . '/admin/lingotek/config/manage');
 
     $edit = [
       'table[article]' => TRUE,
@@ -538,13 +558,15 @@ class LingotekConfigBulkFormTest extends LingotekTestBase {
    * Tests that can we assign job ids with the bulk operation with TMS update.
    */
   public function testAssignJobIdsWithTMSUpdateWithAnError() {
+    $assert_session = $this->assertSession();
+
     $this->goToConfigBulkManagementForm('node_type');
 
     $basepath = \Drupal::request()->getBasePath();
 
     // I can init the upload of content.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/page?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/upload/node_type/page?destination=' . $basepath . '/admin/lingotek/config/manage');
 
     $edit = [
       'table[article]' => TRUE,
@@ -606,12 +628,14 @@ class LingotekConfigBulkFormTest extends LingotekTestBase {
    * Tests that we cannot assign job ids with invalid chars.
    */
   public function testAssignInvalidJobIdsWithTMSUpdate() {
+    $assert_session = $this->assertSession();
+
     $this->goToConfigBulkManagementForm('node_type');
 
     // I can init the upload of content.
     $basepath = \Drupal::request()->getBasePath();
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/page?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/upload/node_type/page?destination=' . $basepath . '/admin/lingotek/config/manage');
     $this->clickLink('EN');
 
     $edit = [
@@ -646,13 +670,15 @@ class LingotekConfigBulkFormTest extends LingotekTestBase {
    * Tests that can we cancel assignation of job ids with the bulk operation.
    */
   public function testCancelAssignJobIds() {
+    $assert_session = $this->assertSession();
+
     $this->goToConfigBulkManagementForm('node_type');
 
     $basepath = \Drupal::request()->getBasePath();
 
     // I can init the upload of content.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/page?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/upload/node_type/page?destination=' . $basepath . '/admin/lingotek/config/manage');
 
     // Canceling resets.
     $edit = [
@@ -679,13 +705,15 @@ class LingotekConfigBulkFormTest extends LingotekTestBase {
    * Tests that can we reset assignation of job ids with the bulk operation.
    */
   public function testResetAssignJobIds() {
+    $assert_session = $this->assertSession();
+
     $this->goToConfigBulkManagementForm('node_type');
 
     $basepath = \Drupal::request()->getBasePath();
 
     // I can init the upload of content.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/page?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/upload/node_type/page?destination=' . $basepath . '/admin/lingotek/config/manage');
 
     // Canceling resets.
     $edit = [
@@ -713,13 +741,15 @@ class LingotekConfigBulkFormTest extends LingotekTestBase {
    * Tests clearing job ids.
    */
   public function testClearJobIds() {
+    $assert_session = $this->assertSession();
+
     $this->goToConfigBulkManagementForm('node_type');
 
     $basepath = \Drupal::request()->getBasePath();
 
     // I can init the upload of content.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/page?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/upload/node_type/page?destination=' . $basepath . '/admin/lingotek/config/manage');
 
     $this->clickLink('EN');
 
@@ -774,13 +804,15 @@ class LingotekConfigBulkFormTest extends LingotekTestBase {
    * Tests clearing job ids with TMS update.
    */
   public function testClearJobIdsWithTMSUpdate() {
+    $assert_session = $this->assertSession();
+
     $this->goToConfigBulkManagementForm('node_type');
 
     $basepath = \Drupal::request()->getBasePath();
 
     // I can init the upload of content.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/page?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/upload/node_type/page?destination=' . $basepath . '/admin/lingotek/config/manage');
 
     $this->clickLink('EN');
 
@@ -835,13 +867,15 @@ class LingotekConfigBulkFormTest extends LingotekTestBase {
    * Tests clearing job ids with TMS update.
    */
   public function testClearJobIdsWithTMSUpdateWithAnError() {
+    $assert_session = $this->assertSession();
+
     $this->goToConfigBulkManagementForm('node_type');
 
     $basepath = \Drupal::request()->getBasePath();
 
     // I can init the upload of content.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/page?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/upload/node_type/page?destination=' . $basepath . '/admin/lingotek/config/manage');
 
     $this->clickLink('EN');
 
@@ -899,13 +933,15 @@ class LingotekConfigBulkFormTest extends LingotekTestBase {
    * Tests clearing job ids with TMS update.
    */
   public function testClearJobIdsWithTMSUpdateWithADocumentArchivedError() {
+    $assert_session = $this->assertSession();
+
     $this->goToConfigBulkManagementForm('node_type');
 
     $basepath = \Drupal::request()->getBasePath();
 
     // I can init the upload of content.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/page?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/upload/node_type/page?destination=' . $basepath . '/admin/lingotek/config/manage');
 
     $this->clickLink('EN');
 
@@ -963,13 +999,15 @@ class LingotekConfigBulkFormTest extends LingotekTestBase {
    * Tests clearing job ids with TMS update.
    */
   public function testClearJobIdsWithTMSUpdateWithADocumentLockedError() {
+    $assert_session = $this->assertSession();
+
     $this->goToConfigBulkManagementForm('node_type');
 
     $basepath = \Drupal::request()->getBasePath();
 
     // I can init the upload of content.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/page?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/upload/node_type/page?destination=' . $basepath . '/admin/lingotek/config/manage');
 
     $this->clickLink('EN');
 
@@ -1027,13 +1065,15 @@ class LingotekConfigBulkFormTest extends LingotekTestBase {
    * Tests clearing job ids with TMS update.
    */
   public function testClearJobIdsWithTMSUpdateWithAPaymentRequiredError() {
+    $assert_session = $this->assertSession();
+
     $this->goToConfigBulkManagementForm('node_type');
 
     $basepath = \Drupal::request()->getBasePath();
 
     // I can init the upload of content.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/page?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/upload/node_type/page?destination=' . $basepath . '/admin/lingotek/config/manage');
 
     $this->clickLink('EN');
 
@@ -1091,6 +1131,8 @@ class LingotekConfigBulkFormTest extends LingotekTestBase {
    * Tests that the bulk management filtering works correctly.
    */
   public function testJobIdFilter() {
+    $assert_session = $this->assertSession();
+
     \Drupal::configFactory()->getEditable('lingotek.settings')->set('translate.config.node_type.profile', 'manual')->save();
 
     $basepath = \Drupal::request()->getBasePath();
@@ -1121,7 +1163,7 @@ class LingotekConfigBulkFormTest extends LingotekTestBase {
     }
 
     // I can init the upload of content.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[content_type_2]' => TRUE,
       'table[content_type_4]' => TRUE,
@@ -1178,6 +1220,8 @@ class LingotekConfigBulkFormTest extends LingotekTestBase {
    * Tests that the bulk management filtering works correctly.
    */
   public function testLabelFilter() {
+    $assert_session = $this->assertSession();
+
     $this->goToConfigBulkManagementForm();
     $this->assertNoField('filters[wrapper][label]');
 
@@ -1249,12 +1293,14 @@ class LingotekConfigBulkFormTest extends LingotekTestBase {
    * Tests that config listed links to the config when there are links available.
    */
   public function testLabelsAndLinksWhenAvailable() {
+    $assert_session = $this->assertSession();
+
     $this->goToConfigBulkManagementForm();
     $this->assertText('System maintenance');
-    $this->assertNoLink('System maintenance');
+    $assert_session->linkNotExists('System maintenance');
 
     $this->goToConfigBulkManagementForm('configurable_language');
-    $this->assertLink('Spanish language');
+    $assert_session->linkExists('Spanish language');
   }
 
 }

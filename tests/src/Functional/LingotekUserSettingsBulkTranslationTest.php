@@ -34,6 +34,7 @@ class LingotekUserSettingsBulkTranslationTest extends LingotekTestBase {
    * Tests that a config can be translated using the links on the management page.
    */
   public function testUserSettingsTranslationUsingLinks() {
+    $assert_session = $this->assertSession();
     // Login as admin.
     $this->drupalLogin($this->rootUser);
 
@@ -43,35 +44,35 @@ class LingotekUserSettingsBulkTranslationTest extends LingotekTestBase {
     $basepath = \Drupal::request()->getBasePath();
 
     // Clicking English must init the upload of content.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/entity.user.admin_form/entity.user.admin_form?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/upload/entity.user.admin_form/entity.user.admin_form?destination=' . $basepath . '/admin/lingotek/config/manage');
     // And we cannot request yet a translation.
-    $this->assertNoLinkByHref($basepath . '/admin/lingotek/config/request/entity.user.admin_form/entity.user.admin_form/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefNotExists($basepath . '/admin/lingotek/config/request/entity.user.admin_form/entity.user.admin_form/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
     $this->clickLink('EN', 3);
     $this->assertText(t('Account settings uploaded successfully'));
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
     $this->verbose(var_export(\Drupal::state()->get('lingotek.uploaded_content'), TRUE));
 
     // There is a link for checking status.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_upload/entity.user.admin_form/entity.user.admin_form?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/check_upload/entity.user.admin_form/entity.user.admin_form?destination=' . $basepath . '/admin/lingotek/config/manage');
     // And we can already request a translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/entity.user.admin_form/entity.user.admin_form/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/request/entity.user.admin_form/entity.user.admin_form/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
     $this->clickLink('EN', 3);
     $this->assertText('Account settings status checked successfully');
 
     // Request the Spanish translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/entity.user.admin_form/entity.user.admin_form/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/request/entity.user.admin_form/entity.user.admin_form/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
     $this->clickLink('ES');
     $this->assertText("Translation to es_MX requested successfully");
     $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.added_target_locale'));
 
     // Check status of the Spanish translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_download/entity.user.admin_form/entity.user.admin_form/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/check_download/entity.user.admin_form/entity.user.admin_form/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
     $this->clickLink('ES');
     $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.checked_target_locale'));
     $this->assertText("Translation to es_MX checked successfully");
 
     // Download the Spanish translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/download/entity.user.admin_form/entity.user.admin_form/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/download/entity.user.admin_form/entity.user.admin_form/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
     $this->clickLink('ES');
     $this->assertText('Translation to es_MX downloaded successfully');
     $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.downloaded_locale'));
@@ -84,6 +85,7 @@ class LingotekUserSettingsBulkTranslationTest extends LingotekTestBase {
    * Tests that a config can be translated using the actions on the management page.
    */
   public function testUserSettingsTranslationUsingActions() {
+    $assert_session = $this->assertSession();
     // Login as admin.
     $this->drupalLogin($this->rootUser);
 
@@ -96,7 +98,7 @@ class LingotekUserSettingsBulkTranslationTest extends LingotekTestBase {
     $basepath = \Drupal::request()->getBasePath();
 
     // I can init the upload of content.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/entity.user.admin_form/entity.user.admin_form?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/upload/entity.user.admin_form/entity.user.admin_form?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[entity.user.admin_form]' => TRUE,
       $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node'),
@@ -105,7 +107,7 @@ class LingotekUserSettingsBulkTranslationTest extends LingotekTestBase {
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
 
     // I can check current status.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_upload/entity.user.admin_form/entity.user.admin_form?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/check_upload/entity.user.admin_form/entity.user.admin_form?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[entity.user.admin_form]' => TRUE,
       $this->getBulkOperationFormName() => $this->getBulkOperationNameForCheckUpload('node'),
@@ -113,7 +115,7 @@ class LingotekUserSettingsBulkTranslationTest extends LingotekTestBase {
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     // Request the German (AT) translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/entity.user.admin_form/entity.user.admin_form/de_AT?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/request/entity.user.admin_form/entity.user.admin_form/de_AT?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[entity.user.admin_form]' => TRUE,
       $this->getBulkOperationFormName() => $this->getBulkOperationNameForRequestTranslation('de', 'node'),
@@ -122,7 +124,7 @@ class LingotekUserSettingsBulkTranslationTest extends LingotekTestBase {
     $this->assertIdentical('de_AT', \Drupal::state()->get('lingotek.added_target_locale'));
 
     // Check status of the Spanish translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_download/entity.user.admin_form/entity.user.admin_form/de_AT?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/check_download/entity.user.admin_form/entity.user.admin_form/de_AT?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[entity.user.admin_form]' => TRUE,
       $this->getBulkOperationFormName() => 'check_translation:de',
@@ -131,7 +133,7 @@ class LingotekUserSettingsBulkTranslationTest extends LingotekTestBase {
     $this->assertIdentical('de_AT', \Drupal::state()->get('lingotek.checked_target_locale'));
 
     // Download the German translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/download/entity.user.admin_form/entity.user.admin_form/de_AT?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/download/entity.user.admin_form/entity.user.admin_form/de_AT?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[entity.user.admin_form]' => TRUE,
       $this->getBulkOperationFormName() => 'download:de',
@@ -206,6 +208,8 @@ class LingotekUserSettingsBulkTranslationTest extends LingotekTestBase {
    * Tests that a config object can be translated using the actions on the management page.
    */
   public function testUserSettingsMultipleLanguageTranslationUsingActions() {
+    $assert_session = $this->assertSession();
+
     // Login as admin.
     $this->drupalLogin($this->rootUser);
 
@@ -218,7 +222,7 @@ class LingotekUserSettingsBulkTranslationTest extends LingotekTestBase {
     $basepath = \Drupal::request()->getBasePath();
 
     // I can init the upload of content.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/entity.user.admin_form/entity.user.admin_form?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/upload/entity.user.admin_form/entity.user.admin_form?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[entity.user.admin_form]' => TRUE,
       $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node'),
@@ -226,7 +230,7 @@ class LingotekUserSettingsBulkTranslationTest extends LingotekTestBase {
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     // I can check current status.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_upload/entity.user.admin_form/entity.user.admin_form?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/check_upload/entity.user.admin_form/entity.user.admin_form?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[entity.user.admin_form]' => TRUE,
       $this->getBulkOperationFormName() => $this->getBulkOperationNameForCheckUpload('node'),
@@ -234,7 +238,7 @@ class LingotekUserSettingsBulkTranslationTest extends LingotekTestBase {
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     // Request all the translations.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/entity.user.admin_form/entity.user.admin_form/de_AT?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/request/entity.user.admin_form/entity.user.admin_form/de_AT?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[entity.user.admin_form]' => TRUE,
       $this->getBulkOperationFormName() => $this->getBulkOperationNameForRequestTranslations('node'),
@@ -242,7 +246,7 @@ class LingotekUserSettingsBulkTranslationTest extends LingotekTestBase {
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     // Check status of all the translations.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_download/entity.user.admin_form/entity.user.admin_form/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/check_download/entity.user.admin_form/entity.user.admin_form/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[entity.user.admin_form]' => TRUE,
       $this->getBulkOperationFormName() => $this->getBulkOperationNameForCheckTranslations('node'),
@@ -250,7 +254,7 @@ class LingotekUserSettingsBulkTranslationTest extends LingotekTestBase {
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     // Download all the translations.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/download/entity.user.admin_form/entity.user.admin_form/de_AT?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/download/entity.user.admin_form/entity.user.admin_form/de_AT?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[entity.user.admin_form]' => TRUE,
       $this->getBulkOperationFormName() => $this->getBulkOperationNameForDownloadTranslations('node'),
@@ -262,6 +266,8 @@ class LingotekUserSettingsBulkTranslationTest extends LingotekTestBase {
    * Tests that a config can be translated using the links on the management page.
    */
   public function testAddingLanguageAllowsRequesting() {
+    $assert_session = $this->assertSession();
+
     // We need a node with translations first.
     $this->testUserSettingsTranslationUsingLinks();
 
@@ -274,7 +280,7 @@ class LingotekUserSettingsBulkTranslationTest extends LingotekTestBase {
     $basepath = \Drupal::request()->getBasePath();
 
     // There is a link for requesting the Catalan translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/entity.user.admin_form/entity.user.admin_form/ca_ES?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/request/entity.user.admin_form/entity.user.admin_form/ca_ES?destination=' . $basepath . '/admin/lingotek/config/manage');
     $this->clickLink('CA');
     $this->assertText("Translation to ca_ES requested successfully");
   }

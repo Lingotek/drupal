@@ -41,6 +41,8 @@ class LingotekContentTypeBulkCancelTest extends LingotekTestBase {
    * Tests that a config entity can be cancelled using the bulk operations on the management page.
    */
   public function testContentTypeCancel() {
+    $assert_session = $this->assertSession();
+
     // This is a hack for avoiding writing different lingotek endpoint mocks.
     \Drupal::state()->set('lingotek.uploaded_content_type', 'content_type');
 
@@ -80,8 +82,8 @@ class LingotekContentTypeBulkCancelTest extends LingotekTestBase {
 
     // We can request again.
     $basepath = \Drupal::request()->getBasePath();
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
-    $this->assertNoLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/es_ES?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefNotExists($basepath . '/admin/lingotek/config/request/node_type/article/es_ES?destination=' . $basepath . '/admin/lingotek/config/manage');
 
     $this->createAndTranslateContentTypeWithLinks();
   }
@@ -90,6 +92,8 @@ class LingotekContentTypeBulkCancelTest extends LingotekTestBase {
    * Tests that a config entity target can be cancelled using the bulk operations on the management page.
    */
   public function testContentTypeCancelTarget() {
+    $assert_session = $this->assertSession();
+
     // This is a hack for avoiding writing different lingotek endpoint mocks.
     \Drupal::state()->set('lingotek.uploaded_content_type', 'content_type');
 
@@ -126,15 +130,17 @@ class LingotekContentTypeBulkCancelTest extends LingotekTestBase {
 
     // We cannot request again.
     $basepath = \Drupal::request()->getBasePath();
-    $this->assertNoLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/es_ES?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefNotExists($basepath . '/admin/lingotek/config/request/node_type/article/es_ES?destination=' . $basepath . '/admin/lingotek/config/manage');
   }
 
   protected function createAndTranslateContentTypeWithLinks() {
+    $assert_session = $this->assertSession();
+
     // Go to the bulk config management page.
     $this->goToConfigBulkManagementForm('node_type');
 
     $basepath = \Drupal::request()->getBasePath();
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
 
     // Clicking English must init the upload of content.
     $this->clickLink('EN');
@@ -144,7 +150,7 @@ class LingotekContentTypeBulkCancelTest extends LingotekTestBase {
     $this->clickLink('EN');
     $this->assertText('Article status checked successfully');
 
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/es_ES?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/request/node_type/article/es_ES?destination=' . $basepath . '/admin/lingotek/config/manage');
 
     // Request the Spanish translation.
     $this->clickLink('ES');

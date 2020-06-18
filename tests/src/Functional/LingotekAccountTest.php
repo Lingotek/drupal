@@ -27,6 +27,8 @@ class LingotekAccountTest extends BrowserTestBase {
    * Tests that the dashboard cannot be accessed without a valid user.
    */
   public function testAccountCanConnect() {
+    $assert_session = $this->assertSession();
+
     // Login as admin.
     $this->drupalLogin($this->rootUser);
     // Try to navigate to the Dashboard page, and assert we are redirected.
@@ -50,16 +52,20 @@ class LingotekAccountTest extends BrowserTestBase {
    * Tests that the dashboard cannot be accessed without a valid user.
    */
   public function testDashboardIsNotAvailableBeforeConnecting() {
+    $assert_session = $this->assertSession();
+
     // Login as admin.
     $this->drupalLogin($this->rootUser);
 
     // Try to navigate to the Dashboard page, and assert we are redirected.
     $this->drupalGet('admin/lingotek');
     $this->assertUrl('admin/lingotek/setup/account');
-    $this->assertLink('Connect Lingotek Account');
+    $assert_session->linkExists('Connect Lingotek Account');
   }
 
   public function testHandshakePage() {
+    $assert_session = $this->assertSession();
+
     // We avoid the redirect so we can see where the user will land for some
     // seconds.
     \Drupal::state()->set('authorize_no_redirect', TRUE);
@@ -77,6 +83,8 @@ class LingotekAccountTest extends BrowserTestBase {
   }
 
   public function testAccountCreationCancelled() {
+    $assert_session = $this->assertSession();
+
     // Login as admin.
     $this->drupalLogin($this->rootUser);
     // Try to navigate to the Dashboard page, and assert we are redirected.

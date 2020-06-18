@@ -74,6 +74,7 @@ class LingotekNodeWhenFieldIsRemovedTest extends LingotekTestBase {
    * Tests that we can translate after the field is removed.
    */
   public function testFieldIsRemoved() {
+    $assert_session = $this->assertSession();
     // This is a hack for avoiding writing different lingotek endpoint mocks.
     \Drupal::state()->set('lingotek.uploaded_content_type', 'node+new_field');
 
@@ -222,8 +223,9 @@ class LingotekNodeWhenFieldIsRemovedTest extends LingotekTestBase {
    *   The field name.
    */
   protected function removeField($entity_type_id, $bundle, $field_name) {
+    $assert_session = $this->assertSession();
     $this->drupalGet('/admin/structure/types/manage/article/fields');
-    $this->assertLinkByHref("/admin/structure/types/manage/$bundle/fields/$entity_type_id.$bundle.$field_name/delete");
+    $assert_session->linkByHrefExists("/admin/structure/types/manage/$bundle/fields/$entity_type_id.$bundle.$field_name/delete");
 
     $this->drupalGet("/admin/structure/types/manage/$bundle/fields/$entity_type_id.$bundle.$field_name/delete");
     $this->drupalPostForm(NULL, [], 'Delete');

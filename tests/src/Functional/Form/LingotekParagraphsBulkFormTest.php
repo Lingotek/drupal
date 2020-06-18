@@ -81,6 +81,8 @@ class LingotekParagraphsBulkFormTest extends LingotekTestBase {
   }
 
   public function testParagraphsParentShownOnListing() {
+    $assert_session = $this->assertSession();
+
     $this->addDemoContent();
 
     $edit = ['contrib[paragraphs][enable_bulk_management]' => 1];
@@ -90,8 +92,8 @@ class LingotekParagraphsBulkFormTest extends LingotekTestBase {
     $this->goToContentBulkManagementForm('paragraph');
 
     $this->assertText('Parent');
-    $this->assertLink('Welcome to the Paragraphs Demo module!', 4);
-    $this->assertLink('Library item');
+    $assert_session->linkExists('Welcome to the Paragraphs Demo module!', 4);
+    $assert_session->linkExists('Library item');
   }
 
   protected function addDemoContent() {

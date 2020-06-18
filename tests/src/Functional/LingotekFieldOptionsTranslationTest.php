@@ -51,6 +51,7 @@ class LingotekFieldOptionsTranslationTest extends LingotekTestBase {
    * Tests that a field can be translated.
    */
   public function testFieldTranslation() {
+    $assert_session = $this->assertSession();
     // Login as admin.
     $this->drupalLogin($this->rootUser);
 
@@ -92,7 +93,7 @@ class LingotekFieldOptionsTranslationTest extends LingotekTestBase {
 
     // Check that the edit link is there.
     $basepath = \Drupal::request()->getBasePath();
-    $this->assertLinkByHref($basepath . '/admin/structure/types/manage/article/fields/node.article.field_options/translate/es/edit');
+    $assert_session->linkByHrefExists($basepath . '/admin/structure/types/manage/article/fields/node.article.field_options/translate/es/edit');
 
     // Check that the values are correct.
     $this->clickLink('Edit', 1);

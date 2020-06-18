@@ -109,6 +109,7 @@ class LingotekNodeWithLinkTranslationTest extends LingotekTestBase {
    * Tests that a node can be translated.
    */
   public function testNodeWithLinkTranslation() {
+    $assert_session = $this->assertSession();
     // This is a hack for avoiding writing different lingotek endpoint mocks.
     \Drupal::state()->set('lingotek.uploaded_content_type', 'node+link');
 
@@ -176,13 +177,14 @@ class LingotekNodeWithLinkTranslationTest extends LingotekTestBase {
     $this->assertText('Las llamas son chulas');
     $this->assertText('Las llamas son muy chulas');
     $this->assertText('Enlace con fotos de llamas');
-    $this->assertLinkByHref('http://drupal.org/es');
+    $assert_session->linkByHrefExists('http://drupal.org/es');
   }
 
   /**
    * Tests that a node can be translated when an invalid link is returned.
    */
   public function testNodeWithInvalidLinkTranslation() {
+    $assert_session = $this->assertSession();
     // This is a hack for avoiding writing different lingotek endpoint mocks.
     \Drupal::state()->set('lingotek.uploaded_content_type', 'node+invalidlink');
 
@@ -251,9 +253,9 @@ class LingotekNodeWithLinkTranslationTest extends LingotekTestBase {
     $this->assertText('Las llamas son muy chulas');
     $this->assertText('Enlace con fotos de llamas');
     // There is no invalid link.
-    $this->assertNoLinkByHref('this is not a valid uri');
+    $assert_session->linkByHrefNotExists('this is not a valid uri');
     // The original link is kept.
-    $this->assertLinkByHref('http://drupal.org');
+    $assert_session->linkByHrefExists('http://drupal.org');
     // Test the error is logged.
     $status = (bool) \Drupal::database()->queryRange('SELECT 1 FROM {watchdog} WHERE message = :message', 0, 1, [':message' => "Field field_link for node Llamas are cool in language es-ar not saved, invalid uri \"this is not a valid uri\""]);
     $this->assert($status, 'A watchdog message was logged for the invalid uri in a field');

@@ -52,6 +52,7 @@ class LingotekTranslationStatusFormatterTest extends LingotekTestBase {
    * Tests the Lingotek translation status field formatter.
    */
   public function testLingotekSourceStatusFormatter() {
+    $assert_session = $this->assertSession();
     $basepath = \Drupal::request()->getBasePath();
 
     // Create a node.
@@ -61,14 +62,16 @@ class LingotekTranslationStatusFormatterTest extends LingotekTestBase {
     $edit['langcode[0][value]'] = 'en';
     $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
     $this->saveAndPublishNodeForm($edit);
-    $this->assertSession()->addressEquals('/node/1');
+    $assert_session->addressEquals('/node/1');
 
     $this->drupalGet('/metadata/1');
-    $this->assertSession()->responseContains('Lingotek translation status');
-    $this->assertSession()->responseContains('<div><a href="' . $basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX?destination=' . $basepath . '/metadata/1" class="language-icon target-request" title="Spanish - Request translation">ES</a></div>');
+    $assert_session->responseContains('Lingotek translation status');
+    $assert_session->responseContains('<div><a href="' . $basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX?destination=' . $basepath . '/metadata/1" class="language-icon target-request" title="Spanish - Request translation">ES</a></div>');
   }
 
   public function testStatusForMissingLanguage() {
+    $assert_session = $this->assertSession();
+
     $basepath = \Drupal::request()->getBasePath();
 
     // Create a node.
@@ -78,7 +81,7 @@ class LingotekTranslationStatusFormatterTest extends LingotekTestBase {
     $edit['langcode[0][value]'] = 'en';
     $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
     $this->saveAndPublishNodeForm($edit);
-    $this->assertSession()->addressEquals('/node/1');
+    $assert_session->addressEquals('/node/1');
 
     $node = Node::load(1);
     /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $service */
@@ -86,8 +89,8 @@ class LingotekTranslationStatusFormatterTest extends LingotekTestBase {
     $service->setTargetStatus($node, 'nb_NO', Lingotek::STATUS_READY);
 
     $this->drupalGet('/metadata/1');
-    $this->assertSession()->responseContains('Lingotek translation status');
-    $this->assertSession()->responseContains('<div><a href="' . $basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX?destination=' . $basepath . '/metadata/1" class="language-icon target-request" title="Spanish - Request translation">ES</a></div>');
+    $assert_session->responseContains('Lingotek translation status');
+    $assert_session->responseContains('<div><a href="' . $basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX?destination=' . $basepath . '/metadata/1" class="language-icon target-request" title="Spanish - Request translation">ES</a></div>');
 
   }
 

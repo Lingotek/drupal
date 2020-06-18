@@ -176,6 +176,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
    * Tests that a node can be translated.
    */
   public function testNodeWithManualTranslation() {
+    $assert_session = $this->assertSession();
     // Login as admin.
     $this->drupalLogin($this->rootUser);
 
@@ -257,8 +258,8 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $this->assertIdentical('es_MX', \Drupal::state()
       ->get('lingotek.downloaded_locale'));
 
-    $this->assertNoLink('Download completed translation');
-    $this->assertLink('Re-download completed translation');
+    $assert_session->linkNotExists('Download completed translation');
+    $assert_session->linkExists('Re-download completed translation');
 
     // The content is translated and published.
     $this->clickLink('Las llamas son chulas');
@@ -394,6 +395,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
    * Tests that no translation can be requested if the language is disabled.
    */
   public function testLanguageDisabled() {
+    $assert_session = $this->assertSession();
     // Add a language.
     $italian = ConfigurableLanguage::createFromLangcode('it')
       ->setThirdPartySetting('lingotek', 'locale', 'it_IT');
@@ -439,8 +441,8 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     // manually.
     $this->assertLingotekRequestTranslationLink('it_IT');
     $this->assertLingotekRequestTranslationLink('es_MX');
-    $this->assertLinkByHref('/node/1/translations/add/en/it');
-    $this->assertLinkByHref('/node/1/translations/add/en/es');
+    $assert_session->linkByHrefExists('/node/1/translations/add/en/it');
+    $assert_session->linkByHrefExists('/node/1/translations/add/en/es');
 
     /** @var \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_config */
     $lingotek_config = \Drupal::service('lingotek.configuration');
@@ -452,8 +454,8 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     // Italian is not present anymore, but still can add a translation.
     $this->assertNoLingotekRequestTranslationLink('it_IT');
     $this->assertLingotekRequestTranslationLink('es_MX');
-    $this->assertLinkByHref('/node/1/translations/add/en/it');
-    $this->assertLinkByHref('/node/1/translations/add/en/es');
+    $assert_session->linkByHrefExists('/node/1/translations/add/en/it');
+    $assert_session->linkByHrefExists('/node/1/translations/add/en/es');
   }
 
   /**

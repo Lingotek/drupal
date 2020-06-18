@@ -122,14 +122,18 @@ class LingotekSettingsTabParagraphsIntegrationFormTest extends LingotekTestBase 
    * Test that the bulk management form doesn't have a tab for paragraphs.
    */
   public function testBulkTabNotShownIfNotActive() {
+    $assert_session = $this->assertSession();
+
     $this->goToContentBulkManagementForm();
-    $this->assertNoLink('Paragraph');
+    $assert_session->linkNotExists('Paragraph');
   }
 
   /**
    * Test that we can enable the tab for paragraphs in bulk management form.
    */
   public function testBulkTabCanBeActivated() {
+    $assert_session = $this->assertSession();
+
     // Activate the settings tab.
     $this->drupalGet('admin/lingotek/settings');
     $edit = ['contrib[paragraphs][enable_bulk_management]' => 1];
@@ -138,7 +142,7 @@ class LingotekSettingsTabParagraphsIntegrationFormTest extends LingotekTestBase 
 
     // Now the tab is active.
     $this->goToContentBulkManagementForm();
-    $this->assertLink('Paragraph');
+    $assert_session->linkExists('Paragraph');
 
     $this->clickLink('Paragraph');
     $this->assertText('Manage Translations');
@@ -149,6 +153,8 @@ class LingotekSettingsTabParagraphsIntegrationFormTest extends LingotekTestBase 
    * Test that we can disable the tab for paragraphs in bulk management form.
    */
   public function testBulkTabCanBeDeactivated() {
+    $assert_session = $this->assertSession();
+
     // Activate the settings tab.
     $this->testBulkTabCanBeActivated();
 
@@ -160,13 +166,15 @@ class LingotekSettingsTabParagraphsIntegrationFormTest extends LingotekTestBase 
 
     // Now the tab is not shown.
     $this->goToContentBulkManagementForm();
-    $this->assertNoLink('Paragraph');
+    $assert_session->linkNotExists('Paragraph');
   }
 
   /**
    * Test that all tabs are shown.
    */
   public function testOtherBulkTabsAreShownAfterDeactivating() {
+    $assert_session = $this->assertSession();
+
     $this->testBulkTabCanBeDeactivated();
     $bundle = $this->vocabulary->id();
     $this->saveLingotekContentTranslationSettings([
@@ -183,19 +191,21 @@ class LingotekSettingsTabParagraphsIntegrationFormTest extends LingotekTestBase 
 
     // Now the taxonomy tab should be shown.
     $this->goToContentBulkManagementForm();
-    $this->assertSession()->statusCodeEquals(200);
-    $this->assertLink('Content');
-    $this->assertNoLink('Paragraph');
-    $this->assertLink('Taxonomy term');
+    $assert_session->statusCodeEquals(200);
+    $assert_session->linkExists('Content');
+    $assert_session->linkNotExists('Paragraph');
+    $assert_session->linkExists('Taxonomy term');
 
     $this->goToContentBulkManagementForm('taxonomy_term');
-    $this->assertSession()->statusCodeEquals(200);
-    $this->assertLink('Content');
-    $this->assertNoLink('Paragraph');
-    $this->assertLink('Taxonomy term');
+    $assert_session->statusCodeEquals(200);
+    $assert_session->linkExists('Content');
+    $assert_session->linkNotExists('Paragraph');
+    $assert_session->linkExists('Taxonomy term');
   }
 
   public function testParagraphsProfileIsNotSelectableUnlessExplicit() {
+    $assert_session = $this->assertSession();
+
     $this->drupalGet('admin/lingotek/settings');
 
     $this->assertNoFieldByName('paragraph[image_text][profiles]', NULL, 'The profile is not selectable for paragraphs by default.');

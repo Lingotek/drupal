@@ -30,6 +30,8 @@ class LingotekSystemSiteBulkCancelTest extends LingotekTestBase {
    * Tests that a config entity can be cancelled using the bulk operations on the management page.
    */
   public function testSystemSiteCancellation() {
+    $assert_session = $this->assertSession();
+
     // This is a hack for avoiding writing different lingotek endpoint mocks.
     \Drupal::state()->set('lingotek.uploaded_content_type', 'system.site');
 
@@ -72,8 +74,8 @@ class LingotekSystemSiteBulkCancelTest extends LingotekTestBase {
 
     // We can request again.
     $basepath = \Drupal::request()->getBasePath();
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/system.site_information_settings/system.site_information_settings?destination=' . $basepath . '/admin/lingotek/config/manage');
-    $this->assertNoLinkByHref($basepath . '/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/es_ES?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/upload/system.site_information_settings/system.site_information_settings?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefNotExists($basepath . '/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/es_ES?destination=' . $basepath . '/admin/lingotek/config/manage');
 
     $this->createAndTranslateSystemSiteWithLinks();
   }
@@ -82,6 +84,7 @@ class LingotekSystemSiteBulkCancelTest extends LingotekTestBase {
    * Tests that a config target can be cancelled using the bulk operations on the management page.
    */
   public function testSystemSiteCancelTarget() {
+    $assert_session = $this->assertSession();
     // This is a hack for avoiding writing different lingotek endpoint mocks.
     \Drupal::state()->set('lingotek.uploaded_content_type', 'system.site');
 
@@ -121,15 +124,16 @@ class LingotekSystemSiteBulkCancelTest extends LingotekTestBase {
 
     // We cannot request again.
     $basepath = \Drupal::request()->getBasePath();
-    $this->assertNoLinkByHref($basepath . '/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/es_ES?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefNotExists($basepath . '/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/es_ES?destination=' . $basepath . '/admin/lingotek/config/manage');
   }
 
   protected function createAndTranslateSystemSiteWithLinks() {
+    $assert_session = $this->assertSession();
     // Go to the bulk config management page.
     $this->goToConfigBulkManagementForm();
 
     $basepath = \Drupal::request()->getBasePath();
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/system.site_information_settings/system.site_information_settings?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/upload/system.site_information_settings/system.site_information_settings?destination=' . $basepath . '/admin/lingotek/config/manage');
 
     // Clicking English must init the upload of content.
     $this->clickLink('EN', 1);
@@ -139,7 +143,7 @@ class LingotekSystemSiteBulkCancelTest extends LingotekTestBase {
     $this->clickLink('EN', 1);
     $this->assertText('System information status checked successfully');
 
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/es_ES?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/es_ES?destination=' . $basepath . '/admin/lingotek/config/manage');
 
     // Request the Spanish translation.
     $this->clickLink('ES');

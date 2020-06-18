@@ -52,6 +52,8 @@ class LingotekModuleUninstallationWithDataTest extends LingotekTestBase {
    * Tests that the module can be uninstalled.
    */
   public function testUninstallModule() {
+    $assert_session = $this->assertSession();
+
     // Login as admin.
     $this->drupalLogin($this->rootUser);
 
@@ -78,7 +80,7 @@ class LingotekModuleUninstallationWithDataTest extends LingotekTestBase {
     // Singular reason.
     $this->assertText('The following reason prevents Lingotek Translation from being uninstalled:');
     $this->assertText('There is content for the entity type: Lingotek Content Metadata');
-    $this->assertLink('Remove lingotek content metadata entities');
+    $assert_session->linkExists('Remove lingotek content metadata entities');
 
     $this->assertSession()->fieldDisabled('edit-uninstall-lingotek');
 

@@ -173,6 +173,8 @@ class LingotekNodeBulkFormWithGroupModuleTest extends LingotekTestBase {
    * Tests that the bulk management group filtering works correctly.
    */
   public function testGroupFilter() {
+    $assert_session = $this->assertSession();
+
     $nodes = [];
     // Create some nodes and relate them with groups.
     for ($i = 1; $i < 15; $i++) {
@@ -199,7 +201,7 @@ class LingotekNodeBulkFormWithGroupModuleTest extends LingotekTestBase {
     $this->goToContentBulkManagementForm();
 
     // Assert there is a pager.
-    $this->assertLinkByHref('?page=1');
+    $assert_session->linkByHrefExists('?page=1');
 
     // After we filter by first group, there is no pager and the rows selected
     // are the ones expected.
@@ -208,10 +210,10 @@ class LingotekNodeBulkFormWithGroupModuleTest extends LingotekTestBase {
     ];
     $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
     foreach ([1, 5, 7, 11, 13] as $j) {
-      $this->assertLink('Llamas are cool ' . $j . ' at Group My Product 1.0');
+      $assert_session->linkExists('Llamas are cool ' . $j . ' at Group My Product 1.0');
     }
-    $this->assertNoLinkByHref('?page=1');
-    $this->assertNoLink('Llamas are cool 2 at Group My Product 2.0');
+    $assert_session->linkByHrefNotExists('?page=1');
+    $assert_session->linkNotExists('Llamas are cool 2 at Group My Product 2.0');
 
     // After we filter by second group, there is no pager and the rows selected
     // are the ones expected.
@@ -220,10 +222,10 @@ class LingotekNodeBulkFormWithGroupModuleTest extends LingotekTestBase {
     ];
     $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
     foreach ([2, 4, 6, 8, 10, 12, 14] as $j) {
-      $this->assertLink('Llamas are cool ' . $j . ' at Group My Product 2.0');
+      $assert_session->linkExists('Llamas are cool ' . $j . ' at Group My Product 2.0');
     }
-    $this->assertNoLink('Page 2');
-    $this->assertNoLink('Llamas are cool 1 at Group My Product 1.0');
+    $assert_session->linkNotExists('Page 2');
+    $assert_session->linkNotExists('Llamas are cool 1 at Group My Product 1.0');
 
     // After we filter by third group, there is no pager and the rows selected
     // are the ones expected.
@@ -232,23 +234,23 @@ class LingotekNodeBulkFormWithGroupModuleTest extends LingotekTestBase {
     ];
     $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
     foreach ([3, 9] as $j) {
-      $this->assertLink('Llamas are cool ' . $j . ' at Group My Product 2.4');
+      $assert_session->linkExists('Llamas are cool ' . $j . ' at Group My Product 2.4');
     }
-    $this->assertNoLinkByHref('?page=1');
-    $this->assertNoLink('Llamas are cool 5 at Group My Product 1.0');
+    $assert_session->linkByHrefNotExists('?page=1');
+    $assert_session->linkNotExists('Llamas are cool 5 at Group My Product 1.0');
 
     // After we reset, we get back to having a pager and all the content.
     $this->drupalPostForm(NULL, [], 'Reset');
     foreach ([1, 5, 7] as $j) {
-      $this->assertLink('Llamas are cool ' . $j . ' at Group My Product 1.0');
+      $assert_session->linkExists('Llamas are cool ' . $j . ' at Group My Product 1.0');
     }
     foreach ([2, 4, 6, 8, 10] as $j) {
-      $this->assertLink('Llamas are cool ' . $j . ' at Group My Product 2.0');
+      $assert_session->linkExists('Llamas are cool ' . $j . ' at Group My Product 2.0');
     }
     foreach ([3, 9] as $j) {
-      $this->assertLink('Llamas are cool ' . $j . ' at Group My Product 2.4');
+      $assert_session->linkExists('Llamas are cool ' . $j . ' at Group My Product 2.4');
     }
-    $this->assertLinkByHref('?page=1');
+    $assert_session->linkByHrefExists('?page=1');
   }
 
   /**
