@@ -270,6 +270,9 @@ class LingotekProfileFormBase extends EntityForm {
             '#description' => $this->t('The default Workflow which would be used for translations.'),
             '#default_value' => $profile->hasCustomSettingsForTarget($langcode) ? $profile->getWorkflowForTarget($langcode) : 'default',
           ],
+          // If using overrides, we can never specify the document vault as this
+          // cannot be empty, nor force to use the project template vault, as it
+          // is unknown to us.
           'vault' => [
             '#type' => 'select',
             '#title' => $this->t('Target Save-To Vault'),

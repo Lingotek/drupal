@@ -594,6 +594,7 @@ class LingotekUnitTest extends UnitTestCase {
         'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0',
         'translation_locale_code' => ['es_ES', 'ca_ES', 'it_IT'],
         'translation_workflow_id' => ['es_workflow', 'ca_workflow', 'default_workflow'],
+        'translation_vault_id'  => ['default_vault', 'ca_vault', 'it_vault'],
       ])
       ->will($this->returnValue($response));
 
@@ -658,9 +659,9 @@ class LingotekUnitTest extends UnitTestCase {
     'vault' => 'test_vault',
     'workflow' => 'test_workflow',
       'language_overrides' => [
-        'es' => ['overrides' => 'custom', 'custom' => ['auto_request' => TRUE, 'workflow' => 'es_workflow']],
-        'ca' => ['overrides' => 'custom', 'custom' => ['auto_request' => TRUE, 'workflow' => 'ca_workflow']],
-        'it' => ['overrides' => 'custom', 'custom' => ['auto_request' => TRUE, 'workflow' => 'default']],
+        'es' => ['overrides' => 'custom', 'custom' => ['auto_request' => TRUE, 'workflow' => 'es_workflow', 'vault' => 'default']],
+        'ca' => ['overrides' => 'custom', 'custom' => ['auto_request' => TRUE, 'workflow' => 'ca_workflow', 'vault' => 'ca_vault']],
+        'it' => ['overrides' => 'custom', 'custom' => ['auto_request' => TRUE, 'workflow' => 'default', 'vault' => 'it_vault']],
       ],
     ], 'lingotek_profile');
     $profile->setAutomaticUpload(TRUE);

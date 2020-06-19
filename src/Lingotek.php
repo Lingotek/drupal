@@ -251,6 +251,7 @@ class Lingotek implements LingotekInterface {
 
     $request_locales = [];
     $request_workflows = [];
+    $request_translation_vaults = [];
 
     if ($profile) {
       $languages = $this->lingotekConfiguration->getEnabledLanguages();
@@ -264,8 +265,17 @@ class Lingotek implements LingotekInterface {
                 $workflow_id = $this->configFactory->get(static::SETTINGS)
                   ->get('default.workflow');
               }
+              $translation_vault_id = $profile->getVaultForTarget($language->getId());
+              if ($translation_vault_id === 'default') {
+                // If using overrides, we can never specify the document vault
+                // as this cannot be empty, nor force to use the project template
+                // vault, as it is unknown to us.
+                $translation_vault_id = $this->configFactory->get(static::SETTINGS)
+                  ->get('default.vault');
+              }
               $request_locales[] = $target_locale;
               $request_workflows[] = $workflow_id;
+              $request_translation_vaults[] = $translation_vault_id;
             }
           }
         }
@@ -275,6 +285,7 @@ class Lingotek implements LingotekInterface {
     if (!empty($request_locales) && !empty($request_workflows)) {
       $args['translation_locale_code'] = $request_locales;
       $args['translation_workflow_id'] = $request_workflows;
+      $args['translation_vault_id'] = $request_translation_vaults;
     }
 
     $args = array_merge(['content' => json_encode($content), 'title' => $title, 'locale_code' => $locale], $args);
