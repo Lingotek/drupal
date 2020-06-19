@@ -46,6 +46,7 @@ interface LingotekConfigTranslationServiceInterface {
    *
    * @param \Drupal\config_translation\ConfigNamesMapper $mapper
    *   The mapper.
+   *
    * @return array
    *   Canonical names of the translatable properties.
    */

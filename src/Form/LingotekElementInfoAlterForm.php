@@ -107,6 +107,7 @@ class LingotekElementInfoAlterForm implements ContainerInjectionInterface {
    *   The form state.
    * @param array $form
    *   The form.
+   *
    * @return array
    *   Processed language configuration element.
    */

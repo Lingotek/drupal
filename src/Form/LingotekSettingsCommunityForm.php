@@ -3,7 +3,6 @@
 namespace Drupal\lingotek\Form;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\lingotek\Lingotek;
 
 /**
  * Configure text display settings for this page.

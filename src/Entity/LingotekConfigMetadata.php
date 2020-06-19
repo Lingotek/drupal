@@ -181,6 +181,7 @@ class LingotekConfigMetadata extends ConfigEntityBase implements LingotekConfigM
    *
    * @param string $config_name
    *   The config name.
+   *
    * @return \Drupal\lingotek\LingotekConfigMetadataInterface
    */
   public static function loadByConfigName($config_name) {
@@ -265,6 +266,7 @@ class LingotekConfigMetadata extends ConfigEntityBase implements LingotekConfigM
    *
    * @param $name
    *   Configuration name.
+   *
    * @return string|null
    *   Plugin id of the mapper.
    */

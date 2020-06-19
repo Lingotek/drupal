@@ -3,5 +3,5 @@ type: module
 package: Testing
 
 dependencies:
-  - lingotek
-  - paragraphs
+  - lingotek:lingotek
+  - paragraphs:paragraphs

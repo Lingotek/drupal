@@ -191,6 +191,7 @@ class LingotekContentMetadata extends ContentEntityBase {
    *
    * @param \Drupal\Core\Entity\EntityInterface $entity
    *   The content entity.
+   *
    * @return $this
    */
   public function setEntity(EntityInterface $entity) {
@@ -234,6 +235,7 @@ class LingotekContentMetadata extends ContentEntityBase {
    *
    * @param string $value
    *   The content entity type ID.
+   *
    * @return $this
    */
   public function setContentEntityTypeId($value) {
@@ -246,6 +248,7 @@ class LingotekContentMetadata extends ContentEntityBase {
    *
    * @param string $value
    *   The content entity ID.
+   *
    * @return $this
    */
   public function setContentEntityId($value) {
@@ -258,6 +261,7 @@ class LingotekContentMetadata extends ContentEntityBase {
    *
    * @param string $value
    *   The job ID.
+   *
    * @return $this
    */
   public function setJobId($value) {

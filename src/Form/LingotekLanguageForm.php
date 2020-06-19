@@ -187,6 +187,7 @@ class LingotekLanguageForm {
    *
    * @param string $locale
    *   The locale to validate.
+   *
    * @return bool
    *   TRUE if it's a valid locale in Lingotek. FALSE if not.
    */

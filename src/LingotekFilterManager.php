@@ -101,12 +101,15 @@ class LingotekFilterManager implements LingotekFilterManagerInterface {
         case 'project_default':
           $filter = NULL;
           break;
+
         case 'drupal_default':
           $filter = $defaultFilter;
           break;
+
         case 'default':
           $filter = $this->chooseAppropriateFilterID($settingsFilter, $defaultFilter);
           break;
+
         default:
           $filter = $profileFilter;
           break;
@@ -131,12 +134,15 @@ class LingotekFilterManager implements LingotekFilterManagerInterface {
         case 'project_default':
           $filter = NULL;
           break;
+
         case 'drupal_default':
           $filter = $defaultFilter;
           break;
+
         case 'default':
           $filter = $this->chooseAppropriateFilterID($settingsFilter, $defaultFilter);
           break;
+
         default:
           $filter = $profileFilter;
           break;
@@ -165,6 +171,7 @@ class LingotekFilterManager implements LingotekFilterManagerInterface {
       case 'project_default':
         $filter = NULL;
         break;
+
       case 'drupal_default':
         $filter = $drupalDefaultFilterID;
         break;

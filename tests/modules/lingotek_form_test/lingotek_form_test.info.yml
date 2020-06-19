@@ -3,4 +3,4 @@ type: module
 package: Testing
 
 dependencies:
-  - lingotek
+  - lingotek:lingotek

@@ -854,12 +854,15 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       case 'yes':
         $document_name = $extended_name;
         break;
+
       case 'no':
         $document_name = $entity->label();
         break;
+
       case 'global_setting':
         $document_name = $global_preference ? $extended_name : $entity->label();
         break;
+
       default:
         $document_name = $extended_name;
     }
@@ -989,12 +992,15 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       case 'yes':
         $document_name = $extended_name;
         break;
+
       case 'no':
         $document_name = $entity->label();
         break;
+
       case 'global_setting':
         $document_name = $global_preference ? $extended_name : $entity->label();
         break;
+
       default:
         $document_name = $extended_name;
     }

@@ -82,6 +82,7 @@ interface LingotekContentTranslationServiceInterface {
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface &$entity
    *   The entity which status we want to get.
+   *
    * @return array
    *   The statuses of the target translation keyed by langcode
    *   (see Lingotek class constants for the values)
@@ -144,6 +145,7 @@ interface LingotekContentTranslationServiceInterface {
    *   The entity which we want to set a document id.
    * @param $doc_id
    *   The document id in the Lingotek platform.
+   *
    * @return \Drupal\Core\Entity\ContentEntityInterface
    *   The entity.
    */

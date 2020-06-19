@@ -25,6 +25,7 @@ class LingotekParagraphsBulkForm {
    *   The form definition array.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The current state of the form.
+   *
    * @throws \Drupal\Core\Entity\EntityMalformedException
    */
   public function form(array &$form, FormStateInterface $form_state) {

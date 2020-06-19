@@ -91,7 +91,7 @@ class LingotekTranslationStatusesFormatter extends FormatterBase implements Cont
    * {@inheritdoc}
    */
   public function viewElements(FieldItemListInterface $items, $langcode) {
-    // We need to implement this, but the ::view() method itself is hacking his
+    // We need to implement this, but the ::view() method itself is hacking its
     // way around so this is never called.
     return FALSE;
   }

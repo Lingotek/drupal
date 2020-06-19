@@ -3,5 +3,5 @@ type: module
 package: Testing
 
 dependencies:
-  - lingotek
-  - lingotek_visitable_metadata
+  - lingotek:lingotek
+  - lingotek:lingotek_visitable_metadata

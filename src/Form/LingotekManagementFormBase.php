@@ -564,42 +564,52 @@ abstract class LingotekManagementFormBase extends FormBase {
         $this->createDebugExportBatch($values);
         $processed = TRUE;
         break;
+
       case 'upload':
         $this->createUploadBatch($values, $job_id);
         $processed = TRUE;
         break;
+
       case 'check_upload':
         $this->createUploadCheckStatusBatch($values);
         $processed = TRUE;
         break;
+
       case 'request_translations':
         $this->createRequestTranslationsBatch($values);
         $processed = TRUE;
         break;
+
       case 'check_translations':
         $this->createTranslationCheckStatusBatch($values);
         $processed = TRUE;
         break;
+
       case 'download':
         $this->createDownloadBatch($values);
         $processed = TRUE;
         break;
+
       case 'cancel':
         $this->createCancelBatch($values);
         $processed = TRUE;
         break;
+
       case 'assign_job':
         $this->redirectToAssignJobIdMultipleEntitiesForm($values, $form_state);
         $processed = TRUE;
         break;
+
       case 'clear_job':
         $this->redirectToClearJobIdMultipleEntitiesForm($values, $form_state);
         $processed = TRUE;
         break;
+
       case 'delete_nodes':
         $this->redirectToDeleteMultipleNodesForm($values, $form_state);
         $processed = TRUE;
         break;
+
       case 'delete_translations':
         $this->redirectToDeleteMultipleTranslationsForm($values, $form_state);
         $processed = TRUE;

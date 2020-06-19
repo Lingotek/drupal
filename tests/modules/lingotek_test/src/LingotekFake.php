@@ -55,30 +55,41 @@ class LingotekFake implements LingotekInterface {
         }
       case 'account.login_id':
         return 'testUser@example.com';
+
       case 'account.sandbox_host':
       case 'account.host':
         return \Drupal::request()->getSchemeAndHttpHost() . \Drupal::request()->getBasePath();
+
       case 'account.authorize_path':
         if (\Drupal::state()->get('authorize_no_redirect', FALSE)) {
           return '/lingofake/authorize_no_redirect';
         }
         return '/lingofake/authorize';
+
       case 'account.default_client_id':
         return 'test_default_client_id';
+
       case 'default':
         return $this->getDefaults();
+
       case 'default.community':
         return $this->config->get($this::SETTINGS)->get($key) ? $this->config->get($this::SETTINGS)->get($key) : 'test_community';
+
       case 'default.project':
         return $this->config->get($this::SETTINGS)->get($key) ? $this->config->get($this::SETTINGS)->get($key) : 'test_project';
+
       case 'default.vault':
         return $this->config->get($this::SETTINGS)->get($key) ? $this->config->get($this::SETTINGS)->get($key) : 'test_vault';
+
       case 'default.filter':
         return $this->config->get($this::SETTINGS)->get($key) ? $this->config->get($this::SETTINGS)->get($key) : 'drupal_default';
+
       case 'default.subfilter':
         return $this->config->get($this::SETTINGS)->get($key) ? $this->config->get($this::SETTINGS)->get($key) : 'drupal_default';
+
       case 'default.workflow':
         return $this->config->get($this::SETTINGS)->get($key) ? $this->config->get($this::SETTINGS)->get($key) : 'test_workflow';
+
       case 'profile':
         return [
             [

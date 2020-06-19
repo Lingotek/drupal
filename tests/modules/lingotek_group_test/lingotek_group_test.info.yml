@@ -3,6 +3,6 @@ type: module
 package: Testing
 
 dependencies:
-  - lingotek
-  - group
-  - gnode
+  - lingotek:lingotek
+  - group:group
+  - group:gnode

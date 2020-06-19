@@ -26,8 +26,10 @@ class LingotekBatchController extends LingotekControllerBase {
     switch ($action) {
       case 'uploadSingle':
         return $this->uploadSingle($entity_type, $entity_id, $profile);
+
       case 'downloadSingle':
         return $this->downloadSingle($entity_type, $entity_id, $profile);
+
       default:
         return $this->noAction();
     }

@@ -434,34 +434,42 @@ class LingotekConfigManagementForm extends FormBase {
         $this->createDebugExportBatch($values);
         $processed = TRUE;
         break;
+
       case 'upload':
         $this->createUploadBatch($values, $job_id);
         $processed = TRUE;
         break;
+
       case 'check_upload':
         $this->createUploadCheckStatusBatch($values);
         $processed = TRUE;
         break;
+
       case 'request_translations':
         $this->createRequestTranslationsBatch($values);
         $processed = TRUE;
         break;
+
       case 'check_translations':
         $this->createTranslationCheckStatusBatch($values);
         $processed = TRUE;
         break;
+
       case 'download':
         $this->createDownloadBatch($values);
         $processed = TRUE;
         break;
+
       case 'cancel':
         $this->createCancelBatch($values);
         $processed = TRUE;
         break;
+
       case 'assign_job':
         $this->redirectToAssignJobIdMultipleConfigForm($values, $form_state);
         $processed = TRUE;
         break;
+
       case 'clear_job':
         $this->redirectToClearJobIdMultipleConfigForm($values, $form_state);
         $processed = TRUE;
@@ -1391,19 +1399,26 @@ class LingotekConfigManagementForm extends FormBase {
       case Lingotek::STATUS_UNTRACKED:
       case Lingotek::STATUS_REQUEST:
         return $this->t('Upload');
+
       case Lingotek::STATUS_DISABLED:
         return $this->t('Disabled, cannot request translation');
+
       case Lingotek::STATUS_EDITED:
         return ($is_config_entity ? $this->translationService->getDocumentId($entity) : $this->translationService->getConfigDocumentId($mapper)) ?
           $this->t('Re-upload (content has changed since last upload)') : $this->t('Upload');
+
       case Lingotek::STATUS_IMPORTING:
         return $this->t('Source importing');
+
       case Lingotek::STATUS_CURRENT:
         return $this->t('Source uploaded');
+
       case Lingotek::STATUS_ERROR:
         return $this->t('Error');
+
       case Lingotek::STATUS_CANCELLED:
         return $this->t('Cancelled by user');
+
       default:
         return ucfirst(strtolower($status));
     }
@@ -1415,22 +1430,31 @@ class LingotekConfigManagementForm extends FormBase {
       switch ($status) {
         case Lingotek::STATUS_UNTRACKED:
           return $language->label() . ' - ' . $this->t('Translation exists, but it is not being tracked by Lingotek');
+
         case Lingotek::STATUS_REQUEST:
           return $language->label() . ' - ' . $this->t('Request translation');
+
         case Lingotek::STATUS_PENDING:
           return $language->label() . ' - ' . $this->t('In-progress');
+
         case Lingotek::STATUS_READY:
           return $language->label() . ' - ' . $this->t('Ready for Download');
+
         case Lingotek::STATUS_CURRENT:
           return $language->label() . ' - ' . $this->t('Current');
+
         case Lingotek::STATUS_EDITED:
           return $language->label() . ' - ' . $this->t('Not current');
+
         case Lingotek::STATUS_INTERMEDIATE:
           return $language->label() . ' - ' . $this->t('In-progress (interim translation downloaded)');
+
         case Lingotek::STATUS_ERROR:
           return $language->label() . ' - ' . $this->t('Error');
+
         case Lingotek::STATUS_CANCELLED:
           return $language->label() . ' - ' . $this->t('Cancelled by user');
+
         default:
           return $language->label() . ' - ' . ucfirst(strtolower($status));
       }

@@ -51,6 +51,7 @@ class LingotekSupportedLocalesControllerTest extends LingotekFunctionalJavascrip
    * Removes any non-visible elements from the passed array.
    *
    * @param array $elements
+   *
    * @return array
    */
   protected function filterVisibleElements($elements) {

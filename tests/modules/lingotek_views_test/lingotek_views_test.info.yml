@@ -3,5 +3,5 @@ type: module
 package: Testing
 
 dependencies:
-  - lingotek
-  - views_ui
+  - lingotek:lingotek
+  - drupal:views_ui

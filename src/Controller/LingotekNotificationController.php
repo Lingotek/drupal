@@ -115,8 +115,8 @@ class LingotekNotificationController extends LingotekControllerBase {
         break;
 
       case 'document':
-
         break;
+
       case 'document_archived':
         $entity = $this->getEntity($request->query->get('document_id'));
         if ($entity) {
@@ -134,6 +134,7 @@ class LingotekNotificationController extends LingotekControllerBase {
           ]);
         }
         break;
+
       case 'document_cancelled':
         $documentId = $request->query->get('document_id');
         $entity = $this->getEntity($documentId);
@@ -163,6 +164,7 @@ class LingotekNotificationController extends LingotekControllerBase {
           $messages[] = "Document not found.";
         }
         break;
+
       // a document has uploaded and imported successfully for document_id
       case 'document_uploaded':
         $entity = $this->getEntity($request->query->get('document_id'));
@@ -195,6 +197,7 @@ class LingotekNotificationController extends LingotekControllerBase {
           $messages[] = "Document not found.";
         }
         break;
+
       case 'document_updated':
         $entity = $this->getEntity($request->query->get('document_id'));
         /** @var \Drupal\lingotek\Entity\LingotekProfile $profile */
@@ -226,6 +229,7 @@ class LingotekNotificationController extends LingotekControllerBase {
           $messages[] = "Document not found.";
         }
         break;
+
       case 'import_failure':
         $prevDocumentId = $request->query->get('prev_document_id');
         $documentId = $request->query->get('document_id');
@@ -255,6 +259,7 @@ class LingotekNotificationController extends LingotekControllerBase {
           $messages[] = "Document not found.";
         }
         break;
+
       case 'target_cancelled':
         $documentId = $request->query->get('document_id');
         $locale = $request->query->get('locale');
@@ -283,6 +288,7 @@ class LingotekNotificationController extends LingotekControllerBase {
           $messages[] = "Document not found.";
         }
         break;
+
       case 'target_deleted':
         /**
          * array(
@@ -345,6 +351,7 @@ class LingotekNotificationController extends LingotekControllerBase {
           ]);
         }
         break;
+
       case 'document_deleted':
         /**
          * array(
@@ -390,6 +397,7 @@ class LingotekNotificationController extends LingotekControllerBase {
           ]);
         }
         break;
+
       case 'phase':
         // translation (i.e., chinese) has been completed for a document
       case 'target':
@@ -489,6 +497,7 @@ class LingotekNotificationController extends LingotekControllerBase {
           $lock->release($lock_name);
         }
         break;
+
       // ignore
       default:
         $this->logger->log(LogLevel::WARNING, 'Unmanaged notification callback from the TMS. Arguments were: @arguments.', [
