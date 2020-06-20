@@ -11,6 +11,9 @@ use Drupal\language\Entity\ConfigurableLanguage;
  * Tests translating a options field.
  *
  * @group lingotek
+ * @group legacy
+ * TODO: Remove legacy group when 8.8.x is not supported.
+ * @see https://www.drupal.org/project/lingotek/issues/3153400
  */
 class LingotekFieldOptionsTranslationTest extends LingotekTestBase {
 

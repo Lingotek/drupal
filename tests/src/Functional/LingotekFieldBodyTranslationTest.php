@@ -10,6 +10,9 @@ use Drupal\lingotek\Lingotek;
  * Tests translating a field.
  *
  * @group lingotek
+ * @group legacy
+ * TODO: Remove legacy group when 8.8.x is not supported.
+ * @see https://www.drupal.org/project/lingotek/issues/3153400
  */
 class LingotekFieldBodyTranslationTest extends LingotekTestBase {
 
