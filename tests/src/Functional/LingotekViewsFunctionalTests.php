@@ -71,9 +71,10 @@ class LingotekViewsFunctionalTests extends LingotekTestBase {
   }
 
   public function testNodeWithMetadataView() {
+    $assert_session = $this->assertSession();
     $this->drupalGet('lingotek/views/node_and_lingotek_metadata');
-    $this->assertSession()->elementTextContains('css', 'h1.page-title', 'Node view with metadata relationship');
-    $this->assertSession()->elementExists('css', '.view-node-and-lingotek-metadata');
+    $assert_session->elementTextContains('css', 'h1.page-title', 'Node view with metadata relationship');
+    $assert_session->elementExists('css', '.view-node-and-lingotek-metadata');
 
     $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
@@ -84,30 +85,31 @@ class LingotekViewsFunctionalTests extends LingotekTestBase {
 
     $this->drupalGet('lingotek/views/node_and_lingotek_metadata');
 
-    $this->assertSession()->elementExists('css', '.view-node-and-lingotek-metadata');
-    $this->assertLink('Llamas are cool');
-    $this->assertSession()->elementTextContains('css', 'td.views-field-translation-source', 'EN');
-    $this->assertSession()->elementTextNotContains('css', 'td.views-field-document-id', 'dummy-document-hash-id');
-    $this->assertSession()->elementTextNotContains('css', 'td.views-field-translation-status-value', 'EN');
-    $this->assertLink('Manual');
+    $assert_session->elementExists('css', '.view-node-and-lingotek-metadata');
+    $assert_session->linkExists('Llamas are cool');
+    $assert_session->elementTextContains('css', 'td.views-field-translation-source', 'EN');
+    $assert_session->elementTextNotContains('css', 'td.views-field-document-id', 'dummy-document-hash-id');
+    $assert_session->elementTextNotContains('css', 'td.views-field-translation-status-value', 'EN');
+    $assert_session->linkExists('Manual');
 
     $this->saveAndKeepPublishedNodeForm(['lingotek_translation_management[lingotek_translation_profile]' => 'automatic'], 1);
 
     $this->drupalGet('lingotek/views/node_and_lingotek_metadata');
 
-    $this->assertSession()->elementExists('css', '.view-node-and-lingotek-metadata');
-    $this->assertLink('Llamas are cool');
-    $this->assertSession()->elementTextContains('css', 'td.views-field-translation-source', 'EN');
-    $this->assertSession()->elementTextContains('css', 'td.views-field-document-id', 'dummy-document-hash-id');
-    $this->assertSession()->elementTextNotContains('css', 'td.views-field-translation-status-value', 'EN');
-    $this->assertSession()->elementTextContains('css', 'td.views-field-translation-status-value', 'ES');
-    $this->assertLink('Automatic');
+    $assert_session->elementExists('css', '.view-node-and-lingotek-metadata');
+    $assert_session->linkExists('Llamas are cool');
+    $assert_session->elementTextContains('css', 'td.views-field-translation-source', 'EN');
+    $assert_session->elementTextContains('css', 'td.views-field-document-id', 'dummy-document-hash-id');
+    $assert_session->elementTextNotContains('css', 'td.views-field-translation-status-value', 'EN');
+    $assert_session->elementTextContains('css', 'td.views-field-translation-status-value', 'ES');
+    $assert_session->linkExists('Automatic');
   }
 
   public function testMetadataView() {
+    $assert_session = $this->assertSession();
     $this->drupalGet('lingotek/views/lingotek_metadata');
-    $this->assertSession()->elementTextContains('css', 'h1.page-title', 'Lingotek Metadata view');
-    $this->assertSession()->elementExists('css', '.view-lingotek-metadata');
+    $assert_session->elementTextContains('css', 'h1.page-title', 'Lingotek Metadata view');
+    $assert_session->elementExists('css', '.view-lingotek-metadata');
 
     $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
@@ -118,22 +120,22 @@ class LingotekViewsFunctionalTests extends LingotekTestBase {
 
     $this->drupalGet('lingotek/views/lingotek_metadata');
 
-    $this->assertSession()->elementExists('css', '.view-lingotek-metadata');
-    $this->assertSession()->elementTextContains('css', 'td.views-field-translation-source', 'EN');
-    $this->assertSession()->elementTextNotContains('css', 'td.views-field-document-id', 'dummy-document-hash-id');
-    $this->assertSession()->elementTextNotContains('css', 'td.views-field-translation-status-value', 'EN');
-    $this->assertLink('Manual');
+    $assert_session->elementExists('css', '.view-lingotek-metadata');
+    $assert_session->elementTextContains('css', 'td.views-field-translation-source', 'EN');
+    $assert_session->elementTextNotContains('css', 'td.views-field-document-id', 'dummy-document-hash-id');
+    $assert_session->elementTextNotContains('css', 'td.views-field-translation-status-value', 'EN');
+    $assert_session->linkExists('Manual');
 
     $this->saveAndKeepPublishedNodeForm(['lingotek_translation_management[lingotek_translation_profile]' => 'automatic'], 1);
 
     $this->drupalGet('lingotek/views/lingotek_metadata');
 
-    $this->assertSession()->elementExists('css', '.view-lingotek-metadata');
-    $this->assertSession()->elementTextContains('css', 'td.views-field-translation-source', 'EN');
-    $this->assertSession()->elementTextContains('css', 'td.views-field-document-id', 'dummy-document-hash-id');
-    $this->assertSession()->elementTextNotContains('css', 'td.views-field-translation-status-value', 'EN');
-    $this->assertSession()->elementTextContains('css', 'td.views-field-translation-status-value', 'ES');
-    $this->assertLink('Automatic');
+    $assert_session->elementExists('css', '.view-lingotek-metadata');
+    $assert_session->elementTextContains('css', 'td.views-field-translation-source', 'EN');
+    $assert_session->elementTextContains('css', 'td.views-field-document-id', 'dummy-document-hash-id');
+    $assert_session->elementTextNotContains('css', 'td.views-field-translation-status-value', 'EN');
+    $assert_session->elementTextContains('css', 'td.views-field-translation-status-value', 'ES');
+    $assert_session->linkExists('Automatic');
   }
 
 }

@@ -17,7 +17,6 @@ use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
  * Tests job management listings.
  *
  * @group lingotek
- * @group legacy
  */
 class LingotekJobManagementTests extends LingotekTestBase {
 
@@ -109,49 +108,55 @@ class LingotekJobManagementTests extends LingotekTestBase {
   }
 
   public function testJobTranslationEmptyTab() {
+    $assert_session = $this->assertSession();
+
     $this->drupalGet('admin/lingotek');
-    $this->assertLink('Translation Jobs');
+    $assert_session->linkExists('Translation Jobs');
     $this->clickLink('Translation Jobs');
 
     $this->assertText('There are no translation jobs. Use the Content or Config tabs to assign them.');
   }
 
   public function testJobTranslationTab() {
+    $assert_session = $this->assertSession();
+
     $this->createContent();
     $this->drupalGet('admin/lingotek');
-    $this->assertLink('Translation Jobs');
+    $assert_session->linkExists('Translation Jobs');
     $this->clickLink('Translation Jobs');
 
     $this->assertText('my-test-job-id-1');
     $this->assertText('3 content items, 1 config items');
-    $this->assertLink('View translation job', 0);
+    $assert_session->linkExists('View translation job', 0);
     $this->assertLinkByHref('/admin/lingotek/job/my-test-job-id-1');
 
     $this->assertText('my-test-job-id-2');
     $this->assertText('1 content items, 0 config items');
-    $this->assertLink('View translation job', 1);
-    $this->assertLinkByHref('/admin/lingotek/job/my-test-job-id-2');
+    $assert_session->linkExists('View translation job', 1);
+    $assert_session->linkByHrefExists('/admin/lingotek/job/my-test-job-id-2');
   }
 
   public function testJobTranslationContentTab() {
+    $assert_session = $this->assertSession();
+
     $this->createContent();
     $this->drupalGet('/admin/lingotek/job/my-test-job-id-1');
 
     // Assert tabs.
-    $this->assertLink('Job my-test-job-id-1 Content');
-    $this->assertLink('Job my-test-job-id-1 Config');
+    $assert_session->linkExists('Job my-test-job-id-1 Content');
+    $assert_session->linkExists('Job my-test-job-id-1 Config');
 
     // Assert title block heading.
     $this->assertSame('Job my-test-job-id-1 Content', $this->xpath('//h1')[0]->getText());
 
     // Assert content listed.
-    $this->assertLink('Llamas are cool');
+    $assert_session->linkExists('Llamas are cool');
     $this->assertSourceStatus('en', Lingotek::STATUS_IMPORTING);
     $this->assertTargetStatus('es', Lingotek::STATUS_REQUEST);
     $this->assertTargetStatus('es-ar', Lingotek::STATUS_REQUEST);
-    $this->assertLink('Camelid');
-    $this->assertLink('Herbivorous');
-    $this->assertNoLink('Awesome');
+    $assert_session->linkExists('Camelid');
+    $assert_session->linkExists('Herbivorous');
+    $assert_session->linkNotExists('Awesome');
 
     // Assert the fields are not there.
     $this->assertNoField('show_advanced');
@@ -159,12 +164,14 @@ class LingotekJobManagementTests extends LingotekTestBase {
   }
 
   public function testJobTranslationConfigTab() {
+    $assert_session = $this->assertSession();
+
     $this->createContent();
     $this->drupalGet('/admin/lingotek/job/my-test-job-id-1');
 
     // Assert tabs.
-    $this->assertLink('Job my-test-job-id-1 Content');
-    $this->assertLink('Job my-test-job-id-1 Config');
+    $assert_session->linkExists('Job my-test-job-id-1 Content');
+    $assert_session->linkExists('Job my-test-job-id-1 Config');
 
     $this->clickLink('Job my-test-job-id-1 Config');
 
@@ -181,14 +188,16 @@ class LingotekJobManagementTests extends LingotekTestBase {
   }
 
   public function testJobTranslationContentTabHasOwnFilter() {
+    $assert_session = $this->assertSession();
+
     $this->createContent();
     $this->testJobTranslationContentTab();
 
     // Let's see the differences in the manage content tab.
     $this->drupalGet('/node/1/manage');
-    $this->assertLink('Camelid');
-    $this->assertLink('Herbivorous');
-    $this->assertLink('Awesome');
+    $assert_session->linkExists('Camelid');
+    $assert_session->linkExists('Herbivorous');
+    $assert_session->linkExists('Awesome');
   }
 
   public function testJobTranslationConfigTabHasOwnFilter() {
