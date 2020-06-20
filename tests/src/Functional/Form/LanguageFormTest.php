@@ -232,4 +232,28 @@ class LanguageFormTest extends BrowserTestBase {
     $this->assertText('The Lingotek locale de-IN does not exist.');
   }
 
+  /**
+   * Tests editing a custom language with a custom locale.
+   */
+  public function testEditingCustomLanguageWithUnderscoredLocale() {
+    ConfigurableLanguage::create(['id' => 'de-at', 'label' => 'German (AT)'])->save();
+    $this->drupalGet('/admin/config/regional/language');
+
+    // Click on edit for German (AT).
+    $this->clickLink('Edit', 1);
+
+    // Assert that the locale is correct.
+    $this->assertFieldByName('lingotek_locale', 'de-AT', 'The Lingotek locale is set to the right language.');
+
+    // Edit the locale.
+    $edit = ['lingotek_locale' => 'de_AT'];
+    $this->drupalPostForm(NULL, $edit, 'Save language');
+
+    // Click on edit for German (AT).
+    $this->clickLink('Edit', 1);
+
+    // Assert that the locale is correct.
+    $this->assertFieldByName('lingotek_locale', 'de-AT', 'The Lingotek locale is set to the right language.');
+  }
+
 }
