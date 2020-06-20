@@ -192,7 +192,7 @@ class LingotekLanguageForm {
    */
   public static function isValidLocale($locale) {
     $locales = \Drupal::service('lingotek')->getLocales();
-    return in_array($locale, $locales);
+    return in_array(str_replace("_", "-", $locale), $locales);
   }
 
 }
