@@ -386,7 +386,7 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
    * Tests that a node type reacts to incomplete target and phase notifications
    * and does not download interim translations based on the settings.
    */
-  public function aaatestIncompletePhaseNotificationWithNoInterimContentTypeTranslation() {
+  public function testIncompletePhaseNotificationWithNoInterimContentTypeTranslation() {
     $assert_session = $this->assertSession();
 
     // Login as admin.

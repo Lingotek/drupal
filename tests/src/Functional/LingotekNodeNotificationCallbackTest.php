@@ -63,7 +63,8 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
   /**
    * Tests notification callbacks without any arguments, like in a browser.
    */
-  public function xxxtestNotificationCallbackWithNoArguments() {
+  public function testNotificationCallbackWithNoArguments() {
+    $assert_session = $this->assertSession();
     // Simulate the notification of an empty request.
     $url = Url::fromRoute('lingotek.notify', [], [])
       ->setAbsolute()->toString();
@@ -86,7 +87,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
   /**
    * Tests that a node can be translated using the links on the management page.
    */
-  public function xxxtestAutomatedNotificationNodeTranslation() {
+  public function testAutomatedNotificationNodeTranslation() {
     // Login as admin.
     $this->drupalLogin($this->rootUser);
 
@@ -178,7 +179,8 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
   /**
    * Tests that a node reacts to a phase notification using the links on the management page.
    */
-  public function xxxtestPhaseNotificationNodeTranslation() {
+  public function testPhaseNotificationNodeTranslation() {
+    $assert_session = $this->assertSession();
     // Login as admin.
     $this->drupalLogin($this->rootUser);
 
@@ -283,7 +285,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
    * Tests that a node reacts to incomplete target and phase notifications
    * and does not download interim translations based on the settings.
    */
-  public function aaatestIncompletePhaseNotificationWithNoInterimNodeTranslation() {
+  public function testIncompletePhaseNotificationWithNoInterimNodeTranslation() {
     // Login as admin.
     $this->drupalLogin($this->rootUser);
 
@@ -377,7 +379,9 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
    * Tests that a node reacts to incomplete target and phase notifications
    * and downloads interim translations based on the settings.
    */
-  public function xxxtestIncompletePhaseNotificationWithInterimNodeTranslation() {
+  public function testIncompletePhaseNotificationWithInterimNodeTranslation() {
+    $assert_session = $this->assertSession();
+
     // Login as admin.
     $this->drupalLogin($this->rootUser);
 
@@ -485,7 +489,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
   /**
    * Tests that a node can be translated using the links on the management page.
    */
-  public function xxxtestManualNotificationNodeTranslation() {
+  public function testManualNotificationNodeTranslation() {
     // Login as admin.
     $this->drupalLogin($this->rootUser);
 
@@ -589,7 +593,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
   /**
    * Tests that a node can be translated using the links on the management page.
    */
-  public function xxxtestProfileTargetOverridesNotificationNodeTranslation() {
+  public function testProfileTargetOverridesNotificationNodeTranslation() {
     $profile = LingotekProfile::create([
       'id' => 'profile2',
       'label' => 'Profile with overrides',
@@ -737,7 +741,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
   /**
    * Tests that a node can be translated using the links on the management page.
    */
-  public function xxxtestProfileRequestTargetOverridesNotificationNodeTranslation() {
+  public function testProfileRequestTargetOverridesNotificationNodeTranslation() {
     $profile = LingotekProfile::create([
       'id' => 'profile2',
       'label' => 'Profile with overrides',
@@ -883,7 +887,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
   /**
    * Tests that there are no automatic requests for disabled languages.
    */
-  public function xxxtestDisabledLanguagesAreNotRequested() {
+  public function testDisabledLanguagesAreNotRequested() {
     // Add a language.
     $italian = ConfigurableLanguage::createFromLangcode('it');
     $italian->save();
@@ -969,7 +973,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
   /**
    * Testing handling several notifications in a row.
    */
-  public function xxxtestNotificationsInARow() {
+  public function testNotificationsInARow() {
     ConfigurableLanguage::createFromLangcode('it')->save();
     ConfigurableLanguage::createFromLangcode('ca')->save();
     ConfigurableLanguage::createFromLangcode('hu')->save();
@@ -1061,7 +1065,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
   /**
    * Tests notification callbacks when the documents have been deleted.
    */
-  public function xxxtestNotificationCallbacksOnMissingDocuments() {
+  public function testNotificationCallbacksOnMissingDocuments() {
     // Simulate the notification of content successfully uploaded.
     $url = Url::fromRoute('lingotek.notify', [], [
       'query' => [
@@ -1108,7 +1112,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
   /**
    * Test that a notification with a failure in download responded with an error.
    */
-  public function xxxtestAutomatedNotificationNodeTranslationWithError() {
+  public function testAutomatedNotificationNodeTranslationWithError() {
     // Add an additional language.
     ConfigurableLanguage::createFromLangcode('it')->save();
 
@@ -1245,7 +1249,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
   /**
    * Test that a notification with a target deleted is responded correctly.
    */
-  public function xxxtestTargetDeleted() {
+  public function testTargetDeleted() {
     // Add an additional language.
     ConfigurableLanguage::createFromLangcode('it')->save();
 
@@ -1373,7 +1377,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
   /**
    * Test that a notification with a document deleted is responded correctly.
    */
-  public function xxxtestDocumentDeleted() {
+  public function testDocumentDeleted() {
     // Add an additional language.
     ConfigurableLanguage::createFromLangcode('it')->save();
 
@@ -1504,7 +1508,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
   /**
    * Tests that a node is archived on the right callback.
    */
-  public function xxxtestArchivedNotificationCallback() {
+  public function testArchivedNotificationCallback() {
     // Login as admin.
     $this->drupalLogin($this->rootUser);
 
@@ -1597,7 +1601,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
   /**
    * Tests that an import_failure callback is handled after document upload.
    */
-  public function xxxtestImportFailureWhileUploading() {
+  public function testImportFailureWhileUploading() {
     // Login as admin.
     $this->drupalLogin($this->rootUser);
 
@@ -1651,7 +1655,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
   /**
    * Tests that an import_failure callback is handled after document update.
    */
-  public function xxxtestImportFailureWhileUpdating() {
+  public function testImportFailureWhileUpdating() {
     // Login as admin.
     $this->drupalLogin($this->rootUser);
 
@@ -1861,7 +1865,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
   /**
    * Tests that a document_cancelled callback is handled after document upload.
    */
-  public function xxxtestDocumentCancelledAfterUploading() {
+  public function testDocumentCancelledAfterUploading() {
     // Login as admin.
     $this->drupalLogin($this->rootUser);
 
@@ -1945,7 +1949,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
   /**
    * Tests that a target_cancelled callback is handled after document upload.
    */
-  public function xxxtestTargetCancelledAfterUploading() {
+  public function testTargetCancelledAfterUploading() {
     // Login as admin.
     $this->drupalLogin($this->rootUser);
 
