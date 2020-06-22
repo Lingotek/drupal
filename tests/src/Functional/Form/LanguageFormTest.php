@@ -255,4 +255,32 @@ class LanguageFormTest extends BrowserTestBase {
     $this->assertFieldByName('lingotek_locale', 'de-AT', 'The Lingotek locale is set to the right language.');
   }
 
+  /**
+   * Tests autocomplete on language locales.
+   */
+  public function testAutocompleteLocale() {
+    $page = $this->getSession()->getPage();
+    // Check that there is a select for locales.
+    ConfigurableLanguage::createFromLangcode('de')->save();
+    $this->drupalGet('/admin/config/regional/language');
+    // Click on edit for German.
+    $this->clickLink('Edit', 1);
+
+    // Make sure that the autocomplete library is added.
+    $this->assertRaw('core/misc/autocomplete.js');
+
+    // Assert that the locale is correct.
+    $this->assertFieldByName('lingotek_locale', 'de-DE', 'The Lingotek locale is set correctly.');
+
+    // Check the autocomplete route.
+    $result = $this->xpath('//input[@name="lingotek_locale" and contains(@data-autocomplete-path, "admin/lingotek/supported-locales-autocomplete")]');
+    $target_url = $this->getAbsoluteUrl($result[0]->getAttribute('data-autocomplete-path'));
+    $this->drupalGet($target_url, ['query' => ['q' => 'de']]);
+    $result = json_decode($page->getContent(), TRUE);
+    $this->assertEquals($result[0]['value'], 'de-AT');
+    $this->assertEquals($result[0]['label'], 'German (Austria) (de-AT) [matched: Code: <em class="placeholder">de-AT</em>]');
+    $this->assertEquals($result[1]['value'], 'de-DE');
+    $this->assertEquals($result[1]['label'], 'German (Germany) (de-DE) [matched: Code: <em class="placeholder">de-DE</em>]');
+  }
+
 }

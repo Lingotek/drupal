@@ -343,4 +343,12 @@ lingotek.supported_locales:
     _controller: '\Drupal\lingotek\Controller\LingotekSupportedLocalesController::content'
     _title: 'Supported Lingotek locales'
   requirements:
-    _permission: 'manage lingotek translations'
+    _permission: 'administer languages'
+
+lingotek.supported_locales_autocomplete:
+  path: '/admin/lingotek/supported-locales-autocomplete'
+  defaults:
+    _controller: '\Drupal\lingotek\Controller\LingotekSupportedLocalesController::autocomplete'
+    _title: 'Supported Lingotek locales'
+  requirements:
+    _permission: 'administer languages'

@@ -44,7 +44,6 @@ class LingotekSupportedLocalesControllerTest extends LingotekFunctionalJavascrip
     // There is only one language from Austria.
     $trs = $this->filterVisibleElements($trs);
     $this->assertCount(1, $trs);
-
   }
 
   /**

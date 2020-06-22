@@ -92,6 +92,7 @@ class LingotekLanguageForm {
     $form['custom_language']['lingotek']['lingotek_locale'] = [
       '#type' => 'textfield',
       '#title' => t('Locale'),
+      '#autocomplete_route_name' => 'lingotek.supported_locales_autocomplete',
       // If we have a langcode, check if there is a locale or default to the one we can guess.
       '#default_value' => $langcode !== NULL ? str_replace("_", "-", $this->languageLocaleMapper->getLocaleForLangcode($langcode)) : '',
       '#description' => $this->t('The Lingotek locale this language maps to.') . ' ' .
