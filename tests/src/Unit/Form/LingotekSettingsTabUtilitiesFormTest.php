@@ -15,39 +15,39 @@ namespace Drupal\Tests\lingotek\Unit\Form {
   use Drupal\Tests\UnitTestCase;
 
   /**
- * @coversDefaultClass \Drupal\lingotek\Form\LingotekSettingsTabUtilitiesForm
- * @group lingotek
- * @preserveGlobalState disabled
- */
+   * @coversDefaultClass \Drupal\lingotek\Form\LingotekSettingsTabUtilitiesForm
+   * @group lingotek
+   * @preserveGlobalState disabled
+   */
   class LingotekSettingsTabUtilitiesFormTest extends UnitTestCase {
 
     /**
-   * The Lingotek service
-   *
-   * @var \Drupal\lingotek\LingotekInterface|\PHPUnit_Framework_MockObject_MockObject
-   */
+     * The Lingotek service
+     *
+     * @var \Drupal\lingotek\LingotekInterface|\PHPUnit_Framework_MockObject_MockObject
+     */
     protected $lingotek;
 
     /**
-   * The config factory.
-   *
-   * @var \Drupal\Core\Config\ConfigFactoryInterface|\PHPUnit_Framework_MockObject_MockObject
-   */
+     * The config factory.
+     *
+     * @var \Drupal\Core\Config\ConfigFactoryInterface|\PHPUnit_Framework_MockObject_MockObject
+     */
     protected $configFactory;
 
     /**
-   * @var \Drupal\Core\State\StateInterface|\PHPUnit_Framework_MockObject_MockObject
-   */
+     * @var \Drupal\Core\State\StateInterface|\PHPUnit_Framework_MockObject_MockObject
+     */
     protected $state;
 
     /**
-   * @var \Drupal\Core\Routing\RouteBuilderInterface|\PHPUnit_Framework_MockObject_MockObject
-   */
+     * @var \Drupal\Core\Routing\RouteBuilderInterface|\PHPUnit_Framework_MockObject_MockObject
+     */
     protected $routeBuilder;
 
     /**
-   * @var LingotekSettingsTabUtilitiesForm
-   */
+     * @var LingotekSettingsTabUtilitiesForm
+     */
     protected $form;
 
     /**
@@ -76,28 +76,28 @@ namespace Drupal\Tests\lingotek\Unit\Form {
       $messenger = $this->createMock(MessengerInterface::class);
 
       $this->form = new LingotekSettingsTabUtilitiesForm(
-      $this->lingotek,
-      $this->configFactory,
-      $this->state,
-      $this->routeBuilder,
-      $this->urlGenerator,
-      $this->linkGenerator
+        $this->lingotek,
+        $this->configFactory,
+        $this->state,
+        $this->routeBuilder,
+        $this->urlGenerator,
+        $this->linkGenerator
       );
       $this->form->setStringTranslation($this->getStringTranslationStub());
       $this->form->setMessenger($messenger);
     }
 
     /**
-   * @covers ::getFormId
-   */
+     * @covers ::getFormId
+     */
     public function testGetFormId() {
       $form_id = $this->form->getFormID();
       $this->assertSame('lingotek.settings_tab_utilities_form', $form_id);
     }
 
     /**
-   * @covers ::buildForm
-   */
+     * @covers ::buildForm
+     */
     public function testFormDebugUtilityWithDebugDisabled() {
       $config = $this->createMock(Config::class);
       $config->expects($this->once())
@@ -119,8 +119,8 @@ namespace Drupal\Tests\lingotek\Unit\Form {
     }
 
     /**
-   * @covers ::buildForm
-   */
+     * @covers ::buildForm
+     */
     public function testFormDebugUtilityWithDebugEnabled() {
       $config = $this->createMock(Config::class);
       $config->expects($this->once())
@@ -142,8 +142,8 @@ namespace Drupal\Tests\lingotek\Unit\Form {
     }
 
     /**
-   * @covers ::switchDebugUtilities
-   */
+     * @covers ::switchDebugUtilities
+     */
     public function testSwitchDebugWithDebugEnabled() {
       $this->state->expects($this->any())
         ->method('get')
@@ -159,8 +159,8 @@ namespace Drupal\Tests\lingotek\Unit\Form {
     }
 
     /**
-   * @covers ::switchDebugUtilities
-   */
+     * @covers ::switchDebugUtilities
+     */
     public function testSwitchDebugWithDebugDisabled() {
       $this->state->expects($this->any())
         ->method('get')
@@ -173,6 +173,18 @@ namespace Drupal\Tests\lingotek\Unit\Form {
         ->method('rebuild');
 
       $this->form->switchDebugUtilities();
+    }
+
+    /**
+     * @covers ::refreshResources
+     */
+    public function testRefreshResources() {
+      $this->lingotek->expects($this->once())
+        ->method('getResources')
+        ->with(TRUE);
+      $this->configFactory->expects($this->never())
+        ->method('getEditable');
+      $this->form->refreshResources();
     }
 
   }

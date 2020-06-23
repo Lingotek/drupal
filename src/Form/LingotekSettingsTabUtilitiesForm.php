@@ -156,9 +156,12 @@ class LingotekSettingsTabUtilitiesForm extends LingotekConfigFormBase {
     $this->messenger()->addStatus($this->t('Debug utilities has been %enabled.', ['%enabled' => !$value ? $this->t('enabled') : $this->t('disabled')]));
   }
 
+  /**
+   * Submit handler for refreshing the resources: projects, workflows, vaults,
+   * and filters.
+   */
   public function refreshResources() {
     $resources = $this->lingotek->getResources(TRUE);
-    $this->lingotek->set('account.resources', $resources);
     $this->messenger()->addStatus($this->t('Project, workflow, vault, and filter information have been refreshed.'));
   }
 

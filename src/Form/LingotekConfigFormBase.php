@@ -15,9 +15,29 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 abstract class LingotekConfigFormBase extends ConfigFormBase {
 
   /**
+   * @var \Drupal\lingotek\LingotekInterface
+   */
+  protected $lingotek;
+
+  /**
+   * The URL generator.
+   *
+   * @var \Drupal\Core\Routing\UrlGeneratorInterface
+   */
+  protected $urlGenerator;
+
+  /**
+   * The link generator.
+   *
+   * @var \Drupal\Core\Utility\LinkGeneratorInterface
+   */
+  protected $linkGenerator;
+
+  /**
    * Constructs a \Drupal\lingotek\Form\LingotekConfigFormBase object.
    *
    * @param \Drupal\lingotek\LingotekInterface $lingotek
+   *   The lingotek service.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config
    *   The factory for configuration objects.
    * @param \Drupal\Core\Routing\UrlGeneratorInterface $url_generator
