@@ -15,6 +15,7 @@ test_dependencies:
   - metatag:metatag
   - paragraphs:paragraphs
   - pathauto:pathauto
+  - workbench_moderation:workbench_moderation
   - group:group
   - bricks:bricks
   - search_api:search_api

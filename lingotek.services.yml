@@ -96,6 +96,22 @@ services:
     tags:
       - { name: lingotek_moderation_handler, priority: 0 }
 
+  lingotek.workbench_moderation_configuration:
+    class: Drupal\lingotek\Moderation\LingotekWorkbenchModerationConfigurationService
+    arguments: ['@module_handler', '@config.factory']
+    tags:
+      - { name: lingotek_moderation_configuration, priority: 10 }
+  lingotek.workbench_moderation_form:
+    class: Drupal\lingotek\Moderation\LingotekWorkbenchModerationSettingsForm
+    arguments: ['@module_handler', '@entity_type.manager', '@lingotek.workbench_moderation_configuration', '@service_container', '@url_generator']
+    tags:
+      - { name: lingotek_moderation_form, priority: 10 }
+  lingotek.workbench_moderation_handler:
+    class: Drupal\lingotek\Moderation\LingotekWorkbenchModerationHandler
+    arguments: ['@module_handler', '@entity_type.manager', '@lingotek.workbench_moderation_configuration', '@service_container']
+    tags:
+      - { name: lingotek_moderation_handler, priority: 10 }
+
   lingotek.content_moderation_configuration:
     class: Drupal\lingotek\Moderation\LingotekContentModerationConfigurationService
     arguments: ['@module_handler', '@config.factory']
