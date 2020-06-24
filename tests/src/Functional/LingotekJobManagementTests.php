@@ -89,7 +89,6 @@ class LingotekJobManagementTests extends LingotekTestBase {
           'fields' => [
             'title' => 1,
             'body' => 1,
-            'field_tags' => 1,
           ],
         ],
       ],
@@ -239,7 +238,6 @@ class LingotekJobManagementTests extends LingotekTestBase {
     $metadata = LingotekConfigMetadata::loadByConfigName('system.site');
     $metadata->setJobId('my-test-job-id-1');
     $metadata->save();
-
   }
 
 }

@@ -72,6 +72,8 @@ class LingotekNodeWithParagraphsManageTranslationTabTest extends LingotekTestBas
    * Tests that a node can be translated using the links on the management page.
    */
   public function testNodeTranslationUsingLinks() {
+    $assert_session = $this->assertSession();
+
     // Login as admin.
     $this->drupalLogin($this->rootUser);
 
@@ -94,8 +96,10 @@ class LingotekNodeWithParagraphsManageTranslationTabTest extends LingotekTestBas
     $this->drupalGet('node/1');
     $this->clickLink('Manage Translations');
 
-    $this->assertText('Llamas are cool');
-    $this->assertText('Image + Text');
+    $assert_session->elementContains('css', 'table#edit-table', 'Llamas are cool');
+    // Assert embedded are listed on the embedded table.
+    $assert_session->elementNotContains('css', 'table#edit-table', 'Image + Text');
+    $assert_session->elementContains('css', 'details#edit-related table', 'Image + Text');
 
     // Clicking English must init the upload of content.
     $this->assertLingotekUploadLink();
@@ -138,6 +142,8 @@ class LingotekNodeWithParagraphsManageTranslationTabTest extends LingotekTestBas
    * Tests that a node can be translated using the actions on the management page.
    */
   public function testNodeTranslationUsingActions() {
+    $assert_session = $this->assertSession();
+
     // Login as admin.
     $this->drupalLogin($this->rootUser);
 
@@ -163,8 +169,10 @@ class LingotekNodeWithParagraphsManageTranslationTabTest extends LingotekTestBas
     $this->drupalGet('node/1');
     $this->clickLink('Manage Translations');
 
-    $this->assertText('Llamas are cool');
-    $this->assertText('Image + Text');
+    $assert_session->elementContains('css', 'table#edit-table', 'Llamas are cool');
+    // Assert embedded are listed on the embedded table.
+    $assert_session->elementNotContains('css', 'table#edit-table', 'Image + Text');
+    $assert_session->elementContains('css', 'details#edit-related table', 'Image + Text');
 
     // I can init the upload of content.
     $this->assertLingotekUploadLink();
@@ -212,6 +220,33 @@ class LingotekNodeWithParagraphsManageTranslationTabTest extends LingotekTestBas
 
     // Now the link is to the workbench, and it opens in a new tab.
     $this->assertLingotekWorkbenchLink('de_AT');
+  }
+
+  /**
+   * Tests that the paragraphs are listed on the embedded content table.
+   */
+  public function testParagraphsOnlyVisibleOnEmbeddedTable() {
+    $assert_session = $this->assertSession();
+    // Add paragraphed content.
+    $this->drupalGet('node/add/paragraphed_content_demo');
+
+    $this->drupalPostForm(NULL, NULL, t('Add Image + Text'));
+
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['field_paragraphs_demo[0][subform][field_text_demo][0][value]'] = 'Llamas are very cool';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
+    $this->saveAndPublishNodeForm($edit, NULL);
+
+    // Check that the manage translations tab is in the node.
+    $this->drupalGet('node/1');
+    $this->clickLink('Manage Translations');
+
+    $assert_session->elementContains('css', 'table#edit-table', 'Llamas are cool');
+    // Assert embedded are listed on the embedded table.
+    $assert_session->elementNotContains('css', 'table#edit-table', 'Image + Text');
+    $assert_session->elementContains('css', 'details#edit-related table', 'Image + Text');
   }
 
   /**

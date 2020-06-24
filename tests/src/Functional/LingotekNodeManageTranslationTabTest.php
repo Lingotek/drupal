@@ -759,6 +759,93 @@ class LingotekNodeManageTranslationTabTest extends LingotekTestBase {
   }
 
   /**
+   * Tests that the depth level filter works properly and the embedded content
+   * is in a separate table.
+   */
+  public function testEmbeddedContentInSeparateListing() {
+    $assert_session = $this->assertSession();
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['field_tags[target_id]'] = implode(',', ['Camelid', 'Herbivorous']);
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    $this->createRelatedTermsForTestingDepth();
+
+    // Check that the manage translations tab is in the node.
+    $this->drupalGet('node/1');
+    $this->clickLink('Manage Translations');
+
+    $assert_session->elementContains('css', 'table#edit-table', 'Llamas are cool');
+    // Assert first level is included.
+    $assert_session->elementContains('css', 'table#edit-table', 'Camelid');
+    $assert_session->elementContains('css', 'table#edit-table', 'Herbivorous');
+    // Assert second level is not included.
+    $assert_session->elementNotContains('css', 'table#edit-table', 'Hominid');
+    // Assert third level is not included.
+    $assert_session->elementNotContains('css', 'table#edit-table', 'Ruminant');
+
+    $this->drupalPostForm(NULL, ['depth' => 2], 'Apply');
+
+    $assert_session->elementContains('css', 'table#edit-table', 'Llamas are cool');
+    // Assert first level is included.
+    $assert_session->elementContains('css', 'table#edit-table', 'Camelid');
+    $assert_session->elementContains('css', 'table#edit-table', 'Herbivorous');
+    // Assert second level is included.
+    $assert_session->elementContains('css', 'table#edit-table', 'Hominid');
+    // Assert third level is not included.
+    $assert_session->elementNotContains('css', 'table#edit-table', 'Ruminant');
+
+    $this->drupalPostForm(NULL, ['depth' => 3], 'Apply');
+
+    $assert_session->elementContains('css', 'table#edit-table', 'Llamas are cool');
+    // Assert first level is included.
+    $assert_session->elementContains('css', 'table#edit-table', 'Camelid');
+    $assert_session->elementContains('css', 'table#edit-table', 'Herbivorous');
+    // Assert second level is included.
+    $assert_session->elementContains('css', 'table#edit-table', 'Hominid');
+    // Assert third level is included.
+    $assert_session->elementContains('css', 'table#edit-table', 'Ruminant');
+
+    // If we configure the field so it's embedded, we won't list its contents
+    // anymore as a related content in manage tab.
+    $this->saveLingotekContentTranslationSettings([
+      'node' => [
+        'article' => [
+          'profiles' => 'automatic',
+          'fields' => [
+            'title' => 1,
+            'body' => 1,
+            'field_tags' => 1,
+          ],
+        ],
+      ],
+    ]);
+    $this->drupalGet('node/1');
+    $this->clickLink('Manage Translations');
+
+    $assert_session->elementContains('css', 'table#edit-table', 'Llamas are cool');
+    // Assert first level is not included.
+    $assert_session->elementNotContains('css', 'table#edit-table', 'Camelid');
+    $assert_session->elementNotContains('css', 'table#edit-table', 'Herbivorous');
+    // Assert second level is not included.
+    $assert_session->elementNotContains('css', 'table#edit-table', 'Hominid');
+    // Assert third level is not included.
+    $assert_session->elementNotContains('css', 'table#edit-table', 'Ruminant');
+
+    // But the first two are listed as embedded content.
+    $assert_session->elementContains('css', 'details#edit-related table', 'Camelid');
+    $assert_session->elementContains('css', 'details#edit-related table', 'Herbivorous');
+    // Assert second level is not included.
+    $assert_session->elementNotContains('css', 'details#edit-related table', 'Hominid');
+    // Assert third level is not included.
+    $assert_session->elementNotContains('css', 'details#edit-related table', 'Ruminant');
+  }
+
+  /**
    * {@inheritdoc}
    *
    * We override this for the destination url.

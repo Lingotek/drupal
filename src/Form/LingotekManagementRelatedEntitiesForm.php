@@ -90,6 +90,7 @@ class LingotekManagementRelatedEntitiesForm extends LingotekManagementFormBase {
   public function buildForm(array $form, FormStateInterface $form_state, ContentEntityInterface $node = NULL) {
     $this->node = $node;
     $form = parent::buildForm($form, $form_state);
+    $related = $this->related;
 
     $depth = $this->getRecursionDepth();
     $form['depth_selection'] = [
@@ -107,6 +108,25 @@ class LingotekManagementRelatedEntitiesForm extends LingotekManagementFormBase {
       '#type' => 'submit',
       '#value' => $this->t('Apply'),
       '#submit' => [[$this, 'recursionDepthCallback']],
+    ];
+
+    $relatedRows = [];
+    if (!empty($related)) {
+      // Generate the rows based on those entities.
+      $relatedRows = $this->getRows($related);
+    }
+    $form['related'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Embedded content references'),
+      '#description' => $this->t('These entities are included in the parent document, but listed here for reference. It is not recommended to operate on this data, as its contents will be already translated with the embedding document.'),
+      '#weight' => 100,
+    ];
+    $form['related']['table'] = [
+      '#header' => $this->getHeaders(),
+      '#rows' => $relatedRows,
+      '#empty' => $this->t('No embedded content available'),
+      '#type' => 'table',
+      '#weight' => 100,
     ];
 
     return $form;
@@ -138,7 +158,7 @@ class LingotekManagementRelatedEntitiesForm extends LingotekManagementFormBase {
    */
   protected function getHeaders() {
     $headers = [
-      'label' => $this->t('Label'),
+      'title' => $this->t('Label'),
       'entity_type_id' => $this->t('Content Type'),
       'bundle' => $this->t('Bundle'),
       'source' => $this->t('Source'),
@@ -149,6 +169,10 @@ class LingotekManagementRelatedEntitiesForm extends LingotekManagementFormBase {
     return $headers;
   }
 
+  /**
+   * @deprecated in lingotek:3.1.0 and is removed from lingotek:4.0.0.
+   * @see ::getNestedEntities
+   */
   public function calculateNestedEntities(ContentEntityInterface &$entity, &$visited = [], &$entities = []) {
     $visited[$entity->bundle()][] = $entity->id();
     $entities[$entity->getEntityTypeId()][] = $entity;
@@ -172,7 +196,7 @@ class LingotekManagementRelatedEntitiesForm extends LingotekManagementFormBase {
     return $entities;
   }
 
-  protected function getNestedEntities(ContentEntityInterface &$entity, &$visited = [], &$entities = [], $depth = 1) {
+  protected function getNestedEntities(ContentEntityInterface &$entity, &$visited = [], &$entities = [], $depth = 1, &$related = []) {
     $visited[$entity->bundle()][] = $entity->id();
     $entities[$entity->getEntityTypeId()][$entity->id()] = $entity->getUntranslated();
     if ($depth > 0) {
@@ -188,11 +212,16 @@ class LingotekManagementRelatedEntitiesForm extends LingotekManagementFormBase {
             $child_entities = $entity->{$k}->referencedEntities();
             foreach ($child_entities as $embedded_entity) {
               if ($embedded_entity !== NULL) {
-                if ($embedded_entity instanceof ContentEntityInterface && $embedded_entity->isTranslatable() && $this->lingotekConfiguration->isEnabled($embedded_entity->getEntityTypeId(), $embedded_entity->bundle())) {
-                  // We need to avoid cycles if we have several entity references
-                  // referencing each other.
-                  if (!isset($visited[$embedded_entity->bundle()]) || !in_array($embedded_entity->id(), $visited[$embedded_entity->bundle()])) {
-                    $entities = $this->getNestedEntities($embedded_entity, $visited, $entities, $depth);
+                // We need to avoid cycles if we have several entity references
+                // referencing each other.
+                if (!isset($visited[$embedded_entity->bundle()]) || !in_array($embedded_entity->id(), $visited[$embedded_entity->bundle()])) {
+                  if ($embedded_entity instanceof ContentEntityInterface && $embedded_entity->isTranslatable() && $this->lingotekConfiguration->isEnabled($embedded_entity->getEntityTypeId(), $embedded_entity->bundle())) {
+                    if (!$this->lingotekConfiguration->isFieldLingotekEnabled($entity->getEntityTypeId(), $entity->bundle(), $k)) {
+                      $entities = $this->getNestedEntities($embedded_entity, $visited, $entities, $depth, $related);
+                    }
+                    else {
+                      $related[$embedded_entity->getEntityTypeId()][$embedded_entity->id()] = $embedded_entity->getUntranslated();
+                    }
                   }
                 }
               }
@@ -201,6 +230,7 @@ class LingotekManagementRelatedEntitiesForm extends LingotekManagementFormBase {
         }
       }
     }
+    $this->related = $related;
     return $entities;
   }
 
@@ -208,8 +238,9 @@ class LingotekManagementRelatedEntitiesForm extends LingotekManagementFormBase {
     // This implies recursion through all the related content.
     $visited = [];
     $entities = [];
+    $related = [];
     $recursion_depth = $this->getRecursionDepth();
-    $entities = $this->getNestedEntities($this->node, $visited, $entities, $recursion_depth);
+    $entities = $this->getNestedEntities($this->node, $visited, $entities, $recursion_depth, $related);
     return $entities;
   }
 
@@ -227,17 +258,21 @@ class LingotekManagementRelatedEntitiesForm extends LingotekManagementFormBase {
   }
 
   protected function getRow($entity) {
-    $row = parent::getRow($entity);
+    // For this method to be able to be reused for the table component, order
+    // matters, so we rebuild the order of the row. For tableselect the headers
+    // defines the order, for the table, the order we add to the array matters.
+    $parentRow = parent::getRow($entity);
     $bundleInfo = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
 
-    if ($entity->hasLinkTemplate('canonical')) {
-      $row['label'] = $entity->toLink();
-    }
-    else {
-      $row['label'] = $entity->label();
-    }
+    $row['title'] = $parentRow['title'];
     $row['entity_type_id'] = $entity->getEntityType()->getLabel();
     $row['bundle'] = $bundleInfo[$entity->bundle()]['label'];
+    $row['title'] = $parentRow['title'];
+    $row['source'] = $parentRow['source'];
+    $row['translations'] = $parentRow['translations'];
+    $row['profile'] = $parentRow['profile'];
+    $row['job_id'] = $parentRow['job_id'];
+
     return $row;
   }
 
