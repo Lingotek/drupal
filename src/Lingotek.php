@@ -108,6 +108,27 @@ class Lingotek implements LingotekInterface {
   /**
    * {@inheritdoc}
    */
+  public function get($key) {
+    return $this->configFactory->get(static::SETTINGS)->get($key);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getEditable($key) {
+    return $this->configFactory->getEditable(static::SETTINGS)->get($key);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function set($key, $value) {
+    $this->configFactory->getEditable(static::SETTINGS)->set($key, $value)->save();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getAccountInfo() {
     try {
       $response = $this->api->getAccountInfo();
