@@ -15,6 +15,67 @@ interface LingotekInterface extends ContainerInjectionInterface {
   public function getLocales();
 
   /**
+   * Gets data from the configuration object.
+   *
+   * @param string $key
+   *   A string that maps to a key within the configuration data.
+   *   For instance in the following configuration array:
+   *   @code
+   *   array(
+   *     'foo' => array(
+   *       'bar' => 'baz',
+   *     ),
+   *   );
+   *   @endcode
+   *   A key of 'foo.bar' would return the string 'baz'. However, a key of 'foo'
+   *   would return array('bar' => 'baz').
+   *   If no key is specified, then the entire data array is returned.
+   *
+   * @return mixed
+   *   The data that was requested.
+   *
+   * @deprecated in lingotek:3.0.1 and is removed from lingotek:4.0.0.
+   *   Use configuration or configuration services directly.
+   * @see \Drupal\lingotek\LingotekConfigurationServiceInterface
+   */
+  public function get($key);
+
+  /**
+   * Gets data from the mutable configuration object.
+   * Returns an mutable configuration object for a given name.
+   *
+   * Should not be used for config that will have runtime effects. Therefore it
+   * is always loaded override free.
+   *
+   * @param string $key
+   *   A string that maps to a key within the configuration data.
+   *
+   * @return mixed
+   *   The data that was requested.
+   *
+   * @see ::get
+   *
+   * @deprecated in lingotek:3.0.1 and is removed from lingotek:4.0.0.
+   *   Use configuration or configuration services directly.
+   * @see \Drupal\lingotek\LingotekConfigurationServiceInterface
+   */
+  public function getEditable($key);
+
+  /**
+   * Set a setting value (and save).
+   *
+   * @param string $key
+   *   The key for the setting.
+   * @param mixed $value
+   *   The value for the setting.
+   *
+   * @deprecated in lingotek:3.0.1 and is removed from lingotek:4.0.0.
+   *   Use configuration or configuration services directly.
+   * @see \Drupal\lingotek\LingotekConfigurationServiceInterface
+   */
+  public function set($key, $value);
+
+  /**
    * Get the available locales on Lingotek with extra information.
    *
    * @return array
