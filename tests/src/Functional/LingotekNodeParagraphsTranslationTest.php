@@ -7,6 +7,7 @@ use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\lingotek\Entity\LingotekContentMetadata;
 use Drupal\node\Entity\Node;
 use Drupal\paragraphs\Entity\Paragraph;
+use Drupal\Tests\content_moderation\Traits\ContentModerationTestTrait;
 
 /**
  * Tests translating a node with multiple locales including paragraphs.
@@ -15,6 +16,10 @@ use Drupal\paragraphs\Entity\Paragraph;
  * @group legacy
  */
 class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
+
+  use ContentModerationTestTrait;
+
+  protected $paragraphsTranslatable = FALSE;
 
   /**
    * {@inheritdoc}
@@ -58,14 +63,10 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     $workflow = $this->createEditorialWorkflow();
     $this->configureContentModeration('editorial', ['node' => ['paragraphed_content_demo']]);
 
-    $edit = [];
-    $edit['settings[node][paragraphed_content_demo][fields][field_paragraphs_demo]'] = 1;
-    $edit['settings[paragraph][image_text][fields][field_text_demo]'] = 1;
-    $this->drupalPostForm('/admin/config/regional/content-language', $edit, 'Save configuration');
+    if ($this->paragraphsTranslatable) {
+      $this->setParagraphFieldsTranslatability();
+    }
 
-    $this->assertText('Settings successfully updated.');
-
-    $this->drupalGet('/admin/config/regional/content-language');
     $this->saveLingotekContentTranslationSettings([
       'node' => [
         'paragraphed_content_demo' => [
@@ -803,8 +804,17 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     // The content is translated and published.
     $this->clickLink('Las llamas son chulas');
     $this->assertText('Las llamas son chulas');
-    $this->assertText('Las llamas son chulas por primera vez');
-    $this->assertText('Las llamas son chulas por segunda vez');
+    if ($this->paragraphsTranslatable) {
+      $this->assertText('Las llamas son chulas por primera vez');
+      $this->assertText('Las llamas son chulas por segunda vez');
+      $this->assertNoText('Las llamas son chulas por tercera vez');
+      $this->assertNoText('Llamas are very cool for the third time');
+    }
+    else {
+      $this->assertNoText('Las llamas son chulas por primera vez');
+      $this->assertText('Las llamas son chulas por segunda vez');
+      $this->assertText('Llamas are very cool for the third time');
+    }
 
     $this->clickLink('Translate');
     $this->clickLink('Llamas are very cool');
@@ -813,6 +823,33 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     $this->assertNoText('Llamas are very cool for the first time');
     $this->assertText('Llamas are very cool for the second time');
     $this->assertText('Llamas are very cool for the third time');
+  }
+
+  public function testEditingAfterNodeWithParagraphsTranslation() {
+    $assert_session = $this->assertSession();
+    $page = $this->getSession()->getPage();
+
+    $this->testNodeWithParagraphsTranslation();
+
+    $this->drupalGet('es-ar/node/1/edit');
+    $assert_session->fieldValueEquals('field_paragraphs_demo[0][subform][field_text_demo][0][value]', 'Las llamas son muy chulas');
+
+    $this->drupalGet('node/1/edit');
+    $assert_session->fieldValueEquals('field_paragraphs_demo[0][subform][field_text_demo][0][value]', 'Llamas are very cool');
+
+    $this->drupalPostForm(NULL, NULL, t('Remove'));
+    $this->drupalPostForm(NULL, NULL, t('Confirm removal'));
+
+    $page->pressButton('Save (this translation)');
+    $assert_session->pageTextContains('Llamas are cool has been updated.');
+  }
+
+  protected function setParagraphFieldsTranslatability(): void {
+    $edit = [];
+    $edit['settings[node][paragraphed_content_demo][fields][field_paragraphs_demo]'] = 1;
+    $edit['settings[paragraph][image_text][fields][field_text_demo]'] = 1;
+    $this->drupalPostForm('/admin/config/regional/content-language', $edit, 'Save configuration');
+    $this->assertSession()->responseContains('Settings successfully updated.');
   }
 
 }

@@ -10,7 +10,17 @@
         {
           "value": "Las llamas son muy chulas"
         }
-      ]
+      ],
+      "_lingotek_metadata": {
+        "_entity_type_id": "paragraph",
+        "_entity_id": "1",
+        "_entity_revision": "1"
+      }
     }
-  ]
+  ],
+  "_lingotek_metadata": {
+    "_entity_type_id": "node",
+    "_entity_id": "1",
+    "_entity_revision": "1"
+  }
 }

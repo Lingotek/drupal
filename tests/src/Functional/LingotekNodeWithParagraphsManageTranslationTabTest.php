@@ -16,6 +16,8 @@ class LingotekNodeWithParagraphsManageTranslationTabTest extends LingotekTestBas
 
   use EntityReferenceTestTrait;
 
+  protected $paragraphsTranslatable = FALSE;
+
   /**
    * {@inheritdoc}
    */
@@ -36,6 +38,10 @@ class LingotekNodeWithParagraphsManageTranslationTabTest extends LingotekTestBas
     ContentLanguageSettings::loadByEntityTypeBundle('node', 'paragraphed_content_demo')->setLanguageAlterable(TRUE)->save();
     ContentLanguageSettings::loadByEntityTypeBundle('paragraph', 'image_text')->setLanguageAlterable(TRUE)->save();
     \Drupal::service('content_translation.manager')->setEnabled('node', 'paragraphed_content_demo', TRUE);
+
+    if ($this->paragraphsTranslatable) {
+      $this->setParagraphFieldsTranslatability();
+    }
 
     drupal_static_reset();
     \Drupal::entityTypeManager()->clearCachedDefinitions();
@@ -221,6 +227,14 @@ class LingotekNodeWithParagraphsManageTranslationTabTest extends LingotekTestBas
    */
   protected function getContentBulkManagementFormUrl($entity_type_id = 'node', $prefix = NULL) {
     return ($prefix === NULL ? '' : '/' . $prefix) . '/' . $entity_type_id . '/1/manage';
+  }
+
+  protected function setParagraphFieldsTranslatability(): void {
+    $edit = [];
+    $edit['settings[node][paragraphed_content_demo][fields][field_paragraphs_demo]'] = 1;
+    $edit['settings[paragraph][image_text][fields][field_text_demo]'] = 1;
+    $this->drupalPostForm('/admin/config/regional/content-language', $edit, 'Save configuration');
+    $this->assertSession()->responseContains('Settings successfully updated.');
   }
 
 }

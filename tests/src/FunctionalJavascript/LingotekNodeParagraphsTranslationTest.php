@@ -14,6 +14,8 @@ class LingotekNodeParagraphsTranslationTest extends LingotekFunctionalJavascript
 
   use ContentModerationTestTrait;
 
+  protected $paragraphsTranslatable = FALSE;
+
   /**
    * {@inheritdoc}
    */
@@ -39,12 +41,9 @@ class LingotekNodeParagraphsTranslationTest extends LingotekFunctionalJavascript
     ContentLanguageSettings::loadByEntityTypeBundle('paragraph', 'image_text')->setLanguageAlterable(TRUE)->save();
     \Drupal::service('content_translation.manager')->setEnabled('node', 'paragraphed_content_demo', TRUE);
 
-    $edit = [];
-    $edit['settings[node][paragraphed_content_demo][fields][field_paragraphs_demo]'] = 1;
-    $edit['settings[paragraph][image_text][fields][field_text_demo]'] = 1;
-    $this->drupalPostForm('/admin/config/regional/content-language', $edit, 'Save configuration');
-
-    $this->assertSession()->responseContains('Settings successfully updated.');
+    if ($this->paragraphsTranslatable) {
+      $this->setParagraphFieldsTranslatability();
+    }
 
     // Enable content moderation for articles.
     $workflow = $this->createEditorialWorkflow();
@@ -77,6 +76,98 @@ class LingotekNodeParagraphsTranslationTest extends LingotekFunctionalJavascript
 
     // This is a hack for avoiding writing different lingotek endpoint mocks.
     \Drupal::state()->set('lingotek.uploaded_content_type', 'node+paragraphs');
+  }
+
+  /**
+   * Tests that a node can be translated.
+   */
+  public function testNodeWithParagraphsTranslation() {
+    $page = $this->getSession()->getPage();
+    $assert_session = $this->assertSession();
+    $messages_locator = '.messages--status';
+
+    // Add paragraphed content.
+    $this->drupalGet('node/add/paragraphed_content_demo');
+    $page->pressButton('field_paragraphs_demo_image_text_add_more');
+    $assert_session->assertWaitOnAjaxRequest();
+    $assert_session->waitForElementVisible('css', '[name="field_paragraphs_demo[0][subform][field_text_demo][0][value]"]');
+    $page->pressButton('field_paragraphs_demo_image_text_add_more');
+    $assert_session->assertWaitOnAjaxRequest();
+    $assert_session->waitForElementVisible('css', '[name="field_paragraphs_demo[1][subform][field_text_demo][0][value]"]');
+
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['field_paragraphs_demo[0][subform][field_text_demo][0][value]'] = 'Llamas are very cool';
+    $edit['moderation_state[0][state]'] = 'published';
+    $this->drupalPostForm(NULL, $edit, t('Save'));
+
+    // Check that only the configured fields have been uploaded, including metatags.
+    $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), TRUE);
+    $this->assertEqual($data['title'][0]['value'], 'Llamas are cool');
+    $this->assertEqual($data['field_paragraphs_demo'][0]['field_text_demo'][0]['value'], 'Llamas are very cool');
+
+    // Check that the url used was the right one.
+    $uploaded_url = \Drupal::state()->get('lingotek.uploaded_url');
+    $this->assertIdentical(\Drupal::request()->getUriForPath('/node/1'), $uploaded_url, 'The node url was used.');
+
+    // Check that the profile used was the right one.
+    $used_profile = \Drupal::state()->get('lingotek.used_profile');
+    $this->assertIdentical('automatic', $used_profile, 'The automatic profile was used.');
+
+    // Check that the translate tab is in the node.
+    $this->drupalGet('node/1');
+    $this->clickLink('Translate');
+
+    // The document should have been automatically uploaded, so let's check
+    // the upload status.
+    $toggle = $page->find('css', 'li.dropbutton-toggle button');
+    $toggle->click();
+    $dropButton = $page->find('css', 'li.check-upload-status.dropbutton-action a');
+    $dropButton->click();
+
+    // This is a batch process, wait to finish.
+    $assert_session->waitForElementVisible('css', $messages_locator);
+
+    $assert_session->elementTextContains('css', $messages_locator, 'The import for node Llamas are cool is complete.');
+
+    // Request translation.
+    $toggle = $page->findAll('css', 'li.dropbutton-toggle button')[1];
+    $toggle->click();
+    $dropButton = $page->find('css', 'li.request-translation.dropbutton-action a');
+    $dropButton->click();
+
+    // This is a batch process, wait to finish.
+    $assert_session->waitForElementVisible('css', $messages_locator);
+
+    $assert_session->elementTextContains('css', $messages_locator, "Locale 'es_AR' was added as a translation target for node Llamas are cool.");
+
+    // Check translation status.
+    $toggle = $page->findAll('css', 'li.dropbutton-toggle button')[1];
+    $toggle->click();
+    $dropButton = $page->find('css', 'li.check-translation-status.dropbutton-action a');
+    $dropButton->click();
+
+    // This is a batch process, wait to finish.
+    $assert_session->waitForElementVisible('css', $messages_locator);
+
+    $assert_session->elementTextContains('css', $messages_locator, 'The es_AR translation for node Llamas are cool is ready for download.');
+
+    // Download translation.
+    $toggle = $page->findAll('css', 'li.dropbutton-toggle button')[1];
+    $toggle->click();
+    $dropButton = $page->find('css', 'li.download-completed-translation.dropbutton-action a');
+    $dropButton->click();
+
+    // This is a batch process, wait to finish.
+    $assert_session->waitForElementVisible('css', $messages_locator);
+
+    $assert_session->elementTextContains('css', $messages_locator, 'The translation of node Llamas are cool into es_AR has been downloaded.');
+
+    // The content is translated and published.
+    $this->clickLink('Las llamas son chulas');
+    $assert_session->pageTextContains('Las llamas son chulas');
+    $assert_session->pageTextContains('Las llamas son muy chulas');
   }
 
   /**
@@ -254,6 +345,37 @@ class LingotekNodeParagraphsTranslationTest extends LingotekFunctionalJavascript
 
     $paragraphs = $page->findAll('css', '.paragraph');
     $this->assertCount(2, $paragraphs);
+  }
+
+  public function testEditingAfterNodeWithParagraphsTranslation() {
+    $page = $this->getSession()->getPage();
+    $assert_session = $this->assertSession();
+    $messages_locator = '.messages--status';
+
+    $this->testNodeWithParagraphsTranslation();
+
+    $this->drupalGet('es-ar/node/1/edit');
+    $assert_session->fieldValueEquals('field_paragraphs_demo[0][subform][field_text_demo][0][value]', 'Las llamas son muy chulas');
+
+    $this->drupalGet('node/1/edit');
+    $assert_session->fieldValueEquals('field_paragraphs_demo[0][subform][field_text_demo][0][value]', 'Llamas are very cool');
+
+    $this->drupalPostForm(NULL, NULL, 'Remove');
+    $assert_session->waitForElementVisible('css', 'field_paragraphs_demo_0_confirm_remove', 1000);
+    $this->drupalPostForm(NULL, NULL, 'Confirm removal');
+    $assert_session->waitForElementRemoved('css', 'field_paragraphs_demo_0_confirm_remove', 1000);
+
+    $this->drupalPostForm(NULL, NULL, 'Save (this translation)');
+    $assert_session->waitForElementVisible('css', $messages_locator);
+    $assert_session->pageTextContains('Paragraphed article Llamas are cool has been updated.');
+  }
+
+  protected function setParagraphFieldsTranslatability(): void {
+    $edit = [];
+    $edit['settings[node][paragraphed_content_demo][fields][field_paragraphs_demo]'] = 1;
+    $edit['settings[paragraph][image_text][fields][field_text_demo]'] = 1;
+    $this->drupalPostForm('/admin/config/regional/content-language', $edit, 'Save configuration');
+    $this->assertSession()->responseContains('Settings successfully updated.');
   }
 
 }
