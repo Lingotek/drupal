@@ -398,9 +398,8 @@ class LingotekNotificationController extends LingotekControllerBase {
         }
         break;
 
-      case 'phase':
-        // translation (i.e., chinese) has been completed for a document
       case 'target':
+      case 'download_interim_translation':
         // TO-DO: download target for locale_code and document_id (also, progress and complete params can be used as needed)
         // ex. ?project_id=103956f4-17cf-4d79-9d15-5f7b7a88dee2&locale_code=de-DE&document_id=bbf48a7b-b201-47a0-bc0e-0446f9e33a2f&complete=true&locale=de_DE&progress=100&type=target
         $document_id = $request->query->get('document_id');
@@ -430,8 +429,11 @@ class LingotekNotificationController extends LingotekControllerBase {
             }
             $allowInterimDownloads = $this->lingotekConfiguration->getPreference('enable_download_interim');
             $progressCompleted = ($request->query->get('progress') == '100');
-            if ($progressCompleted) {
+            if ($progressCompleted && $type === 'target') {
               $translation_service->setTargetStatus($entity, $langcode, Lingotek::STATUS_READY);
+            }
+            elseif ($type === 'phase' && $allowInterimDownloads || $type === 'download_interim_translation' && $allowInterimDownloads) {
+              $translation_service->setTargetStatus($entity, $langcode, Lingotek::STATUS_INTERMEDIATE);
             }
             if ($profile->hasAutomaticDownloadForTarget($langcode) && $profile->hasAutomaticDownloadWorker() && ($progressCompleted || $allowInterimDownloads)) {
               $queue = \Drupal::queue('lingotek_downloader_queue_worker');
