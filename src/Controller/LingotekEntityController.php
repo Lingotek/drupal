@@ -174,8 +174,10 @@ class LingotekEntityController extends LingotekControllerBase {
       $this->messenger()->addError(t('The download for @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
     }
     catch (LingotekContentEntityStorageException $storage_exception) {
-      $this->messenger()->addError(t('The download for @entity_type %title failed because of the length of one field translation value: %table.',
-        ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label(), '%table' => $storage_exception->getTable()]));
+      \Drupal::logger('lingotek')->error('The download for @entity_type %title failed because of the length of one field translation (%locale) value: %table.',
+        ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label(), '%locale' => $locale, '%table' => $storage_exception->getTable()]);
+      $this->messenger()->addError(t('The download for @entity_type %title failed because of the length of one field translation (%locale) value: %table.',
+        ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label(), '%locale' => $locale, '%table' => $storage_exception->getTable()]));
     }
     return $this->translationsPageRedirect($entity);
   }
