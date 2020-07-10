@@ -23,7 +23,7 @@ class LingotekTaxonomyTermLongTitleTranslationTest extends LingotekTestBase {
    *
    * @var array
    */
-  public static $modules = ['block', 'taxonomy'];
+  public static $modules = ['block', 'taxonomy', 'dblog'];
 
   /**
    * Vocabulary for testing.
@@ -123,7 +123,11 @@ class LingotekTaxonomyTermLongTitleTranslationTest extends LingotekTestBase {
 
     // Download translation. It must fail with a useful error message.
     $this->clickLink('Download completed translation');
-    $this->assertText('The download for taxonomy_term Llamas are cool failed because of the length of one field translation value: name.');
+    $this->assertText('The download for taxonomy_term Llamas are cool failed because of the length of one field translation (es_ES) value: name.');
+
+    // Test the error is logged.
+    $status = (bool) \Drupal::database()->queryRange('SELECT 1 FROM {watchdog} WHERE message = :message', 0, 1, [':message' => "The download for taxonomy_term Llamas are cool failed because of the length of one field translation (es_ES) value: name."]);
+    $this->assert($status, 'A watchdog message was logged for the length of the field.');
 
     // Check the right class is added.
     $this->goToContentBulkManagementForm('taxonomy_term');
@@ -136,7 +140,11 @@ class LingotekTaxonomyTermLongTitleTranslationTest extends LingotekTestBase {
 
     // Check that the link works
     $this->clickLink('ES');
-    $this->assertText('The download for taxonomy_term Llamas are cool failed because of the length of one field translation value: name.');
+    $this->assertText('The download for taxonomy_term Llamas are cool failed because of the length of one field translation (es_ES) value: name.');
+
+    // Test the error is logged.
+    $status = (bool) \Drupal::database()->queryRange('SELECT 1 FROM {watchdog} WHERE message = :message', 0, 1, [':message' => "The download for taxonomy_term Llamas are cool failed because of the length of one field translation (es_ES) value: name."]);
+    $this->assert($status, 'A watchdog message was logged for the length of the field.');
   }
 
   /**
@@ -181,7 +189,11 @@ class LingotekTaxonomyTermLongTitleTranslationTest extends LingotekTestBase {
 
     // Download translation. It must fail with a useful error message.
     $this->clickLink('Download completed translation');
-    $this->assertText('The download for taxonomy_term Llamas are cool failed because of the length of one field translation value: name.');
+    $this->assertText('The download for taxonomy_term Llamas are cool failed because of the length of one field translation (es_ES) value: name.');
+
+    // Test the error is logged.
+    $status = (bool) \Drupal::database()->queryRange('SELECT 1 FROM {watchdog} WHERE message = :message', 0, 1, [':message' => "The download for taxonomy_term Llamas are cool failed because of the length of one field translation (es_ES) value: name."]);
+    $this->assert($status, 'A watchdog message was logged for the length of the field.');
 
     // Check the right class is added.
     $this->goToContentBulkManagementForm('taxonomy_term');
@@ -194,7 +206,11 @@ class LingotekTaxonomyTermLongTitleTranslationTest extends LingotekTestBase {
 
     // Check that the link works
     $this->clickLink('ES');
-    $this->assertText('The download for taxonomy_term Llamas are cool failed because of the length of one field translation value: name.');
+    $this->assertText('The download for taxonomy_term Llamas are cool failed because of the length of one field translation (es_ES) value: name.');
+
+    // Test the error is logged.
+    $status = (bool) \Drupal::database()->queryRange('SELECT 1 FROM {watchdog} WHERE message = :message', 0, 1, [':message' => "The download for taxonomy_term Llamas are cool failed because of the length of one field translation (es_ES) value: name."]);
+    $this->assert($status, 'A watchdog message was logged for the length of the field.');
   }
 
   /**
@@ -257,7 +273,11 @@ class LingotekTaxonomyTermLongTitleTranslationTest extends LingotekTestBase {
 
     // Download translation. It must fail with a useful error message.
     $this->clickLink('Download completed translation');
-    $this->assertText('The download for taxonomy_term Llamas are cool failed because of the length of one field translation value: name.');
+    $this->assertText('The download for taxonomy_term Llamas are cool failed because of the length of one field translation (es_ES) value: name.');
+
+    // Test the error is logged.
+    $status = (bool) \Drupal::database()->queryRange('SELECT 1 FROM {watchdog} WHERE message = :message', 0, 1, [':message' => "The download for taxonomy_term Llamas are cool failed because of the length of one field translation (es_ES) value: name."]);
+    $this->assert($status, 'A watchdog message was logged for the length of the field.');
 
     // Check the right class is added.
     $this->goToContentBulkManagementForm('taxonomy_term');
@@ -270,7 +290,11 @@ class LingotekTaxonomyTermLongTitleTranslationTest extends LingotekTestBase {
 
     // Check that the link works
     $this->clickLink('ES');
-    $this->assertText('The download for taxonomy_term Llamas are cool failed because of the length of one field translation value: name.');
+    $this->assertText('The download for taxonomy_term Llamas are cool failed because of the length of one field translation (es_ES) value: name.');
+
+    // Test the error is logged.
+    $status = (bool) \Drupal::database()->queryRange('SELECT 1 FROM {watchdog} WHERE message = :message', 0, 1, [':message' => "The download for taxonomy_term Llamas are cool failed because of the length of one field translation (es_ES) value: name."]);
+    $this->assert($status, 'A watchdog message was logged for the length of the field.');
   }
 
   /**
@@ -333,7 +357,11 @@ class LingotekTaxonomyTermLongTitleTranslationTest extends LingotekTestBase {
     // Download translation. It must fail with a useful error message.
     $this->assertLingotekDownloadTargetLink('es_ES', 'dummy-document-hash-id', 'taxonomy_term');
     $this->clickLink('ES');
-    $this->assertText('The download for taxonomy_term Llamas are cool failed because of the length of one field translation value: name.');
+    $this->assertText('The download for taxonomy_term Llamas are cool failed because of the length of one field translation (es_ES) value: name.');
+
+    // Test the error is logged.
+    $status = (bool) \Drupal::database()->queryRange('SELECT 1 FROM {watchdog} WHERE message = :message', 0, 1, [':message' => "The download for taxonomy_term Llamas are cool failed because of the length of one field translation (es_ES) value: name."]);
+    $this->assert($status, 'A watchdog message was logged for the length of the field.');
 
     // Check the right class is added.
     $this->goToContentBulkManagementForm('taxonomy_term');
@@ -345,7 +373,11 @@ class LingotekTaxonomyTermLongTitleTranslationTest extends LingotekTestBase {
 
     // Check that the link works
     $this->clickLink('ES');
-    $this->assertText('The download for taxonomy_term Llamas are cool failed because of the length of one field translation value: name.');
+    $this->assertText('The download for taxonomy_term Llamas are cool failed because of the length of one field translation (es_ES) value: name.');
+
+    // Test the error is logged.
+    $status = (bool) \Drupal::database()->queryRange('SELECT 1 FROM {watchdog} WHERE message = :message', 0, 1, [':message' => "The download for taxonomy_term Llamas are cool failed because of the length of one field translation (es_ES) value: name."]);
+    $this->assert($status, 'A watchdog message was logged for the length of the field.');
   }
 
   /**
@@ -430,8 +462,12 @@ class LingotekTaxonomyTermLongTitleTranslationTest extends LingotekTestBase {
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     // Download translation. It must fail with a useful error message.
-    $this->assertText('The download for taxonomy_term Llamas are cool failed because of the length of one field translation value: name.');
+    $this->assertText('The download for taxonomy_term Llamas are cool failed because of the length of one field translation (de_AT) value: name.');
     $this->assertIdentical('de_AT', \Drupal::state()->get('lingotek.downloaded_locale'));
+
+    // Test the error is logged.
+    $status = (bool) \Drupal::database()->queryRange('SELECT 1 FROM {watchdog} WHERE message = :message', 0, 1, [':message' => "The download for taxonomy_term Llamas are cool failed because of the length of one field translation (de_AT) value: name."]);
+    $this->assert($status, 'A watchdog message was logged for the length of the field.');
 
     // Check the right class is added.
     $this->goToContentBulkManagementForm('taxonomy_term');
@@ -444,7 +480,11 @@ class LingotekTaxonomyTermLongTitleTranslationTest extends LingotekTestBase {
 
     // Check that the link works
     $this->clickLink('DE');
-    $this->assertText('The download for taxonomy_term Llamas are cool failed because of the length of one field translation value: name.');
+    $this->assertText('The download for taxonomy_term Llamas are cool failed because of the length of one field translation (de_AT) value: name.');
+
+    // Test the error is logged.
+    $status = (bool) \Drupal::database()->queryRange('SELECT 1 FROM {watchdog} WHERE message = :message', 0, 1, [':message' => "The download for taxonomy_term Llamas are cool failed because of the length of one field translation (de_AT) value: name."]);
+    $this->assert($status, 'A watchdog message was logged for the length of the field.');
   }
 
 }
