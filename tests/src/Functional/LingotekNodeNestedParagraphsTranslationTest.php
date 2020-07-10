@@ -16,6 +16,8 @@ use Drupal\paragraphs\Entity\Paragraph;
  */
 class LingotekNodeNestedParagraphsTranslationTest extends LingotekTestBase {
 
+  protected $paragraphsTranslatable = FALSE;
+
   /**
    * {@inheritdoc}
    */
@@ -56,11 +58,9 @@ class LingotekNodeNestedParagraphsTranslationTest extends LingotekTestBase {
     // that hold a list of languages.
     $this->rebuildContainer();
 
-    $edit = [];
-    $edit['settings[node][paragraphed_nested_content][fields][field_paragraph_container]'] = 1;
-    $edit['settings[paragraph][paragraph_container][fields][field_paragraphs_demo]'] = 1;
-    $this->drupalPostForm('/admin/config/regional/content-language', $edit, 'Save configuration');
-    $this->assertText('Settings successfully updated.');
+    if ($this->paragraphsTranslatable) {
+      $this->setParagraphFieldsTranslatability();
+    }
 
     $this->saveLingotekContentTranslationSettings([
       'node' => [
@@ -629,8 +629,25 @@ class LingotekNodeNestedParagraphsTranslationTest extends LingotekTestBase {
     // The content is translated and published.
     $this->clickLink('Las llamas son chulas');
     $this->assertText('Las llamas son chulas');
-    $this->assertText('Las llamas son muy chulas por primera vez');
-    $this->assertText('Las llamas son muy chulas por segunda vez');
+
+    if ($this->paragraphsTranslatable) {
+      $this->assertText('Las llamas son muy chulas por primera vez');
+      $this->assertText('Las llamas son muy chulas por segunda vez');
+    }
+    else {
+      $this->assertNoText('Las llamas son muy chulas por primera vez');
+      $this->assertNoText('Las llamas son muy chulas por segunda vez');
+      // We show the data that was actually uploaded and translated from the
+      // previous revision. The first revision is missing, as it was not
+      // translated.
+      $this->assertText('Los perros son muy chulos por primera vez');
+      $this->assertText('Los perros son muy chulos por segunda vez');
+      // That paragraph exists, but was not translated so it's not shown at all.
+      $this->assertNoText('Los gatos son muy chulos por primera vez');
+      $this->assertNoText('Los gatos son muy chulos por segunda vez');
+      $this->assertNoText('Los gatos son muy chulos por tercera vez');
+      $this->assertNoText('Los gatos son muy chulos por cuarta vez');
+    }
 
     $this->clickLink('Translate');
     $this->clickLink('Llamas are cool');
@@ -646,6 +663,25 @@ class LingotekNodeNestedParagraphsTranslationTest extends LingotekTestBase {
     $this->assertText('Cats are very cool for the FOURTH time');
     $this->assertText('Cats are very cool for the third time');
     $this->assertText('Cats are very cool for the second time');
+  }
+
+  public function testEditingAfterNodeWithParagraphsTranslation() {
+    $assert_session = $this->assertSession();
+    $page = $this->getSession()->getPage();
+
+    $this->testNodeWithParagraphsTranslation();
+
+    $this->drupalGet('es-ar/node/1/edit');
+    $assert_session->fieldValueEquals('field_paragraph_container[0][subform][field_paragraphs_demo][0][subform][field_text_demo][0][value]', 'Las llamas son muy chulas');
+
+    $this->drupalGet('node/1/edit');
+    $assert_session->fieldValueEquals('field_paragraph_container[0][subform][field_paragraphs_demo][0][subform][field_text_demo][0][value]', 'Llamas are very cool');
+
+    $this->drupalPostForm(NULL, NULL, t('Remove'));
+    $this->drupalPostForm(NULL, NULL, t('Confirm removal'));
+
+    $page->pressButton('Save (this translation)');
+    $assert_session->pageTextContains('Llamas are cool has been updated.');
   }
 
   protected function createNestedParagraphedNode($profile = 'manual') {
@@ -692,6 +728,14 @@ class LingotekNodeNestedParagraphsTranslationTest extends LingotekTestBase {
       'status' => TRUE,
     ]);
     $node->save();
+  }
+
+  protected function setParagraphFieldsTranslatability(): void {
+    $edit = [];
+    $edit['settings[node][paragraphed_nested_content][fields][field_paragraph_container]'] = 1;
+    $edit['settings[paragraph][paragraph_container][fields][field_paragraphs_demo]'] = 1;
+    $this->drupalPostForm('/admin/config/regional/content-language', $edit, 'Save configuration');
+    $this->assertSession()->responseContains('Settings successfully updated.');
   }
 
 }

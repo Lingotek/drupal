@@ -1348,9 +1348,12 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
           }
           // Paragraphs module use 'entity_reference_revisions'.
           elseif ($field_type === 'entity_reference_revisions') {
+            $paragraphTranslatable = $field_definition->isTranslatable();
             $target_entity_type_id = $field_definition->getFieldStorageDefinition()
               ->getSetting('target_type');
-            $translation->{$name} = NULL;
+            if ($paragraphTranslatable) {
+              $translation->{$name} = NULL;
+            }
             $delta = 0;
             $fieldValues = [];
             foreach ($field_data as $index => $field_item) {
@@ -1361,14 +1364,34 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
               $embedded_entity = $this->entityTypeManager->getStorage($target_entity_type_id)
                 ->load($embedded_entity_id);
               if ($embedded_entity !== NULL) {
+                // If there is asymmetrical paragraphs enabled, we need a new one duplicated and stored.
+                if ($paragraphTranslatable && \Drupal::moduleHandler()->moduleExists('paragraphs_asymmetric_translation_widgets')) {
+                  $duplicate = $embedded_entity->createDuplicate();
+                  if ($duplicate->isTranslatable()) {
+                    $duplicate->set('langcode', $langcode);
+                    foreach ($duplicate->getTranslationLanguages(FALSE) as $translationLanguage) {
+                      try {
+                        $duplicate->removeTranslation($translationLanguage->getId());
+                      }
+                      catch (\InvalidArgumentException $e) {
+                        // Should never happen.
+                      }
+                    }
+                  }
+                  $embedded_entity = $duplicate;
+                }
                 $this->saveTargetData($embedded_entity, $langcode, $field_item);
                 // Now the embedded entity is saved, but we need to ensure
                 // the reference will be saved too. Ensure it's the same revision.
-                $fieldValues[$delta] = ['target_id' => $embedded_entity_id, 'target_revision_id' => $embedded_entity->getRevisionId()];
+                $fieldValues[$delta] = ['target_id' => $embedded_entity->id(), 'target_revision_id' => $embedded_entity->getRevisionId()];
                 $delta++;
               }
             }
-            $translation->{$name} = $fieldValues;
+            // If the paragraph was not translatable, we avoid at all costs to modify the field,
+            // as this will override the source and may have unintended consequences.
+            if ($paragraphTranslatable) {
+              $translation->{$name} = $fieldValues;
+            }
           }
           // If there is a path item, we need to handle it separately. See
           // https://www.drupal.org/node/2681241

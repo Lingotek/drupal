@@ -17,6 +17,8 @@ use Drupal\paragraphs\Entity\Paragraph;
  */
 class LingotekNodeNestedParagraphsEditedTranslationTest extends LingotekTestBase {
 
+  protected $paragraphsTranslatable = FALSE;
+
   /**
    * {@inheritdoc}
    */
@@ -56,13 +58,9 @@ class LingotekNodeNestedParagraphsEditedTranslationTest extends LingotekTestBase
     // that hold a list of languages.
     $this->rebuildContainer();
 
-    $this->drupalGet('/admin/config/regional/content-language');
-
-    $edit = [];
-    $edit['settings[node][paragraphed_nested_content][fields][field_paragraph_container]'] = 1;
-    $edit['settings[paragraph][paragraph_container][fields][field_paragraphs_demo]'] = 1;
-    $this->drupalPostForm('/admin/config/regional/content-language', $edit, 'Save configuration');
-    $this->assertText('Settings successfully updated.');
+    if ($this->paragraphsTranslatable) {
+      $this->setParagraphFieldsTranslatability();
+    }
 
     $this->saveLingotekContentTranslationSettings([
       'node' => [
@@ -156,12 +154,14 @@ class LingotekNodeNestedParagraphsEditedTranslationTest extends LingotekTestBase
     $this->clickLink('Edit');
 
     $edit = [];
-    $edit['field_paragraph_container[0][subform][field_paragraphs_demo][0][subform][field_text_demo][0][value]'] = 'Dogs are very cool for the first time';
-    $edit['field_paragraph_container[0][subform][field_paragraphs_demo][1][subform][field_text_demo][0][value]'] = 'Dogs are very cool for the second time';
+    $edit['field_paragraph_container[0][subform][field_paragraphs_demo][0][subform][field_text_demo][0][value]'] = 'Cats are very cool for the first time';
+    $edit['field_paragraph_container[0][subform][field_paragraphs_demo][1][subform][field_text_demo][0][value]'] = 'Cats are very cool for the second time';
 
     $this->saveAndKeepPublishedNodeForm($edit, 1, FALSE);
 
     $this->assertText('Paragraphed nested content Llamas are cool has been updated.');
+    $this->assertText('Cats are very cool for the first time');
+    $this->assertText('Cats are very cool for the second time');
     $this->assertText('Dogs are very cool for the first time');
     $this->assertText('Dogs are very cool for the second time');
 
@@ -216,6 +216,14 @@ class LingotekNodeNestedParagraphsEditedTranslationTest extends LingotekTestBase
       'status' => TRUE,
     ]);
     $node->save();
+  }
+
+  protected function setParagraphFieldsTranslatability(): void {
+    $edit = [];
+    $edit['settings[node][paragraphed_nested_content][fields][field_paragraph_container]'] = 1;
+    $edit['settings[paragraph][paragraph_container][fields][field_paragraphs_demo]'] = 1;
+    $this->drupalPostForm('/admin/config/regional/content-language', $edit, 'Save configuration');
+    $this->assertSession()->responseContains('Settings successfully updated.');
   }
 
 }
