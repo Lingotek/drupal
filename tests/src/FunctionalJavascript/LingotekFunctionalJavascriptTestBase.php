@@ -49,6 +49,75 @@ abstract class LingotekFunctionalJavascriptTestBase extends WebDriverTestBase {
   }
 
   /**
+   * Create a new text field.
+   *
+   * @param string $name
+   *   The name of the new field (all lowercase).
+   * @param string $type_name
+   *   The bundle that this field will be added to.
+   * @param string $entity_type_id
+   *   The entity type that this field will be added to. Defaults to 'node'.
+   * @param array $storage_settings
+   *   A list of field storage settings that will be added to the defaults.
+   * @param array $field_settings
+   *   A list of instance settings that will be added to the instance defaults.
+   * @param array $widget_settings
+   *   A list of widget settings that will be added to the widget defaults.
+   *
+   * @return \Drupal\Core\Entity\EntityInterface
+   *   The field config.
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
+   */
+  public function createTextField($name, $type_name, $entity_type_id = 'node', array $storage_settings = [], array $field_settings = [], array $widget_settings = []) {
+    $fieldStorage = \Drupal::entityTypeManager()->getStorage('field_storage_config')->create([
+      'field_name' => $name,
+      'entity_type' => $entity_type_id,
+      'type' => 'text',
+      'settings' => $storage_settings,
+      'cardinality' => !empty($storage_settings['cardinality']) ? $storage_settings['cardinality'] : 1,
+    ]);
+    $fieldStorage->save();
+    $field_config = \Drupal::entityTypeManager()->getStorage('field_config')->create([
+      'field_name' => $name,
+      'label' => $name,
+      'entity_type' => $entity_type_id,
+      'bundle' => $type_name,
+      'required' => !empty($field_settings['required']),
+      'settings' => $field_settings,
+    ]);
+    $field_config->save();
+
+    $entity_form_display = EntityFormDisplay::load($entity_type_id . '.' . $type_name . '.' . 'default');
+    if (!$entity_form_display) {
+      $entity_form_display = EntityFormDisplay::create([
+        'targetEntityType' => $entity_type_id,
+        'bundle' => $type_name,
+        'mode' => 'default',
+        'status' => TRUE,
+      ]);
+    }
+    $entity_form_display->setComponent($name, [
+      'type' => 'text_textfield',
+      'settings' => $widget_settings,
+    ])
+      ->save();
+    $display = EntityViewDisplay::load($entity_type_id . '.' . $type_name . '.' . 'default');
+    if (!$display) {
+      $display = EntityViewDisplay::create([
+        'targetEntityType' => $entity_type_id,
+        'bundle' => $type_name,
+        'mode' => 'default',
+        'status' => TRUE,
+      ]);
+    }
+    $display->setComponent($name)
+      ->save();
+
+    return $field_config;
+  }
+
+  /**
    * Create a new image field.
    *
    * @param string $name
