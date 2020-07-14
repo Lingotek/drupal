@@ -301,6 +301,7 @@ class LingotekConfigurationService implements LingotekConfigurationServiceInterf
     $default_enabled = [
       'string',
       'image',
+      'text',
       'text_with_summary',
       'text_long',
       'path',
