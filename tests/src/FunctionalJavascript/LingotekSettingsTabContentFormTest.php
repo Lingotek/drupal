@@ -38,6 +38,7 @@ class LingotekSettingsTabContentFormTest extends LingotekFunctionalJavascriptTes
 
     $this->createImageField('field_image', 'article');
     $this->createImageField('user_picture', 'user', 'user');
+    $this->createTextField('field_text', 'article');
 
     // Enable translation for the current entity type and ensure the change is
     // picked up.
@@ -66,6 +67,7 @@ class LingotekSettingsTabContentFormTest extends LingotekFunctionalJavascriptTes
     $this->assertNoFieldChecked('edit-node-article-enabled');
     $this->assertNoFieldChecked('edit-node-article-fields-title');
     $this->assertNoFieldChecked('edit-node-article-fields-body');
+    $this->assertNoFieldChecked('edit-node-article-fields-field-text');
     $this->assertNoFieldChecked('edit-node-article-fields-field-image');
     $this->assertNoFieldChecked('edit-node-article-fields-field-imageproperties-file');
     $this->assertNoFieldChecked('edit-node-article-fields-field-imageproperties-alt');
@@ -79,6 +81,7 @@ class LingotekSettingsTabContentFormTest extends LingotekFunctionalJavascriptTes
     $this->assertFieldChecked('edit-node-article-enabled');
     $this->assertFieldChecked('edit-node-article-fields-title');
     $this->assertFieldChecked('edit-node-article-fields-body');
+    $this->assertFieldChecked('edit-node-article-fields-field-text');
     $this->assertFieldChecked('edit-node-article-fields-field-image');
     $this->assertNoFieldChecked('edit-node-article-fields-field-imageproperties-file');
     $this->assertFieldChecked('edit-node-article-fields-field-imageproperties-alt');
@@ -92,6 +95,7 @@ class LingotekSettingsTabContentFormTest extends LingotekFunctionalJavascriptTes
     $this->assertFieldChecked('edit-node-article-enabled');
     $this->assertFieldChecked('edit-node-article-fields-title');
     $this->assertFieldChecked('edit-node-article-fields-body');
+    $this->assertFieldChecked('edit-node-article-fields-field-text');
     $this->assertFieldChecked('edit-node-article-fields-field-image');
     $this->assertNoFieldChecked('edit-node-article-fields-field-imageproperties-file');
     $this->assertFieldChecked('edit-node-article-fields-field-imageproperties-alt');
@@ -124,6 +128,7 @@ class LingotekSettingsTabContentFormTest extends LingotekFunctionalJavascriptTes
     $this->assertFieldChecked('edit-node-article-fields-title');
     $this->assertNoFieldChecked('edit-node-article-fields-body');
     $this->assertFieldChecked('edit-node-article-fields-uid');
+    $this->assertNoFieldChecked('edit-node-article-fields-field-text');
     $this->assertFieldChecked('edit-node-article-fields-field-image');
     $this->assertNoFieldChecked('edit-node-article-fields-field-imageproperties-file');
     $this->assertFieldChecked('edit-node-article-fields-field-imageproperties-alt');
@@ -143,9 +148,10 @@ class LingotekSettingsTabContentFormTest extends LingotekFunctionalJavascriptTes
 
     $this->assertFieldChecked('edit-node-article-enabled');
     $this->assertFieldChecked('edit-node-article-fields-title');
-    // We marked body and kept the others as they were.
+    // We marked body and field_text and kept the others as they were.
     $this->assertFieldChecked('edit-node-article-fields-body');
     $this->assertFieldChecked('edit-node-article-fields-uid');
+    $this->assertFieldChecked('edit-node-article-fields-field-text');
     $this->assertFieldChecked('edit-node-article-fields-field-image');
     $this->assertNoFieldChecked('edit-node-article-fields-field-imageproperties-file');
     $this->assertFieldChecked('edit-node-article-fields-field-imageproperties-alt');
