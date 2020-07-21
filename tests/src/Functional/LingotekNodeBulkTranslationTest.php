@@ -123,6 +123,73 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
   }
 
   /**
+   * Tests that a node cannot be translated if not configured, and will provide user-friendly messages.
+   */
+  public function testNodeTranslationMessageWhenBundleNotConfiguredWithLinks() {
+    $assert_session = $this->assertSession();
+
+    // Create Article node types.
+    $this->drupalCreateContentType(['type' => 'page', 'name' => 'Page']);
+    // Enable translation for the current entity type and ensure the change is
+    // picked up.
+    ContentLanguageSettings::loadByEntityTypeBundle('node', 'page')
+      ->setLanguageAlterable(TRUE)
+      ->save();
+    \Drupal::service('content_translation.manager')
+      ->setEnabled('node', 'page', TRUE);
+
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Pages are cool';
+    $edit['body[0][value]'] = 'Pages are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $this->drupalPostForm('node/add/page', $edit, t('Save'));
+
+    $this->goToContentBulkManagementForm();
+
+    $assert_session->pageTextContains('Not enabled');
+    $this->clickLink('EN');
+    $assert_session->pageTextContains('Cannot upload Page Pages are cool. That Content type is not enabled for Lingotek translation.');
+  }
+
+  /**
+   * Tests that a node cannot be translated if not configured, and will provide user-friendly messages.
+   */
+  public function testNodeTranslationMessageWhenBundleNotConfiguredWithActions() {
+    $assert_session = $this->assertSession();
+
+    // Create Article node types.
+    $this->drupalCreateContentType(['type' => 'page', 'name' => 'Page']);
+    // Enable translation for the current entity type and ensure the change is
+    // picked up.
+    ContentLanguageSettings::loadByEntityTypeBundle('node', 'page')
+      ->setLanguageAlterable(TRUE)
+      ->save();
+    \Drupal::service('content_translation.manager')
+      ->setEnabled('node', 'page', TRUE);
+
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Pages are cool';
+    $edit['body[0][value]'] = 'Pages are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $this->drupalPostForm('node/add/page', $edit, t('Save'));
+
+    $this->goToContentBulkManagementForm();
+
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    $this->assertIdentical(NULL, \Drupal::state()
+      ->get('lingotek.uploaded_locale'));
+    $assert_session->pageTextContains('Cannot upload Page Pages are cool. That Content type is not enabled for Lingotek translation.');
+  }
+
+  /**
    * Tests that a node can be translated using the actions on the management page.
    */
   public function testNodeTranslationUsingActions() {

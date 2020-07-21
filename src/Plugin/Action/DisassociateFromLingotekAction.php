@@ -13,7 +13,8 @@ use Drupal\lingotek\Exception\LingotekApiException;
  *   category = "Lingotek",
  *   deriver = "Drupal\lingotek\Plugin\Action\Derivative\ContentEntityLingotekActionDeriver",
  * )
- * @deprecated Use CancelLingotekAction instead.
+ * @deprecated in lingotek:3.1.0 and is removed from lingotek:4.0.0.
+ * @see \Drupal\lingotek\Plugin\Action\CancelLingotekAction
  */
 class DisassociateFromLingotekAction extends LingotekContentEntityActionBase {
 

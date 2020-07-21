@@ -40,6 +40,13 @@ class LingotekNodeBulkViewsTranslationTest extends LingotekNodeBulkTranslationTe
   /**
    * {@inheritdoc}
    */
+  public function testNodeTranslationMessageWhenBundleNotConfiguredWithLinks() {
+    $this->markTestSkipped('This doesn\'t apply if we replace the management pages with views.');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   protected function assertSelectionIsKept(string $key) {
     // No valid selection, so permission denied message.
     $this->assertText('You are not authorized to access this page.');

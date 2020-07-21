@@ -19,13 +19,28 @@ function lingotek_operation_content_upload($entity_type_id, $entity_id, &$contex
     $context['message'] = t('Uploading @entity_type @entity_id', ['@entity_type' => $entity_type_id, '@entity_id' => $entity_id]);
   }
 
-  /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
-  $translation_service = \Drupal::service('lingotek.content_translation');
-
   /** @var \Drupal\Core\Entity\EntityStorageInterface $entity_storage */
   $entity_storage = \Drupal::entityTypeManager()->getStorage($entity_type_id);
   // Prepare the entity's translatable content for upload.
   $entity = $entity_storage->load($entity_id);
+
+  $entityTypeBundleInfo = \Drupal::service('entity_type.bundle.info');
+  $bundleInfos = $entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
+  if (!$entity->getEntityType()->isTranslatable() || !$bundleInfos[$entity->bundle()]['translatable']) {
+    \Drupal::messenger()->addWarning(t('Cannot upload @type %label. That @bundle_label is not enabled for translation.',
+      ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label(), '@bundle_label' => $entity->getEntityType()->getBundleLabel()]));
+    return;
+  }
+  /** @var \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_configuration */
+  $lingotek_configuration = \Drupal::service('lingotek.configuration');
+  if (!$lingotek_configuration->isEnabled($entity->getEntityTypeId(), $entity->bundle())) {
+    \Drupal::messenger()->addWarning(t('Cannot upload @type %label. That @bundle_label is not enabled for Lingotek translation.',
+      ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label(), '@bundle_label' => $entity->getEntityType()->getBundleLabel()]));
+    return;
+  }
+
+  /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+  $translation_service = \Drupal::service('lingotek.content_translation');
 
   // Use upload with new entities.
   if (!$translation_service->getDocumentId($entity)) {
@@ -105,13 +120,28 @@ function lingotek_operation_content_download($entity_type_id, $entity_id, $local
   if ($context) {
     $context['message'] = t('Downloading translation "@locale" for @entity_type #@entity_id', ['@entity_type' => $entity_type_id, '@entity_id' => $entity_id, '@locale' => $locale]);
   }
-  /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
-  $translation_service = \Drupal::service('lingotek.content_translation');
-
   /** @var \Drupal\Core\Entity\EntityStorageInterface $entity_storage */
   $entity_storage = \Drupal::entityTypeManager()->getStorage($entity_type_id);
   // Prepare the entity's translatable content for upload.
   $entity = $entity_storage->load($entity_id);
+
+  $entityTypeBundleInfo = \Drupal::service('entity_type.bundle.info');
+  $bundleInfos = $entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
+  if (!$entity->getEntityType()->isTranslatable() || !$bundleInfos[$entity->bundle()]['translatable']) {
+    \Drupal::messenger()->addWarning(t('Cannot download @type %label. That @bundle_label is not enabled for translation.',
+      ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label(), '@bundle_label' => $entity->getEntityType()->getBundleLabel()]));
+    return;
+  }
+  /** @var \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_configuration */
+  $lingotek_configuration = \Drupal::service('lingotek.configuration');
+  if (!$lingotek_configuration->isEnabled($entity->getEntityTypeId(), $entity->bundle())) {
+    \Drupal::messenger()->addWarning(t('Cannot download @type %label. That @bundle_label is not enabled for Lingotek translation.',
+      ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label(), '@bundle_label' => $entity->getEntityType()->getBundleLabel()]));
+    return;
+  }
+
+  /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+  $translation_service = \Drupal::service('lingotek.content_translation');
 
   try {
     if ($translation_service->downloadDocument($entity, $locale)) {

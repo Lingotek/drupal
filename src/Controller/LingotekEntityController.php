@@ -2,19 +2,92 @@
 
 namespace Drupal\lingotek\Controller;
 
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
+use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\lingotek\Exception\LingotekApiException;
 use Drupal\lingotek\Exception\LingotekContentEntityStorageException;
 use Drupal\lingotek\Exception\LingotekDocumentArchivedException;
 use Drupal\lingotek\Exception\LingotekDocumentLockedException;
 use Drupal\lingotek\Exception\LingotekPaymentRequiredException;
+use Drupal\lingotek\LanguageLocaleMapperInterface;
 use Drupal\lingotek\Lingotek;
 use Drupal\Core\Url;
+use Drupal\lingotek\LingotekConfigurationServiceInterface;
+use Drupal\lingotek\LingotekInterface;
+use Psr\Log\LoggerInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\Request;
 
 class LingotekEntityController extends LingotekControllerBase {
 
   protected $translations_link;
+
+  /**
+   * The Lingotek configuration service.
+   *
+   * @var \Drupal\lingotek\LingotekConfigurationServiceInterface
+   */
+  protected $lingotekConfiguration;
+
+  /**
+   * The entity type bundle info.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeBundleInfoInterface
+   */
+  protected $entityTypeBundleInfo;
+
+  /**
+   * Constructs a LingotekEntityController object.
+   *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The Request instance.
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   The factory for configuration objects.
+   * @param \Drupal\lingotek\LingotekInterface $lingotek
+   *   The lingotek service.
+   * @param \Drupal\lingotek\LanguageLocaleMapperInterface $language_locale_mapper
+   *   The language-locale mapper.
+   * @param \Drupal\Core\Form\FormBuilderInterface $form_builder
+   *   The form builder.
+   * @param \Psr\Log\LoggerInterface $logger
+   *   A logger instance.
+   * @param \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_configuration
+   *   The Lingotek configuration service.
+   * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entity_type_bundle_info
+   *   The entity type bundle info.
+   */
+  public function __construct(Request $request, ConfigFactoryInterface $config_factory, LingotekInterface $lingotek, LanguageLocaleMapperInterface $language_locale_mapper, FormBuilderInterface $form_builder, LoggerInterface $logger, LingotekConfigurationServiceInterface $lingotek_configuration = NULL, EntityTypeBundleInfoInterface $entity_type_bundle_info = NULL) {
+    parent::__construct($request, $config_factory, $lingotek, $language_locale_mapper, $form_builder, $logger);
+    if (!$lingotek_configuration) {
+      @trigger_error('The lingotek.configuration service must be passed to LingotekEntityController::__construct, it is included in lingotek:3.2.0 and required for lingotek:4.0.0.', E_USER_DEPRECATED);
+      $lingotek_configuration = \Drupal::service('lingotek.configuration');
+    }
+    $this->lingotekConfiguration = $lingotek_configuration;
+    if (!$entity_type_bundle_info) {
+      @trigger_error('The entity_type.bundle.info service must be passed to LingotekEntityController::__construct, it is included in lingotek:3.2.0 and required for lingotek:4.0.0.', E_USER_DEPRECATED);
+      $entity_type_bundle_info = \Drupal::service('entity_type.bundle.info');
+    }
+    $this->entityTypeBundleInfo = $entity_type_bundle_info;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('request_stack')->getCurrentRequest(),
+      $container->get('config.factory'),
+      $container->get('lingotek'),
+      $container->get('lingotek.language_locale_mapper'),
+      $container->get('form_builder'),
+      $container->get('logger.channel.lingotek'),
+      $container->get('lingotek.configuration'),
+      $container->get('entity_type.bundle.info')
+    );
+  }
 
   public function checkUpload($doc_id) {
     /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
@@ -23,6 +96,18 @@ class LingotekEntityController extends LingotekControllerBase {
     $entity = $translation_service->loadByDocumentId($doc_id);
     if (!$entity) {
       // TODO: log warning
+      return $this->translationsPageRedirect($entity);
+    }
+    $bundleInfos = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
+    if (!$entity->getEntityType()->isTranslatable() || !$bundleInfos[$entity->bundle()]['translatable']) {
+      \Drupal::messenger()->addWarning(t('Cannot check upload for @type %label. That @bundle_label is not enabled for translation.',
+        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label(), '@bundle_label' => $entity->getEntityType()->getBundleLabel()]));
+      return $this->translationsPageRedirect($entity);
+    }
+    if (!$this->lingotekConfiguration->isEnabled($entity->getEntityTypeId(), $entity->bundle())) {
+      $this->messenger()->addWarning(t('Cannot check upload for @type %label. That @bundle_label is not enabled for Lingotek translation.',
+        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label(), '@bundle_label' => $entity->getEntityType()->getBundleLabel()]
+      ));
       return $this->translationsPageRedirect($entity);
     }
     try {
@@ -47,6 +132,18 @@ class LingotekEntityController extends LingotekControllerBase {
     $entity = $translation_service->loadByDocumentId($doc_id);
     if (!$entity) {
       // TODO: log warning
+      return $this->translationsPageRedirect($entity);
+    }
+    $bundleInfos = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
+    if (!$entity->getEntityType()->isTranslatable() || !$bundleInfos[$entity->bundle()]['translatable']) {
+      \Drupal::messenger()->addWarning(t('Cannot check target for @type %label. That @bundle_label is not enabled for translation.',
+        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label(), '@bundle_label' => $entity->getEntityType()->getBundleLabel()]));
+      return $this->translationsPageRedirect($entity);
+    }
+    if (!$this->lingotekConfiguration->isEnabled($entity->getEntityTypeId(), $entity->bundle())) {
+      $this->messenger()->addWarning(t('Cannot check target for @type %label. That @bundle_label is not enabled for Lingotek translation.',
+        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label(), '@bundle_label' => $entity->getEntityType()->getBundleLabel()]
+      ));
       return $this->translationsPageRedirect($entity);
     }
 
@@ -74,6 +171,19 @@ class LingotekEntityController extends LingotekControllerBase {
       // TODO: log warning
       return $this->translationsPageRedirect($entity);
     }
+    $bundleInfos = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
+    if (!$entity->getEntityType()->isTranslatable() || !$bundleInfos[$entity->bundle()]['translatable']) {
+      \Drupal::messenger()->addWarning(t('Cannot request target for @type %label. That @bundle_label is not enabled for translation.',
+        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label(), '@bundle_label' => $entity->getEntityType()->getBundleLabel()]));
+      return $this->translationsPageRedirect($entity);
+    }
+    if (!$this->lingotekConfiguration->isEnabled($entity->getEntityTypeId(), $entity->bundle())) {
+      $this->messenger()->addWarning(t('Cannot request target for @type %label. That @bundle_label is not enabled for Lingotek translation.',
+        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label(), '@bundle_label' => $entity->getEntityType()->getBundleLabel()]
+      ));
+      return $this->translationsPageRedirect($entity);
+    }
+
     try {
       if ($translation_service->addTarget($entity, $locale)) {
         $this->messenger()->addStatus(t("Locale '@locale' was added as a translation target for @entity_type %title.", ['@locale' => $locale, '@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
@@ -101,9 +211,25 @@ class LingotekEntityController extends LingotekControllerBase {
   }
 
   public function upload($entity_type, $entity_id) {
+    $entity = $this->entityTypeManager()->getStorage($entity_type)->load($entity_id);
+    if (!$entity) {
+      // TODO: log warning
+      return $this->translationsPageRedirect($entity);
+    }
+    $bundleInfos = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
+    if (!$entity->getEntityType()->isTranslatable() || !$bundleInfos[$entity->bundle()]['translatable']) {
+      \Drupal::messenger()->addWarning(t('Cannot upload @type %label. That @bundle_label is not enabled for translation.',
+        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label(), '@bundle_label' => $entity->getEntityType()->getBundleLabel()]));
+      return $this->translationsPageRedirect($entity);
+    }
+    if (!$this->lingotekConfiguration->isEnabled($entity->getEntityTypeId(), $entity->bundle())) {
+      $this->messenger()->addWarning(t('Cannot upload @type %label. That @bundle_label is not enabled for Lingotek translation.',
+        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label(), '@bundle_label' => $entity->getEntityType()->getBundleLabel()]
+      ));
+      return $this->translationsPageRedirect($entity);
+    }
     /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
     $translation_service = \Drupal::service('lingotek.content_translation');
-    $entity = $this->entityTypeManager()->getStorage($entity_type)->load($entity_id);
     try {
       if ($translation_service->uploadDocument($entity)) {
         $this->messenger()->addStatus(t('@entity_type %title has been uploaded.', ['@entity_type' => ucfirst($entity->getEntityTypeId()), '%title' => $entity->label()]));
@@ -125,6 +251,22 @@ class LingotekEntityController extends LingotekControllerBase {
     /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
     $translation_service = \Drupal::service('lingotek.content_translation');
     $entity = $translation_service->loadByDocumentId($doc_id);
+    if (!$entity) {
+      // TODO: log warning
+      return $this->translationsPageRedirect($entity);
+    }
+    $bundleInfos = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
+    if (!$entity->getEntityType()->isTranslatable() || !$bundleInfos[$entity->bundle()]['translatable']) {
+      \Drupal::messenger()->addWarning(t('Cannot upload @type %label. That @bundle_label is not enabled for translation.',
+        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label(), '@bundle_label' => $entity->getEntityType()->getBundleLabel()]));
+      return $this->translationsPageRedirect($entity);
+    }
+    if (!$this->lingotekConfiguration->isEnabled($entity->getEntityTypeId(), $entity->bundle())) {
+      $this->messenger()->addWarning(t('Cannot upload @type %label. That @bundle_label is not enabled for Lingotek translation.',
+        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label(), '@bundle_label' => $entity->getEntityType()->getBundleLabel()]
+      ));
+      return $this->translationsPageRedirect($entity);
+    }
     try {
       if ($translation_service->updateDocument($entity)) {
         $this->messenger()->addStatus(t('@entity_type %title has been updated.', ['@entity_type' => ucfirst($entity->getEntityTypeId()), '%title' => $entity->label()]));
@@ -158,6 +300,18 @@ class LingotekEntityController extends LingotekControllerBase {
     $entity = $translation_service->loadByDocumentId($doc_id);
     if (!$entity) {
       // TODO: log warning
+      return $this->translationsPageRedirect($entity);
+    }
+    $bundleInfos = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
+    if (!$entity->getEntityType()->isTranslatable() || !$bundleInfos[$entity->bundle()]['translatable']) {
+      \Drupal::messenger()->addWarning(t('Cannot download @type %label. That @bundle_label is not enabled for translation.',
+        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label(), '@bundle_label' => $entity->getEntityType()->getBundleLabel()]));
+      return $this->translationsPageRedirect($entity);
+    }
+    if (!$this->lingotekConfiguration->isEnabled($entity->getEntityTypeId(), $entity->bundle())) {
+      $this->messenger()->addWarning(t('Cannot download @type %label. That @bundle_label is not enabled for Lingotek translation.',
+        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label(), '@bundle_label' => $entity->getEntityType()->getBundleLabel()]
+      ));
       return $this->translationsPageRedirect($entity);
     }
 

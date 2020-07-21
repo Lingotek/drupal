@@ -2,6 +2,7 @@
 
 namespace Drupal\lingotek\Plugin\Action;
 
+use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Action\Plugin\Action\EntityActionBase;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Session\AccountInterface;
@@ -50,11 +51,7 @@ abstract class LingotekContentEntityActionBase extends EntityActionBase {
    * {@inheritdoc}
    */
   public function access($object, AccountInterface $account = NULL, $return_as_object = FALSE) {
-    return TRUE;
-    /** @var \Drupal\node\NodeInterface $object */
-    $result = $object->access('update', $account, TRUE)
-      ->andIf($object->getOwner()->access('edit', $account, TRUE));
-
+    $result = AccessResult::allowed();
     return $return_as_object ? $result : $result->isAllowed();
   }
 

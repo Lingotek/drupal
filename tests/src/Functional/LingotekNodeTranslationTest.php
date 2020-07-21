@@ -173,6 +173,39 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
   }
 
   /**
+   * Tests that a node cannot be translated if not configured, and will provide user-friendly messages.
+   */
+  public function testNodeTranslationMessageWhenBundleNotConfigured() {
+    $assert_session = $this->assertSession();
+
+    // Create Article node types.
+    $this->drupalCreateContentType(['type' => 'page', 'name' => 'Page']);
+    // Enable translation for the current entity type and ensure the change is
+    // picked up.
+    ContentLanguageSettings::loadByEntityTypeBundle('node', 'page')
+      ->setLanguageAlterable(TRUE)
+      ->save();
+    \Drupal::service('content_translation.manager')
+      ->setEnabled('node', 'page', TRUE);
+
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Pages are cool';
+    $edit['body[0][value]'] = 'Pages are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $this->drupalPostForm('node/add/page', $edit, t('Save'));
+
+    // Check that the translate tab is in the node.
+    $this->drupalGet('node/1');
+    $this->clickLink('Translate');
+
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $assert_session->pageTextContains('Cannot upload Page Pages are cool. That Content type is not enabled for Lingotek translation.');
+    $assert_session->pageTextContains('Uploaded 0 documents to Lingotek.');
+  }
+
+  /**
    * Tests that a node can be translated.
    */
   public function testNodeWithManualTranslation() {
