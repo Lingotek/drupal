@@ -1336,7 +1336,9 @@ class LingotekConfigManagementForm extends FormBase {
           else {
             $this->translationService->setSourceStatus($entity, Lingotek::STATUS_CURRENT);
           }
-          $this->translationService->checkTargetStatuses($entity);
+          if ($this->translationService->getDocumentId($entity)) {
+            $this->translationService->checkTargetStatuses($entity);
+          }
         }
       }
       else {
@@ -1347,7 +1349,9 @@ class LingotekConfigManagementForm extends FormBase {
           else {
             $this->translationService->setConfigSourceStatus($mapper, Lingotek::STATUS_CURRENT);
           }
-          $this->translationService->checkConfigTargetStatuses($mapper->getPluginId());
+          if ($this->translationService->getConfigDocumentId($mapper)) {
+            $this->translationService->checkConfigTargetStatuses($mapper->getPluginId());
+          }
         }
       }
     }

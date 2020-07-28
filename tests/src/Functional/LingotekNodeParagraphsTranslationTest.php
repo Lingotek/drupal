@@ -499,6 +499,33 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
   }
 
   /**
+   * Tests that when we entity_reference_revisions perform a delete on a paragraph
+   * for syncing with its parent, the lingotek_entity_translation_delete() hook
+   * doesn't check statuses for a document without document id.
+   */
+  public function testParagraphIsNotCheckedIfTranslationIsRemoved() {
+    ConfigurableLanguage::createFromLangcode('de')->setThirdPartySetting('lingotek', 'locale', 'de_DE')->save();
+
+    $this->testNodeWithParagraphsTranslation();
+
+    /** @var \Drupal\paragraphs\ParagraphInterface $paragraph */
+    $node = Node::load(1);
+    $node->save();
+
+    $paragraph = Paragraph::load(1);
+    $paragraph->addTranslation('de');
+    $paragraph->save();
+
+    $this->drupalGet('node/1/edit');
+    $this->drupalPostForm(NULL, [], 'Remove');
+    $this->drupalPostForm(NULL, [], 'Confirm removal');
+    $this->drupalPostForm(NULL, [], 'Save');
+
+    // The content is edited successfully.
+    $this->assertText('Llamas are cool');
+  }
+
+  /**
    * Paragraphs don't have a title, so we should disallow filtering by it.
    */
   public function testParagraphIsRemovedFromTranslationIfSourceIsRemoved() {
