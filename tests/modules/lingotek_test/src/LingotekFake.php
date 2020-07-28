@@ -466,6 +466,9 @@ class LingotekFake implements LingotekInterface {
   }
 
   public function getDocumentTranslationStatuses($doc_id) {
+    if (!$doc_id) {
+      throw new LingotekApiException('Error requesting statuses without document id.');
+    }
     if (\Drupal::state()->get('lingotek.must_error_in_check_target_status', FALSE)) {
       throw new LingotekApiException('Error was forced.');
     }
