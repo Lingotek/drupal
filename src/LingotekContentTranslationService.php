@@ -627,6 +627,23 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
           }
         }
       }
+      elseif ($field_type === 'tablefield') {
+        foreach ($entity->{$k} as $index => $field_item) {
+          $tableValue = $field_item->value;
+          $embedded_data = [];
+          foreach ($tableValue as $row_index => $row) {
+            if ($row_index === 'caption') {
+              $embedded_data[$index]['caption'] = $row;
+            }
+            else {
+              foreach ($row as $col_index => $cell) {
+                $embedded_data[$index]['row:' . $row_index]['col:' . $col_index] = $cell;
+              }
+            }
+          }
+          $data[$k] = $embedded_data;
+        }
+      }
       elseif ($field_type === 'metatag') {
         foreach ($entity->{$k} as $field_item) {
           $metatag_serialized = $field_item->get('value')->getValue();
@@ -1391,6 +1408,24 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
             // as this will override the source and may have unintended consequences.
             if ($paragraphTranslatable) {
               $translation->{$name} = $fieldValues;
+            }
+          }
+          elseif ($field_type === 'tablefield') {
+            foreach ($field_data as $delta => $field_item_data) {
+              $embedded_data = [];
+              $caption = '';
+              $table = [];
+              foreach ($field_item_data as $row_index => $row) {
+                if ($row_index === 'caption') {
+                  $caption = $row;
+                }
+                else {
+                  foreach ($row as $col_index => $cell) {
+                    $table[intval(str_replace('row:', '', $row_index))][intval(str_replace('col:', '', $col_index))] = $cell;
+                  }
+                }
+              }
+              $translation->{$name}->set($delta, ['caption' => $caption, 'value' => $table]);
             }
           }
           // If there is a path item, we need to handle it separately. See
