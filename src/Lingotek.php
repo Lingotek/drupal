@@ -89,7 +89,7 @@ class Lingotek implements LingotekInterface {
     $this->configFactory = $config_factory;
     $this->lingotekFilterManager = $lingotek_filter_manager;
     if (!$lingotek_configuration) {
-      @trigger_error('The language_manager service must be passed to Lingotek::__construct, it is included in lingotek:3.1.0 and required for lingotek:4.0.0.', E_USER_DEPRECATED);
+      @trigger_error('The lingotek.configuration service must be passed to Lingotek::__construct, it is included in lingotek:3.1.0 and required for lingotek:4.0.0.', E_USER_DEPRECATED);
       $lingotek_configuration = \Drupal::service('lingotek.configuration');
     }
     $this->lingotekConfiguration = $lingotek_configuration;
