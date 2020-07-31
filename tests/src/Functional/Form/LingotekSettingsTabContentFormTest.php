@@ -782,7 +782,7 @@ class LingotekSettingsTabContentFormTest extends LingotekTestBase {
 
     $this->saveLingotekContentTranslationSettingsForNodeTypes();
 
-    foreach (range(1, 50) as $i) {
+    foreach (range(1, 150) as $i) {
       $this->drupalCreateContentType([
         'type' => 'content_type_' . $i,
         'name' => 'Content Type ' . $i,

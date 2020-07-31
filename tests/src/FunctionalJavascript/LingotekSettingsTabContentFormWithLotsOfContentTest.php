@@ -36,7 +36,7 @@ class LingotekSettingsTabContentFormWithLotsOfContentTest extends LingotekFuncti
       'name' => 'Article',
     ]);
 
-    foreach (range(1, 50) as $i) {
+    foreach (range(1, 150) as $i) {
       $this->drupalCreateContentType([
         'type' => 'content_type_' . $i,
         'name' => 'Content Type ' . $i,
@@ -54,7 +54,7 @@ class LingotekSettingsTabContentFormWithLotsOfContentTest extends LingotekFuncti
     \Drupal::service('content_translation.manager')
       ->setEnabled('node', 'article', TRUE);
 
-    foreach (range(1, 50) as $i) {
+    foreach (range(1, 150) as $i) {
       ContentLanguageSettings::loadByEntityTypeBundle('node', 'content_type_' . $i)
         ->setLanguageAlterable(TRUE)
         ->save();

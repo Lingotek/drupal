@@ -25,7 +25,7 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
    */
   protected $countTranslatableBundles;
 
-  const CONTENT_SINGLE_FORM_THRESHOLD = 50;
+  const CONTENT_SINGLE_FORM_THRESHOLD = 150;
 
   /**
    * {@inheritdoc}
