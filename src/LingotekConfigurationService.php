@@ -15,7 +15,7 @@ use Drupal\lingotek\Entity\LingotekProfile;
 /**
  * Service for managing lingotek configuration.
  */
-class LingotekConfigurationService implements LingotekConfigurationServiceInterface {
+class LingotekConfigurationService implements LingotekConfigurationServiceInterface, LingotekMultipleContentConfigurationServiceInterface {
 
   /**
    * {@inheritDoc}
@@ -51,6 +51,44 @@ class LingotekConfigurationService implements LingotekConfigurationServiceInterf
       $result = !!$config->get($key);
     }
     return $result;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public function setContentTranslationSettings(array $contentData) {
+    $config = \Drupal::configFactory()->getEditable('lingotek.settings');
+
+    foreach ($contentData as $entity_type_id => $entityTypeData) {
+      foreach ($entityTypeData as $bundle_id => $bundleData) {
+        if (isset($bundleData['enabled'])) {
+          $key = 'translate.entity.' . $entity_type_id . '.' . $bundle_id . '.enabled';
+          $config->set($key, $bundleData['enabled']);
+        }
+        if (isset($bundleData['fields'])) {
+          foreach ($bundleData['fields'] as $field_id => $fieldValue) {
+            if (strpos($field_id, ':properties') === FALSE) {
+              $key = 'translate.entity.' . $entity_type_id . '.' . $bundle_id . '.field.' . $field_id;
+              if ($fieldValue && !$config->get($key)) {
+                $config->set($key, $fieldValue);
+              }
+              elseif (!$fieldValue && $config->get($key)) {
+                $config->clear($key);
+              }
+            }
+            else {
+              // If it's properties, we set whatever we got.
+              $key = 'translate.entity.' . $entity_type_id . '.' . $bundle_id . '.field.' . $field_id;
+              $config->set($key, $fieldValue);
+            }
+          }
+        }
+        if (isset($bundleData['profile'])) {
+          $config->set('translate.entity.' . $entity_type_id . '.' . $bundle_id . '.profile', $bundleData['profile']);
+        }
+      }
+    }
+    $config->save();
   }
 
   /**

@@ -129,6 +129,132 @@ class LingotekSettingsTabContentFormTest extends LingotekTestBase {
     $this->assertEqual('automatic', $config_data['translate']['entity']['node']['article']['profile']);
   }
 
+  /**
+   * Test that we can configure entities at the subfield level.
+   */
+  public function testDisableTranslatableEntity() {
+    $this->testConfigureTranslatableEntityWithFieldsAndSubfields();
+
+    // Uncheck the image alt property and enable title.
+    $edit = [
+      'node[article][enabled]' => 1,
+      'node[article][profiles]' => 'automatic',
+      'node[article][fields][title]' => 1,
+      'node[article][fields][body]' => 1,
+      'node[article][fields][field_image]' => 1,
+      'node[article][fields][field_image:properties][alt]' => FALSE,
+      'node[article][fields][field_image:properties][title]' => 'title',
+      'user[user][enabled]' => 1,
+      'user[user][fields][user_picture]' => 1,
+      'user[user][fields][user_picture:properties][alt]' => FALSE,
+      'user[user][fields][user_picture:properties][title]' => 'title',
+    ];
+    $this->drupalPostForm(NULL, $edit, 'Save', [], 'lingoteksettings-tab-content-form');
+
+    // Check that values are kept in the form.
+    $this->assertFieldChecked('edit-node-article-enabled');
+    $this->assertFieldByName('node[article][profiles]', 'automatic');
+    $this->assertFieldChecked('edit-node-article-fields-title');
+    $this->assertFieldChecked('edit-node-article-fields-body');
+    $this->assertFieldChecked('edit-node-article-fields-field-image');
+    $this->assertNoFieldChecked('edit-node-article-fields-field-imageproperties-alt');
+    $this->assertFieldChecked('edit-node-article-fields-field-imageproperties-title');
+
+    // Check that the config is correctly saved.
+    $config_data = $this->config('lingotek.settings')->getRawData();
+    $this->assertTrue($config_data['translate']['entity']['node']['article']['enabled']);
+    $this->assertTrue($config_data['translate']['entity']['node']['article']['field']['title']);
+    $this->assertTrue($config_data['translate']['entity']['node']['article']['field']['body']);
+    $this->assertTrue($config_data['translate']['entity']['node']['article']['field']['field_image']);
+    // As the schema here is sequence:ignore, there is no boolean casting.
+    $this->assertEqual($config_data['translate']['entity']['node']['article']['field']['field_image:properties']['alt'], '0');
+    $this->assertEqual($config_data['translate']['entity']['node']['article']['field']['field_image:properties']['title'], '1');
+    $this->assertFalse(array_key_exists('revision_log', $config_data['translate']['entity']['node']['article']['field']));
+    $this->assertEqual('automatic', $config_data['translate']['entity']['node']['article']['profile']);
+
+    // Uncheck a couple of fields: body and image from node.
+    $edit = [
+      'node[article][enabled]' => 1,
+      'node[article][profiles]' => 'automatic',
+      'node[article][fields][title]' => 1,
+      'node[article][fields][body]' => FALSE,
+      'node[article][fields][field_image]' => FALSE,
+      'node[article][fields][field_image:properties][alt]' => FALSE,
+      'node[article][fields][field_image:properties][title]' => 'title',
+      'user[user][enabled]' => 1,
+      'user[user][fields][user_picture]' => 1,
+      'user[user][fields][user_picture:properties][alt]' => FALSE,
+      'user[user][fields][user_picture:properties][title]' => 'title',
+    ];
+    $this->drupalPostForm(NULL, $edit, 'Save', [], 'lingoteksettings-tab-content-form');
+
+    // Check that values are kept in the form.
+    $this->assertFieldChecked('edit-node-article-enabled');
+    $this->assertFieldByName('node[article][profiles]', 'automatic');
+    $this->assertFieldChecked('edit-node-article-fields-title');
+    $this->assertNoFieldChecked('edit-node-article-fields-body');
+    $this->assertNoFieldChecked('edit-node-article-fields-field-image');
+    $this->assertNoFieldChecked('edit-node-article-fields-field-imageproperties-alt');
+    $this->assertNoFieldChecked('edit-node-article-fields-field-imageproperties-title');
+
+    // Check that the config is correctly saved.
+    $config_data = $this->config('lingotek.settings')->getRawData();
+    $this->assertTrue($config_data['translate']['entity']['node']['article']['enabled']);
+    $this->assertTrue($config_data['translate']['entity']['node']['article']['field']['title']);
+    $this->assertFalse(array_key_exists('body', $config_data['translate']['entity']['node']['article']['field']));
+    $this->assertFalse(array_key_exists('field_image', $config_data['translate']['entity']['node']['article']['field']));
+    // As the schema here is sequence:ignore, there is no boolean casting.
+    // This should probably just be deleted.
+    $this->assertFalse(array_key_exists('alt', $config_data['translate']['entity']['node']['article']['field']['field_image:properties']));
+    $this->assertEqual($config_data['translate']['entity']['node']['article']['field']['field_image:properties']['title'], '0');
+    $this->assertFalse(array_key_exists('revision_log', $config_data['translate']['entity']['node']['article']['field']));
+    $this->assertEqual('automatic', $config_data['translate']['entity']['node']['article']['profile']);
+
+    // Uncheck user for translation.
+    $edit = [
+      'node[article][enabled]' => 1,
+      'node[article][profiles]' => 'automatic',
+      'node[article][fields][title]' => 1,
+      'node[article][fields][body]' => FALSE,
+      'node[article][fields][field_image]' => FALSE,
+      'node[article][fields][field_image:properties][alt]' => FALSE,
+      'node[article][fields][field_image:properties][title]' => 'title',
+      'user[user][enabled]' => FALSE,
+    ];
+    $this->drupalPostForm(NULL, $edit, 'Save', [], 'lingoteksettings-tab-content-form');
+
+    // Check that values are kept in the form.
+    $this->assertFieldChecked('edit-node-article-enabled');
+    $this->assertFieldByName('node[article][profiles]', 'automatic');
+    $this->assertFieldChecked('edit-node-article-fields-title');
+    $this->assertNoFieldChecked('edit-node-article-fields-body');
+    $this->assertNoFieldChecked('edit-node-article-fields-field-image');
+    $this->assertNoFieldChecked('edit-node-article-fields-field-imageproperties-alt');
+    $this->assertNoFieldChecked('edit-node-article-fields-field-imageproperties-title');
+
+    $this->assertNoFieldChecked('edit-user-user-enabled');
+    $this->assertFieldByName('user[user][profiles]', 'automatic');
+    $this->assertFieldChecked('edit-user-user-fields-user-picture');
+    $this->assertFieldChecked('edit-user-user-fields-user-pictureproperties-title');
+
+    // Check that the config is correctly saved.
+    $config_data = $this->config('lingotek.settings')->getRawData();
+    $this->assertTrue($config_data['translate']['entity']['node']['article']['enabled']);
+    $this->assertTrue($config_data['translate']['entity']['node']['article']['field']['title']);
+    $this->assertFalse(array_key_exists('body', $config_data['translate']['entity']['node']['article']['field']));
+    $this->assertFalse(array_key_exists('field_image', $config_data['translate']['entity']['node']['article']['field']));
+    // As the schema here is sequence:ignore, there is no boolean casting.
+    // This should probably just be deleted.
+    $this->assertFalse(array_key_exists('alt', $config_data['translate']['entity']['node']['article']['field']['field_image:properties']));
+    $this->assertEqual($config_data['translate']['entity']['node']['article']['field']['field_image:properties']['title'], '0');
+    $this->assertFalse(array_key_exists('revision_log', $config_data['translate']['entity']['node']['article']['field']));
+    $this->assertEqual('automatic', $config_data['translate']['entity']['node']['article']['profile']);
+
+    $this->assertFalse($config_data['translate']['entity']['user']['user']['enabled']);
+    $this->assertTrue($config_data['translate']['entity']['user']['user']['field']['user_picture']);
+    $this->assertEqual($config_data['translate']['entity']['user']['user']['field']['user_picture:properties']['title'], '1');
+  }
+
   public function testICanDisableFields() {
     // Enable translation for the current entity type and ensure the change is
     // picked up.

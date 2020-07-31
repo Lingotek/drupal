@@ -167,7 +167,6 @@ class LingotekConfigSubscriber implements EventSubscriberInterface {
     }
 
     if ($event->getConfig()->getName() === 'lingotek.settings' && $event->isChanged('translate.entity')) {
-      drupal_static_reset();
       $this->entityFieldManager->clearCachedFieldDefinitions();
       $this->entityTypeManager->clearCachedDefinitions();
       \Drupal::service('router.builder')->setRebuildNeeded();

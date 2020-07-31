@@ -2,10 +2,8 @@
 
 namespace Drupal\lingotek\Form;
 
-use Drupal\block\Entity\Block;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\ReplaceCommand;
-use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Entity\ContentEntityType;
 use Symfony\Component\HttpFoundation\Request;
@@ -139,36 +137,38 @@ class LingotekSettingsContentSingleForm extends LingotekConfigFormBase {
 
     $form_values = $form_state->getValues();
 
+    $contentSettingsData = [];
+
     $entity_id = $this->entity_type_id;
 
     foreach ($form_values[$entity_id] as $bundle_id => $bundle) {
       // Only process if we have marked the checkbox.
       if ($bundle['enabled']) {
         if (!$lingotek_config->isEnabled($entity_id, $bundle_id)) {
-          $lingotek_config->setEnabled($entity_id, $bundle_id);
+          $contentSettingsData[$entity_id][$bundle_id]['enabled'] = TRUE;
         }
         foreach ($bundle['fields_container']['fields'] as $field_id => $ignore) {
           $field_choice = isset($bundle['fields'][$field_id]) ? $bundle['fields'][$field_id] : 0;
           if ($field_choice == 1) {
-            $lingotek_config->setFieldLingotekEnabled($entity_id, $bundle_id, $field_id);
+            $contentSettingsData[$entity_id][$bundle_id]['fields'][$field_id] = TRUE;
             if (isset($form_values[$entity_id][$bundle_id]['fields'][$field_id . ':properties'])) {
               // We need to add both arrays, as the first one only includes the checked properties.
               $property_values = $form_values[$entity_id][$bundle_id]['fields'][$field_id . ':properties'] +
                 $form_values[$entity_id][$bundle_id]['fields_container']['fields'][$field_id . ':properties'];
-              $lingotek_config->setFieldPropertiesLingotekEnabled($entity_id, $bundle_id, $field_id, $property_values);
+              $contentSettingsData[$entity_id][$bundle_id]['fields'][$field_id . ':properties'] = $property_values;
             }
           }
           elseif ($field_choice == 0) {
-            $lingotek_config->setFieldLingotekEnabled($entity_id, $bundle_id, $field_id, FALSE);
+            $contentSettingsData[$entity_id][$bundle_id]['fields'][$field_id] = FALSE;
             if (isset($form_values[$entity_id][$bundle_id]['fields'][$field_id . ':properties'])) {
               $properties = array_keys($form_values[$entity_id][$bundle_id]['fields'][$field_id . ':properties']);
               $properties = array_fill_keys($properties, 0);
-              $lingotek_config->setFieldPropertiesLingotekEnabled($entity_id, $bundle_id, $field_id, $properties);
+              $contentSettingsData[$entity_id][$bundle_id]['fields'][$field_id . ':properties'] = $properties;
             }
           }
         }
         if (isset($form_values[$entity_id][$bundle_id]['profiles'])) {
-          $lingotek_config->setDefaultProfileId($entity_id, $bundle_id, $form_values[$entity_id][$bundle_id]['profiles']);
+          $contentSettingsData[$entity_id][$bundle_id]['profile'] = $form_values[$entity_id][$bundle_id]['profiles'];
         }
 
         /** @var \Drupal\lingotek\Moderation\LingotekModerationFactoryInterface $moderationFactory */
@@ -179,13 +179,10 @@ class LingotekSettingsContentSingleForm extends LingotekConfigFormBase {
       }
       else {
         // If we removed it, unable it.
-        $lingotek_config->setEnabled($entity_id, $bundle_id, FALSE);
+        $contentSettingsData[$entity_id][$bundle_id]['enabled'] = FALSE;
       }
     }
-
-    // There is some bug than local tasks block cache is not cleared. Let's do
-    // that manually.
-    $this->invalidateLocalTaskCacheBlocks();
+    $lingotek_config->setContentTranslationSettings($contentSettingsData);
 
     $form_state->setRedirect('lingotek.settings');
     parent::submitForm($form, $form_state);
@@ -395,25 +392,6 @@ class LingotekSettingsContentSingleForm extends LingotekConfigFormBase {
       'fields' => $this->retrieveFields($form_state, $entity_type_id, $bundle_id),
     ];
     return $fields_container;
-  }
-
-  /**
-   * Invalidates the local task cache blocks.
-   */
-  private function invalidateLocalTaskCacheBlocks() {
-    if (\Drupal::moduleHandler()->moduleExists('block')) {
-      // There is some bug than local tasks block cache is not cleared. Let's do
-      // that manually.
-      $ids = \Drupal::entityQuery('block')
-        ->condition('plugin', 'local_tasks_block')
-        ->execute();
-      $tags = [];
-      foreach ($ids as $id) {
-        $block = Block::load($id);
-        $tags = array_merge($tags, $block->getCacheTagsToInvalidate());
-      }
-      Cache::invalidateTags($tags);
-    }
   }
 
 }
