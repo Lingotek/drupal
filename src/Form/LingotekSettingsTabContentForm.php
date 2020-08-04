@@ -19,6 +19,8 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
   protected $bundles;
   protected $translatable_bundles;
 
+  protected const EXCLUDED_BUNDLES = ['lingotek_content_metadata', 'content_moderation_state'];
+
   /**
    * The number of translatable bundles.
    * @var int
@@ -280,10 +282,12 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
 
     $count = 0;
     foreach ($this->bundles as $bundle_group_id => $bundle_group) {
-      foreach ($bundle_group as $bundle_id => $bundle) {
-        if ($bundle['translatable']) {
-          $this->translatable_bundles[$bundle_group_id][$bundle_id] = $bundle;
-          ++$count;
+      if (!in_array($bundle_group_id, self::EXCLUDED_BUNDLES)) {
+        foreach ($bundle_group as $bundle_id => $bundle) {
+          if ($bundle['translatable']) {
+            $this->translatable_bundles[$bundle_group_id][$bundle_id] = $bundle;
+            ++$count;
+          }
         }
       }
     }

@@ -67,6 +67,30 @@ class LingotekContentModerationSettingsTest extends LingotekTestBase {
   }
 
   /**
+   * Tests that the content moderation state entity cannot be enabled for Lingotek.
+   */
+  public function testContentModerationStateEntityNotAvailableForLingotek() {
+    $assert_session = $this->assertSession();
+
+    ContentLanguageSettings::loadByEntityTypeBundle('content_moderation_state', 'content_moderation_state')->setLanguageAlterable(TRUE)->save();
+    \Drupal::service('content_translation.manager')->setEnabled('content_moderation_state', 'content_moderation_state', TRUE);
+
+    $this->drupalGet('admin/lingotek/settings');
+
+    $this->assertNoField('content_moderation_state[content_moderation_state][enabled]',
+      'The content moderation state entity should not be available for Lingotek translation.');
+
+    // See content_moderation_entity_bundle_info_alter().
+    $this->enableModerationThroughUI('article', ['draft', 'needs_review', 'published'], 'draft');
+    $this->saveLingotekContentTranslationSettingsForNodeTypes();
+
+    $this->drupalGet('admin/lingotek/settings');
+
+    $this->assertNoField('content_moderation_state[content_moderation_state][enabled]',
+      'The content moderation state entity should not be available for Lingotek translation.');
+  }
+
+  /**
    * Tests that the content moderation settings are stored correctly.
    */
   public function testContentModerationSettings() {
