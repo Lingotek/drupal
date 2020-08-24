@@ -9,7 +9,6 @@ use Drupal\Core\Entity\Entity\EntityFormDisplay;
  *
  * @group lingotek
  * @group legacy
- * @requires module paragraphs_asymmetric_translation_widgets
  */
 class LingotekNodeTranslatableParagraphsAsymmetricTranslationTest extends LingotekNodeTranslatableParagraphsTranslationTest {
 
@@ -22,7 +21,6 @@ class LingotekNodeTranslatableParagraphsAsymmetricTranslationTest extends Lingot
    * {@inheritdoc}
    */
   protected function setUp(): void {
-    $this->markTestSkipped('Requires paragraphs_asymmetric_translation_widgets and that has not a D9 compatible version.');
     parent::setUp();
     $this->setFormDisplaysToAsymmetric();
   }
