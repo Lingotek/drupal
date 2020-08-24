@@ -22,3 +22,4 @@ test_dependencies:
   - entity_usage:entity_usage
   - entity_browser:entity_browser
   - block_field:block_field
+  - paragraphs_asymmetric_translation_widgets:paragraphs_asymmetric_translation_widgets

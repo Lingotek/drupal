@@ -50,7 +50,8 @@
     "drupal/search_api": "dev-1.x",
     "drupal/block_field": "dev-1.x",
     "drupal/entity_usage": "dev-2.x",
-    "drupal/entity_browser": "dev-2.x"
+    "drupal/entity_browser": "dev-2.x",
+    "drupal/paragraphs_asymmetric_translation_widgets": "dev-1.x"
   },
   "repositories": {
     "drupal": {
