@@ -82,7 +82,7 @@ class LingotekNodeTranslationAppendTypeTitleOptionTest extends LingotekTestBase 
   protected function setSettingsAppendTypeTitle($value) {
     $this->drupalGet('/admin/lingotek/settings');
     $edit = [
-      'append_type_to_title' => $value ? 1 : 0,
+      'append_type_to_title' => $value,
     ];
     $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], 'lingoteksettings-tab-preferences-form');
   }

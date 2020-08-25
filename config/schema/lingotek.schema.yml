@@ -42,7 +42,7 @@ lingotek.settings:
           type: string
         append_type_to_title:
           label: 'Global setting to set whether to append content type to title in TMS'
-          type: string
+          type: boolean
         enable_content_cloud:
           type: boolean
           deprecated: "This option is unused since lingotek:8.x-2.21. Will be removed in lingotek:4.0.0"

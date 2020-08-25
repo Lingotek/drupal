@@ -131,3 +131,16 @@ function lingotek_update_8222() {
   $lingotekSettings->set('preference.enable_download_interim', TRUE);
   $lingotekSettings->save();
 }
+
+/**
+ * Adds enable_download_interim preference to lingotek.settings.
+ */
+function lingotek_update_9000() {
+  // We converted this to a boolean.
+  $lingotekSettings = \Drupal::configFactory()->getEditable('lingotek.settings');
+  $preference = $lingotekSettings->get('preference.append_type_to_title', NULL);
+  if ($preference === 'global_setting') {
+    $lingotekSettings->set('preference.append_type_to_title', TRUE);
+    $lingotekSettings->save();
+  }
+}

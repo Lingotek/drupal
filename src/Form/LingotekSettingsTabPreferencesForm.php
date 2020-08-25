@@ -156,7 +156,7 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
       '#type' => 'checkbox',
       '#title' => t('Append Entity Type to TMS Document Name'),
       '#description' => t('Enable to have content/entity type appended to the document title in TMS.'),
-      '#default_value' => $lingotek_config->getPreference('append_type_to_title') ?: FALSE,
+      '#default_value' => $lingotek_config->getPreference('append_type_to_title'),
     ];
 
     $form['prefs']['split_download_all'] = [
@@ -189,14 +189,14 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
     $this->saveLanguageSwitcherSettings($form_values);
     $this->saveShowLanguageFields($form_values);
     $this->saveAlwaysShowTranslateTabs($form_values);
-    $lingotek_config->setPreference('language_specific_profiles', $form_values['language_specific_profiles']);
-    $lingotek_config->setPreference('advanced_taxonomy_terms', $form_values['advanced_taxonomy_terms']);
-    $lingotek_config->setPreference('advanced_parsing', $form_values['advanced_parsing']);
-    $lingotek_config->setPreference('append_type_to_title', $form_values['append_type_to_title']);
+    $lingotek_config->setPreference('language_specific_profiles', $form_values['language_specific_profiles'] ? TRUE : FALSE);
+    $lingotek_config->setPreference('advanced_taxonomy_terms', $form_values['advanced_taxonomy_terms'] ? TRUE : FALSE);
+    $lingotek_config->setPreference('advanced_parsing', $form_values['advanced_parsing'] ? TRUE : FALSE);
+    $lingotek_config->setPreference('append_type_to_title', $form_values['append_type_to_title'] ? TRUE : FALSE);
     $lingotek_config->setPreference('target_download_status', $form_values['target_download_status']);
-    $lingotek_config->setPreference('enable_download_source', $form_values['enable_download_source']);
-    $lingotek_config->setPreference('enable_download_interim', $form_values['enable_download_interim']);
-    $lingotek_config->setPreference('split_download_all', $form_values['split_download_all']);
+    $lingotek_config->setPreference('enable_download_source', $form_values['enable_download_source'] ? TRUE : FALSE);
+    $lingotek_config->setPreference('enable_download_interim', $form_values['enable_download_interim'] ? TRUE : FALSE);
+    $lingotek_config->setPreference('split_download_all', $form_values['split_download_all'] ? TRUE : FALSE);
     parent::submitForm($form, $form_state);
   }
 
@@ -296,18 +296,21 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
   }
 
   protected function saveAlwaysShowTranslateTabs($form_values) {
-    $this->lingotek->set('preference.always_show_translate_tabs', $form_values['always_show_translate_tabs']);
+    $config = \Drupal::configFactory()->getEditable('lingotek.settings');
+    $config->set('preference.always_show_translate_tabs', $form_values['always_show_translate_tabs'] ? TRUE : FALSE);
     if ($form_values['always_show_translate_tabs']) {
-      $this->lingotek->set('preference.allow_local_editing', $form_values['allow_local_editing']);
+      $config->set('preference.allow_local_editing', $form_values['allow_local_editing'] ? TRUE : FALSE);
     }
     else {
-      $this->lingotek->set('preference.allow_local_editing', 0);
+      $config->set('preference.allow_local_editing', FALSE);
     }
+    $config->save();
   }
 
   protected function saveShowLanguageFields($form_values) {
+    $config = \Drupal::configFactory()->getEditable('lingotek.settings');
     // Only save if there's a change to the show_language_labels choice
-    if ($this->lingotek->get('preference.show_language_labels') != $form_values['show_language_labels']) {
+    if ($config->get('preference.show_language_labels') != $form_values['show_language_labels']) {
       $bundles = \Drupal::service('entity_type.bundle.info')->getBundleInfo('node');
 
       foreach ($bundles as $bundle_id => $bundle) {
@@ -335,7 +338,8 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
         }
       }
     }
-    $this->lingotek->set('preference.show_language_labels', $form_values['show_language_labels']);
+    $config->set('preference.show_language_labels', $form_values['show_language_labels'] ? TRUE : FALSE);
+    $config->save();
   }
 
 }
