@@ -1366,8 +1366,18 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
               if ($embedded_entity !== NULL) {
                 // If there is asymmetrical paragraphs enabled, we need a new one duplicated and stored.
                 if ($paragraphTranslatable && \Drupal::moduleHandler()->moduleExists('paragraphs_asymmetric_translation_widgets')) {
+                  /** @var \Drupal\paragraphs\ParagraphInterface $duplicate */
                   $duplicate = $embedded_entity->createDuplicate();
                   if ($duplicate->isTranslatable()) {
+                    // If there is already a translation for the language we
+                    // want to set as default, we have to remove it. This should
+                    // never happen, but there may different previous approaches
+                    // to translating paragraphs, so we need to make sure the
+                    // download does not break because of this.
+                    if ($duplicate->hasTranslation($langcode)) {
+                      $duplicate->removeTranslation($langcode);
+                      $duplicate->save();
+                    }
                     $duplicate->set('langcode', $langcode);
                     foreach ($duplicate->getTranslationLanguages(FALSE) as $translationLanguage) {
                       try {

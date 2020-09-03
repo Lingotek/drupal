@@ -865,6 +865,91 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     $assert_session->pageTextContains('Llamas are cool has been updated.');
   }
 
+  public function testEditingAfterNodeWithParagraphsTranslationWithExistingParagraphTranslation() {
+    $assert_session = $this->assertSession();
+    $page = $this->getSession()->getPage();
+
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
+    // Add paragraphed content.
+    $this->drupalGet('node/add/paragraphed_content_demo');
+
+    $this->drupalPostForm(NULL, NULL, t('Add Image + Text'));
+
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['field_paragraphs_demo[0][subform][field_text_demo][0][value]'] = 'Llamas are very cool';
+    $edit['moderation_state[0][state]'] = 'published';
+    $this->drupalPostForm(NULL, $edit, t('Save'));
+
+    $this->node = Node::load(1);
+
+    // Check that only the configured fields have been uploaded, including metatags.
+    $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), TRUE);
+    $this->verbose(var_export($data, TRUE));
+    $this->assertUploadedDataFieldCount($data, 2);
+    $this->assertEqual($data['title'][0]['value'], 'Llamas are cool');
+    $this->assertEqual($data['field_paragraphs_demo'][0]['field_text_demo'][0]['value'], 'Llamas are very cool');
+
+    // Create a translation.
+    /** @var \Drupal\paragraphs\Entity\Paragraph $paragraph */
+    $paragraph = Paragraph::load(1);
+    $paragraphTranslation = $paragraph->addTranslation('es-ar', $paragraph->toArray());
+    $paragraphTranslation->save();
+
+    // Check that the url used was the right one.
+    $uploaded_url = \Drupal::state()->get('lingotek.uploaded_url');
+    $this->assertIdentical(\Drupal::request()->getUriForPath('/node/1'), $uploaded_url, 'The node url was used.');
+
+    // Check that the profile used was the right one.
+    $used_profile = \Drupal::state()->get('lingotek.used_profile');
+    $this->assertIdentical('automatic', $used_profile, 'The automatic profile was used.');
+
+    // Check that the translate tab is in the node.
+    $this->drupalGet('node/1');
+    $this->clickLink('Translate');
+
+    // The document should have been automatically uploaded, so let's check
+    // the upload status.
+    $this->clickLink('Check Upload Status');
+    $this->assertText('The import for node Llamas are cool is complete.');
+
+    // Request translation.
+    $link = $this->xpath('//a[normalize-space()="Request translation" and contains(@href,"es_AR")]');
+    $link[0]->click();
+    $this->assertText("Locale 'es_AR' was added as a translation target for node Llamas are cool.");
+
+    // Check translation status.
+    $this->clickLink('Check translation status');
+    $this->assertText('The es_AR translation for node Llamas are cool is ready for download.');
+
+    // Check that the Edit link points to the workbench and it is opened in a new tab.
+    $this->assertLingotekWorkbenchLink('es_AR');
+
+    // Download translation.
+    $this->clickLink('Download completed translation');
+    $this->assertText('The translation of node Llamas are cool into es_AR has been downloaded.');
+
+    // The content is translated and published.
+    $this->clickLink('Las llamas son chulas');
+    $this->assertText('Las llamas son chulas');
+    $this->assertText('Las llamas son muy chulas');
+
+    $this->drupalGet('es-ar/node/1/edit');
+    $assert_session->fieldValueEquals('field_paragraphs_demo[0][subform][field_text_demo][0][value]', 'Las llamas son muy chulas');
+
+    $this->drupalGet('node/1/edit');
+    $assert_session->fieldValueEquals('field_paragraphs_demo[0][subform][field_text_demo][0][value]', 'Llamas are very cool');
+
+    $this->drupalPostForm(NULL, NULL, t('Remove'));
+    $this->drupalPostForm(NULL, NULL, t('Confirm removal'));
+
+    $page->pressButton('Save (this translation)');
+    $assert_session->pageTextContains('Llamas are cool has been updated.');
+  }
+
   protected function setParagraphFieldsTranslatability(): void {
     $edit = [];
     $edit['settings[node][paragraphed_content_demo][fields][field_paragraphs_demo]'] = 1;
