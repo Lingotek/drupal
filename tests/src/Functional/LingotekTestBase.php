@@ -205,6 +205,10 @@ abstract class LingotekTestBase extends BrowserTestBase {
     }
   }
 
+  protected function goToInterfaceTranslationManagementForm() {
+    $this->drupalGet('admin/lingotek/manage/interface-translation');
+  }
+
   /**
    * Asserts if the uploaded data contains the expected number of fields.
    *

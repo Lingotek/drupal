@@ -19,6 +19,13 @@ lingotek.manage:
   parent: 'lingotek.dashboard'
   weight: 11
 
+lingotek.manage_interface_translation:
+  route_name: 'lingotek.manage_interface_translation'
+  title: 'User Interface Translation'
+  description: 'Translate user interface using Lingotek cloud-based localization'
+  parent: 'lingotek.dashboard'
+  weight: 14
+
 lingotek.manage_config:
   route_name: 'lingotek.manage_config'
   title: 'Config'

@@ -46,7 +46,12 @@ class LingotekTargetStatuses extends RenderElement {
    *   The element as a render array.
    */
   public function preRender(array $element) {
-    $statuses = $this->getTranslationsStatuses($element['#entity'], $element['#source_langcode'], $element['#statuses']);
+    if (isset($element['#entity'])) {
+      $statuses = $this->getTranslationsStatuses($element['#entity'], $element['#source_langcode'], $element['#statuses']);
+    }
+    elseif (isset($element['#ui_component'])) {
+      $statuses = $this->getTranslationsStatusesForUI($element['#ui_component'], $element['#source_langcode'], $element['#statuses']);
+    }
     $element['#statuses'] = $statuses;
     return $element;
   }
@@ -113,7 +118,42 @@ class LingotekTargetStatuses extends RenderElement {
     }
     ksort($translations);
     foreach ($translations as $langcode => &$translation) {
-      $translation['status_text'] = $this->getTargetStatusText($entity, $translation['status'], $langcode);
+      $translation['status_text'] = $this->getTargetStatusText($translation['status'], $langcode);
+      $translation['language'] = $langcode;
+    }
+    return $translations;
+  }
+
+  protected function getTranslationsStatusesForUI($component, $source_langcode, array $statuses) {
+    $translations = [];
+    $languages = \Drupal::languageManager()->getLanguages();
+    $languages = array_filter($languages, function (LanguageInterface $language) {
+      $configLanguage = ConfigurableLanguage::load($language->getId());
+      return \Drupal::service('lingotek.configuration')->isLanguageEnabled($configLanguage);
+    });
+    foreach ($statuses as $langcode => $status) {
+      if ($langcode !== $source_langcode && array_key_exists($langcode, $languages)) {
+        // We may have an existing translation already.
+        $translations[$langcode] = [
+            'status' => $status,
+            'url' => $this->getTargetActionUrlForUI($component, $status, $langcode),
+            'new_window' => in_array($status, [Lingotek::STATUS_CURRENT, Lingotek::STATUS_INTERMEDIATE, Lingotek::STATUS_EDITED]),
+          ];
+      }
+      array_walk($languages, function ($language, $langcode) use ($component, &$translations) {
+        if (!isset($translations[$langcode]) &&
+          $langcode !== 'en') {
+          $translations[$langcode] = [
+            'status' => Lingotek::STATUS_REQUEST,
+            'url' => $this->getTargetActionUrlForUI($component, Lingotek::STATUS_REQUEST, $langcode),
+            'new_window' => FALSE,
+          ];
+        }
+      });
+    }
+    ksort($translations);
+    foreach ($translations as $langcode => &$translation) {
+      $translation['status_text'] = $this->getTargetStatusText($translation['status'], $langcode);
       $translation['language'] = $langcode;
     }
     return $translations;
@@ -122,8 +162,6 @@ class LingotekTargetStatuses extends RenderElement {
   /**
    * Get the source status label.
    *
-   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
-   *   The entity.
    * @param string $status
    *   The target status.
    * @param string $langcode
@@ -132,7 +170,7 @@ class LingotekTargetStatuses extends RenderElement {
    * @return string
    *   The source status human-friendly label.
    */
-  protected function getTargetStatusText(ContentEntityInterface $entity, $status, $langcode) {
+  protected function getTargetStatusText($status, $langcode) {
     $language = ConfigurableLanguage::load($langcode);
 
     switch ($status) {
@@ -225,6 +263,61 @@ class LingotekTargetStatuses extends RenderElement {
             'locale' => $locale,
           ],
           ['query' => $this->getDestinationWithQueryArray()]);
+      }
+    }
+    return $url;
+  }
+
+  protected function getTargetActionUrlForUI($component, $target_status, $langcode) {
+    $url = NULL;
+    $document_id = \Drupal::service('lingotek.interface_translation')
+      ->getDocumentId($component);
+    $locale = \Drupal::service('lingotek.language_locale_mapper')
+      ->getLocaleForLangcode($langcode);
+    if ($document_id) {
+      if ($target_status == Lingotek::STATUS_REQUEST) {
+        $url = Url::fromRoute('lingotek.interface_translation.request_translation', [],
+          [
+            'query' => [
+                'component' => $component,
+                'locale' => $locale,
+              ] + $this->getDestinationWithQueryArray(),
+          ]);
+      }
+      if ($target_status == Lingotek::STATUS_PENDING) {
+        $url = Url::fromRoute('lingotek.interface_translation.check_translation', [],
+          [
+            'query' => [
+                'component' => $component,
+                'locale' => $locale,
+              ] + $this->getDestinationWithQueryArray(),
+          ]);
+      }
+      if ($target_status == Lingotek::STATUS_READY || $target_status == Lingotek::STATUS_ERROR) {
+        $url = Url::fromRoute('lingotek.interface_translation.download', [],
+          [
+            'query' => [
+                'component' => $component,
+                'locale' => $locale,
+              ] + $this->getDestinationWithQueryArray(),
+          ]);
+      }
+      if ($target_status == Lingotek::STATUS_CURRENT ||
+        $target_status == Lingotek::STATUS_INTERMEDIATE ||
+        $target_status == Lingotek::STATUS_EDITED) {
+        $url = Url::fromRoute('lingotek.workbench', [
+          'doc_id' => $document_id,
+          'locale' => $locale,
+        ]);
+      }
+      if ($target_status == Lingotek::STATUS_UNTRACKED) {
+        $url = Url::fromRoute('lingotek.interface_translation.request_translation', [],
+          [
+            'query' => [
+                'component' => $component,
+                'locale' => $locale,
+              ] + $this->getDestinationWithQueryArray(),
+          ]);
       }
     }
     return $url;

@@ -44,8 +44,14 @@ class LingotekSourceStatus extends RenderElement {
    *   The element as a render array.
    */
   public function preRender(array $element) {
-    $element['#url'] = $this->getSourceActionUrl($element['#entity'], $element['#status']);
-    $element['#status_title'] = $this->getSourceStatusText($element['#entity'], $element['#status']);
+    if (isset($element['#entity'])) {
+      $element['#url'] = $this->getSourceActionUrl($element['#entity'], $element['#status']);
+      $element['#status_title'] = $this->getSourceStatusText($element['#entity'], $element['#status']);
+    }
+    elseif (isset($element['#ui_component'])) {
+      $element['#url'] = $this->getSourceActionUrlForUI($element['#ui_component'], $element['#status']);
+      $element['#status_title'] = $this->getSourceStatusTextForUI($element['#ui_component'], $element['#status']);
+    }
     return $element;
   }
 
@@ -85,6 +91,25 @@ class LingotekSourceStatus extends RenderElement {
     return $url;
   }
 
+  protected function getSourceActionUrlForUI($component, $source_status) {
+    $url = NULL;
+    if ($source_status == Lingotek::STATUS_IMPORTING) {
+      $url = Url::fromRoute('lingotek.interface_translation.check_upload', [],
+        ['query' => ['component' => $component] + $this->getDestinationWithQueryArray()]);
+    }
+    if ($source_status == Lingotek::STATUS_EDITED || $source_status == Lingotek::STATUS_UNTRACKED || $source_status == Lingotek::STATUS_ERROR || $source_status == Lingotek::STATUS_CANCELLED) {
+      if ($doc_id = \Drupal::service('lingotek.interface_translation')->getDocumentId($component)) {
+        $url = Url::fromRoute('lingotek.interface_translation.update', [],
+          ['query' => ['component' => $component] + $this->getDestinationWithQueryArray()]);
+      }
+      else {
+        $url = Url::fromRoute('lingotek.interface_translation.upload', [],
+          ['query' => ['component' => $component] + $this->getDestinationWithQueryArray()]);
+      }
+    }
+    return $url;
+  }
+
   /**
    * Get the source status label.
    *
@@ -107,6 +132,36 @@ class LingotekSourceStatus extends RenderElement {
 
       case Lingotek::STATUS_EDITED:
         return (\Drupal::service('lingotek.content_translation')->getDocumentId($entity)) ?
+          t('Re-upload (content has changed since last upload)') : t('Upload');
+
+      case Lingotek::STATUS_IMPORTING:
+        return t('Source importing');
+
+      case Lingotek::STATUS_CURRENT:
+        return t('Source uploaded');
+
+      case Lingotek::STATUS_ERROR:
+        return t('Error');
+
+      case Lingotek::STATUS_CANCELLED:
+        return $this->t('Cancelled by user');
+
+      default:
+        return ucfirst(strtolower($source_status));
+    }
+  }
+
+  protected function getSourceStatusTextForUI($component, $source_status) {
+    switch ($source_status) {
+      case Lingotek::STATUS_UNTRACKED:
+      case Lingotek::STATUS_REQUEST:
+        return t('Upload');
+
+      case Lingotek::STATUS_DISABLED:
+        return t('Disabled, cannot request translation');
+
+      case Lingotek::STATUS_EDITED:
+        return (\Drupal::service('lingotek.interface_translation')->getDocumentId($component)) ?
           t('Re-upload (content has changed since last upload)') : t('Upload');
 
       case Lingotek::STATUS_IMPORTING:

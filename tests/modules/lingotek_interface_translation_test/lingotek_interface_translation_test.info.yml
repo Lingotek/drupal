@@ -1,0 +1,6 @@
+name: Lingotek Interface Translation Test Helper
+type: module
+package: Testing
+
+dependencies:
+  - lingotek:lingotek

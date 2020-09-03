@@ -103,6 +103,22 @@ lingotek.manage:
   requirements:
     _permission: 'manage lingotek translations'
 
+lingotek.manage_interface_translation:
+  path: '/admin/lingotek/manage/interface-translation'
+  defaults:
+    _form: '\Drupal\lingotek\Form\LingotekInterfaceTranslationForm'
+    _title: 'Manage User Interface Translations'
+  requirements:
+    _permission: 'manage lingotek translations,translate interface'
+
+lingotek.manage_interface_translation.clear_metadata:
+  path: '/admin/lingotek/manage/interface-translation/clear-metadata-confirm'
+  defaults:
+    _form: '\Drupal\lingotek\Form\LingotekInterfaceTranslationClearMetadataForm'
+    _title: 'Confirm deletion of User Interface Translations Lingotek metadata'
+  requirements:
+    _permission: 'manage lingotek translations,translate interface'
+
 lingotek.manage_config:
   path: '/admin/lingotek/config/manage'
   defaults:
@@ -352,3 +368,53 @@ lingotek.supported_locales_autocomplete:
     _title: 'Supported Lingotek locales'
   requirements:
     _permission: 'administer languages'
+
+lingotek.interface_translation.upload:
+  path: '/admin/lingotek/interface-translation/upload'
+  defaults:
+    _controller: '\Drupal\lingotek\Controller\LingotekInterfaceTranslationController::upload'
+    _title: 'Upload Source'
+  requirements:
+    _permission: 'manage lingotek translations,translate interface'
+
+lingotek.interface_translation.update:
+  path: '/admin/lingotek/interface-translation/update'
+  defaults:
+    _controller: '\Drupal\lingotek\Controller\LingotekInterfaceTranslationController::update'
+    _title: 'Upload Source'
+  requirements:
+    _permission: 'manage lingotek translations,translate interface'
+
+lingotek.interface_translation.check_upload:
+  path: '/admin/lingotek/interface-translation/check-upload'
+  defaults:
+    _controller: '\Drupal\lingotek\Controller\LingotekInterfaceTranslationController::checkUpload'
+    _title: 'Upload Source'
+  requirements:
+    _permission: 'manage lingotek translations,translate interface'
+
+lingotek.interface_translation.request_translation:
+  path: '/admin/lingotek/interface-translation/request-translation'
+  defaults:
+    _controller: '\Drupal\lingotek\Controller\LingotekInterfaceTranslationController::requestTranslation'
+    _title: 'Request Translation'
+  requirements:
+    _permission: 'manage lingotek translations,translate interface'
+
+lingotek.interface_translation.check_translation:
+  path: '/admin/lingotek/interface-translation/check-translation'
+  defaults:
+    _controller: '\Drupal\lingotek\Controller\LingotekInterfaceTranslationController::checkTranslation'
+    _title: 'Check Translation status'
+  requirements:
+    _permission: 'manage lingotek translations,translate interface'
+
+
+lingotek.interface_translation.download:
+  path: '/admin/lingotek/interface-translation/download-translation'
+  defaults:
+    _controller: '\Drupal\lingotek\Controller\LingotekInterfaceTranslationController::download'
+    _title: 'Download Translation'
+  requirements:
+    _permission: 'manage lingotek translations,translate interface'
+

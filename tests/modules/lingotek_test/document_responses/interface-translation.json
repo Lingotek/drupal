@@ -1,0 +1,31 @@
+{
+  "Lingotek Interface Translation Test Helper\u003CCONTEXT\u003E": {
+    "Lingotek Interface Translation Test Helper": "Ayudante para Traducción de Interfaz Lingotek",
+    "_context": ""
+  },
+  "Testing\u003CCONTEXT\u003E": {
+    "Testing": "Pruebas",
+    "_context": ""
+  },
+  "Test title for interface translation\u003CCONTEXT\u003E": {
+    "Test title for interface translation": "Título de Prueba para Traducción de Interfaz",
+    "_context": ""
+  },
+  "This is test of context\u003CCONTEXT\u003Emultiple p": {
+    "This is test of context": "Esto es una pppprueba de contexto",
+    "_context": "multiple p"
+  },
+  "This is test of context\u003CCONTEXT\u003Emultiple t": {
+    "This is test of context": "Estttto es una prueba de conttttextttto",
+    "_context": "multiple t"
+  },
+  "This is test of context\u003CCONTEXT\u003E": {
+    "This is test of context": "Esto es una prueba de contexto",
+    "_context": ""
+  },
+  "This is a singular example\u003CPLURAL\u003EThis is a plural @count example\u003CCONTEXT\u003E": {
+    "This is a singular example": "Este es un ejemplo en singular",
+    "This is a plural @count example": "Este es un ejemplo en plural: @count",
+    "_context": ""
+  }
+}

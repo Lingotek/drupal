@@ -16,6 +16,7 @@ use Drupal\lingotek\Lingotek;
 use Drupal\lingotek\LingotekConfigTranslationServiceInterface;
 use Drupal\lingotek\LingotekConfigurationServiceInterface;
 use Drupal\lingotek\LingotekContentTranslationServiceInterface;
+use Drupal\lingotek\LingotekInterfaceTranslationServiceInterface;
 use Drupal\lingotek\LingotekInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
@@ -50,6 +51,13 @@ class LingotekNotificationController extends LingotekControllerBase {
   protected $lingotekConfigTranslation;
 
   /**
+   * The Lingotek interface translation service.
+   *
+   * @var \Drupal\lingotek\LingotekInterfaceTranslationServiceInterface
+   */
+  protected $lingotekInterfaceTranslation;
+
+  /**
    * Constructs a LingotekControllerBase object.
    *
    * @param \Symfony\Component\HttpFoundation\Request $request
@@ -70,12 +78,19 @@ class LingotekNotificationController extends LingotekControllerBase {
    *   The Lingotek content translation service.
    * @param \Drupal\lingotek\LingotekConfigTranslationServiceInterface $config_translation_service
    *   The Lingotek config translation service.
+   * @param \Drupal\lingotek\LingotekInterfaceTranslationServiceInterface $interface_translation_service
+   *   The Lingotek interface translation service.
    */
-  public function __construct(Request $request, ConfigFactoryInterface $config_factory, LingotekInterface $lingotek, LanguageLocaleMapperInterface $language_locale_mapper, FormBuilderInterface $form_builder, LoggerInterface $logger, LingotekConfigurationServiceInterface $lingotek_configuration, LingotekContentTranslationServiceInterface $content_translation_service, LingotekConfigTranslationServiceInterface $config_translation_service) {
+  public function __construct(Request $request, ConfigFactoryInterface $config_factory, LingotekInterface $lingotek, LanguageLocaleMapperInterface $language_locale_mapper, FormBuilderInterface $form_builder, LoggerInterface $logger, LingotekConfigurationServiceInterface $lingotek_configuration, LingotekContentTranslationServiceInterface $content_translation_service, LingotekConfigTranslationServiceInterface $config_translation_service, LingotekInterfaceTranslationServiceInterface $interface_translation_service = NULL) {
     parent::__construct($request, $config_factory, $lingotek, $language_locale_mapper, $form_builder, $logger);
     $this->lingotekConfiguration = $lingotek_configuration;
     $this->lingotekContentTranslation = $content_translation_service;
     $this->lingotekConfigTranslation = $config_translation_service;
+    if (!$interface_translation_service) {
+      @trigger_error('The lingotek.interface_translation service must be passed to LingotekNotificationController::__construct, it is included in lingotek:3.2.0 and required for lingotek:4.0.0.', E_USER_DEPRECATED);
+      $interface_translation_service = \Drupal::service('lingotek.interface_translation');
+    }
+    $this->lingotekInterfaceTranslation = $interface_translation_service;
   }
 
   /**
@@ -91,7 +106,8 @@ class LingotekNotificationController extends LingotekControllerBase {
       $container->get('logger.channel.lingotek'),
       $container->get('lingotek.configuration'),
       $container->get('lingotek.content_translation'),
-      $container->get('lingotek.config_translation')
+      $container->get('lingotek.config_translation'),
+      $container->get('lingotek.interface_translation')
     );
   }
 
@@ -123,6 +139,9 @@ class LingotekNotificationController extends LingotekControllerBase {
           if ($entity instanceof ConfigEntityInterface) {
             $translation_service = $this->lingotekConfigTranslation;
           }
+          if ($entity instanceof string) {
+            $translation_service = $this->lingotekInterfaceTranslation;
+          }
           // We need to unset the document id first, so there's no cancelling
           // call to the TMS.
           $translation_service->setDocumentId($entity, NULL);
@@ -145,6 +164,9 @@ class LingotekNotificationController extends LingotekControllerBase {
           }
           elseif ($entity instanceof ContentEntityInterface) {
             $this->lingotekConfiguration->setProfile($entity, NULL);
+          }
+          if ($entity instanceof string) {
+            $translation_service = $this->lingotekInterfaceTranslation;
           }
           $http_status_code = Response::HTTP_OK;
 
@@ -174,6 +196,9 @@ class LingotekNotificationController extends LingotekControllerBase {
           if ($entity instanceof ConfigEntityInterface) {
             $translation_service = $this->lingotekConfigTranslation;
           }
+          elseif (is_string($entity)) {
+            $translation_service = $this->lingotekInterfaceTranslation;
+          }
           $http_status_code = Response::HTTP_OK;
           $translation_service->setSourceStatus($entity, Lingotek::STATUS_CURRENT);
           $languages = [];
@@ -183,7 +208,7 @@ class LingotekNotificationController extends LingotekControllerBase {
             return $this->lingotekConfiguration->isLanguageEnabled($configLanguage);
           });
           foreach ($target_languages as $target_language) {
-            if ($profile->hasAutomaticRequestForTarget($target_language->getId())) {
+            if ($profile !== NULL && $profile->hasAutomaticRequestForTarget($target_language->getId())) {
               $target_locale = $this->languageLocaleMapper->getLocaleForLangcode($target_language->getId());
               if ($translation_service->addTarget($entity, $target_locale)) {
                 $languages[] = $target_language->getId();
@@ -206,6 +231,9 @@ class LingotekNotificationController extends LingotekControllerBase {
           if ($entity instanceof ConfigEntityInterface) {
             $translation_service = $this->lingotekConfigTranslation;
           }
+          elseif (is_string($entity)) {
+            $translation_service = $this->lingotekInterfaceTranslation;
+          }
           $http_status_code = Response::HTTP_OK;
           $translation_service->setSourceStatus($entity, Lingotek::STATUS_CURRENT);
           $languages = [];
@@ -215,7 +243,7 @@ class LingotekNotificationController extends LingotekControllerBase {
             return $this->lingotekConfiguration->isLanguageEnabled($configLanguage);
           });
           foreach ($target_languages as $target_language) {
-            if ($profile->hasAutomaticRequestForTarget($target_language->getId())) {
+            if ($profile !== NULL && $profile->hasAutomaticRequestForTarget($target_language->getId())) {
               $target_locale = $this->languageLocaleMapper->getLocaleForLangcode($target_language->getId());
               if ($translation_service->addTarget($entity, $target_locale)) {
                 $languages[] = $target_language->getId();
@@ -237,6 +265,9 @@ class LingotekNotificationController extends LingotekControllerBase {
         if ($entity) {
           if ($entity instanceof ConfigEntityInterface) {
             $translation_service = $this->lingotekConfigTranslation;
+          }
+          elseif (is_string($entity)) {
+            $translation_service = $this->lingotekInterfaceTranslation;
           }
           $http_status_code = Response::HTTP_OK;
           // We update the document id to the previous one no matter what. If it
@@ -267,6 +298,9 @@ class LingotekNotificationController extends LingotekControllerBase {
         if ($entity) {
           if ($entity instanceof ConfigEntityInterface) {
             $translation_service = $this->lingotekConfigTranslation;
+          }
+          elseif (is_string($entity)) {
+            $translation_service = $this->lingotekInterfaceTranslation;
           }
           $http_status_code = Response::HTTP_OK;
 
@@ -320,6 +354,9 @@ class LingotekNotificationController extends LingotekControllerBase {
         if ($entity !== NULL) {
           if ($entity instanceof ConfigEntityInterface) {
             $translation_service = $this->lingotekConfigTranslation;
+          }
+          elseif (is_string($entity)) {
+            $translation_service = $this->lingotekInterfaceTranslation;
           }
           $locale = $request->query->get('locale');
           $langcode = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale)
@@ -375,6 +412,9 @@ class LingotekNotificationController extends LingotekControllerBase {
           if ($entity instanceof ConfigEntityInterface) {
             $translation_service = $this->lingotekConfigTranslation;
           }
+          elseif (is_string($entity)) {
+            $translation_service = $this->lingotekInterfaceTranslation;
+          }
           $user_login = $request->query->get('deleted_by_user_login');
           $translation_service->deleteMetadata($entity);
           $this->logger->log(LogLevel::DEBUG, 'Document for entity @label deleted by @user_login in the TMS.', [
@@ -427,6 +467,9 @@ class LingotekNotificationController extends LingotekControllerBase {
             if ($entity instanceof ConfigEntityInterface) {
               $translation_service = $this->lingotekConfigTranslation;
             }
+            elseif (is_string($entity)) {
+              $translation_service = $this->lingotekInterfaceTranslation;
+            }
             $allowInterimDownloads = $this->lingotekConfiguration->getPreference('enable_download_interim');
             $progressCompleted = ($request->query->get('progress') == '100');
             if ($progressCompleted && $type === 'target') {
@@ -435,7 +478,7 @@ class LingotekNotificationController extends LingotekControllerBase {
             elseif ($type === 'phase' && $allowInterimDownloads || $type === 'download_interim_translation' && $allowInterimDownloads) {
               $translation_service->setTargetStatus($entity, $langcode, Lingotek::STATUS_INTERMEDIATE);
             }
-            if ($profile->hasAutomaticDownloadForTarget($langcode) && $profile->hasAutomaticDownloadWorker() && ($progressCompleted || $allowInterimDownloads)) {
+            if ($profile !== NULL && $profile->hasAutomaticDownloadForTarget($langcode) && $profile->hasAutomaticDownloadWorker() && ($progressCompleted || $allowInterimDownloads)) {
               $queue = \Drupal::queue('lingotek_downloader_queue_worker');
               $item = [
                 'entity_type_id' => $entity->getEntityTypeId(),
@@ -445,7 +488,7 @@ class LingotekNotificationController extends LingotekControllerBase {
               ];
               $result['download_queued'] = $queue->createItem($item);
             }
-            elseif ($profile->hasAutomaticDownloadForTarget($langcode) && !$profile->hasAutomaticDownloadWorker() && ($progressCompleted || $allowInterimDownloads)) {
+            elseif ($profile !== NULL && $profile->hasAutomaticDownloadForTarget($langcode) && !$profile->hasAutomaticDownloadWorker() && ($progressCompleted || $allowInterimDownloads)) {
               $result['download'] = $translation_service->downloadDocument($entity, $locale);
             }
             else {
@@ -475,7 +518,7 @@ class LingotekNotificationController extends LingotekControllerBase {
                 '@locale' => $locale,
                 '@document' => $document_id,
               ]);
-              if (!$profile->hasAutomaticDownloadForTarget($langcode)) {
+              if ($profile !== NULL && !$profile->hasAutomaticDownloadForTarget($langcode)) {
                 $http_status_code = Response::HTTP_OK;
               }
               else {
@@ -512,7 +555,6 @@ class LingotekNotificationController extends LingotekControllerBase {
           ->setSharedMaxAge(0)
           ->getCacheableMetadata()->addCacheContexts(['url.query_args']);
         return $response;
-      break;
     }
 
     $response = [
@@ -550,6 +592,11 @@ class LingotekNotificationController extends LingotekControllerBase {
     if ($entity === NULL) {
       /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
       $translation_service = \Drupal::service('lingotek.config_translation');
+      $entity = $translation_service->loadByDocumentId($document_id);
+    }
+    if ($entity === NULL) {
+      /** @var \Drupal\lingotek\LingotekInterfaceTranslationService $translation_service */
+      $translation_service = \Drupal::service('lingotek.interface_translation');
       $entity = $translation_service->loadByDocumentId($document_id);
     }
     return $entity;

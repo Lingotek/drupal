@@ -22,11 +22,17 @@ lingotek.manage_config:
   title: 'Config'
   weight: -8
 
+lingotek.manage_interface_translation:
+  route_name: lingotek.manage_interface_translation
+  base_route: lingotek.dashboard
+  title: 'User Interface'
+  weight: -7
+
 lingotek.translation_jobs:
   route_name: lingotek.translation_jobs
   base_route: lingotek.dashboard
   title: 'Translation Jobs'
-  weight: -7
+  weight: -6
 
 lingotek.translation_job_info.content:
   route_name: lingotek.translation_job_info.content

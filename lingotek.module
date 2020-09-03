@@ -719,6 +719,7 @@ function lingotek_theme() {
     'lingotek_source_status' => [
       'variables' => [
         'entity' => NULL,
+        'ui_component' => NULL,
         'status' => '',
         'status_title' => '',
         'language' => NULL,

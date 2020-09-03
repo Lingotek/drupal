@@ -1,0 +1,7 @@
+lingotek_interface_translation_test.test_route:
+  path: '/lingotek-interface-translation-test'
+  defaults:
+    _controller: '\Drupal\lingotek_interface_translation_test\Controller\InterfaceTranslationTestController::content'
+    _title: 'Test title for interface translation'
+  requirements:
+    _permission: 'administer lingotek'
