@@ -2,6 +2,8 @@
 
 namespace Drupal\lingotek\Plugin\QueueWorker;
 
+use Drupal\Core\Config\Entity\ConfigEntityInterface;
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Queue\QueueWorkerBase;
 use Drupal\lingotek\Lingotek;
 use Drupal\Component\Render\FormattableMarkup;
@@ -27,9 +29,22 @@ class LingotekDownloaderQueueWorker extends QueueWorkerBase {
     $document_id = $data['document_id'];
 
     $entity = \Drupal::entityTypeManager()->getStorage($entity_type_id)->load($entity_id);
+    if ($entity instanceof ConfigEntityInterface) {
+      /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+      $translation_service = \Drupal::service('lingotek.config_translation');
+    }
+    elseif ($entity instanceof ContentEntityInterface) {
+      /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+      $translation_service = \Drupal::service('lingotek.content_translation');
+    }
+    if (empty($translation_service)) {
+      $message = new FormattableMarkup('Can not download - entity (@instance) is not supported instance of a class', [
+        '@instance' => gettype($entity),
+      ]);
 
-    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
-    $translation_service = \Drupal::service('lingotek.content_translation');
+      \Drupal::logger('lingotek')->error($message);
+      throw new \Exception($message);
+    }
     $translation_service->setTargetStatus($entity, $locale, Lingotek::STATUS_READY);
     $download = $translation_service->downloadDocument($entity, $locale);
 
