@@ -61,11 +61,6 @@
     "drupal": {
       "type": "composer",
       "url": "https://packages.drupal.org/8"
-    },
-    "acquia/cohesion": {
-      "type": "github",
-      "url": "https://github.com/acquia/cohesion",
-      "no-api": true
     }
   }
 }
