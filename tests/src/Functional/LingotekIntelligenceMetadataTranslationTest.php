@@ -68,6 +68,8 @@ class LingotekIntelligenceMetadataTranslationTest extends LingotekTestBase {
     // that hold a list of languages.
     $this->rebuildContainer();
 
+    $this->setupResources();
+
     $this->saveLingotekContentTranslationSettings([
       'node' => [
         'article' => [
@@ -779,8 +781,8 @@ class LingotekIntelligenceMetadataTranslationTest extends LingotekTestBase {
   protected function setupGeneralIntelligenceSettings() {
     $this->drupalGet('admin/lingotek/settings');
     $edit = [
-      'intelligence_metadata[use_author]' => 1,
-      'intelligence_metadata[use_author_email]' => 1,
+      'intelligence_metadata[use_author]' => TRUE,
+      'intelligence_metadata[use_author_email]' => TRUE,
       'intelligence_metadata[use_contact_email_for_author]' => FALSE,
       'intelligence_metadata[use_business_unit]' => 1,
       'intelligence_metadata[use_business_division]' => 1,
@@ -816,6 +818,35 @@ class LingotekIntelligenceMetadataTranslationTest extends LingotekTestBase {
       'intelligence_metadata[use_contact_email_for_author]' => TRUE,
     ];
     $this->drupalPostForm(NULL, $edit, 'Save Lingotek Intelligence Metadata', [], 'lingotekintelligence-metadata-form');
+  }
+
+  /**
+   * Setup test resources for the test.
+   */
+  protected function setupResources() {
+    $config = \Drupal::configFactory()->getEditable('lingotek.settings');
+    $config->set('account.resources.community', [
+      'test_community' => 'Test community',
+      'test_community2' => 'Test community 2',
+    ]);
+    $config->set('account.resources.project', [
+      'test_project' => 'Test project',
+      'test_project2' => 'Test project 2',
+    ]);
+    $config->set('account.resources.vault', [
+      'test_vault' => 'Test vault',
+      'test_vault2' => 'Test vault 2',
+    ]);
+    $config->set('account.resources.workflow', [
+      'test_workflow' => 'Test workflow',
+      'test_workflow2' => 'Test workflow 2',
+    ]);
+    $config->set('account.resources.filter', [
+      'test_filter' => 'Test filter',
+      'test_filter2' => 'Test filter 2',
+      'test_filter3' => 'Test filter 3',
+    ]);
+    $config->save();
   }
 
 }

@@ -1,0 +1,4 @@
+services:
+  lingotek_test.config.factory:
+    class: Drupal\Core\Config\ConfigFactory
+    arguments: ['@config.storage', '@event_dispatcher', '@config.typed']

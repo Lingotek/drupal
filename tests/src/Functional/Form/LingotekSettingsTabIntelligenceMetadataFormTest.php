@@ -28,8 +28,8 @@ class LingotekSettingsTabIntelligenceMetadataFormTest extends LingotekTestBase {
     // Check we can store the values.
     $this->drupalGet('admin/lingotek/settings');
     $edit = [
-      'intelligence_metadata[use_author]' => 1,
-      'intelligence_metadata[use_author_email]' => 1,
+      'intelligence_metadata[use_author]' => TRUE,
+      'intelligence_metadata[use_author_email]' => TRUE,
       'intelligence_metadata[use_contact_email_for_author]' => FALSE,
       'intelligence_metadata[use_business_unit]' => 1,
       'intelligence_metadata[use_business_division]' => 1,

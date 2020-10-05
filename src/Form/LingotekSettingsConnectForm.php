@@ -22,13 +22,14 @@ class LingotekSettingsConnectForm extends LingotekConfigFormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     // build the redirecting link for authentication to Lingotek
-    $host = $this->lingotek->get('account.host');
-    $auth_path = $this->lingotek->get('account.authorize_path');
-    $id = $this->lingotek->get('account.default_client_id');
-    $return_uri = new Url('lingotek.setup_account_handshake', ['success' => 'true', 'prod' => 'prod'], ['absolute' => TRUE]);
+    $config = $this->configFactory->get('lingotek.settings');
+    $host = $config->get('account.host');
+    $auth_path = $config->get('account.authorize_path');
+    $id = $config->get('account.default_client_id');
+    $return_uri = $this->urlGenerator->generateFromRoute('lingotek.setup_account_handshake', ['success' => 'true', 'prod' => 'prod'], ['absolute' => TRUE]);
 
-    $lingotek_register_link = $host . '/' . 'lingopoint/portal/requestAccount.action?client_id=' . $id . '&response_type=token&app=' . urlencode($return_uri->toString());
-    $lingotek_connect_link = $host . '/' . $auth_path . '?client_id=' . $id . '&response_type=token&redirect_uri=' . urlencode($return_uri->toString());
+    $lingotek_register_link = $host . '/' . 'lingopoint/portal/requestAccount.action?client_id=' . $id . '&response_type=token&app=' . urlencode($return_uri);
+    $lingotek_connect_link = $host . '/' . $auth_path . '?client_id=' . $id . '&response_type=token&redirect_uri=' . urlencode($return_uri);
     $lingotek_demo_link = 'https://www.lingotek.com/request-demo';
 
     $form = [];
@@ -77,7 +78,7 @@ class LingotekSettingsConnectForm extends LingotekConfigFormBase {
 
     $form['account_types']['existing_account']['cta'] = [
       '#type' => 'link',
-      '#title' => t('Connect Lingotek Account'),
+      '#title' => $this->t('Connect Lingotek Account'),
       '#url' => Url::fromUri($lingotek_connect_link),
       '#attributes' => ['class' => ['lingotek_signup_box_cta', 'lingotek_signup_box_main_cta']],
     ];
@@ -105,7 +106,7 @@ class LingotekSettingsConnectForm extends LingotekConfigFormBase {
 
     $form['account_types']['free_account']['cta'] = [
       '#type' => 'link',
-      '#title' => t('Get started'),
+      '#title' => $this->t('Get started'),
       '#url' => Url::fromUri($lingotek_register_link),
       '#attributes' => ['class' => 'lingotek_signup_box_cta'],
     ];

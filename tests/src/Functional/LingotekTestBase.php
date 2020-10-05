@@ -155,6 +155,7 @@ abstract class LingotekTestBase extends BrowserTestBase {
     $this->drupalPostForm(NULL, [
       'project' => 'test_project',
       'vault' => 'test_vault',
+      'workflow' => 'test_workflow',
     ], 'Save configuration');
   }
 

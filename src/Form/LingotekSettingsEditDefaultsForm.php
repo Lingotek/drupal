@@ -17,7 +17,12 @@ class LingotekSettingsEditDefaultsForm extends LingotekSettingsDefaultsForm {
     $this->defaults_labels['project'] = t('Default Project');
     $this->defaults_labels['workflow'] = t('Default Workflow');
     $this->defaults_labels['vault'] = t('Default Vault');
-    parent::init();
+    $this->defaults_labels['filter'] = t('Default Filter');
+    $this->defaults_labels['subfilter'] = t('Default Subfilter');
+
+    $config = \Drupal::configFactory()->getEditable('lingotek.settings');
+    $this->defaults = $config->get('default');
+    $this->resources = $this->lingotek->getResources();
   }
 
   /**
@@ -34,6 +39,7 @@ class LingotekSettingsEditDefaultsForm extends LingotekSettingsDefaultsForm {
     $config->save();
 
     $form_state->setRedirect('lingotek.settings');
+    $this->messenger()->addStatus($this->t('The configuration options have been saved.'));
   }
 
 }

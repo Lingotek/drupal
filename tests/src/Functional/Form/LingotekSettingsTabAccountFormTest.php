@@ -25,9 +25,6 @@ class LingotekSettingsTabAccountFormTest extends LingotekTestBase {
     parent::setUp();
 
     $this->setupResources();
-
-    // Login as admin.
-    $this->drupalLogin($this->rootUser);
   }
 
   /**
@@ -40,13 +37,13 @@ class LingotekSettingsTabAccountFormTest extends LingotekTestBase {
     $this->assertTableValue('plan', 'No');
     $this->assertTableValue('activation', 'testUser@example.com');
     $this->assertTableValue('token', 'test_token');
-    $this->assertTableValue('community', 'Test Community (test_community)');
-    $this->assertTableValue('workflow', 'test_workflow (test_workflow)');
-    $this->assertTableValue('project', 'test_project (test_project)');
-    $this->assertTableValue('vault', 'test_vault (test_vault)');
+    $this->assertTableValue('community', 'Test community (test_community)');
+    $this->assertTableValue('workflow', 'Test workflow (test_workflow)');
+    $this->assertTableValue('project', 'Test project (test_project)');
+    $this->assertTableValue('vault', 'Test vault (test_vault)');
     $this->assertTableValue('filter', 'Drupal Default (drupal_default)');
     $this->assertTableValue('subfilter', 'Drupal Default (drupal_default)');
-    $this->assertTableValue('tms', 'https://myaccount.lingotek.com');
+    $this->assertTableValue('tms', \Drupal::request()->getSchemeAndHttpHost() . \Drupal::request()->getBasePath());
     $this->assertTableValue('gmc', 'https://gmc.lingotek.com');
 
     $this->clickLink('Edit defaults');
@@ -65,13 +62,13 @@ class LingotekSettingsTabAccountFormTest extends LingotekTestBase {
     $this->assertTableValue('plan', 'No');
     $this->assertTableValue('activation', 'testUser@example.com');
     $this->assertTableValue('token', 'test_token');
-    $this->assertTableValue('community', 'Test Community 2 (test_community2)');
-    $this->assertTableValue('workflow', 'test_workflow 2 (test_workflow2)');
-    $this->assertTableValue('project', 'test_project 2 (test_project2)');
-    $this->assertTableValue('vault', 'test_vault 2 (test_vault2)');
-    $this->assertTableValue('filter', 'test_filter 2 (test_filter2)');
-    $this->assertTableValue('subfilter', 'test_filter 3 (test_filter3)');
-    $this->assertTableValue('tms', 'https://myaccount.lingotek.com');
+    $this->assertTableValue('community', 'Test community 2 (test_community2)');
+    $this->assertTableValue('workflow', 'Test workflow 2 (test_workflow2)');
+    $this->assertTableValue('project', 'Test project 2 (test_project2)');
+    $this->assertTableValue('vault', 'Test vault 2 (test_vault2)');
+    $this->assertTableValue('filter', 'Test filter 2 (test_filter2)');
+    $this->assertTableValue('subfilter', 'Test filter 3 (test_filter3)');
+    $this->assertTableValue('tms', \Drupal::request()->getSchemeAndHttpHost() . \Drupal::request()->getBasePath());
     $this->assertTableValue('gmc', 'https://gmc.lingotek.com');
   }
 
@@ -113,25 +110,25 @@ class LingotekSettingsTabAccountFormTest extends LingotekTestBase {
   protected function setupResources() {
     $config = \Drupal::configFactory()->getEditable('lingotek.settings');
     $config->set('account.resources.community', [
-      'test_community' => 'Test Community',
-      'test_community2' => 'Test Community 2',
+      'test_community' => 'Test community',
+      'test_community2' => 'Test community 2',
     ]);
     $config->set('account.resources.project', [
-      'test_project' => 'test_project',
-      'test_project2' => 'test_project 2',
+      'test_project' => 'Test project',
+      'test_project2' => 'Test project 2',
     ]);
     $config->set('account.resources.vault', [
-      'test_vault' => 'test_vault',
-      'test_vault2' => 'test_vault 2',
+      'test_vault' => 'Test vault',
+      'test_vault2' => 'Test vault 2',
     ]);
     $config->set('account.resources.workflow', [
-      'test_workflow' => 'test_workflow',
-      'test_workflow2' => 'test_workflow 2',
+      'test_workflow' => 'Test workflow',
+      'test_workflow2' => 'Test workflow 2',
     ]);
     $config->set('account.resources.filter', [
-      'test_filter' => 'test_filter',
-      'test_filter2' => 'test_filter 2',
-      'test_filter3' => 'test_filter 3',
+      'test_filter' => 'Test filter',
+      'test_filter2' => 'Test filter 2',
+      'test_filter3' => 'Test filter 3',
     ]);
     $config->save();
   }

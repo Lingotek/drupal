@@ -32,6 +32,15 @@ class LingotekProfileFormTest extends LingotekTestBase {
   public static $modules = ['node'];
 
   /**
+   * {@inheritdoc}
+   */
+  protected function setUp(): void {
+    parent::setUp();
+
+    $this->setupResources();
+  }
+
+  /**
    * Test that default profiles are present.
    */
   public function testDefaultProfilesPresent() {
@@ -129,7 +138,7 @@ class LingotekProfileFormTest extends LingotekTestBase {
       'vault' => 'test_vault',
       'workflow' => 'test_workflow',
       'filter' => 'test_filter',
-      'subfilter' => 'another_filter',
+      'subfilter' => 'test_filter2',
       'append_type_to_title' => 'no',
     ];
     $this->drupalPostForm(NULL, $edit, t('Save'));
@@ -143,7 +152,7 @@ class LingotekProfileFormTest extends LingotekTestBase {
     $this->assertIdentical('test_vault', $profile->getVault());
     $this->assertIdentical('test_workflow', $profile->getWorkflow());
     $this->assertIdentical('test_filter', $profile->getFilter());
-    $this->assertIdentical('another_filter', $profile->getSubfilter());
+    $this->assertIdentical('test_filter2', $profile->getSubfilter());
 
     $this->drupalGet("/admin/lingotek/settings/profile/$profile_id/edit");
     $this->assertNoFieldChecked("edit-auto-upload");
@@ -153,7 +162,7 @@ class LingotekProfileFormTest extends LingotekTestBase {
     $this->assertOptionSelected('edit-vault', 'test_vault');
     $this->assertOptionSelected('edit-workflow', 'test_workflow');
     $this->assertOptionSelected('edit-filter', 'test_filter');
-    $this->assertOptionSelected('edit-subfilter', 'another_filter');
+    $this->assertOptionSelected('edit-subfilter', 'test_filter2');
   }
 
   /**
@@ -388,7 +397,7 @@ class LingotekProfileFormTest extends LingotekTestBase {
       'auto_download' => 1,
       'project' => 'default',
       'vault' => 'default',
-      'workflow' => 'another_workflow',
+      'workflow' => 'test_workflow2',
       'language_overrides[es][overrides]' => 'custom',
       'language_overrides[es][custom][auto_download]' => FALSE,
       'language_overrides[es][custom][workflow]' => 'test_workflow',
@@ -406,7 +415,7 @@ class LingotekProfileFormTest extends LingotekTestBase {
     $this->assertTrue($profile->hasAutomaticDownload());
     $this->assertIdentical('default', $profile->getProject());
     $this->assertIdentical('default', $profile->getVault());
-    $this->assertIdentical('another_workflow', $profile->getWorkflow());
+    $this->assertIdentical('test_workflow2', $profile->getWorkflow());
     $this->assertIdentical('test_workflow', $profile->getWorkflowForTarget('es'));
     $this->assertIdentical('default', $profile->getWorkflowForTarget('de'));
     $this->assertIdentical('test_vault', $profile->getVaultForTarget('es'));
@@ -419,7 +428,7 @@ class LingotekProfileFormTest extends LingotekTestBase {
     $this->assertFieldChecked("edit-auto-download");
     $this->assertOptionSelected('edit-project', 'default');
     $this->assertOptionSelected('edit-vault', 'default');
-    $this->assertOptionSelected('edit-workflow', 'another_workflow');
+    $this->assertOptionSelected('edit-workflow', 'test_workflow2');
     $this->assertOptionSelected('edit-language-overrides-es-overrides', 'custom');
     $this->assertOptionSelected('edit-language-overrides-de-overrides', 'custom');
     $this->assertOptionSelected('edit-language-overrides-en-overrides', 'default');
@@ -625,12 +634,14 @@ class LingotekProfileFormTest extends LingotekTestBase {
     $assert_session->optionExists('edit-filter', 'project_default');
     $assert_session->optionExists('edit-filter', 'drupal_default');
     $assert_session->optionExists('edit-filter', 'test_filter');
-    $assert_session->optionExists('edit-filter', 'another_filter');
+    $assert_session->optionExists('edit-filter', 'test_filter2');
+    $assert_session->optionExists('edit-filter', 'test_filter3');
     $assert_session->optionExists('edit-subfilter', 'default');
     $assert_session->optionExists('edit-subfilter', 'project_default');
     $assert_session->optionExists('edit-subfilter', 'drupal_default');
     $assert_session->optionExists('edit-subfilter', 'test_filter');
-    $assert_session->optionExists('edit-subfilter', 'another_filter');
+    $assert_session->optionExists('edit-subfilter', 'test_filter2');
+    $assert_session->optionExists('edit-subfilter', 'test_filter3');
   }
 
   /**
@@ -650,7 +661,7 @@ class LingotekProfileFormTest extends LingotekTestBase {
     $assert_session->optionExists('edit-filter', 'default');
     $assert_session->optionExists('edit-filter', 'project_default');
     $assert_session->optionNotExists('edit-filter', 'test_filter');
-    $assert_session->optionNotExists('edit-filter', 'another_filter');
+    $assert_session->optionNotExists('edit-filter', 'test_filter2');
 
     $this->assertFieldByName('subfilter');
     $option_field = $assert_session->optionExists('edit-subfilter', 'drupal_default');
@@ -658,7 +669,7 @@ class LingotekProfileFormTest extends LingotekTestBase {
     $assert_session->optionExists('edit-subfilter', 'default');
     $assert_session->optionExists('edit-subfilter', 'project_default');
     $assert_session->optionNotExists('edit-subfilter', 'test_filter');
-    $assert_session->optionNotExists('edit-subfilter', 'another_filter');
+    $assert_session->optionNotExists('edit-subfilter', 'test_filter2');
   }
 
   /**
@@ -693,6 +704,35 @@ class LingotekProfileFormTest extends LingotekTestBase {
     $elements = $this->xpath('//input[@id=:id]', [':id' => $id]);
     return $this->assertTrue(isset($elements[0]) && empty($elements[0]->getAttribute('disabled')),
       $message ? $message : t('Field @id is enabled.', ['@id' => $id]), t('Browser'));
+  }
+
+  /**
+   * Setup test resources for the test.
+   */
+  protected function setupResources() {
+    $config = \Drupal::configFactory()->getEditable('lingotek.settings');
+    $config->set('account.resources.community', [
+      'test_community' => 'Test community',
+      'test_community2' => 'Test community 2',
+    ]);
+    $config->set('account.resources.project', [
+      'test_project' => 'Test project',
+      'test_project2' => 'Test project 2',
+    ]);
+    $config->set('account.resources.vault', [
+      'test_vault' => 'Test vault',
+      'test_vault2' => 'Test vault 2',
+    ]);
+    $config->set('account.resources.workflow', [
+      'test_workflow' => 'Test workflow',
+      'test_workflow2' => 'Test workflow 2',
+    ]);
+    $config->set('account.resources.filter', [
+      'test_filter' => 'Test filter',
+      'test_filter2' => 'Test filter 2',
+      'test_filter3' => 'Test filter 3',
+    ]);
+    $config->save();
   }
 
 }

@@ -101,7 +101,9 @@ abstract class LingotekControllerBase extends ControllerBase {
   public function connected() {
     $access_token = $this->request->query->get('access_token');
     if ($access_token) {
-      $this->lingotek->set('access_token', $access_token);
+      $config = \Drupal::configFactory()->getEditable('lingotek.settings');
+      $config->set('access_token', $access_token);
+      $config->save();
       return TRUE;
     }
     return FALSE;

@@ -31,35 +31,35 @@ class LingotekSettingsTabLoggingForm extends LingotekConfigFormBase {
       '#type' => 'checkbox',
       '#title' => t('Error Logging'),
       '#description' => t("This prints errors and warnings to the web server's error logs in addition to adding them to watchdog."),
-      '#default_value' => $this->lingotek->get('logging.lingotek_error_log'),
+      '#default_value' => $this->config('lingotek.settings')->get('logging.lingotek_error_log'),
     ];
 
     $form['log']['warning_logging'] = [
       '#type' => 'checkbox',
       '#title' => t('Warning Logging'),
       '#description' => t("This logs any warnings in watchdog and the web server's error logs."),
-      '#default_value' => $this->lingotek->get('logging.lingotek_warning_log'),
+      '#default_value' => $this->config('lingotek.settings')->get('logging.lingotek_warning_log'),
     ];
 
     $form['log']['interaction_logging'] = [
       '#type' => 'checkbox',
       '#title' => t('API & Interaction Logging'),
       '#description' => t('Logs the timing and request/response details of all Lingotek API calls. Additionally, interaction calls (e.g., endpoint, notifications) made back to Drupal will be logged with this enabled.'),
-      '#default_value' => $this->lingotek->get('logging.lingotek_api_debug'),
+      '#default_value' => $this->config('lingotek.settings')->get('logging.lingotek_api_debug'),
     ];
 
     $form['log']['trace_logging'] = [
       '#type' => 'checkbox',
       '#title' => t('Trace Logging'),
       '#description' => t("This logs trace debug messages to watchdog and the web server's error logs. (This logging is extremely verbose.)"),
-      '#default_value' => $this->lingotek->get('logging.lingotek_trace_log'),
+      '#default_value' => $this->config('lingotek.settings')->get('logging.lingotek_trace_log'),
     ];
 
     $form['log']['never_cache'] = [
       '#type' => 'checkbox',
       '#title' => t('Never Cache'),
       '#description' => t('Skips caching so you can test easier. This avoids frequent polling of fresh data from Lingotek. Only those with Developer permissions will have caching disabled.'),
-      '#default_value' => $this->lingotek->get('logging.lingotek_flush_cache'),
+      '#default_value' => $this->config('lingotek.settings')->get('logging.lingotek_flush_cache'),
     ];
 
     $form['log']['actions']['#type'] = 'actions';
@@ -78,11 +78,13 @@ class LingotekSettingsTabLoggingForm extends LingotekConfigFormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $form_values = $form_state->getValues();
 
-    $this->lingotek->set('logging.lingotek_error_log', $form_values['error_logging']);
-    $this->lingotek->set('logging.lingotek_warning_log', $form_values['warning_logging']);
-    $this->lingotek->set('logging.lingotek_api_debug', $form_values['interaction_logging']);
-    $this->lingotek->set('logging.lingotek_trace_log', $form_values['trace_logging']);
-    $this->lingotek->set('logging.lingotek_flush_cache', $form_values['never_cache']);
+    $config = \Drupal::configFactory()->getEditable('lingotek.settings');
+    $config->set('logging.lingotek_error_log', $form_values['error_logging']);
+    $config->set('logging.lingotek_warning_log', $form_values['warning_logging']);
+    $config->set('logging.lingotek_api_debug', $form_values['interaction_logging']);
+    $config->set('logging.lingotek_trace_log', $form_values['trace_logging']);
+    $config->set('logging.lingotek_flush_cache', $form_values['never_cache']);
+    $config->save();
   }
 
 }

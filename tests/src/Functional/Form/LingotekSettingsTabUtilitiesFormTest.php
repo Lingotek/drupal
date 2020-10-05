@@ -43,8 +43,8 @@ class LingotekSettingsTabUtilitiesFormTest extends LingotekTestBase {
     $communities = $config->get('account.resources.community');
     $this->assertCount(2, $communities);
     $this->assertEquals([
-      'test_community' => 'Test Community',
-      'test_community2' => 'Test Community 2',
+      'test_community' => 'Test community',
+      'test_community2' => 'Test community 2',
     ], $communities);
     $projects = $config->get('account.resources.project');
     $this->assertCount(2, $projects);
@@ -79,8 +79,8 @@ class LingotekSettingsTabUtilitiesFormTest extends LingotekTestBase {
   protected function setupResources() {
     $config = \Drupal::configFactory()->getEditable('lingotek.settings');
     $config->set('account.resources.community', [
-      'test_community' => 'Test Community',
-      'test_community2' => 'Test Community 2',
+      'test_community' => 'Test community',
+      'test_community2' => 'Test community 2',
     ]);
     $config->set('account.resources.project', [
       'test_project' => 'test_project',

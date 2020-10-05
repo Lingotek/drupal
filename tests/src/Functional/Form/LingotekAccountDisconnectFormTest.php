@@ -19,6 +19,8 @@ class LingotekAccountDisconnectFormTest extends LingotekTestBase {
     $this->drupalGet('admin/lingotek/settings');
     $this->drupalPostForm(NULL, [], t('Disconnect'), [], 'lingoteksettings-tab-account-form');
 
+    \Drupal::state()->set('must_remain_disconnected', TRUE);
+
     // We need to confirm disconnection.
     $this->drupalPostForm(NULL, [], t('Disconnect'));
 

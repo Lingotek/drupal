@@ -146,28 +146,31 @@ class LingotekProfileFormBase extends EntityForm {
 
     $projects = $this->config('lingotek.settings')->get('account.resources.project');
     $default_project = $this->config('lingotek.settings')->get('default.project');
+    $default_project_name = isset($projects[$default_project]) ? $projects[$default_project] : '';
 
     $form['project'] = [
       '#type' => 'select',
       '#title' => $this->t('Default Project'),
-      '#options' => ['default' => 'Default (' . $projects[$default_project] . ')'] + $projects,
+      '#options' => ['default' => $this->t('Default (%project)', ['%project' => $default_project_name])] + $projects,
       '#description' => $this->t('The default Translation Memory Project where translations are saved.'),
       '#default_value' => $profile->getProject(),
     ];
 
     $workflows = $this->config('lingotek.settings')->get('account.resources.workflow');
     $default_workflow = $this->config('lingotek.settings')->get('default.workflow');
+    $default_workflow_name = isset($workflows[$default_workflow]) ? $workflows[$default_workflow] : '';
 
     $form['workflow'] = [
       '#type' => 'select',
       '#title' => $this->t('Default Workflow'),
-      '#options' => ['default' => 'Default (' . $workflows[$default_workflow] . ')'] + $workflows,
+      '#options' => ['default' => $this->t('Default (%workflow)', ['%workflow' => $default_workflow_name])] + $workflows,
       '#description' => $this->t('The default Workflow which would be used for translations.'),
       '#default_value' => $profile->getWorkflow(),
     ];
 
     $vaults = $this->config('lingotek.settings')->get('account.resources.vault');
     $default_vault = $this->config('lingotek.settings')->get('default.vault');
+    $default_vault_name = isset($vaults[$default_vault]) ? $vaults[$default_vault] : '';
 
     // We have two defaults: default vault, or the Project Workflow Template
     // Default vault.
@@ -175,7 +178,7 @@ class LingotekProfileFormBase extends EntityForm {
       '#type' => 'select',
       '#title' => $this->t('Default Vault'),
       '#options' => [
-          'default' => 'Default (' . $vaults[$default_vault] . ')',
+          'default' => $this->t('Default (%vault)', ['%vault' => $default_vault_name]),
           'project_workflow_vault' => 'Use Project Workflow Template Default',
         ] + $vaults,
       '#description' => $this->t('The default Translation Memory Vault where translations are saved.'),
@@ -266,7 +269,7 @@ class LingotekProfileFormBase extends EntityForm {
           'workflow' => [
             '#type' => 'select',
             '#title' => $this->t('Default Workflow'),
-            '#options' => ['default' => 'Default (' . $workflows[$default_workflow] . ')'] + $workflows,
+            '#options' => ['default' => $this->t('Default (%workflow)', ['%workflow' => $default_workflow_name])] + $workflows,
             '#description' => $this->t('The default Workflow which would be used for translations.'),
             '#default_value' => $profile->hasCustomSettingsForTarget($langcode) ? $profile->getWorkflowForTarget($langcode) : 'default',
           ],
@@ -276,7 +279,7 @@ class LingotekProfileFormBase extends EntityForm {
           'vault' => [
             '#type' => 'select',
             '#title' => $this->t('Target Save-To Vault'),
-            '#options' => ['default' => 'Default (' . $vaults[$default_vault] . ')'] + $vaults,
+            '#options' => ['default' => $this->t('Default (%vault)', ['%vault' => $default_vault_name])] + $vaults,
             '#description' => $this->t("The Translation Memory Vault where this target's translations are saved."),
             '#default_value' => $profile->hasCustomSettingsForTarget($langcode) ? $profile->getVaultForTarget($langcode) : 'default',
           ],

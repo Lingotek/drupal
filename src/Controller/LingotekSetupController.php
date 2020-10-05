@@ -84,13 +84,20 @@ class LingotekSetupController extends LingotekControllerBase {
     $resources = $this->lingotek->getResources();
     // No choice necessary. Save and advance to the next page.
     if (count($resources['project']) == 1 && count($resources['vault']) == 1) {
-      $this->lingotek->set('default.project', current(array_keys($resources['project'])));
-      $this->lingotek->set('default.vault', current(array_keys($resources['vault'])));
-      $this->lingotek->set('default.workflow', array_search('Machine Translation', $resources['workflow']));
+      $config = \Drupal::configFactory()->getEditable('lingotek.settings');
+
+      $config->set('default.project', current(array_keys($resources['project'])));
+      $config->set('default.vault', current(array_keys($resources['vault'])));
+      $default_workflow = array_search('Machine Translation', $resources['workflow']);
+      if ($default_workflow === FALSE) {
+        $default_workflow = current(array_keys($resources['workflow']));
+      }
+      $config->set('default.workflow', $default_workflow);
       // Assign the project callback
       $new_callback_url = \Drupal::urlGenerator()->generateFromRoute('lingotek.notify', [], ['absolute' => TRUE]);
-      $this->lingotek->set('account.callback_url', $new_callback_url);
-      $new_response = $this->lingotek->setProjectCallBackUrl($this->lingotek->get('default.project'), $new_callback_url);
+      $config->set('account.callback_url', $new_callback_url);
+      $config->save();
+      $new_response = $this->lingotek->setProjectCallBackUrl($config->get('default.project'), $new_callback_url);
       return $this->redirect('lingotek.dashboard');
     }
     return [

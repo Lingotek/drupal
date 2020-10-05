@@ -314,33 +314,33 @@ class LingotekIntelligenceMetadataForm extends FormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $metadata = $this->getIntelligenceMetadata($form_state);
-    $metadata->setAuthorPermission($form_state->getValue(['intelligence_metadata', 'use_author']));
-    $metadata->setAuthorEmailPermission($form_state->getValue(['intelligence_metadata', 'use_author_email']));
-    $metadata->setContactEmailForAuthorPermission($form_state->getValue(['intelligence_metadata', 'use_contact_email_for_author']));
+    $metadata->setAuthorPermission($form_state->getValue(['intelligence_metadata', 'use_author']) ? TRUE : FALSE);
+    $metadata->setAuthorEmailPermission($form_state->getValue(['intelligence_metadata', 'use_author_email']) ? TRUE : FALSE);
+    $metadata->setContactEmailForAuthorPermission($form_state->getValue(['intelligence_metadata', 'use_contact_email_for_author']) ? TRUE : FALSE);
     $metadata->setDefaultAuthorEmail($form_state->getValue(['intelligence_metadata', 'default_author_email']));
-    $metadata->setBusinessUnitPermission($form_state->getValue(['intelligence_metadata', 'use_business_unit']));
+    $metadata->setBusinessUnitPermission($form_state->getValue(['intelligence_metadata', 'use_business_unit']) ? TRUE : FALSE);
     $metadata->setBusinessUnit($form_state->getValue(['intelligence_metadata', 'business_unit']));
-    $metadata->setBusinessDivisionPermission($form_state->getValue(['intelligence_metadata', 'use_business_division']));
+    $metadata->setBusinessDivisionPermission($form_state->getValue(['intelligence_metadata', 'use_business_division']) ? TRUE : FALSE);
     $metadata->setBusinessDivision($form_state->getValue(['intelligence_metadata', 'business_division']));
-    $metadata->setCampaignIdPermission($form_state->getValue(['intelligence_metadata', 'use_campaign_id']));
+    $metadata->setCampaignIdPermission($form_state->getValue(['intelligence_metadata', 'use_campaign_id']) ? TRUE : FALSE);
     $metadata->setCampaignId($form_state->getValue(['intelligence_metadata', 'campaign_id']));
-    $metadata->setCampaignRatingPermission($form_state->getValue(['intelligence_metadata', 'use_campaign_rating']));
-    $metadata->setCampaignRating($form_state->getValue(['intelligence_metadata', 'campaign_rating']));
-    $metadata->setChannelPermission($form_state->getValue(['intelligence_metadata', 'use_channel']));
+    $metadata->setCampaignRatingPermission($form_state->getValue(['intelligence_metadata', 'use_campaign_rating']) ? TRUE : FALSE);
+    $metadata->setCampaignRating(intval($form_state->getValue(['intelligence_metadata', 'campaign_rating'])));
+    $metadata->setChannelPermission($form_state->getValue(['intelligence_metadata', 'use_channel']) ? TRUE : FALSE);
     $metadata->setChannel($form_state->getValue(['intelligence_metadata', 'channel']));
-    $metadata->setContactNamePermission($form_state->getValue(['intelligence_metadata', 'use_contact_name']));
+    $metadata->setContactNamePermission($form_state->getValue(['intelligence_metadata', 'use_contact_name']) ? TRUE : FALSE);
     $metadata->setContactName($form_state->getValue(['intelligence_metadata', 'contact_name']));
-    $metadata->setContactEmailPermission($form_state->getValue(['intelligence_metadata', 'use_contact_email']));
+    $metadata->setContactEmailPermission($form_state->getValue(['intelligence_metadata', 'use_contact_email']) ? TRUE : FALSE);
     $metadata->setContactEmail($form_state->getValue(['intelligence_metadata', 'contact_email']));
-    $metadata->setContentDescriptionPermission($form_state->getValue(['intelligence_metadata', 'use_content_description']));
+    $metadata->setContentDescriptionPermission($form_state->getValue(['intelligence_metadata', 'use_content_description']) ? TRUE : FALSE);
     $metadata->setContentDescription($form_state->getValue(['intelligence_metadata', 'content_description']));
-    $metadata->setBaseDomainPermission($form_state->getValue(['intelligence_metadata', 'use_base_domain']));
-    $metadata->setReferenceUrlPermission($form_state->getValue(['intelligence_metadata', 'use_reference_url']));
-    $metadata->setExternalStyleIdPermission($form_state->getValue(['intelligence_metadata', 'use_external_style_id']));
+    $metadata->setBaseDomainPermission($form_state->getValue(['intelligence_metadata', 'use_base_domain']) ? TRUE : FALSE);
+    $metadata->setReferenceUrlPermission($form_state->getValue(['intelligence_metadata', 'use_reference_url']) ? TRUE : FALSE);
+    $metadata->setExternalStyleIdPermission($form_state->getValue(['intelligence_metadata', 'use_external_style_id']) ? TRUE : FALSE);
     $metadata->setExternalStyleId($form_state->getValue(['intelligence_metadata', 'external_style_id']));
-    $metadata->setPurchaseOrderPermission($form_state->getValue(['intelligence_metadata', 'use_purchase_order']));
+    $metadata->setPurchaseOrderPermission($form_state->getValue(['intelligence_metadata', 'use_purchase_order']) ? TRUE : FALSE);
     $metadata->setPurchaseOrder($form_state->getValue(['intelligence_metadata', 'purchase_order']));
-    $metadata->setRegionPermission($form_state->getValue(['intelligence_metadata', 'use_region']));
+    $metadata->setRegionPermission($form_state->getValue(['intelligence_metadata', 'use_region']) ? TRUE : FALSE);
     $metadata->setRegion($form_state->getValue(['intelligence_metadata', 'region']));
 
     // Show this message only if we are saving the general settings. For profiles

@@ -41,7 +41,11 @@ class LingotekAccountTest extends BrowserTestBase {
     // Then we can select the defaults for the different fields.
     $this->drupalPostForm(NULL, ['community' => 'test_community'], 'Next');
     $this->assertText('The configuration options have been saved.');
-    $this->drupalPostForm(NULL, ['project' => 'test_project', 'vault' => 'test_vault'], 'Save configuration');
+    $this->drupalPostForm(NULL, [
+      'project' => 'test_project',
+      'vault' => 'test_vault',
+      'workflow' => 'test_workflow',
+    ], 'Save configuration');
     $this->assertText('The configuration options have been saved.');
     // We are done with the defaults, we should be redirected to the dashboard.
     $this->assertText('Dashboard');

@@ -13,7 +13,9 @@ class LingotekSettingsDefaultsForm extends LingotekConfigFormBase {
   protected $resources;
 
   public function init() {
-    $this->defaults = $this->lingotek->getEditable('default');
+    $config = \Drupal::configFactory()->getEditable('lingotek.settings');
+
+    $this->defaults = $config->get('default');
     $this->resources = $this->lingotek->getResources();
 
     // Make visible only those options that have more than one choice
@@ -21,14 +23,21 @@ class LingotekSettingsDefaultsForm extends LingotekConfigFormBase {
       $this->defaults_labels['project'] = t('Default Project');
     }
     elseif (count($this->resources['project']) == 1) {
-      $this->lingotek->set('default.project', current(array_keys($this->resources['project'])));
+      $config->set('default.project', current(array_keys($this->resources['project'])));
     }
 
     if (count($this->resources['vault']) > 1) {
       $this->defaults_labels['vault'] = t('Default Vault');
     }
     elseif (count($this->resources['vault']) == 1) {
-      $this->lingotek->set('default.vault', current(array_keys($this->resources['vault'])));
+      $config->set('default.vault', current(array_keys($this->resources['vault'])));
+    }
+
+    if (count($this->resources['workflow']) > 1) {
+      $this->defaults_labels['workflow'] = t('Default Workflow');
+    }
+    elseif (count($this->resources['workflow']) == 1) {
+      $config->set('default.workflow', current(array_keys($this->resources['workflow'])));
     }
 
     if (count($this->resources['filter']) > 1) {
@@ -36,15 +45,16 @@ class LingotekSettingsDefaultsForm extends LingotekConfigFormBase {
       $this->defaults_labels['subfilter'] = t('Default Subfilter');
     }
     else {
-      $this->lingotek->set('default.filter', 'drupal_default');
-      $this->lingotek->set('default.subfilter', 'drupal_default');
+      $config->set('default.filter', 'drupal_default');
+      $config->set('default.subfilter', 'drupal_default');
     }
 
     // Set workflow to machine translation every time regardless if there's more than one choice
     $machine_translation = array_search('Machine Translation', $this->resources['workflow']);
     if ($machine_translation) {
-      $this->lingotek->set('default.workflow', $machine_translation);
+      $config->set('default.workflow', $machine_translation);
     }
+    $config->save();
   }
 
   /**
@@ -76,9 +86,11 @@ class LingotekSettingsDefaultsForm extends LingotekConfigFormBase {
         '#title' => $label,
         '#type' => 'select',
         '#options' => $options,
-        '#default_value' => $this->defaults[$key],
         '#required' => TRUE,
       ];
+      if (isset($this->defaults[$key])) {
+        $form[$key]['#default_value'] = $this->defaults[$key];
+      }
     }
 
     return parent::buildForm($form, $form_state);

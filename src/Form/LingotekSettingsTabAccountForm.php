@@ -106,8 +106,10 @@ class LingotekSettingsTabAccountForm extends LingotekConfigFormBase {
       ['#markup' => ''],
     ];
 
+    $resources = $this->lingotek->getResources();
+
     $default_community = $config->get('default.community');
-    $default_community_name = $config->get('account.resources.community.' . $default_community);
+    $default_community_name = isset($resources['community'][$default_community]) ? $resources['community'][$default_community] : '';
     $communityRow = [
       ['#markup' => $this->t('Community:'), '#prefix' => '<b>', '#suffix' => '</b>'],
       ['#markup' => new FormattableMarkup('@name (@id)', ['@name' => $default_community_name, '@id' => $default_community])],
@@ -115,7 +117,7 @@ class LingotekSettingsTabAccountForm extends LingotekConfigFormBase {
     ];
 
     $default_workflow = $config->get('default.workflow');
-    $default_workflow_name = $config->get('account.resources.workflow.' . $default_workflow);
+    $default_workflow_name = isset($resources['workflow'][$default_workflow]) ? $resources['workflow'][$default_workflow] : '';
     $workflowRow = [
       ['#markup' => $this->t('Default Workflow:'), '#prefix' => '<b>', '#suffix' => '</b>'],
       ['#markup' => new FormattableMarkup('@name (@id)', ['@name' => $default_workflow_name, '@id' => $default_workflow])],
@@ -123,7 +125,7 @@ class LingotekSettingsTabAccountForm extends LingotekConfigFormBase {
     ];
 
     $default_project = $config->get('default.project');
-    $default_project_name = $config->get('account.resources.project.' . $default_project);
+    $default_project_name = isset($resources['project'][$default_project]) ? $resources['project'][$default_project] : '';
     $projectRow = [
       ['#markup' => $this->t('Default Project:'), '#prefix' => '<b>', '#suffix' => '</b>'],
       ['#markup' => new FormattableMarkup('@name (@id)', ['@name' => $default_project_name, '@id' => $default_project])],
@@ -149,7 +151,7 @@ class LingotekSettingsTabAccountForm extends LingotekConfigFormBase {
     }
 
     $default_vault = $config->get('default.vault');
-    $default_vault_name = $config->get('account.resources.vault.' . $default_vault);
+    $default_vault_name = isset($resources['vault'][$default_vault]) ? $resources['vault'][$default_vault] : '';
 
     $vaultRow = [
       ['#markup' => $this->t('Default Vault:'), '#prefix' => '<b>', '#suffix' => '</b>'],

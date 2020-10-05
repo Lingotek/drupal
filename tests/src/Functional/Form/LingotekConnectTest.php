@@ -44,6 +44,13 @@ class LingotekConnectTest extends BrowserTestBase {
     $this->drupalPostForm(NULL, ['community' => 'test_community'], 'Next');
     $this->assertText('The configuration options have been saved.');
 
+    // Assert there are options for workflows.
+    $this->assertFieldByName('workflow');
+    $option_field = $assert_session->optionExists('edit-workflow', '- Select -');
+    $this->assertTrue($option_field->hasAttribute('selected'));
+    $assert_session->optionExists('edit-workflow', 'test_workflow');
+    $assert_session->optionExists('edit-workflow', 'test_workflow2');
+
     // Assert there are options for filters.
     $this->assertFieldByName('filter');
     $option_field = $assert_session->optionExists('edit-filter', 'drupal_default');
@@ -64,6 +71,7 @@ class LingotekConnectTest extends BrowserTestBase {
     $this->drupalPostForm(NULL, [
       'project' => 'test_project',
       'vault' => 'test_vault',
+      'workflow' => 'test_workflow',
       'filter' => 'drupal_default',
       'subfilter' => 'drupal_default',
     ], 'Save configuration');
@@ -74,6 +82,7 @@ class LingotekConnectTest extends BrowserTestBase {
    * Tests connecting to Lingotek.
    */
   public function testConnectToLingotekWithoutFilters() {
+    $assert_session = $this->assertSession();
     \Drupal::state()->set('lingotek.no_filters', TRUE);
 
     $this->drupalGet('admin/lingotek/setup/account');
@@ -81,12 +90,20 @@ class LingotekConnectTest extends BrowserTestBase {
     $this->drupalPostForm(NULL, ['community' => 'test_community'], 'Next');
     $this->assertText('The configuration options have been saved.');
 
+    // Assert there are options for workflows.
+    $this->assertFieldByName('workflow');
+    $option_field = $assert_session->optionExists('edit-workflow', '- Select -');
+    $this->assertTrue($option_field->hasAttribute('selected'));
+    $assert_session->optionExists('edit-workflow', 'test_workflow');
+    $assert_session->optionExists('edit-workflow', 'test_workflow2');
+
     // Assert there are no options for filters and no select.
     $this->assertNoFieldByName('filter');
     $this->assertNoFieldByName('subfilter');
 
     $this->drupalPostForm(NULL, [
       'project' => 'test_project',
+      'workflow' => 'test_workflow',
       'vault' => 'test_vault',
     ], 'Save configuration');
     $this->assertText('The configuration options have been saved.');

@@ -28,14 +28,14 @@ class LingotekSettingsAccountForm extends LingotekConfigFormBase {
     '#type'        => 'textfield',
     '#title'       => t('Login'),
     '#description' => t('The login used to connect with the Lingotek service.'),
-    '#value'       => $this->lingotek->get('account.login_id'),
+    '#value'       => $this->config('lingotek.settings')->get('account.login_id'),
     '#disabled'    => TRUE,
     ];
     $form['account']['access_token'] = [
     '#type'        => 'textfield',
     '#title'       => t('Access Token'),
     '#description' => t('The token currently useed when communicating with the Lingotek service.'),
-    '#value'       => $this->lingotek->get('account.access_token'),
+    '#value'       => $this->config('lingotek.settings')->get('account.access_token'),
     '#disabled'    => TRUE,
     ];
 
