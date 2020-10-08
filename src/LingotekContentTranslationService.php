@@ -724,14 +724,25 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
           $form_elements = \Drupal::keyValue('cohesion.assets.form_elements');
           $field_uid = $component_model[$key]->getElement()->getProperty('uid');
           $form_field = $form_elements->get($field_uid);
-          $model = $component = $component_model[$key]->getElement()->getProperty('uuid');
-          if (isset($form_field['translate']) && $form_field['translate'] === TRUE) {
-            // Only expose value that is a string or a WYSIWYG
-            if (is_string($value) && !empty($value)) {
-              $data_layout[$key] = $value;
-            }
-            elseif (is_object($value) && property_exists($value, 'text') && property_exists($value, 'textFormat')) {
-              $data_layout[$key] = Html::escape($value->text);
+          $model = $component = $component_model[$key]->getElement()
+            ->getProperty('uuid');
+          // We default to true if not set, so we can fallback to including it
+          // if we cannot explicitly discard it.
+          $componentType = isset($form_field['model']['settings']['type']) ? $form_field['model']['settings']['type'] : 'notDiscardedType';
+          $protectedComponentTypes = [
+            'cohTypeahead',
+            'cohEntityBrowser',
+            'cohFileBrowser',
+          ];
+          if (!in_array($componentType, $protectedComponentTypes)) {
+            if (isset($form_field['translate']) && $form_field['translate'] === TRUE) {
+              // Only expose value that is a string or a WYSIWYG
+              if (is_string($value) && !empty($value)) {
+                $data_layout[$key] = $value;
+              }
+              elseif (is_object($value) && property_exists($value, 'text') && property_exists($value, 'textFormat')) {
+                $data_layout[$key] = Html::escape($value->text);
+              }
             }
           }
         }
