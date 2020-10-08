@@ -299,16 +299,21 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
     $lingotek_config = \Drupal::service('lingotek.configuration');
     $enable_bulk_management = $lingotek_config->getPreference('contrib.paragraphs.enable_bulk_management');
 
-    if ($entity_id !== 'paragraph' || $enable_bulk_management) {
+    if (!in_array($entity_id, ['paragraph', 'cohesion_layout']) || $enable_bulk_management) {
       $select = [
         '#type' => 'select',
         '#options' => $lingotek_config->getProfileOptions(),
         '#default_value' => $lingotek_config->getDefaultProfileId($entity_id, $bundle_id),
       ];
     }
-    else {
+    elseif ($entity_id === 'paragraph' || $enable_bulk_management) {
       $select = [
         '#markup' => $this->t("A profile doesn't apply for paragraphs. Not recommended, but you may want to <a href=':link'>translate paragraphs independently</a>.", [':link' => '#edit-contrib-paragraphs-enable-bulk-management']),
+      ];
+    }
+    elseif ($entity_id === 'cohesion_layout') {
+      $select = [
+        '#markup' => $this->t("A profile doesn't apply for cohesion layouts."),
       ];
     }
     return $select;
@@ -334,7 +339,7 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
         if (!empty($storage_definitions[$field_id]) &&
               $storage_definitions[$field_id]->getProvider() != 'content_translation' &&
               !in_array($storage_definitions[$field_id]->getName(), [$entity_type->getKey('langcode'), $entity_type->getKey('default_langcode'), 'revision_translation_affected']) &&
-          ($field_definition->isTranslatable() || ($field_definition->getType() == 'entity_reference_revisions' || $field_definition->getType() == 'path')) && !$field_definition->isComputed() && !$field_definition->isReadOnly()) {
+          ($field_definition->isTranslatable() || ($field_definition->getType() == 'cohesion_entity_reference_revisions' || $field_definition->getType() == 'entity_reference_revisions' || $field_definition->getType() == 'path')) && !$field_definition->isComputed() && !$field_definition->isReadOnly()) {
 
           $checkbox_choice = 0;
           if ($value = $lingotek_config->isFieldLingotekEnabled($entity_id, $bundle_id, $field_id)) {
@@ -438,6 +443,15 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
           $field_checkboxes[$field_id] = $field_checkbox;
         }
       }
+    }
+
+    if ($entity_id === 'cohesion_layout') {
+      $field_checkboxes['json_values']['#default_value'] = TRUE;
+      $field_checkboxes['styles']['#default_value'] = FALSE;
+      $field_checkboxes['template']['#default_value'] = FALSE;
+      // field_checkboxes['json_values']['#attributes']['disabled'] = 'disabled';
+      // $field_checkboxes['styles']['#attributes']['disabled'] = 'disabled';
+      // $field_checkboxes['template']['#attributes']['disabled'] = 'disabled';
     }
 
     return $field_checkboxes;

@@ -179,7 +179,7 @@ class LingotekManagementRelatedEntitiesForm extends LingotekManagementFormBase {
     $field_definitions = $this->entityFieldManager->getFieldDefinitions($entity->getEntityTypeId(), $entity->bundle());
     foreach ($field_definitions as $k => $definition) {
       $field_type = $field_definitions[$k]->getType();
-      if ($field_type === 'entity_reference' || $field_type === 'er_viewmode' || $field_type === 'entity_reference_revisions') {
+      if ($field_type === 'entity_reference' || $field_type === 'er_viewmode' || $field_type === 'entity_reference_revisions' || $field_type === 'cohesion_entity_reference_revisions') {
         $target_entity_type_id = $field_definitions[$k]->getFieldStorageDefinition()
           ->getSetting('target_type');
         $target_entity_type = $this->entityTypeManager->getDefinition($target_entity_type_id);
@@ -204,7 +204,7 @@ class LingotekManagementRelatedEntitiesForm extends LingotekManagementFormBase {
       $field_definitions = $this->entityFieldManager->getFieldDefinitions($entity->getEntityTypeId(), $entity->bundle());
       foreach ($field_definitions as $k => $definition) {
         $field_type = $field_definitions[$k]->getType();
-        if (in_array($field_type, ['entity_reference', 'entity_reference_revisions', 'er_viewmode'])) {
+        if (in_array($field_type, ['entity_reference', 'cohesion_entity_reference_revisions', 'entity_reference_revisions', 'er_viewmode'])) {
           $target_entity_type_id = $field_definitions[$k]->getFieldStorageDefinition()
             ->getSetting('target_type');
           $target_entity_type = $this->entityTypeManager->getDefinition($target_entity_type_id);

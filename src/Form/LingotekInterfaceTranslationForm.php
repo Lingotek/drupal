@@ -233,6 +233,38 @@ class LingotekInterfaceTranslationForm extends FormBase {
         $form['theme']['custom']['table']['#rows'][] = $row;
       }
     }
+    if ($this->moduleHandler->moduleExists('cohesion')) {
+      $template_location = COHESION_TEMPLATE_PATH;
+      // Get real path to templates and extract relative path for interface translation.
+      if ($wrapper = \Drupal::service('stream_wrapper_manager')
+        ->getViaUri($template_location)) {
+        $template_path = $wrapper->basePath() . '/cohesion/templates';
+      }
+      // This is a fake component.
+      $component = $template_path;
+
+      $row = [
+        'label' => 'Cohesion templates',
+        'machine_name' => 'cohesion_templates',
+        'source' => [
+          'data' => [
+            '#type' => 'lingotek_source_status',
+            '#ui_component' => $component,
+            '#language' => $this->languageManager->getLanguage('en'),
+            '#status' => $this->lingotekInterfaceTranslation->getSourceStatus($component),
+          ],
+        ],
+        'translations' => [
+          'data' => [
+            '#type' => 'lingotek_target_statuses',
+            '#ui_component' => $component,
+            '#source_langcode' => 'en',
+            '#statuses' => $this->lingotekInterfaceTranslation->getTargetStatuses($component),
+          ],
+        ],
+      ];
+      $form['theme']['custom']['table']['#rows'][] = $row;
+    }
 
     $modules = $this->moduleHandler->getModuleList();
     foreach ($modules as $module => $moduleInfo) {

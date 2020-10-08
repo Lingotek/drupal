@@ -2,7 +2,11 @@
 
 namespace Drupal\lingotek;
 
+use Drupal\cohesion\LayoutCanvas\ElementModel;
+use Drupal\cohesion\LayoutCanvas\LayoutCanvas;
+use Drupal\cohesion_elements\Entity\Component;
 use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\SortArray;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
@@ -609,7 +613,8 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
         }
       }
       // Paragraphs use the entity_reference_revisions field type.
-      elseif ($field_type === 'entity_reference_revisions') {
+      // Cohesion uses a similar type and we can reuse this.
+      elseif ($field_type === 'entity_reference_revisions' || $field_type === 'cohesion_entity_reference_revisions') {
         $target_entity_type_id = $field_definitions[$k]->getFieldStorageDefinition()->getSetting('target_type');
         foreach ($entity->{$k} as $field_item) {
           $embedded_entity_id = $field_item->get('target_id')->getValue();
@@ -644,6 +649,25 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
           $data[$k] = $embedded_data;
         }
       }
+      // Special treatment for Acquia Site Builder (Cohesion) values.
+      elseif ($field_type === 'string_long' && $field->getName() === 'json_values' && $field->getEntity()->getEntityTypeId() === 'cohesion_layout') {
+        $value = $entity->{$k}->value;
+        $layout_canvas = new LayoutCanvas($value);
+        foreach ($layout_canvas->iterateCanvas() as $element) {
+          $data_layout = [];
+          if ($element->isComponent() && $component = Component::load($element->getComponentID())) {
+            // Get the models of each form field of the component as an array keyed by their uuid
+            $component_model = $component->getLayoutCanvasInstance()
+              ->iterateModels('component_form');
+            if ($element->getModel()) {
+              $data_layout = array_merge($data_layout, $this->processCohesionComponentsValues($element->getModel()
+                ->getValues(), $component_model));
+            }
+          }
+          $data[$k][$element->getModelUUID()] = $data_layout;
+        }
+        unset($data[$k][0]);
+      }
       elseif ($field_type === 'metatag') {
         foreach ($entity->{$k} as $field_item) {
           $metatag_serialized = $field_item->get('value')->getValue();
@@ -676,6 +700,44 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     $this->includeMetadata($entity, $data, $isParentEntity);
 
     return $data;
+  }
+
+  private function processCohesionComponentsValues($values, $component_model, $model_key = []) {
+    $data_layout = [];
+    foreach ($values as $key => $value) {
+      // If the key in the model matches a uuid then it a component field value
+      // If the model contains (property) and is TRUE, the field is excluded from being expose as translatable
+      if (preg_match(ElementModel::MATCH_UUID, $key)) {
+        if (is_array($value)) {
+          foreach ($value as $index => $inner_value) {
+            $data_layout = array_merge($data_layout, $this->processCohesionComponentsValues($inner_value, $component_model, array_merge($model_key, [
+              $key,
+              $index,
+            ])));
+          }
+        }
+        elseif (isset($component_model[$key]) && $component_model[$key]->getProperty([
+            'settings',
+            'translate',
+          ]) !== FALSE) {
+
+          $form_elements = \Drupal::keyValue('cohesion.assets.form_elements');
+          $field_uid = $component_model[$key]->getElement()->getProperty('uid');
+          $form_field = $form_elements->get($field_uid);
+          $model = $component = $component_model[$key]->getElement()->getProperty('uuid');
+          if (isset($form_field['translate']) && $form_field['translate'] === TRUE) {
+            // Only expose value that is a string or a WYSIWYG
+            if (is_string($value) && !empty($value)) {
+              $data_layout[$key] = $value;
+            }
+            elseif (is_object($value) && property_exists($value, 'text') && property_exists($value, 'textFormat')) {
+              $data_layout[$key] = Html::escape($value->text);
+            }
+          }
+        }
+      }
+    }
+    return $data_layout;
   }
 
   /**
@@ -1316,7 +1378,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
           break;
         }
         $field_definition = $entity->getFieldDefinition($name);
-        if ($field_definition && ($field_definition->isTranslatable() || $field_definition->getType() === 'entity_reference_revisions')
+        if ($field_definition && ($field_definition->isTranslatable() || $field_definition->getType() === 'cohesion_entity_reference_revisions' || $field_definition->getType() === 'entity_reference_revisions')
           && $this->lingotekConfiguration->isFieldLingotekEnabled($entity->getEntityTypeId(), $entity->bundle(), $name)) {
           // First we check if this is a entity reference, and save the translated entity.
           $field_type = $field_definition->getType();
@@ -1438,6 +1500,37 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
               $translation->{$name}->set($delta, ['caption' => $caption, 'value' => $table]);
             }
           }
+          // Cohesion layouts use 'cohesion_entity_reference_revisions'.
+          elseif ($field_type === 'cohesion_entity_reference_revisions') {
+            $cohesionLayoutTranslatable = $field_definition->isTranslatable();
+            $target_entity_type_id = $field_definition->getFieldStorageDefinition()
+              ->getSetting('target_type');
+            if ($cohesionLayoutTranslatable) {
+              $translation->{$name} = NULL;
+            }
+            $delta = 0;
+            $fieldValues = [];
+            foreach ($field_data as $index => $field_item) {
+              $embedded_entity_id = $revision->{$name}->get($index)
+                ->get('target_id')
+                ->getValue();
+              /** @var \Drupal\Core\Entity\RevisionableInterface $embedded_entity */
+              $embedded_entity = $this->entityTypeManager->getStorage($target_entity_type_id)
+                ->load($embedded_entity_id);
+              if ($embedded_entity !== NULL) {
+                $this->saveTargetData($embedded_entity, $langcode, $field_item);
+                // Now the embedded entity is saved, but we need to ensure
+                // the reference will be saved too. Ensure it's the same revision.
+                $fieldValues[$delta] = ['target_id' => $embedded_entity->id(), 'target_revision_id' => $embedded_entity->getRevisionId()];
+                $delta++;
+              }
+            }
+            // If the cohesion layout was not translatable, we avoid at all costs to modify the field,
+            // as this will override the source and may have unintended consequences.
+            if ($cohesionLayoutTranslatable) {
+              $translation->{$name} = $fieldValues;
+            }
+          }
           // If there is a path item, we need to handle it separately. See
           // https://www.drupal.org/node/2681241
           elseif ($field_type === 'path') {
@@ -1481,6 +1574,25 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
               $translation->{$name}->set($index, $metatag_value);
               ++$index;
             }
+          }
+          elseif ($field_type === 'string_long' && $field_definition->getName() === 'json_values' && $field_definition->getTargetEntityTypeId() === 'cohesion_layout') {
+            $existingData = $revision->get($name)->offsetGet(0)->value;
+            $layout_canvas = new LayoutCanvas($existingData);
+            foreach ($layout_canvas->iterateModels() as $element_uuid => &$model) {
+              foreach ($model->getValues() as $key => $value) {
+                if (isset($field_data[$element_uuid]) && isset($field_data[$element_uuid][$key])) {
+                  if (is_string($value) && !empty($value)) {
+                    $model->setProperty($key, $field_data[$element_uuid][$key]);
+                  }
+                  elseif (is_object($value) && property_exists($value, 'text') && property_exists($value, 'textFormat')) {
+                    $new_value = $value;
+                    $new_value->text = Html::decodeEntities($field_data[$element_uuid][$key]);
+                    $model->setProperty($key, $new_value);
+                  }
+                }
+              }
+            }
+            $translation->get($name)->offsetGet(0)->set('value', json_encode($layout_canvas));
           }
           elseif ($field_type === 'block_field') {
             $translation->{$name} = NULL;

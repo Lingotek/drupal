@@ -198,8 +198,7 @@ class LingotekElementInfoAlterForm implements ContainerInjectionInterface {
                   $entity_type->getKey('default_langcode'),
                   'revision_translation_affected',
                 ]) &&
-                ($field_definition->isTranslatable() || ($field_definition->getType() == 'entity_reference_revisions' || $field_definition->getType() == 'path')) && !$field_definition->isComputed() && !$field_definition->isReadOnly()) {
-
+                ($field_definition->isTranslatable() || ($field_definition->getType() == 'cohesion_entity_reference_revisions' || $field_definition->getType() == 'entity_reference_revisions' || $field_definition->getType() == 'path')) && !$field_definition->isComputed() && !$field_definition->isReadOnly()) {
                 if ($value = $this->lingotekConfiguration->isFieldLingotekEnabled($entity_type_id, $bundle_id, $field_id)) {
                   break;
                 }

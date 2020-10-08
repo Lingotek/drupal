@@ -141,7 +141,7 @@ class LingotekConfigurationService implements LingotekConfigurationServiceInterf
     $config = \Drupal::config('lingotek.settings');
     $profile_id = $config->get('translate.entity.' . $entity_type_id . '.' . $bundle . '.profile');
     if ($provide_default && $profile_id === NULL && $this->isEnabled($entity_type_id, $bundle)) {
-      if ($entity_type_id === 'paragraph') {
+      if (in_array($entity_type_id, ['paragraph', 'cohesion_layout'])) {
         $profile_id = Lingotek::PROFILE_DISABLED;
       }
       else {
@@ -319,7 +319,7 @@ class LingotekConfigurationService implements LingotekConfigurationServiceInterf
     // See https://www.drupal.org/node/2788285
     // We also support paths even if they are not translatable (which may happen
     // if they are computed fields.
-    $excluded_types = ['path', 'entity_reference_revisions'];
+    $excluded_types = ['path', 'entity_reference_revisions', 'cohesion_entity_reference_revisions'];
     return (!empty($field_definitions[$field_name])
       && ($field_definitions[$field_name]->isTranslatable() || (in_array($field_definitions[$field_name]->getType(), $excluded_types)))
       && !!$config->get($key));
@@ -342,8 +342,10 @@ class LingotekConfigurationService implements LingotekConfigurationServiceInterf
       'text',
       'text_with_summary',
       'text_long',
+      'string_long',
       'path',
       'entity_reference_revisions',
+      'cohesion_entity_reference_revisions',
     ];
     if ($saved_value === NULL) {
       $type = $field_definitions[$field_name]->getType();

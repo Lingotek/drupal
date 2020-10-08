@@ -162,6 +162,11 @@ class LingotekConfigSubscriber implements EventSubscriberInterface {
               $lingotek_config->isFieldLingotekEnabled($entity_type_id, $bundle, $field_name)) {
             $lingotek_config->setFieldLingotekEnabled($entity_type_id, $bundle, $field_name, FALSE);
           }
+          if (isset($field_definition[$field_name]) && $field_definition[$field_name]->getType() !== 'cohesion_entity_reference_revisions' &&
+            $lingotek_config->isFieldLingotekEnabled($entity_type_id, $bundle, $field_name)) {
+            $lingotek_config->setFieldLingotekEnabled($entity_type_id, $bundle, $field_name, FALSE);
+          }
+
         }
       }
     }

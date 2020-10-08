@@ -57,6 +57,9 @@ class LingotekRouteSubscriber extends RouteSubscriberBase {
             continue;
           }
         }
+        if ($entity_type_id === 'cohesion_layout') {
+          continue;
+        }
 
         // Add a route for bulk translation management.
         $path = "admin/lingotek/manage/{$entity_type_id}";

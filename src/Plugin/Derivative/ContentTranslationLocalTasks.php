@@ -73,6 +73,12 @@ class ContentTranslationLocalTasks extends DeriverBase implements ContainerDeriv
           continue;
         }
       }
+      if ($entity_type_id === 'cohesion_layout') {
+        if (isset($this->derivatives[$translation_route_name])) {
+          unset($this->derivatives[$translation_route_name]);
+        }
+        continue;
+      }
 
       $has_canonical_path = $entity_type->hasLinkTemplate('canonical');
 

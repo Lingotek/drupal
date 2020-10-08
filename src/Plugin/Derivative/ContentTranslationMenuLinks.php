@@ -71,6 +71,12 @@ class ContentTranslationMenuLinks extends DeriverBase implements ContainerDerive
           continue;
         }
       }
+      if ($entity_type_id === 'cohesion_layout') {
+        if (isset($this->derivatives[$translation_route_name])) {
+          unset($this->derivatives[$translation_route_name]);
+        }
+        continue;
+      }
 
       // Create the entries for the tabs in the bulk manage pages.
       $base_route_name = "lingotek.manage";
