@@ -24,4 +24,3 @@ test_dependencies:
   - block_field:block_field
   - paragraphs_asymmetric_translation_widgets:paragraphs_asymmetric_translation_widgets
   - potx:potx
-  - cohesion:cohesion
