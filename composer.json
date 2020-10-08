@@ -56,11 +56,5 @@
   },
   "suggest": {
     "drupal/potx": "dev-1.x"
-  },
-  "repositories": {
-    "drupal": {
-      "type": "composer",
-      "url": "https://packages.drupal.org/8"
-    }
   }
 }
