@@ -73,14 +73,24 @@ class LingotekSettingsDefaultsForm extends LingotekConfigFormBase {
     foreach ($this->defaults_labels as $key => $label) {
       $resources_key = ($key === 'subfilter') ? 'filter' : $key;
       asort($this->resources[$resources_key]);
-      if ($key === 'filter' || $key === 'subfilter') {
-        $options = [
-          'project_default' => 'Use Project Default',
-          'drupal_default' => 'Use Drupal Default',
-        ] + $this->resources[$resources_key];
-      }
-      else {
-        $options = $this->resources[$key];
+      switch ($key) {
+        case 'filter':
+        case 'subfilter':
+          $options = [
+            'project_default' => $this->t('Use Project Default'),
+            'drupal_default' => $this->t('Use Drupal Default'),
+          ] + $this->resources[$resources_key];
+          break;
+
+        case 'workflow':
+          $options = [
+            'project_default' => $this->t('Project Default'),
+          ] + $this->resources[$resources_key];
+          break;
+
+        default:
+          $options = $this->resources[$key];
+          break;
       }
       $form[$key] = [
         '#title' => $label,

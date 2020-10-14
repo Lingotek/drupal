@@ -579,23 +579,55 @@ class LingotekUnitTest extends UnitTestCase {
       ])
       ->will($this->returnValue($response));
 
+    // Default workflow
     $this->api->expects($this->at(8))
       ->method('addDocument')
       ->with([
-        'title' => 'title',
-        'content' => '{"content":"wedgiePlatypus"}',
-        'locale_code' => 'en_US',
-        'format' => 'JSON',
-        'project_id' => 'test_project',
-        'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
-        'fprm_id' => '4f91482b-5aa1-4a4a-a43f-712af7b39625',
-        'vault_id' => 'test_vault',
-        'job_id' => 'my_job_id',
-        'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0',
-        'translation_locale_code' => ['es_ES', 'ca_ES', 'it_IT'],
-        'translation_workflow_id' => ['es_workflow', 'ca_workflow', 'default_workflow'],
-        'translation_vault_id'  => ['default_vault', 'ca_vault', 'it_vault'],
-      ])
+      'title' => 'title',
+      'content' => '"content"',
+      'locale_code' => 'es',
+      'format' => 'JSON',
+      'project_id' => 'default_project',
+      'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
+      'fprm_id' => '4f91482b-5aa1-4a4a-a43f-712af7b39625',
+      'vault_id' => 'default_vault',
+      'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0',
+    ])
+      ->will($this->returnValue($response));
+
+    // Project default workflow should not include translation_workflow_id
+    $this->api->expects($this->at(9))
+      ->method('addDocument')
+      ->with([
+       'title' => 'title',
+       'content' => '"content"',
+       'locale_code' => 'es',
+       'format' => 'JSON',
+       'project_id' => 'default_project',
+       'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
+       'fprm_id' => '4f91482b-5aa1-4a4a-a43f-712af7b39625',
+       'vault_id' => 'default_vault',
+       'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0',
+     ])
+      ->will($this->returnValue($response));
+
+    $this->api->expects($this->at(10))
+      ->method('addDocument')
+      ->with([
+      'title' => 'title',
+      'content' => '{"content":"wedgiePlatypus"}',
+      'locale_code' => 'en_US',
+      'format' => 'JSON',
+      'project_id' => 'test_project',
+      'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
+      'fprm_id' => '4f91482b-5aa1-4a4a-a43f-712af7b39625',
+      'vault_id' => 'test_vault',
+      'job_id' => 'my_job_id',
+      'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0',
+      'translation_locale_code' => ['es_ES', 'ca_ES', 'it_IT'],
+      'translation_workflow_id' => ['es_workflow', 'ca_workflow', 'default_workflow'],
+      'translation_vault_id'  => ['default_vault', 'ca_vault', 'it_vault'],
+     ])
       ->will($this->returnValue($response));
 
     // We upload with a profile that has a vault and a project.
@@ -624,7 +656,7 @@ class LingotekUnitTest extends UnitTestCase {
 
     // We upload with a profile that has marked to use the project default
     // workflow template vault, so must be omitted.
-    $profile = new LingotekProfile(['id' => 'profile2', 'project' => 'default', 'vault' => 'project_workflow_vault', 'filter' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265'], 'lingotek_profile');
+    $profile = new LingotekProfile(['id' => 'profile2', 'project' => 'default', 'vault' => 'project_default', 'filter' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265'], 'lingotek_profile');
     $doc_id = $this->lingotek->uploadDocument('title', 'content', 'es', NULL, $profile);
     $this->assertEquals('my-document-id', $doc_id);
 
@@ -635,6 +667,16 @@ class LingotekUnitTest extends UnitTestCase {
 
     // We upload with a job ID.
     $doc_id = $this->lingotek->uploadDocument('title', ['content' => 'wedgiePlatypus'], 'es', NULL, $profile, 'my_job_id');
+    $this->assertEquals('my-document-id', $doc_id);
+
+    // We upload with the default workflow
+    $profile = new LingotekProfile(['id' => 'profile1', 'project' => 'default', 'vault' => 'default', 'workflow' => 'default'], 'lingotek_profile');
+    $doc_id = $this->lingotek->uploadDocument('title', 'content', 'es', NULL, $profile);
+    $this->assertEquals('my-document-id', $doc_id);
+
+    // We upload with the project default workflow
+    $profile = new LingotekProfile(['id' => 'profile1', 'project' => 'default', 'vault' => 'default', 'workflow' => 'project_default'], 'lingotek_profile');
+    $doc_id = $this->lingotek->uploadDocument('title', 'content', 'es', NULL, $profile);
     $this->assertEquals('my-document-id', $doc_id);
 
     // We upload with a profile that specifies auto request of targets on upload.
@@ -865,6 +907,12 @@ class LingotekUnitTest extends UnitTestCase {
       ->with('my_doc_id', 'es_ES', NULL)
       ->will($this->returnValue($response));
 
+    // If workflow is project_default, workflow should not be included.
+    $this->api->expects($this->at(6))
+      ->method('addTranslation')
+      ->with('my_doc_id', 'es_ES', NULL)
+      ->will($this->returnValue($response));
+
     // We upload with a profile that has a workflow.
     $profile = new LingotekProfile(['id' => 'profile1', 'workflow' => 'my_test_workflow'], 'lingotek_profile');
     $this->assertTrue($this->lingotek->addTarget('my_doc_id', 'es_ES', $profile));
@@ -890,6 +938,9 @@ class LingotekUnitTest extends UnitTestCase {
 
     // We upload without a profile
     $this->assertTrue($this->lingotek->addTarget('my_doc_id', 'es_ES', NULL));
+
+    $profile = new LingotekProfile(['id' => 'profile1', 'workflow' => 'project_default'], 'lingotek_profile');
+    $this->assertTrue($this->lingotek->addTarget('my_doc_id', 'es_ES', $profile));
   }
 
   /**

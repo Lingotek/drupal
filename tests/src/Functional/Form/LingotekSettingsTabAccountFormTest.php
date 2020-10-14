@@ -73,6 +73,17 @@ class LingotekSettingsTabAccountFormTest extends LingotekTestBase {
   }
 
   /**
+ * Test the table has and displays the project default option for workflows
+ */
+  public function testTableWithDefaultProjectWorkflow() {
+    $this->drupalGet('admin/lingotek/settings');
+    $this->clickLink('Edit defaults');
+    $edit = ['workflow' => 'project_default'];
+    $this->drupalPostForm(NULL, $edit, 'Save configuration');
+    $this->assertTableValue('workflow', 'Project Default (project_default)');
+  }
+
+  /**
    * Test the table shows the right values.
    */
   public function testTableValuesWithDefaultFilters() {

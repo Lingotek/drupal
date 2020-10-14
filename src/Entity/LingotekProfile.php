@@ -2,6 +2,7 @@
 
 namespace Drupal\lingotek\Entity;
 
+use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\lingotek\LingotekIntelligenceMetadataInterface;
 use Drupal\lingotek\LingotekProfileInterface;
@@ -148,7 +149,7 @@ class LingotekProfile extends ConfigEntityBase implements LingotekProfileInterfa
   /**
    * Specific target language settings override.
    *
-   * @var string
+   * @var array
    */
   protected $language_overrides = [];
 
@@ -204,6 +205,22 @@ class LingotekProfile extends ConfigEntityBase implements LingotekProfileInterfa
       $values['intelligence_metadata'] += $this->intelligence_metadata;
     }
     return parent::__construct($values, $entity_type);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function preSave(EntityStorageInterface $storage) {
+    // getWorkflow() could return 'default', but we need to check if the default itself is 'project_default' as well
+    $default_workflow = \Drupal::config('lingotek.settings')->get('default.workflow');
+    if ($this->getWorkflow() === 'project_default' || $default_workflow === 'project_default') {
+      foreach ($this->language_overrides as $langcode => $v) {
+        if (isset($this->language_overrides[$langcode]['custom']['workflow'])) {
+          unset($this->language_overrides[$langcode]['custom']['workflow']);
+        }
+      }
+    }
+    parent::preSave($storage);
   }
 
   /**
@@ -806,7 +823,7 @@ class LingotekProfile extends ConfigEntityBase implements LingotekProfileInterfa
    */
   public function getWorkflowForTarget($langcode) {
     $workflow = $this->getWorkflow();
-    if (isset($this->language_overrides[$langcode]) && $this->hasCustomSettingsForTarget($langcode)) {
+    if ($this->hasCustomSettingsForTarget($langcode) && isset($this->language_overrides[$langcode]['custom']['workflow'])) {
       $workflow = $this->language_overrides[$langcode]['custom']['workflow'];
     }
     return $workflow;

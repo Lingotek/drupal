@@ -117,7 +117,14 @@ class LingotekSettingsTabAccountForm extends LingotekConfigFormBase {
     ];
 
     $default_workflow = $config->get('default.workflow');
-    $default_workflow_name = isset($resources['workflow'][$default_workflow]) ? $resources['workflow'][$default_workflow] : '';
+
+    if ($default_workflow === 'project_default') {
+      $default_workflow_name = $this->t('Project Default');
+    }
+    else {
+      $default_workflow_name = isset($resources['workflow'][$default_workflow]) ? $resources['workflow'][$default_workflow] : '';
+    }
+
     $workflowRow = [
       ['#markup' => $this->t('Default Workflow:'), '#prefix' => '<b>', '#suffix' => '</b>'],
       ['#markup' => new FormattableMarkup('@name (@id)', ['@name' => $default_workflow_name, '@id' => $default_workflow])],

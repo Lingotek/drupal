@@ -69,7 +69,7 @@ class LingotekProfileFormBase extends EntityForm {
     $profile = $this->entity;
     $form['id'] = [
       '#type' => 'machine_name',
-      '#description' => t('A unique machine-readable name. Can only contain lowercase letters, numbers, and underscores.'),
+      '#description' => $this->t('A unique machine-readable name. Can only contain lowercase letters, numbers, and underscores.'),
       '#disabled' => !$profile->isNew(),
       '#default_value' => $profile->id(),
       '#machine_name' => [
@@ -158,12 +158,31 @@ class LingotekProfileFormBase extends EntityForm {
 
     $workflows = $this->config('lingotek.settings')->get('account.resources.workflow');
     $default_workflow = $this->config('lingotek.settings')->get('default.workflow');
-    $default_workflow_name = isset($workflows[$default_workflow]) ? $workflows[$default_workflow] : '';
+
+    if ($default_workflow === 'project_default') {
+      $default_workflow_name = $this->t('Project Default');
+    }
+    else {
+      $default_workflow_name = isset($workflows[$default_workflow]) ? $workflows[$default_workflow] : '';
+    }
+
+    if ($default_workflow === 'project_default') {
+      // If the default workflow is project_default, then we hide both project_default and default
+      $hideWorkflowOverrideConditions = [['value' => 'project_default'], ['value' => 'default']];
+    }
+    else {
+      // If the default workflow is something other than project_default, we don't want to hide it
+      // to ensure that the user can override it
+      $hideWorkflowOverrideConditions = ['value' => 'project_default'];
+    }
 
     $form['workflow'] = [
       '#type' => 'select',
       '#title' => $this->t('Default Workflow'),
-      '#options' => ['default' => $this->t('Default (%workflow)', ['%workflow' => $default_workflow_name])] + $workflows,
+      '#options' => [
+        'project_default' => $this->t('Project Default'),
+        'default' => $this->t('Default (%workflow)', ['%workflow' => $default_workflow_name]),
+      ] + $workflows,
       '#description' => $this->t('The default Workflow which would be used for translations.'),
       '#default_value' => $profile->getWorkflow(),
     ];
@@ -179,7 +198,7 @@ class LingotekProfileFormBase extends EntityForm {
       '#title' => $this->t('Default Vault'),
       '#options' => [
           'default' => $this->t('Default (%vault)', ['%vault' => $default_vault_name]),
-          'project_workflow_vault' => 'Use Project Workflow Template Default',
+          'project_default' => $this->t('Use Project Workflow Template Default'),
         ] + $vaults,
       '#description' => $this->t('The default Translation Memory Vault where translations are saved.'),
       '#default_value' => $profile->getVault(),
@@ -194,7 +213,7 @@ class LingotekProfileFormBase extends EntityForm {
           'default' => $this->t('Use Global Default (%filter)', ['%filter' => $this->lingotekFilterManager->getDefaultFilterLabel()]),
           'project_default' => $this->t('Use Project Default'),
           'drupal_default' => $this->t('Use Drupal Default'),
-        ] + $filters,
+      ] + $filters,
       '#description' => $this->t('The default FPRM Filter used when uploading or updating a document.'),
       '#default_value' => $profile->getFilter(),
     ];
@@ -269,9 +288,16 @@ class LingotekProfileFormBase extends EntityForm {
           'workflow' => [
             '#type' => 'select',
             '#title' => $this->t('Default Workflow'),
-            '#options' => ['default' => $this->t('Default (%workflow)', ['%workflow' => $default_workflow_name])] + $workflows,
+            '#options' => [
+              'default' => $this->t('Default (%workflow)', ['%workflow' => $default_workflow_name]),
+            ] + $workflows,
             '#description' => $this->t('The default Workflow which would be used for translations.'),
             '#default_value' => $profile->hasCustomSettingsForTarget($langcode) ? $profile->getWorkflowForTarget($langcode) : 'default',
+            '#states' => [
+              'invisible' => [
+                ':input[name="workflow"]' => $hideWorkflowOverrideConditions,
+              ],
+            ],
           ],
           // If using overrides, we can never specify the document vault as this
           // cannot be empty, nor force to use the project template vault, as it

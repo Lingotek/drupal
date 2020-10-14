@@ -247,7 +247,7 @@ class Lingotek implements LingotekInterface {
     ];
     // Remove filters set to NULL
     $defaults = array_filter($defaults);
-
+    $workflow_id = NULL;
     $metadata = $this->getIntelligenceMetadata($content);
 
     if ($profile !== NULL && $project = $profile->getProject()) {
@@ -263,9 +263,15 @@ class Lingotek implements LingotekInterface {
       $defaults['vault_id'] = $vault;
       // If we use the project workflow template default vault, we omit the
       // vault parameter and the TMS will decide.
-      if ($vault === 'project_workflow_vault') {
+      if ($vault === 'project_default') {
         unset($defaults['vault_id']);
       }
+    }
+    if ($profile !== NULL && ($workflow_id = $profile->getWorkflow()) && $workflow_id !== 'default') {
+      $defaults['translation_workflow_id'] = $workflow_id;
+    }
+    else {
+      $defaults['translation_workflow_id'] = $this->configFactory->get(static::SETTINGS)->get('default.workflow');
     }
 
     $args = array_merge($metadata, $defaults);
@@ -307,6 +313,9 @@ class Lingotek implements LingotekInterface {
       $args['translation_locale_code'] = $request_locales;
       $args['translation_workflow_id'] = $request_workflows;
       $args['translation_vault_id'] = $request_translation_vaults;
+    }
+    if (($workflow_id && $workflow_id === 'project_default') || empty($request_locales)) {
+      unset($args['translation_workflow_id']);
     }
 
     $args = array_merge(['content' => json_encode($content), 'title' => $title, 'locale_code' => $locale], $args);
@@ -507,8 +516,14 @@ class Lingotek implements LingotekInterface {
     $drupal_language = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale);
 
     if ($profile !== NULL && $workflow_id = $profile->getWorkflowForTarget($drupal_language->getId())) {
-      if ($workflow_id === 'default') {
-        $workflow_id = $this->configFactory->get(static::SETTINGS)->get('default.workflow');
+      switch ($workflow_id) {
+        case 'project_default':
+          $workflow_id = NULL;
+          break;
+
+        case 'default':
+          $workflow_id = $this->configFactory->get(static::SETTINGS)->get('default.workflow');
+          break;
       }
     }
 

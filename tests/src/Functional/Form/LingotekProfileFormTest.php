@@ -117,6 +117,20 @@ class LingotekProfileFormTest extends LingotekTestBase {
   }
 
   /**
+   * Tests that both project default and default workflows are shown in the profile form.
+   */
+  public function testWorkflows() {
+    $assert_session = $this->assertSession();
+
+    $this->drupalGet('admin/lingotek/settings');
+    $this->clickLink(t('Add new Translation Profile'));
+
+    $this->assertFieldByName('workflow');
+    $assert_session->optionExists('edit-workflow', 'project_default');
+    $assert_session->optionExists('edit-workflow', 'default');
+  }
+
+  /**
    * Test editing profiles.
    */
   public function testEditingProfile() {
