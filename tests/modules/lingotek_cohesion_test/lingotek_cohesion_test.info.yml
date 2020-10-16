@@ -1,0 +1,7 @@
+name: Lingotek Cohesion integration Test Helper
+type: module
+package: Testing
+
+dependencies:
+  - cohesion:cohesion
+  - lingotek:lingotek

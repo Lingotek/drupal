@@ -1,0 +1,17 @@
+<?php
+
+/**
+ * @file
+ * Provides the foundations for testing Cohesion without having it installed.
+ */
+
+/**
+ * Implements hook_entity_type_build().
+ *
+ * Replace the entity class so we can override the output of twig.
+ */
+function lingotek_cohesion_test_entity_type_build(&$entity_types) {
+  if (isset($entity_types['cohesion_layout'])) {
+    $entity_types['cohesion_layout']->setClass('Drupal\lingotek_cohesion_test\Entity\TestCohesionLayout');
+  }
+}

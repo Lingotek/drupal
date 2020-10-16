@@ -1,0 +1,45 @@
+{
+  "title": [
+    {
+      "value": "Las llamas son chulas"
+    }
+  ],
+  "layout_canvas": [
+    {
+      "json_values": {
+        "###MODEL_UUID###": {
+          "###COMPONENT_UUID###": "&lt;p&gt;Las llamas son muy chulas&lt;\/p&gt;\n"
+        }
+      },
+      "_lingotek_metadata": {
+        "_entity_type_id": "cohesion_layout",
+        "_entity_id": "1",
+        "_entity_revision": "1"
+      }
+    }
+  ],
+  "_lingotek_metadata": {
+    "_entity_type_id": "node",
+    "_entity_id": "1",
+    "_entity_revision": "1",
+    "_intelligence": {
+      "external_document_id": "1",
+      "content_type": "node - article",
+      "domain": "http:\/\/lingod8.test",
+      "reference_url": "http:\/\/lingod8.test\/node\/1",
+      "author_name": "admin",
+      "author_email": "admin@example.com",
+      "business_unit": null,
+      "business_division": null,
+      "campaign_id": null,
+      "campaign_rating": 0,
+      "channel": null,
+      "contact_name": null,
+      "contact_email": null,
+      "content_description": null,
+      "external_style_id": null,
+      "purchase_order": null,
+      "region": null
+    }
+  }
+}
