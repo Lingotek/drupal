@@ -313,6 +313,12 @@ class LingotekFake implements LingotekInterface {
 
     $path = drupal_get_path('module', 'lingotek') . '/tests/modules/lingotek_test/document_responses/' . $type . '.json';
     $input = file_get_contents($path);
+    $dataReplacements = \Drupal::state()->get('lingotek.data_replacements', []);
+    if (!empty($dataReplacements)) {
+      foreach ($dataReplacements as $original => $new) {
+        $input = str_replace($original, $new, $input);
+      }
+    }
     return json_decode($input, TRUE);
   }
 
