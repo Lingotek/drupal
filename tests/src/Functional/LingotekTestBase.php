@@ -316,6 +316,26 @@ abstract class LingotekTestBase extends BrowserTestBase {
     }
   }
 
+  protected function saveAndArchiveNodeForm(array $edit, $nid, $usePath = TRUE) {
+    $path = NULL;
+    if ($usePath) {
+      $path = ($nid !== NULL) ? "node/$nid/edit" : NULL;
+    }
+    $entity_definition = \Drupal::entityTypeManager()->getDefinition('node');
+    $node = Node::load($nid);
+    $bundle = $node->bundle();
+    if (\Drupal::moduleHandler()->moduleExists('content_moderation') &&
+      \Drupal::service('content_moderation.moderation_information')
+        ->shouldModerateEntitiesOfBundle($entity_definition, $bundle)) {
+      $edit['moderation_state[0][state]'] = 'archived';
+      $this->drupalPostForm($path, $edit, t('Save'));
+    }
+    else {
+      $edit['status[value]'] = FALSE;
+      $this->drupalPostForm($path, $edit, t('Save'));
+    }
+  }
+
   protected function saveAsUnpublishedNodeForm(array $edit, $bundle = 'article') {
     $path = ($bundle !== NULL) ? "node/add/$bundle" : NULL;
     $edit['status[value]'] = FALSE;

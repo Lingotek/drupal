@@ -219,6 +219,7 @@ abstract class LingotekManagementFormBase extends FormBase {
     $sourceLanguageFilter = $temp_store->get('source_language');
     $sourceStatusFilter = $temp_store->get('source_status');
     $targetStatusFilter = $temp_store->get('target_status');
+    $contentStateFilter = $temp_store->get('content_state');
     $profileFilter = $temp_store->get('profile');
 
     // Add the filters if any.
@@ -299,6 +300,22 @@ abstract class LingotekManagementFormBase extends FormBase {
           Lingotek::STATUS_ERROR => $this->t('Error'),
         ],
       ];
+      if ($this->moduleHandler->moduleExists('content_moderation')) {
+        $workflow = $this->entityTypeManager->getStorage('workflow')->load('editorial');
+        if ($workflow != NULL) {
+          $states = $workflow->getTypePlugin()->getStates();
+          $options = ['' => $this->t('All')];
+          foreach ($states as $state_id => $state) {
+            $options[$state_id] = $state->label();
+          }
+          $form['filters']['advanced_options']['content_state'] = [
+            '#type' => 'select',
+            '#title' => $this->t('Content State'),
+            '#default_value' => $contentStateFilter,
+            '#options' => $options,
+          ];
+        }
+      }
       $form['filters']['advanced_options']['profile'] = [
         '#type' => 'select',
         '#title' => $this->t('Profile'),

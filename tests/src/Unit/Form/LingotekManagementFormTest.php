@@ -288,6 +288,10 @@ namespace Drupal\Tests\lingotek\Unit\Form {
         ->willReturn(NULL);
       $tempStore->expects($this->at(8))
         ->method('get')
+        ->with('content_state')
+        ->willReturn(NULL);
+      $tempStore->expects($this->at(9))
+        ->method('get')
         ->with('profile')
         ->willReturn(NULL);
 

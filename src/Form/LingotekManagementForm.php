@@ -75,6 +75,7 @@ class LingotekManagementForm extends LingotekManagementFormBase {
     $sourceLanguageFilter = $temp_store->get('source_language');
     $sourceStatusFilter = $temp_store->get('source_status');
     $targetStatusFilter = $temp_store->get('target_status');
+    $contentStateFilter = $temp_store->get('content_state');
     $profileFilter = $temp_store->get('profile');
 
     if ($sourceStatusFilter) {
@@ -251,7 +252,6 @@ class LingotekManagementForm extends LingotekManagementFormBase {
       }
     }
     if ($profileFilter) {
-      $profileOptions = $this->lingotekConfiguration->getProfileOptions();
       if (is_string($profileFilter)) {
         $profileFilter = [$profileFilter];
       }
@@ -313,6 +313,23 @@ class LingotekManagementForm extends LingotekManagementFormBase {
         $union2->innerJoin('lingotek_content_metadata__translation_status', 'translation_target_status',
           'metadata_target.id = translation_target_status.entity_id AND translation_target_status.translation_status_language <> entity_table.' . $entity_type->getKey('langcode'));
         $union2->condition('translation_target_status.translation_status_value', $targetStatusFilter);
+      }
+    }
+
+    if ($contentStateFilter != '') {
+      $content_moderation_type = $this->entityTypeManager->getDefinition('content_moderation_state');
+      $query->innerJoin($content_moderation_type->getDataTable(), 'content_moderation_data',
+      'entity_table.' . $entity_type->getKey('id') . '= content_moderation_data.content_entity_id');
+      $query->condition('content_moderation_data.moderation_state', $contentStateFilter);
+      if ($union !== NULL) {
+        $union->innerJoin($content_moderation_type->getDataTable(), 'content_moderation_data',
+        'entity_table.' . $entity_type->getKey('id') . '= content_moderation_data.content_entity_id');
+        $union->condition('content_moderation_data.moderation_state', $contentStateFilter);
+      }
+      if ($union2 !== NULL) {
+        $union2->innerJoin($content_moderation_type->getDataTable(), 'content_moderation_data',
+        'entity_table.' . $entity_type->getKey('id') . '= content_moderation_data.content_entity_id');
+        $union2->condition('content_moderation_data.moderation_state', $contentStateFilter);
       }
     }
 
@@ -438,7 +455,7 @@ class LingotekManagementForm extends LingotekManagementFormBase {
   protected function getFilterKeys() {
     $groupsExists = $this->moduleHandler->moduleExists('group') && $this->entityTypeId === 'node';
     // We need specific identifiers for default and advanced filters since the advanced filters bundle is unique.
-    $filtersKeys = [['wrapper', 'label'], ['wrapper', 'bundle'], ['wrapper', 'job'], ['advanced_options', 'document_id'], ['advanced_options', 'entity_id'], ['advanced_options', 'profile'], ['advanced_options', 'source_language'], ['advanced_options', 'source_status'], ['advanced_options', 'target_status']];
+    $filtersKeys = [['wrapper', 'label'], ['wrapper', 'bundle'], ['wrapper', 'job'], ['advanced_options', 'document_id'], ['advanced_options', 'entity_id'], ['advanced_options', 'profile'], ['advanced_options', 'source_language'], ['advanced_options', 'source_status'], ['advanced_options', 'target_status'], ['advanced_options', 'content_state']];
     if ($groupsExists) {
       $filtersKeys[] = ['wrapper', 'group'];
     }
