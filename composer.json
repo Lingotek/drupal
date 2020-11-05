@@ -53,6 +53,7 @@
     "drupal/entity_browser": "dev-2.x",
     "drupal/paragraphs_asymmetric_translation_widgets": "dev-1.x",
     "drupal/potx": "dev-1.x",
+    "drupal/layout_builder_st": "dev-1.x",
     "acquia/cohesion": "6.3.*"
   },
   "suggest": {
