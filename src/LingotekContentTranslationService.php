@@ -7,6 +7,7 @@ use Drupal\cohesion\LayoutCanvas\LayoutCanvas;
 use Drupal\cohesion_elements\Entity\Component;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\Html;
+use Drupal\Component\Utility\NestedArray;
 use Drupal\Component\Utility\SortArray;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
@@ -555,17 +556,17 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
           $typedConfigManager = \Drupal::service('config.typed');
           $pluginIDName = $block_instance->getPluginDefinition()['id'];
           $blockConfig = $block_instance->getConfiguration();
-          $definition = $typedConfigManager->getDefinition($pluginIDName);
+          $definition = $typedConfigManager->getDefinition('block.settings.' . $pluginIDName);
           if ($definition['type'] == 'undefined') {
             $definition = $typedConfigManager->getDefinition('block_settings');
           }
           $dataDefinition = $typedConfigManager->buildDataDefinition($definition, $blockConfig);
           $schema = $typedConfigManager->create($dataDefinition, $blockConfig);
           $properties = $lingotekConfigTranslation->getTranslatableProperties($schema, NULL);
-
           $embedded_data = [];
           foreach ($properties as $property) {
-            $embedded_data[$property] = $blockConfig[$property];
+            $propertyParts = explode('.', $property);
+            $embedded_data[$property] = NestedArray::getValue($blockConfig, $propertyParts);
           }
           if (strpos($pluginId, 'block_content') === 0) {
             $uuid = $block_instance->getDerivativeId();
@@ -1617,7 +1618,11 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
                   unset($field_item['entity']);
                 }
                 $configuration = $block->getConfiguration();
-                $newConfiguration = array_replace($configuration, $field_item);
+                $newConfiguration = $configuration;
+                foreach ($field_item as $fieldItemProperty => $fieldItemPropertyData) {
+                  $componentDataKeyParts = explode('.', $fieldItemProperty);
+                  NestedArray::setValue($newConfiguration, $componentDataKeyParts, $fieldItemPropertyData);
+                }
                 $translation->{$name}->set($index, [
                   'plugin_id' => $block->getPluginId(),
                   'settings' => $newConfiguration,
