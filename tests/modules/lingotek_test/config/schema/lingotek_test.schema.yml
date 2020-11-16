@@ -39,3 +39,11 @@ field.field.*.*.*.third_party.lingotek:
       sequence:
         type: string
         label: 'Target status'
+
+block.settings.lingotek_test_rich_text_block:
+  type: block_settings
+  label: 'Lingotek Rich text block'
+  mapping:
+    rich_text:
+      type: text_format
+      label: 'Rich text with format'

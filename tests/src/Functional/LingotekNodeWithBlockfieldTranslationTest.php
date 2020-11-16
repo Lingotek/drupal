@@ -213,6 +213,90 @@ class LingotekNodeWithBlockfieldTranslationTest extends LingotekTestBase {
   }
 
   /**
+   * Tests that a node can be translated referencing a standard block.
+   */
+  public function testNodeWithCustomConfigBlockTranslation() {
+    // This is a hack for avoiding writing different lingotek endpoint mocks.
+    \Drupal::state()->set('lingotek.uploaded_content_type', 'node+blockfieldcustom');
+
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['field_block[0][plugin_id]'] = 'lingotek_test_rich_text_block';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
+    $edit['langcode[0][value]'] = 'en';
+
+    // Because we cannot do ajax requests in this test, we submit and edit later.
+    $this->saveAndPublishNodeForm($edit);
+
+    $edit['field_block[0][settings][label_display]'] = TRUE;
+    $edit['field_block[0][settings][label]'] = 'Custom block title';
+    $edit['field_block[0][settings][rich_text][value]'] = 'Custom block body';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
+    $this->saveAndKeepPublishedNodeForm($edit, 1);
+
+    $this->assertText('Custom block title');
+    $this->assertText('Custom block body');
+
+    $this->node = Node::load(1);
+
+    // Check that only the configured fields have been uploaded, including field
+    // block settings stored in the field.
+    $data = json_decode(\Drupal::state()
+      ->get('lingotek.uploaded_content', '[]'), TRUE);
+    $this->assertUploadedDataFieldCount($data, 3);
+    $this->assertTrue(isset($data['title'][0]['value']));
+    $this->assertEqual(1, count($data['body'][0]));
+    $this->assertTrue(isset($data['body'][0]['value']));
+    $this->assertEqual(2, count($data['field_block'][0]));
+    $this->assertEqual($data['field_block'][0]['label'], 'Custom block title');
+    $this->assertEqual($data['field_block'][0]['rich_text.value'], 'Custom block body');
+
+    // Check that the translate tab is in the node.
+    $this->drupalGet('node/1');
+    $this->clickLink('Translate');
+
+    // The document should have been automatically uploaded, so let's check
+    // the upload status.
+    $this->clickLink('Check Upload Status');
+    $this->assertText('The import for node Llamas are cool is complete.');
+
+    // Request translation.
+    $link = $this->xpath('//a[normalize-space()="Request translation" and contains(@href,"es_AR")]');
+    $link[0]->click();
+    $this->assertText("Locale 'es_AR' was added as a translation target for node Llamas are cool.");
+
+    // Check translation status.
+    $this->clickLink('Check translation status');
+    $this->assertText('The es_AR translation for node Llamas are cool is ready for download.');
+
+    // Check that the Edit link points to the workbench and it is opened in a new tab.
+    $this->assertLingotekWorkbenchLink('es_AR');
+
+    // Download translation.
+    $this->clickLink('Download completed translation');
+    $this->assertText('The translation of node Llamas are cool into es_AR has been downloaded.');
+
+    // The content is translated and published.
+    $this->clickLink('Las llamas son chulas');
+    $this->assertText('Las llamas son chulas');
+    $this->assertText('Las llamas son muy chulas');
+    $this->assertText('Título de bloque personalizado');
+    $this->assertText('Cuerpo de bloque personalizado');
+
+    // The original content didn't change.
+    $this->drupalGet('node/1');
+    $this->assertText('Llamas are cool');
+    $this->assertText('Llamas are very cool');
+    $this->assertText('Custom block title');
+    $this->assertText('Custom block body');
+  }
+
+  /**
    * Tests that a node can be translated referencing a content block.
    */
   public function testNodeWithContentBlockTranslation() {
