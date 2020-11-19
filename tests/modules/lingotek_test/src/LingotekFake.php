@@ -310,8 +310,13 @@ class LingotekFake implements LingotekInterface {
 
     \Drupal::state()->set('lingotek.downloaded_locale', $locale);
     $type = \Drupal::state()->get('lingotek.uploaded_content_type', 'node');
+    $typeWithLocale = $type . '.' . $locale;
+    $path = drupal_get_path('module', 'lingotek') . '/tests/modules/lingotek_test/document_responses/' . $typeWithLocale . '.json';
 
-    $path = drupal_get_path('module', 'lingotek') . '/tests/modules/lingotek_test/document_responses/' . $type . '.json';
+    if (!file_exists($path)) {
+      $path = drupal_get_path('module', 'lingotek') . '/tests/modules/lingotek_test/document_responses/' . $type . '.json';
+    }
+
     $input = file_get_contents($path);
     $dataReplacements = \Drupal::state()->get('lingotek.data_replacements', []);
     if (!empty($dataReplacements)) {
