@@ -1377,6 +1377,18 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       $revision = (isset($data['_lingotek_metadata']) && isset($data['_lingotek_metadata']['_entity_revision'])) ? $data['_lingotek_metadata']['_entity_revision'] : NULL;
       $revision = $this->loadUploadedRevision($entity, $revision);
 
+      // We should reload the last revision of the entity at all times.
+      // This check here is only because of the case when we have asymmetric
+      // paragraphs for translations, as in that case we get a duplicate that
+      // still has not a valid entity id.
+      // Also take into account that we may have just removed paragraph
+      // translations form previous translation approaches, and in that case we
+      // are forced to remove those, but there will be a mark of translation
+      // changes.
+      if ($entity->id() && !$entity->hasTranslationChanges()) {
+        $entity = $this->entityTypeManager->getStorage($entity->getEntityTypeId())->load($entity->id());
+      }
+
       // Initialize the translation on the Drupal side, if necessary.
       /** @var \Drupal\Core\Entity\ContentEntityInterface $translation */
       if (!$entity->hasTranslation($langcode)) {
