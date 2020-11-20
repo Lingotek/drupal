@@ -26,6 +26,8 @@ use Drupal\lingotek\LingotekConfigMetadataInterface;
  *     "profile",
  *     "hash",
  *     "job_id",
+ *     "uploaded_timestamp",
+ *     "updated_timestamp",
  *   },
  * )
  */
@@ -79,6 +81,18 @@ class LingotekConfigMetadata extends ConfigEntityBase implements LingotekConfigM
    * @var string
    */
   protected $job_id = '';
+
+  /**
+   * The time of the initial upload
+   * @var int
+   */
+  protected $uploaded_timestamp = NULL;
+
+  /**
+   * The last time document was updated
+   * @var int
+   */
+  protected $updated_timestamp = NULL;
 
   /**
    * {@inheritdoc}
@@ -174,6 +188,36 @@ class LingotekConfigMetadata extends ConfigEntityBase implements LingotekConfigM
     $this->job_id = $job_id;
 
     return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setLastUpdated($timestamp) {
+    $this->updated_timestamp = $timestamp;
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getLastUpdated() {
+    return $this->updated_timestamp;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setLastUploaded($timestamp) {
+    $this->uploaded_timestamp = $timestamp;
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getLastUploaded() {
+    return $this->uploaded_timestamp;
   }
 
   /**

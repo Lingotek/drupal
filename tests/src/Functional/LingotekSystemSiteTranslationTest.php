@@ -3,6 +3,7 @@
 namespace Drupal\Tests\lingotek\Functional;
 
 use Drupal\language\Entity\ConfigurableLanguage;
+use Drupal\lingotek\Entity\LingotekConfigMetadata;
 use Drupal\lingotek\Lingotek;
 
 /**
@@ -17,7 +18,7 @@ class LingotekSystemSiteTranslationTest extends LingotekTestBase {
    *
    * @var array
    */
-  public static $modules = ['block', 'node', 'image'];
+  public static $modules = ['block', 'node', 'image', 'frozenintime'];
 
   protected function setUp(): void {
     parent::setUp();
@@ -56,6 +57,13 @@ class LingotekSystemSiteTranslationTest extends LingotekTestBase {
     $this->assertTrue(array_key_exists('name', $data['system.site']));
     $this->assertTrue(array_key_exists('slogan', $data['system.site']));
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
+
+    // Ensure it has the expected timestamp for upload
+    $timestamp = \Drupal::time()->getRequestTime();
+    foreach (LingotekConfigMetadata::loadMultiple() as $metadata) {
+      $this->assertEquals($timestamp, $metadata->getLastUploaded());
+      $this->assertEmpty($metadata->getLastUpdated());
+    }
 
     // Check that the url used was the right one.
     $uploaded_url = \Drupal::state()->get('lingotek.uploaded_url');
@@ -117,6 +125,13 @@ class LingotekSystemSiteTranslationTest extends LingotekTestBase {
     // We need to reupload again. It's manual for configuration.
     $this->clickLink('Upload');
     $this->checkForMetaRefresh();
+
+    // Ensure it has the expected timestamp for upload
+    $timestamp = \Drupal::time()->getRequestTime();
+    foreach (LingotekConfigMetadata::loadMultiple() as $metadata) {
+      $this->assertEquals($timestamp, $metadata->getLastUploaded());
+      $this->assertEquals($timestamp, $metadata->getLastUpdated());
+    }
 
     // Check the status is not edited for Vasque, but available to request
     // translation.

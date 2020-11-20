@@ -688,4 +688,94 @@ interface LingotekConfigTranslationServiceInterface {
    */
   public function getTranslatableProperties(TraversableTypedDataInterface $schema, $prefix);
 
+  /**
+   * Sets the timestamp for the last time the config was uploaded.
+   *
+   * @param \Drupal\config_translation\ConfigNamesMapper $mapper
+   *   The mapper for which we want to save the timestamp.
+   * @param int $timestamp
+   *   The timestamp being saved.
+   */
+  public function setConfigLastUploaded(ConfigNamesMapper $mapper, int $timestamp);
+
+  /**
+   * Sets the timestamp for the last time the config was updated.
+   *
+   * @param \Drupal\config_translation\ConfigNamesMapper $mapper
+   *   The mapper for which we want to save the timestamp.
+   * @param int $timestamp
+   *   The timestamp being saved.
+   */
+  public function setConfigLastUpdated(ConfigNamesMapper $mapper, int $timestamp);
+
+  /**
+   * Gets the timestamp for the last time the config was uploaded.
+   *
+   * @param \Drupal\config_translation\ConfigNamesMapper $mapper
+   *   The mapper for which we want to get the timestamp.
+   *
+   * @return int
+   *   The timestamp or NULL.
+   */
+  public function getConfigLastUploaded(ConfigNamesMapper $mapper);
+
+  /**
+   * Gets the timestamp for the last time the config was updated.
+   *
+   * @param \Drupal\config_translation\ConfigNamesMapper $mapper
+   *   The mapper for which we want to get the timestamp.
+   *
+   * @return int
+   *   The timestamp or NULL.
+   */
+  public function getConfigLastUpdated(ConfigNamesMapper $mapper);
+
+  /**
+   * Gets the 'initial upload' time metadata.
+   *
+   * @param \Drupal\Core\Config\Entity\ConfigEntityInterface $entity
+   *   The entity for which we want the timestamp.
+   *
+   * @return int
+   *   Returns the timestamp or NULL.
+   */
+  public function getLastUploaded(ConfigEntityInterface $entity);
+
+  /**
+   * Gets the 'updated date' time metadata.
+   *
+   * @param \Drupal\Core\Config\Entity\ConfigEntityInterface $entity
+   *   The entity for which we want the timestamp.
+   *
+   * @return int
+   *   Returns the timestamp or NULL.
+   */
+  public function getLastUpdated(ConfigEntityInterface $entity);
+
+  /**
+   * Updates the 'initial upload' time metadata to the current request time.
+   *
+   * @param \Drupal\Core\Config\Entity\ConfigEntityInterface $entity
+   *   The entity to which we want to save the timestamp.
+   * @param int $timestamp
+   *   The timestamp we want to store.
+   *
+   * @return \Drupal\Core\Config\Entity\ConfigEntityInterface
+   *   Returns the entity for which timestamp is saved.
+   */
+  public function setLastUploaded(ConfigEntityInterface $entity, int $timestamp);
+
+  /**
+   * Updates the 'updated date' time metadata to the current request time.
+   *
+   * @param \Drupal\Core\Config\Entity\ConfigEntityInterface $entity
+   *   The entity to which we want to save the timestamp.
+   * @param int $timestamp
+   *   The timestamp we want to store.
+   *
+   * @return \Drupal\Core\Config\Entity\ConfigEntityInterface
+   *   Returns the entity for which timestamp is saved.
+   */
+  public function setLastUpdated(ConfigEntityInterface $entity, int $timestamp);
+
 }

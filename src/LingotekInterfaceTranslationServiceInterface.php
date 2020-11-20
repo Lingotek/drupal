@@ -383,4 +383,52 @@ interface LingotekInterfaceTranslationServiceInterface {
    */
   public function setJobId($component, $job_id, $update_tms = FALSE);
 
+  /**
+   * Updates the 'initial upload' time metadata to the current request time.
+   *
+   * @param string $component
+   *   The component for which we want to update the timestamp.
+   * @param int $timestamp
+   *   The timestamp we want to store.
+   *
+   * @return string
+   *   Returns the component which translations are saved.
+   */
+  public function setLastUploaded($component, int $timestamp);
+
+  /**
+   * Updates the 'updated date' time metadata to the current request time.
+   *
+   * @param string $component
+   *   The component for which we want to update the timestamp.
+   * @param int $timestamp
+   *   The timestamp we want to store.
+   *
+   * @return string
+   *   Returns the component which translations are saved.
+   */
+  public function setLastUpdated($component, int $timestamp);
+
+  /**
+ * Returns the 'initial upload' time metadata.
+ *
+ * @param string $component
+ *   The component for which we want to get the timestamp.
+   *
+ * @return int
+ *   Returns the unix timestamp.
+ */
+  public function getLastUploaded($component);
+
+  /**
+   * Returns the 'updated date' time metadata.
+   *
+   * @param string $component
+   *   The component for which we want to get the timestamp.
+   *
+   * @return int
+   *   Returns the unix timestamp.
+   */
+  public function getUpdatedTime($component);
+
 }

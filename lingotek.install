@@ -2,6 +2,14 @@
 
 /**
  * @file
+ * Install, update and uninstall functions for the lingotek module.
+ */
+
+use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+
+/**
+ * @file
  * Install, update and uninstall functions for the Lingotek module.
  */
 
@@ -142,5 +150,24 @@ function lingotek_update_9000() {
   if ($preference === 'global_setting') {
     $lingotekSettings->set('preference.append_type_to_title', TRUE);
     $lingotekSettings->save();
+  }
+}
+
+/**
+ * Adds initial upload and updated date fields to Lingotek metadata entities.
+ */
+function lingotek_update_9401() {
+  $fields = [];
+  $fields['updated_timestamp'] = BaseFieldDefinition::create('timestamp')
+    ->setLabel(new TranslatableMarkup('Updated timestamp'))
+    ->setDescription(new TranslatableMarkup('The last time document was updated.'));
+
+  $fields['uploaded_timestamp'] = BaseFieldDefinition::create('timestamp')
+    ->setLabel(new TranslatableMarkup('Initial upload'))
+    ->setDescription(new TranslatableMarkup('The time of the initial upload.'));
+
+  $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  foreach ($fields as $name => $storage_definition) {
+    $entity_definition_update_manager->installFieldStorageDefinition($name, 'lingotek_content_metadata', 'lingotek', $storage_definition);
   }
 }

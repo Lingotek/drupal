@@ -588,6 +588,7 @@ class LingotekInterfaceTranslationService implements LingotekInterfaceTranslatio
       $this->setSourceStatus($component, Lingotek::STATUS_IMPORTING);
       $this->setTargetStatuses($component, Lingotek::STATUS_REQUEST);
       $this->setJobId($component, $job_id);
+      $this->setLastUploaded($component, \Drupal::time()->getRequestTime());
       return $document_id;
     }
     return FALSE;
@@ -705,11 +706,15 @@ class LingotekInterfaceTranslationService implements LingotekInterfaceTranslatio
       $this->setSourceStatus($component, Lingotek::STATUS_IMPORTING);
       $this->setTargetStatuses($component, Lingotek::STATUS_PENDING);
       $this->setJobId($component, $job_id);
+      $this->setLastUpdated($component, \Drupal::time()->getRequestTime());
       return $document_id;
     }
     return FALSE;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function downloadDocuments($component) {
     if ($document_id = $this->getDocumentId($component)) {
       $source_status = $this->getSourceStatus($component);
@@ -1045,6 +1050,44 @@ class LingotekInterfaceTranslationService implements LingotekInterfaceTranslatio
     }
     potx_finish_processing('_potx_save_string');
     return $_potx_strings;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setLastUploaded($component, int $timestamp) {
+    $metadata = $this->getMetadata($component);
+    $metadata['uploaded_timestamp'] = $timestamp;
+    $this->saveMetadata($component, $metadata);
+
+    return $component;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setLastUpdated($component, int $timestamp) {
+    $metadata = $this->getMetadata($component);
+    $metadata['updated_timestamp'] = $timestamp;
+    $this->saveMetadata($component, $metadata);
+
+    return $component;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getLastUploaded($component) {
+    $metadata = $this->getMetadata($component);
+    return isset($metadata['uploaded_timestamp']) ? $metadata['uploaded_timestamp'] : NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getUpdatedTime($component) {
+    $metadata = $this->getMetadata($component);
+    return isset($metadata['updated_timestamp']) ? $metadata['updated_timestamp'] : NULL;
   }
 
 }

@@ -426,6 +426,12 @@ lingotek.lingotek_config_metadata.*:
     job_id:
       type: string
       label: 'Lingotek Job ID'
+    updated_timestamp:
+      type: timestamp
+      label: 'Updated date'
+    uploaded_timestamp:
+      type: timestamp
+      label: 'Initial upload'
 
 language.entity.*.third_party.lingotek:
   type: mapping

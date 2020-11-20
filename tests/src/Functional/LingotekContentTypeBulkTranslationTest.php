@@ -6,6 +6,7 @@ use Drupal\Core\Language\LanguageInterface;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\lingotek\Lingotek;
 use Drupal\node\Entity\NodeType;
+use Drupal\lingotek\Entity\LingotekConfigMetadata;
 
 /**
  * Tests translating a config entity using the bulk management form.
@@ -19,7 +20,7 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
    *
    * @var array
    */
-  public static $modules = ['block', 'node'];
+  public static $modules = ['block', 'node', 'frozenintime'];
 
   protected function setUp(): void {
     parent::setUp();
@@ -62,6 +63,13 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->clickLink('EN');
     $this->assertText(t('Article uploaded successfully'));
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
+
+    // Ensure it has the expected timestamp for updated and upload
+    $timestamp = \Drupal::time()->getRequestTime();
+    foreach (LingotekConfigMetadata::loadMultiple() as $metadata) {
+      $this->assertEmpty($metadata->getLastUpdated());
+      $this->assertEquals($timestamp, $metadata->getLastUploaded());
+    }
 
     // There is a link for checking status.
     $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/check_upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
@@ -329,6 +337,13 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
 
     // The source status is 'Importing' because of automatic upload.
     $this->assertSourceStatus('EN', Lingotek::STATUS_IMPORTING);
+
+    // Ensure it has the expected timestamp for updated and upload
+    $timestamp = \Drupal::time()->getRequestTime();
+    foreach (LingotekConfigMetadata::loadMultiple() as $metadata) {
+      $this->assertEquals($timestamp, $metadata->getLastUpdated());
+      $this->assertEquals($timestamp, $metadata->getLastUploaded());
+    }
 
     // Check the target statuses are not affected, but the current is back to pending.
     $this->assertTargetStatus('ES', Lingotek::STATUS_PENDING);

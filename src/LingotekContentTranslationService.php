@@ -135,9 +135,6 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       return FALSE;
     }
     $document_id = $this->getDocumentId($entity);
-    // We set a max time of 1 hour for the import (in seconds)
-    $maxImportTime = 3600;
-    $source_status = $this->getSourceStatus($entity);
     if ($document_id) {
       // Document has successfully imported.
       if ($this->lingotek->getDocumentStatus($document_id)) {
@@ -145,19 +142,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
         return TRUE;
       }
       else {
-        // TODO: change to actual last_uploaded timestamp rather than surrogate.
-        if ($entity->getEntityType()->entityClassImplements(EntityChangedInterface::class)) {
-          $last_uploaded_time = $entity->getChangedTime();
-          // If document has not successfully imported after MAX_IMPORT_TIME
-          // then move to ERROR state.
-          if (\Drupal::time()->getRequestTime() - $last_uploaded_time > $maxImportTime) {
-            $this->setSourceStatus($entity, Lingotek::STATUS_ERROR);
-          }
-          else {
-            // Document still may be importing and the MAX import time didn't
-            // complete yet, so we do nothing.
-          }
-        }
+        $this->checkForTimeout($entity);
         return FALSE;
       }
     }
@@ -165,6 +150,34 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       $this->setTargetStatuses($entity, Lingotek::STATUS_DISABLED);
     }
     return FALSE;
+  }
+
+  /**
+   * Checks the time elapsed since the last upload and sets the entity
+   * to error if the max time has elapsed.
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   */
+  protected function checkForTimeout(ContentEntityInterface &$entity) {
+    // We set a max time of 1 hour for the import (in seconds)
+    $maxImportTime = 3600;
+    if ($last_uploaded_time = $this->getLastUpdated($entity) ?: $this->getLastUploaded($entity)) {
+      // If document has not successfully imported after MAX_IMPORT_TIME
+      // then move to ERROR state.
+      if (\Drupal::time()->getRequestTime() - $last_uploaded_time > $maxImportTime) {
+        $this->setSourceStatus($entity, Lingotek::STATUS_ERROR);
+      }
+      else {
+        // Document still may be importing and the MAX import time didn't
+        // complete yet, so we do nothing.
+      }
+      // TODO: Remove the elseif clause after 4.0.0 is released
+    }
+    elseif ($entity->getEntityType()->entityClassImplements(EntityChangedInterface::class)) {
+      $last_uploaded_time = $entity->getChangedTime();
+      if (\Drupal::time()->getRequestTime() - $last_uploaded_time > $maxImportTime) {
+        $this->setSourceStatus($entity, Lingotek::STATUS_ERROR);
+      }
+    }
   }
 
   /**
@@ -980,6 +993,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       $this->setSourceStatus($entity, Lingotek::STATUS_IMPORTING);
       $this->setTargetStatuses($entity, Lingotek::STATUS_REQUEST);
       $this->setJobId($entity, $job_id);
+      $this->setLastUploaded($entity, \Drupal::time()->getRequestTime());
       return $document_id;
     }
     if ($this->getSourceStatus($entity) == Lingotek::STATUS_DISABLED) {
@@ -1128,7 +1142,8 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       $this->setSourceStatus($entity, Lingotek::STATUS_IMPORTING);
       $this->setTargetStatuses($entity, Lingotek::STATUS_PENDING);
       $this->setJobId($entity, $job_id);
-      return $document_id;
+      $this->setLastUpdated($entity, \Drupal::time()->getRequestTime());
+      return $newDocumentID;
     }
     if ($this->getSourceStatus($entity) == Lingotek::STATUS_DISABLED) {
       $this->setTargetStatuses($entity, Lingotek::STATUS_DISABLED);
@@ -1904,6 +1919,59 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
         }
       }
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setLastUploaded(ContentEntityInterface $entity, int $timestamp) {
+    if (!$entity->lingotek_metadata->entity) {
+      $entity->lingotek_metadata->entity = LingotekContentMetadata::loadByTargetId($entity->getEntityTypeId(), $entity->id());
+    }
+    /** @var \Drupal\lingotek\Entity\LingotekContentMetadata $metadata */
+    $metadata = &$entity->lingotek_metadata->entity;
+    $metadata->setLastUploaded($timestamp)->save();
+
+    return $entity;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setLastUpdated(ContentEntityInterface $entity, int $timestamp) {
+    if (!$entity->lingotek_metadata->entity) {
+      $entity->lingotek_metadata->entity = LingotekContentMetadata::loadByTargetId($entity->getEntityTypeId(), $entity->id());
+    }
+    /** @var \Drupal\lingotek\Entity\LingotekContentMetadata $metadata */
+    $metadata = &$entity->lingotek_metadata->entity;
+    $metadata->setLastUpdated($timestamp)->save();
+
+    return $entity;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getLastUploaded(ContentEntityInterface $entity) {
+    if (!$entity->lingotek_metadata->entity) {
+      $entity->lingotek_metadata->entity = LingotekContentMetadata::loadByTargetId($entity->getEntityTypeId(), $entity->id());
+    }
+    /** @var \Drupal\lingotek\Entity\LingotekContentMetadata $metadata */
+    $metadata = $entity->lingotek_metadata->entity;
+    return $metadata->getLastUploaded();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getLastUpdated(ContentEntityInterface $entity) {
+    if (!$entity->lingotek_metadata->entity) {
+      $entity->lingotek_metadata->entity = LingotekContentMetadata::loadByTargetId($entity->getEntityTypeId(), $entity->id());
+    }
+
+    /** @var \Drupal\lingotek\Entity\LingotekContentMetadata $metadata */
+    $metadata = $entity->lingotek_metadata->entity;
+    return $metadata->getLastUpdated();
   }
 
 }

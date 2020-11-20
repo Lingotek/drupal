@@ -21,7 +21,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['block', 'node', 'image'];
+  public static $modules = ['block', 'node', 'image', 'frozenintime'];
 
   /**
    * @var \Drupal\node\NodeInterface
@@ -135,6 +135,12 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $translation_service = \Drupal::service('lingotek.content_translation');
     $source_status = $translation_service->getSourceStatus($this->node);
     $this->assertEqual(Lingotek::STATUS_IMPORTING, $source_status, 'The node has been marked as importing.');
+
+    // Assert the updated time and uploaded time have expected values
+    $metadata = $this->node->lingotek_metadata->entity;
+    $expected_time = \Drupal::time()->getRequestTime();
+    $this->assertEmpty($metadata->getLastUpdated());
+    $this->assertEquals($expected_time, $metadata->getLastUploaded());
 
     // The document should have been automatically uploaded, so let's check
     // the upload status.
@@ -318,6 +324,13 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $edit['langcode[0][value]'] = 'en';
     $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
     $this->saveAndKeepPublishedThisTranslationNodeForm($edit, 1);
+
+    // Assert the updated time and uploaded time are, in this case, equal
+    $this->node = $this->resetStorageCachesAndReloadNode();
+    $metadata = $this->node->lingotek_metadata->entity;
+    $expected_time = \Drupal::time()->getRequestTime();
+    $this->assertEquals($expected_time, $metadata->getLastUpdated());
+    $this->assertEquals($expected_time, $metadata->getLastUploaded());
 
     $this->clickLink('Translate');
 
@@ -521,11 +534,21 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $source_status = $translation_service->getSourceStatus($this->node);
     $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The node has been marked as error.');
 
+    $metadata = $this->node->lingotek_metadata->entity;
+    $expected_time = \Drupal::time()->getRequestTime();
+    $this->assertEmpty($metadata->getLastUploaded());
+    $this->assertEmpty($metadata->getLastUpdated());
+
     // I can still re-try the upload.
     \Drupal::state()->set('lingotek.must_error_in_upload', FALSE);
     $this->clickLink('Upload');
     $this->checkForMetaRefresh();
     $this->assertText('Uploaded 1 document to Lingotek.');
+
+    $this->node = $this->resetStorageCachesAndReloadNode();
+    $metadata = $this->node->lingotek_metadata->entity;
+    $this->assertEquals($expected_time, $metadata->getLastUploaded());
+    $this->assertEmpty($metadata->getLastUpdated());
   }
 
   /**

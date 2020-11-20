@@ -1621,7 +1621,29 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
 
     // The document has not been imported yet, and it was uploaded long ago.
     \Drupal::state()->set('lingotek.document_status_completion', FALSE);
-    Node::load(1)->setChangedTime(\Drupal::time()->getRequestTime() - 100000)->save();
+    // TODO: Remove the test in between these comments once 4.0.0 is released
+    $node = Node::load(1);
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.content_translation');
+    $translation_service->setLastUploaded($node, 0);
+    $node->setChangedTime(\Drupal::time()->getRequestTime() - 100000)->save();
+
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForCheckUpload('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    // It was marked as error and I can try the update.
+    // Check the right class is added.
+    $this->assertSourceStatus('EN', Lingotek::STATUS_ERROR);
+    // END TODO
+
+    $node = Node::load(1);
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.content_translation');
+    $translation_service->setLastUploaded($node, \Drupal::time()->getRequestTime() - 100000);
 
     $key = $this->getBulkSelectionKey('en', 1);
     $edit = [

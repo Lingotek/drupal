@@ -10,6 +10,7 @@ use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Tests\field\Traits\EntityReferenceTestTrait;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
+use Drupal\lingotek\Entity\LingotekConfigMetadata;
 use Drupal\node\Entity\Node;
 
 /**
@@ -24,7 +25,7 @@ class LingotekNodeWithBlockfieldTranslationTest extends LingotekTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['block', 'node', 'dblog', 'block_content', 'block_field'];
+  public static $modules = ['block', 'node', 'dblog', 'block_content', 'block_field', 'frozenintime'];
 
   /**
    * @var \Drupal\node\NodeInterface
@@ -158,6 +159,12 @@ class LingotekNodeWithBlockfieldTranslationTest extends LingotekTestBase {
     // Because we cannot do ajax requests in this test, we submit and edit later.
     $this->saveAndPublishNodeForm($edit);
 
+    // Ensure it has the expected timestamp for updated and upload
+    foreach (LingotekConfigMetadata::loadMultiple() as $metadata) {
+      $this->assertEmpty($metadata->getLastUpdated());
+      $this->assertEmpty($metadata->getLastUploaded());
+    }
+
     $edit['field_block[0][settings][label_display]'] = TRUE;
     $edit['field_block[0][settings][label]'] = 'Current theme overridden title block';
     $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
@@ -165,6 +172,13 @@ class LingotekNodeWithBlockfieldTranslationTest extends LingotekTestBase {
 
     $this->assertText('Current theme overridden title block');
     $this->assertText('Current theme: stark');
+
+    // Ensure it has the expected timestamp for updated and upload
+    $timestamp = \Drupal::time()->getRequestTime();
+    foreach (LingotekConfigMetadata::loadMultiple() as $metadata) {
+      $this->assertEmpty($metadata->getLastUpdated());
+      $this->assertEquals($timestamp, $metadata->getLastUploaded());
+    }
 
     $this->node = Node::load(1);
 

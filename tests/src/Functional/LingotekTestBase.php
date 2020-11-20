@@ -721,4 +721,26 @@ abstract class LingotekTestBase extends BrowserTestBase {
     $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], 'lingoteksettings-tab-configuration-form');
   }
 
+  /**
+   * Resets node and metadata storage caches and reloads the node.
+   *
+   * @return \Drupal\node\NodeInterface
+   *   The node.
+   */
+  protected function resetStorageCachesAndReloadNode() {
+    /** @var \Drupal\node\NodeStorageInterface $node_storage */
+    $node_storage = $this->container->get('entity_type.manager')->getStorage('node');
+    /** @var \Drupal\Core\Entity\EntityStorageInterface; $metadata_storage */
+    $metadata_storage = $this->container->get('entity_type.manager')
+      ->getStorage('lingotek_content_metadata');
+
+    // The node and the metadata caches need to be reset before reload.
+    $metadata_storage->resetCache([1]);
+    $node_storage->resetCache([1]);
+
+    /** @var \Drupal\node\NodeInterface $node */
+    $node = $node_storage->load(1);
+    return $node;
+  }
+
 }

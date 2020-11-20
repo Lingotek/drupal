@@ -411,6 +411,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
       $this->setSourceStatus($entity, Lingotek::STATUS_IMPORTING);
       $this->setTargetStatuses($entity, Lingotek::STATUS_REQUEST);
       $this->setJobId($entity, $job_id);
+      $this->setLastUploaded($entity, \Drupal::time()->getRequestTime());
       return $document_id;
     }
     if ($this->getSourceStatus($entity) == Lingotek::STATUS_DISABLED) {
@@ -508,7 +509,8 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
       $this->setSourceStatus($entity, Lingotek::STATUS_IMPORTING);
       $this->setTargetStatuses($entity, Lingotek::STATUS_PENDING);
       $this->setJobId($entity, $job_id);
-      return $document_id;
+      $this->setLastUpdated($entity, \Drupal::time()->getRequestTime());
+      return $newDocumentID;
     }
     if ($this->getSourceStatus($entity) == Lingotek::STATUS_DISABLED) {
       $this->setTargetStatuses($entity, Lingotek::STATUS_DISABLED);
@@ -1108,6 +1110,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
       $this->setConfigSourceStatus($mapper, Lingotek::STATUS_IMPORTING);
       $this->setConfigTargetStatuses($mapper, Lingotek::STATUS_REQUEST);
       $this->setConfigJobId($mapper, $job_id);
+      $this->setConfigLastUploaded($mapper, \Drupal::time()->getRequestTime());
       return $document_id;
     }
     if ($this->getConfigSourceStatus($mapper) == Lingotek::STATUS_DISABLED) {
@@ -1549,6 +1552,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
       $this->setConfigSourceStatus($mapper, Lingotek::STATUS_IMPORTING);
       $this->setConfigTargetStatuses($mapper, Lingotek::STATUS_PENDING);
       $this->setConfigJobId($mapper, $job_id);
+      $this->setConfigLastUpdated($mapper, \Drupal::time()->getRequestTime());
       return $document_id;
     }
     if ($this->getConfigSourceStatus($mapper) == Lingotek::STATUS_DISABLED) {
@@ -1735,6 +1739,88 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
       }
     }
     return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+  */
+  public function setConfigLastUploaded(ConfigNamesMapper $mapper, int $timestamp) {
+    foreach ($mapper->getConfigNames() as $config_name) {
+      $metadata = LingotekConfigMetadata::loadByConfigName($config_name);
+      $metadata->setLastUploaded($timestamp)->save();
+    }
+    return $mapper;
+  }
+
+  /**
+   * {@inheritdoc}
+  */
+  public function setConfigLastUpdated(ConfigNamesMapper $mapper, int $timestamp) {
+    foreach ($mapper->getConfigNames() as $config_name) {
+      $metadata = LingotekConfigMetadata::loadByConfigName($config_name);
+      $metadata->setLastUpdated($timestamp)->save();
+    }
+    return $mapper;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getConfigLastUpdated(ConfigNamesMapper $mapper) {
+    $config_names = $mapper->getConfigNames();
+    foreach ($config_names as $config_name) {
+      $metadata = LingotekConfigMetadata::loadByConfigName($config_name);
+      return $metadata->getLastUpdated();
+    }
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getConfigLastUploaded(ConfigNamesMapper $mapper) {
+    $config_names = $mapper->getConfigNames();
+    foreach ($config_names as $config_name) {
+      $metadata = LingotekConfigMetadata::loadByConfigName($config_name);
+      return $metadata->getLastUploaded();
+    }
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getLastUploaded(ConfigEntityInterface $entity) {
+    $metadata = LingotekConfigMetadata::loadByConfigName($entity->getEntityTypeId() . '.' . $entity->id());
+    return $metadata->getLastUploaded();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getLastUpdated(ConfigEntityInterface $entity) {
+    $metadata = LingotekConfigMetadata::loadByConfigName($entity->getEntityTypeId() . '.' . $entity->id());
+    return $metadata->getLastUpdated();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setLastUploaded(ConfigEntityInterface $entity, int $timestamp) {
+    $metadata = LingotekConfigMetadata::loadByConfigName($entity->getEntityTypeId() . '.' . $entity->id());
+    $metadata->setLastUploaded($timestamp)->save();
+
+    return $entity;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setLastUpdated(ConfigEntityInterface $entity, int $timestamp) {
+    $metadata = LingotekConfigMetadata::loadByConfigName($entity->getEntityTypeId() . '.' . $entity->id());
+    $metadata->setLastUpdated($timestamp)->save();
+
+    return $entity;
   }
 
 }

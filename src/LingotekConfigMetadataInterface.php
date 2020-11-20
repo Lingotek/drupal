@@ -96,4 +96,38 @@ interface LingotekConfigMetadataInterface extends ConfigEntityInterface {
    */
   public function setJobId($job_id);
 
+  /**
+   * Sets the timestamp for the time of the initial upload.
+   *
+   * @param int $timestamp
+   *   The unix timestamp of the event.
+   *
+   * @return $this
+   */
+  public function setLastUploaded($timestamp);
+
+  /**
+   * Gets the timestamp for the time of the initial upload.
+   *
+   * @return int
+   */
+  public function getLastUploaded();
+
+  /**
+   * Sets the timestamp for the time of the initial upload.
+   *
+   * @param int $timestamp
+   *   The unix timestamp of the event.
+   *
+   * @return $this
+   */
+  public function setLastUpdated($timestamp);
+
+  /**
+   * Gets the timestamp for the last time document was updated.
+   *
+   * @return int
+   */
+  public function getLastUpdated();
+
 }

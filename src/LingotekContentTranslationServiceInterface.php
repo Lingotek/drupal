@@ -384,4 +384,52 @@ interface LingotekContentTranslationServiceInterface {
    */
   public function getJobId(ContentEntityInterface $entity);
 
+  /**
+   * Updates the 'initial upload' time metadata to the current request time.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The entity which we want the document id.
+   * @param int $timestamp
+   *   The timestamp we want to store.
+   *
+   * @return \Drupal\Core\Entity\ContentEntityInterface
+   *   Returns the entity.
+   */
+  public function setLastUploaded(ContentEntityInterface $entity, int $timestamp);
+
+  /**
+   * Updates the 'updated date' time metadata to the current request time.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The entity which we want the document id.
+   * @param int $timestamp
+   *   The timestamp we want to store.
+   *
+   * @return \Drupal\Core\Entity\ContentEntityInterface
+   *   Returns the entity.
+   */
+  public function setLastUpdated(ContentEntityInterface $entity, int $timestamp);
+
+  /**
+   * Gets the 'initial upload' time metadata for the given entity.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The entity which we want the document id.
+   *
+   * @return \Drupal\Core\Entity\ContentEntityInterface
+   *   Returns the timestamp.
+   */
+  public function getLastUploaded(ContentEntityInterface $entity);
+
+  /**
+   * Gets the 'updated date' time metadata for the given entity.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The entity which we want the document id.
+   *
+   * @return \Drupal\Core\Entity\ContentEntityInterface
+   *   Returns the timestamp.
+   */
+  public function getLastUpdated(ContentEntityInterface $entity);
+
 }

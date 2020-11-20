@@ -76,6 +76,14 @@ class LingotekContentMetadata extends ContentEntityBase {
       ->setLabel(new TranslatableMarkup('Lingotek job id'))
       ->setDescription(new TranslatableMarkup('The Lingotek job id.'));
 
+    $fields['updated_timestamp'] = BaseFieldDefinition::create('timestamp')
+      ->setLabel(new TranslatableMarkup('Updated timestamp'))
+      ->setDescription(new TranslatableMarkup('The last time document was updated.'));
+
+    $fields['uploaded_timestamp'] = BaseFieldDefinition::create('timestamp')
+      ->setLabel(new TranslatableMarkup('Initial upload'))
+      ->setDescription(new TranslatableMarkup('The time of the initial upload.'));
+
     return $fields;
   }
 
@@ -267,6 +275,49 @@ class LingotekContentMetadata extends ContentEntityBase {
   public function setJobId($value) {
     $this->job_id = $value;
     return $this;
+  }
+
+  /**
+   * Sets the timestamp for the time of the initial upload.
+   * @param int $timestamp
+   *   The unix timestamp of the event.
+   *
+   * @return $this
+   */
+  public function setLastUpdated($timestamp) {
+    $this->updated_timestamp->value = $timestamp;
+
+    return $this;
+  }
+
+  /**
+   * Gets the timestamp for the time of the initial upload.
+   *
+   * @return int
+   */
+  public function getLastUpdated() {
+    return $this->updated_timestamp->value;
+  }
+
+  /**
+   * Sets the timestamp for the time of the initial upload.
+   * @param int $timestamp
+   *   The unix timestamp of the event.
+   *
+   * @return $this
+   */
+  public function setLastUploaded($timestamp) {
+    $this->uploaded_timestamp->value = $timestamp;
+    return $this;
+  }
+
+  /**
+   * Gets the timestamp for the last time document was updated.
+   *
+   * @return int
+   */
+  public function getLastUploaded() {
+    return $this->uploaded_timestamp->value;
   }
 
 }

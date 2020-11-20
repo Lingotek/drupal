@@ -526,6 +526,20 @@ display:
           entity_type: lingotek_content_metadata
           entity_field: job_id
           plugin_id: field
+        updated_timestamp:
+          id: updated_timestamp
+          table: lingotek_metadata
+          field: updated_timestamp
+          entity_type: lingotek_content_metadata
+          entity_field: updated_timestamp
+          plugin_id: field
+        uploaded_timestamp:
+          id: uploaded_timestamp
+          table: lingotek_metadata
+          field: uploaded_timestamp
+          entity_type: lingotek_content_metadata
+          entity_field: uploaded_timestamp
+          plugin_id: field
       filters: {  }
       sorts: {  }
       title: 'Lingotek Metadata view'

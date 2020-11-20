@@ -18,7 +18,7 @@ class LingotekInterfaceTranslationTest extends LingotekTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['block', 'node', 'potx', 'lingotek_interface_translation_test'];
+  public static $modules = ['block', 'node', 'potx', 'lingotek_interface_translation_test', 'frozenintime'];
 
   /**
    * {@inheritdoc}
@@ -77,7 +77,7 @@ class LingotekInterfaceTranslationTest extends LingotekTestBase {
     // hardcode it.
     $path = drupal_get_path('module', 'lingotek_interface_translation_test');
     $component = $path;
-    $indexOfModuleLink = 1;
+    $indexOfModuleLink = 2;
     $assert_session = $this->assertSession();
     // Login as admin.
     $this->drupalLogin($this->rootUser);
@@ -210,8 +210,8 @@ class LingotekInterfaceTranslationTest extends LingotekTestBase {
     $path2 = drupal_get_path('module', 'lingotek_test');
     $component1 = $path1;
     $component2 = $path2;
-    $indexOfModuleLink1 = 1;
-    $indexOfModuleLink2 = 2;
+    $indexOfModuleLink1 = 2;
+    $indexOfModuleLink2 = 3;
     $assert_session = $this->assertSession();
     // Login as admin.
     $this->drupalLogin($this->rootUser);
@@ -321,7 +321,7 @@ class LingotekInterfaceTranslationTest extends LingotekTestBase {
     // hardcode it.
     $path = drupal_get_path('module', 'lingotek_interface_translation_test');
     $component = $path;
-    $indexOfModuleLink = 1;
+    $indexOfModuleLink = 2;
     $assert_session = $this->assertSession();
     // Login as admin.
     $this->drupalLogin($this->rootUser);
@@ -343,11 +343,15 @@ class LingotekInterfaceTranslationTest extends LingotekTestBase {
     $translation_service = \Drupal::service('lingotek.interface_translation');
     $source_status = $translation_service->getSourceStatus($component);
     $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The source upload has been marked as error.');
+    $this->assertEmpty($translation_service->getLastUploaded($component));
 
     // I can still re-try the upload.
     \Drupal::state()->set('lingotek.must_error_in_upload', FALSE);
     $this->clickLink('EN', $indexOfModuleLink);
     $assert_session->responseContains('<em class="placeholder">' . $component . '</em> uploaded successfully');
+    drupal_flush_all_caches();
+    $expected_time = \Drupal::time()->getRequestTime();
+    $this->assertEquals($expected_time, $translation_service->getLastUploaded($component));
   }
 
   /**
@@ -361,7 +365,7 @@ class LingotekInterfaceTranslationTest extends LingotekTestBase {
     // hardcode it.
     $path = drupal_get_path('module', 'lingotek_interface_translation_test');
     $component = $path;
-    $indexOfModuleLink = 1;
+    $indexOfModuleLink = 2;
     $assert_session = $this->assertSession();
     // Login as admin.
     $this->drupalLogin($this->rootUser);
@@ -404,7 +408,7 @@ class LingotekInterfaceTranslationTest extends LingotekTestBase {
     // hardcode it.
     $path = drupal_get_path('module', 'lingotek_interface_translation_test');
     $component = $path;
-    $indexOfModuleLink = 1;
+    $indexOfModuleLink = 2;
     $assert_session = $this->assertSession();
     // Login as admin.
     $this->drupalLogin($this->rootUser);
@@ -445,7 +449,7 @@ class LingotekInterfaceTranslationTest extends LingotekTestBase {
     // hardcode it.
     $path = drupal_get_path('module', 'lingotek_interface_translation_test');
     $component = $path;
-    $indexOfModuleLink = 1;
+    $indexOfModuleLink = 2;
     $assert_session = $this->assertSession();
     // Login as admin.
     $this->drupalLogin($this->rootUser);
@@ -483,7 +487,7 @@ class LingotekInterfaceTranslationTest extends LingotekTestBase {
     // hardcode it.
     $path = drupal_get_path('module', 'lingotek_interface_translation_test');
     $component = $path;
-    $indexOfModuleLink = 1;
+    $indexOfModuleLink = 2;
     $assert_session = $this->assertSession();
     // Login as admin.
     $this->drupalLogin($this->rootUser);
@@ -526,7 +530,7 @@ class LingotekInterfaceTranslationTest extends LingotekTestBase {
     // hardcode it.
     $path = drupal_get_path('module', 'lingotek_interface_translation_test');
     $component = $path;
-    $indexOfModuleLink = 1;
+    $indexOfModuleLink = 2;
     $assert_session = $this->assertSession();
     // Login as admin.
     $this->drupalLogin($this->rootUser);
@@ -560,7 +564,7 @@ class LingotekInterfaceTranslationTest extends LingotekTestBase {
     // hardcode it.
     $path = drupal_get_path('module', 'lingotek_interface_translation_test');
     $component = $path;
-    $indexOfModuleLink = 1;
+    $indexOfModuleLink = 2;
     $assert_session = $this->assertSession();
     // Login as admin.
     $this->drupalLogin($this->rootUser);
@@ -599,7 +603,7 @@ class LingotekInterfaceTranslationTest extends LingotekTestBase {
     // hardcode it.
     $path = drupal_get_path('module', 'lingotek_interface_translation_test');
     $component = $path;
-    $indexOfModuleLink = 1;
+    $indexOfModuleLink = 2;
     $assert_session = $this->assertSession();
     // Login as admin.
     $this->drupalLogin($this->rootUser);
@@ -642,7 +646,7 @@ class LingotekInterfaceTranslationTest extends LingotekTestBase {
     // hardcode it.
     $path = drupal_get_path('module', 'lingotek_interface_translation_test');
     $component = $path;
-    $indexOfModuleLink = 1;
+    $indexOfModuleLink = 2;
     $assert_session = $this->assertSession();
     // Login as admin.
     $this->drupalLogin($this->rootUser);

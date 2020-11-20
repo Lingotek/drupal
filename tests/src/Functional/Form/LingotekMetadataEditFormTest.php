@@ -21,7 +21,7 @@ class LingotekMetadataEditFormTest extends LingotekTestBase {
    *
    * @var array
    */
-  public static $modules = ['block', 'node'];
+  public static $modules = ['block', 'node', 'frozenintime'];
 
   protected function setUp(): void {
     parent::setUp();
@@ -123,7 +123,8 @@ class LingotekMetadataEditFormTest extends LingotekTestBase {
     $this->assertOptionSelected('edit-en', Lingotek::STATUS_IMPORTING);
     $this->assertOptionSelected('edit-es', Lingotek::STATUS_REQUEST);
     $this->assertFieldById('edit-lingotek-job-id', '');
-    $this->assertFieldByName('verbatim_area[verbatim]', <<<JSON
+    $timestamp = \Drupal::time()->getRequestTime();
+    $this->assertSession()->fieldValueEquals('verbatim_area[verbatim]', <<<JSON
 {
     "id": [
         {
@@ -166,7 +167,13 @@ class LingotekMetadataEditFormTest extends LingotekTestBase {
             "language": "es"
         }
     ],
-    "job_id": []
+    "job_id": [],
+    "updated_timestamp": [],
+    "uploaded_timestamp": [
+        {
+            "value": "$timestamp"
+        }
+    ]
 }
 JSON
     );
@@ -190,7 +197,7 @@ JSON
     $this->assertOptionSelected('edit-en', Lingotek::STATUS_UNTRACKED);
     $this->assertOptionSelected('edit-es', Lingotek::STATUS_READY);
     $this->assertFieldById('edit-lingotek-job-id', 'a new edited job id');
-    $this->assertFieldByName('verbatim_area[verbatim]', <<<JSON
+    $this->assertSession()->fieldValueEquals('verbatim_area[verbatim]', <<<JSON
 {
     "id": [
         {
@@ -236,6 +243,12 @@ JSON
     "job_id": [
         {
             "value": "a new edited job id"
+        }
+    ],
+    "updated_timestamp": [],
+    "uploaded_timestamp": [
+        {
+            "value": "$timestamp"
         }
     ]
 }
@@ -351,7 +364,7 @@ JSON
     $this->assertOptionSelected('edit-en', Lingotek::STATUS_UNTRACKED);
     $this->assertOptionSelected('edit-es', Lingotek::STATUS_READY);
     $this->assertFieldById('edit-lingotek-job-id', 'a new edited job id');
-    $this->assertFieldByName('verbatim_area[verbatim]', <<<JSON
+    $this->assertSession()->fieldValueEquals('verbatim_area[verbatim]', <<<JSON
 {
     "id": [
         {
@@ -398,7 +411,9 @@ JSON
         {
             "value": "a new edited job id"
         }
-    ]
+    ],
+    "updated_timestamp": [],
+    "uploaded_timestamp": []
 }
 JSON
     );
