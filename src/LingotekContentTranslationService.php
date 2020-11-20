@@ -23,6 +23,7 @@ use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\language\Entity\ConfigurableLanguage;
+use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Drupal\lingotek\Entity\LingotekContentMetadata;
 use Drupal\lingotek\Exception\LingotekApiException;
 use Drupal\lingotek\Exception\LingotekContentEntityStorageException;
@@ -588,6 +589,55 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
             }
           }
           $data[$k][$field_item->getName()] = $embedded_data;
+        }
+      }
+      if ($field_type === 'layout_translation') {
+        // We need to get the original data from the layout.
+        $layoutBuilderST = \Drupal::moduleHandler()->moduleExists('layout_builder_st');
+        if ($layoutBuilderST) {
+          $data[$k] = ['components' => []];
+          $layoutField = $entity->{OverridesSectionStorage::FIELD_NAME};
+          $block_manager = \Drupal::service('plugin.manager.block');
+          $lingotekConfigTranslation = \Drupal::service('lingotek.config_translation');
+          /** @var \Drupal\Core\Config\TypedConfigManagerInterface $typedConfigManager */
+          $typedConfigManager = \Drupal::service('config.typed');
+          $layout = $layoutField->getValue();
+          /** @var \Drupal\layout_builder\Section $sectionObject */
+          foreach ($layout as $sectionIndex => $section) {
+            $sectionObject = $section['section'];
+            $components = $sectionObject->getComponents();
+            /** @var \Drupal\layout_builder\SectionComponent $component */
+            foreach ($components as $componentUuid => $component) {
+              /** @var \Drupal\Core\Block\BlockPluginInterface $block_instance */
+              // TODO: Change this to getConfiguration() when is safe to do so.
+              // See https://www.drupal.org/project/drupal/issues/3180555.
+              $block_instance = $block_manager->createInstance($component->getPluginId(), $component->get('configuration'));
+              $pluginIDName = $block_instance->getPluginDefinition()['id'];
+              $blockConfig = $block_instance->getConfiguration();
+              $definition = $typedConfigManager->getDefinition('block.settings.' . $pluginIDName);
+              if ($definition['type'] == 'undefined') {
+                $definition = $typedConfigManager->getDefinition('block_settings');
+              }
+              $dataDefinition = $typedConfigManager->buildDataDefinition($definition, $blockConfig);
+              $schema = $typedConfigManager->create($dataDefinition, $blockConfig);
+              $properties = $lingotekConfigTranslation->getTranslatableProperties($schema, NULL);
+
+              $embedded_data = [];
+              foreach ($properties as $property) {
+                // The data definition will return nested keys as dot separated.
+                $propertyParts = explode('.', $property);
+                $embedded_data[$property] = NestedArray::getValue($blockConfig, $propertyParts);
+              }
+              $data[$k]['components'][$componentUuid] = $embedded_data;
+
+              if (strpos($pluginIDName, 'inline_block') === 0) {
+                $blockRevisionId = $blockConfig['block_revision_id'];
+                if ($block = $this->entityTypeManager->getStorage('block_content')->loadRevision($blockRevisionId)) {
+                  $data[$k]['entities']['block_content'][$blockRevisionId] = $this->getSourceData($block, $visited);
+                }
+              }
+            }
+          }
         }
       }
       // If we have an entity reference, we may want to embed it.
@@ -1633,6 +1683,66 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
             }
             $translation->get($name)->offsetGet(0)->set('value', json_encode($layout_canvas));
           }
+          elseif ($field_type === 'layout_translation') {
+            $components = [];
+
+            // We need the original layout, as the translation must store the
+            // non-translatable properties too. So we need to copy them to the
+            // translated field.
+            $block_manager = \Drupal::service('plugin.manager.block');
+            $layoutField = $entity->{OverridesSectionStorage::FIELD_NAME};
+            $layout = $layoutField->getValue();
+
+            foreach ($field_data['components'] as $componentUuid => $componentData) {
+              /** @var \Drupal\layout_builder\SectionComponent $originalComponent */
+              $originalComponent = NULL;
+              /** @var \Drupal\layout_builder\Section $section */
+              foreach ($layout as $sectionInfo) {
+                $sectionComponents = $sectionInfo['section']->getComponents();
+                if (isset($sectionComponents[$componentUuid])) {
+                  $originalComponent = $sectionComponents[$componentUuid];
+                  break;
+                }
+              }
+              $block_instance = $block_manager->createInstance($originalComponent->getPluginId(), $originalComponent->get('configuration'));
+              $blockConfig = $block_instance->getConfiguration();
+
+              $components[$componentUuid] = [];
+              foreach ($componentData as $componentDataKey => $componentDataValue) {
+                $componentDataKeyParts = explode('.', $componentDataKey);
+                if (count($componentDataKeyParts) > 1) {
+                  // The translation must store the non-translatable properties
+                  // too. So we copy them from the original field. The key to be
+                  // copied is the complete key but the last piece.
+                  $originalDataKeyParts = array_slice($componentDataKeyParts, 0, -1);
+                  NestedArray::setValue($components[$componentUuid], $originalDataKeyParts, NestedArray::getValue($blockConfig, $originalDataKeyParts));
+                }
+                NestedArray::setValue($components[$componentUuid], $componentDataKeyParts, $componentDataValue);
+              }
+            }
+            // If we are embedding content blocks, we need to translate those too.
+            if (isset($field_data['entities']['block_content'])) {
+              foreach ($field_data['entities']['block_content'] as $embedded_entity_revision_id => $blockContentData) {
+                $target_entity_type_id = 'block_content';
+                $embedded_entity = $this->entityTypeManager->getStorage($target_entity_type_id)
+                  ->loadRevision($embedded_entity_revision_id);
+                // We may have orphan references, so ensure that they exist before
+                // continuing.
+                if ($embedded_entity !== NULL) {
+                  if ($embedded_entity instanceof ContentEntityInterface) {
+                    if ($this->lingotekConfiguration->isEnabled($embedded_entity->getEntityTypeId(), $embedded_entity->bundle())) {
+                      $this->saveTargetData($embedded_entity, $langcode, $blockContentData);
+                    }
+                    else {
+                      \Drupal::logger('lingotek')
+                        ->warning($this->t('Field %field not saved as its referenced entity is not translatable by Lingotek', ['%field' => $name]));
+                    }
+                  }
+                }
+              }
+            }
+            $translation->{$name}->value = ['components' => $components];
+          }
           elseif ($field_type === 'block_field') {
             $translation->{$name} = NULL;
             foreach ($field_data as $index => $field_item) {
@@ -1674,9 +1784,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
                             ->warning($this->t('Field %field not saved as its referenced entity is not translatable by Lingotek', ['%field' => $name]));
                         }
                       }
-
                     }
-
                   }
                 }
               }
