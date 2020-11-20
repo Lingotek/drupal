@@ -18,6 +18,7 @@ use Drupal\Core\Entity\EntityChangedInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\EntityStorageException;
+use Drupal\Core\Entity\RevisionableEntityBundleInterface;
 use Drupal\Core\Entity\RevisionLogInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
@@ -1732,16 +1733,21 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       $moderation_handler = $moderation_factory->getModerationHandler();
       $moderation_handler->performModerationTransitionIfNeeded($translation);
 
-      if ($moderation_handler->isModerationEnabled($translation) && $translation instanceof RevisionLogInterface) {
-        $requestTime = \Drupal::time()->getRequestTime();
-        $translation->setNewRevision(TRUE);
-        $translation->setRevisionUserId(\Drupal::currentUser()->id());
-        $translation->setRevisionCreationTime($requestTime);
-        $translation->setRevisionTranslationAffected(TRUE);
-        $translation->setChangedTime($requestTime);
-        $translation->setRevisionLogMessage((string) new FormattableMarkup('Document translated into @langcode by Lingotek.', ['@langcode' => strtoupper($langcode)]));
+      if ($moderation_handler->isModerationEnabled($translation) &&
+          $translation->getEntityType()->isRevisionable()) {
+        if ($bundle_entity_type = $entity->getEntityType()->getBundleEntityType()) {
+          $bundle_entity = $this->entityTypeManager->getStorage($bundle_entity_type)->load($entity->bundle());
+          if ($bundle_entity instanceof RevisionableEntityBundleInterface) {
+            $translation->setNewRevision($bundle_entity->shouldCreateNewRevision());
+          }
+        }
+        if ($translation instanceof RevisionLogInterface && $translation->isNewRevision()) {
+          $requestTime = \Drupal::time()->getRequestTime();
+          $translation->setRevisionUserId(\Drupal::currentUser()->id());
+          $translation->setRevisionCreationTime($requestTime);
+          $translation->setRevisionLogMessage((string) new FormattableMarkup('Document translated into @langcode by Lingotek.', ['@langcode' => strtoupper($langcode)]));
+        }
       }
-
       $translation->save();
 
       return $entity;
