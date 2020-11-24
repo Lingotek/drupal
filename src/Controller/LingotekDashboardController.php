@@ -17,6 +17,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Drupal\Core\Session\AccountInterface;
 
 /**
  * Returns responses for lingotek module setup routes.
@@ -65,8 +66,10 @@ class LingotekDashboardController extends LingotekControllerBase {
    *   A logger instance.
    * @param \Drupal\Core\Routing\UrlGeneratorInterface $url_generator
    *   The url generator.
+   * @param \Drupal\Core\Session\AccountInterface $current_user
+   *   The current user.
    */
-  public function __construct(Request $request, ConfigFactoryInterface $config_factory, EntityTypeManagerInterface $entity_type_manager, LanguageManagerInterface $language_manager, LingotekInterface $lingotek, LanguageLocaleMapperInterface $language_locale_mapper, LingotekConfigurationServiceInterface $lingotek_configuration, FormBuilderInterface $form_builder, LoggerInterface $logger, UrlGeneratorInterface $url_generator = NULL) {
+  public function __construct(Request $request, ConfigFactoryInterface $config_factory, EntityTypeManagerInterface $entity_type_manager, LanguageManagerInterface $language_manager, LingotekInterface $lingotek, LanguageLocaleMapperInterface $language_locale_mapper, LingotekConfigurationServiceInterface $lingotek_configuration, FormBuilderInterface $form_builder, LoggerInterface $logger, UrlGeneratorInterface $url_generator = NULL, AccountInterface $current_user = NULL) {
     parent::__construct($request, $config_factory, $lingotek, $language_locale_mapper, $form_builder, $logger);
     $this->entityTypeManager = $entity_type_manager;
     $this->languageManager = $language_manager;
@@ -76,6 +79,11 @@ class LingotekDashboardController extends LingotekControllerBase {
       $url_generator = \Drupal::service('url_generator');
     }
     $this->urlGenerator = $url_generator;
+    if (!$current_user) {
+      @trigger_error('The current_user service must be passed to LingotekDashboardController::__construct, it is included in lingotek:3.4.0 and required for lingotek:4.0.0.', E_USER_DEPRECATED);
+      $current_user = \Drupal::service('current_user');
+    }
+    $this->currentUser = $current_user;
   }
 
   /**
@@ -92,7 +100,8 @@ class LingotekDashboardController extends LingotekControllerBase {
       $container->get('lingotek.configuration'),
       $container->get('form_builder'),
       $container->get('logger.channel.lingotek'),
-      $container->get('url_generator')
+      $container->get('url_generator'),
+      $container->get('current_user')
     );
   }
 
@@ -135,6 +144,7 @@ class LingotekDashboardController extends LingotekControllerBase {
       return $redirect;
     }
     $request_method = $request->getMethod();
+    $language_permission = $this->currentUser->hasPermission('administer languages');
 
     $http_status_code = Response::HTTP_NOT_IMPLEMENTED;
     $response = [
@@ -142,59 +152,69 @@ class LingotekDashboardController extends LingotekControllerBase {
     ];
     switch ($request_method) {
       case 'POST':
-        $languageStorage = $this->entityTypeManager->getStorage('configurable_language');
-        $lingotek_locale = $request->get('code');
-        $native = $request->get('native');
-        $language = $request->get('language');
-        $direction = $request->get('direction');
-        if (isset($language, $lingotek_locale, $direction)) {
-          // First, we try if there is a disabled language with that locale.
-          $existingLanguage = $languageStorage->getQuery()
-            ->condition('third_party_settings.lingotek.disabled', TRUE)
-            ->condition('third_party_settings.lingotek.locale', $lingotek_locale)
-            ->execute();
-          if (!$existingLanguage) {
-            // If we didn't find it, maybe the language was the default
-            // locale, and it didn't have a locale stored.
+        if ($language_permission) {
+          $languageStorage = $this->entityTypeManager->getStorage('configurable_language');
+          $lingotek_locale = $request->get('code');
+          $native = $request->get('native');
+          $language = $request->get('language');
+          $direction = $request->get('direction');
+          if (isset($language, $lingotek_locale, $direction)) {
+            // First, we try if there is a disabled language with that locale.
             $existingLanguage = $languageStorage->getQuery()
               ->condition('third_party_settings.lingotek.disabled', TRUE)
-              ->condition('id', LingotekLocale::convertLingotek2Drupal($lingotek_locale, FALSE))
+              ->condition('third_party_settings.lingotek.locale', $lingotek_locale)
               ->execute();
+            if (!$existingLanguage) {
+              // If we didn't find it, maybe the language was the default
+              // locale, and it didn't have a locale stored.
+              $existingLanguage = $languageStorage->getQuery()
+                ->condition('third_party_settings.lingotek.disabled', TRUE)
+                ->condition('id', LingotekLocale::convertLingotek2Drupal($lingotek_locale, FALSE))
+                ->execute();
+            }
+            if ($existingLanguage) {
+              $language = $languageStorage->load(reset($existingLanguage));
+            }
+            else {
+              $rtl = ($direction == 'RTL') ? LanguageInterface::DIRECTION_RTL : LanguageInterface::DIRECTION_LTR;
+              $langcode = LingotekLocale::generateLingotek2Drupal($lingotek_locale);
+              $language = $languageStorage->create([
+                'id' => $langcode,
+                'label' => $language,
+                'native' => $native,
+                'direction' => $rtl,
+              ]);
+            }
+            $language->setThirdPartySetting('lingotek', 'disabled', FALSE);
+            $language->setThirdPartySetting('lingotek', 'locale', $lingotek_locale);
+            $language->save();
+            $response += $this->getLanguageReport($language);
+            $http_status_code = Response::HTTP_OK;
           }
-          if ($existingLanguage) {
-            $language = $languageStorage->load(reset($existingLanguage));
-          }
-          else {
-            $rtl = ($direction == 'RTL') ? LanguageInterface::DIRECTION_RTL : LanguageInterface::DIRECTION_LTR;
-            $langcode = LingotekLocale::generateLingotek2Drupal($lingotek_locale);
-            $language = $languageStorage->create([
-              'id' => $langcode,
-              'label' => $language,
-              'native' => $native,
-              'direction' => $rtl,
-            ]);
-          }
-          $language->setThirdPartySetting('lingotek', 'disabled', FALSE);
-          $language->setThirdPartySetting('lingotek', 'locale', $lingotek_locale);
-          $language->save();
-          $response += $this->getLanguageReport($language);
-          $http_status_code = 200;
+          // TO-DO: (1) add language to CMS if not enabled X, (2) add language to TMS project
         }
-
-        // TO-DO: (1) add language to CMS if not enabled X, (2) add language to TMS project
+        else {
+          $response['message'] = "Administer Languages permission required to add language";
+          $http_status_code = Response::HTTP_FORBIDDEN;
+        }
         break;
 
       case 'DELETE':
-        $content = $request->getContent();
-        $parsed_content = [];
-        parse_str($content, $parsed_content);
-        $locale = $parsed_content['code'];
-        $language = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale);
-        $response['language'] = $language->id();
-        $this->lingotek_configuration->disableLanguage($language);
-        $this->languageManager()->reset();
-        $response['message'] = "Language disabled: $locale";
-        $http_status_code = Response::HTTP_OK;
+        if ($language_permission) {
+          $content = $request->getContent();
+          $parsed_content = [];
+          parse_str($content, $parsed_content);
+          $locale = $parsed_content['code'];
+          $language = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale);
+          $response['language'] = $language->id();
+          $this->lingotek_configuration->disableLanguage($language);
+          $this->languageManager()->reset();
+          $response['message'] = "Language disabled: $locale";
+          $http_status_code = Response::HTTP_OK;
+        }
+        else {
+          $response['message'] = "Administer Languages permission required to delete language";
+        }
         break;
 
       case 'GET':
