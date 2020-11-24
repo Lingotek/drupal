@@ -15,6 +15,7 @@ use Drupal\lingotek\LanguageLocaleMapperInterface;
 use Drupal\lingotek\LingotekConfigurationServiceInterface;
 use Drupal\lingotek\LingotekInterface;
 use Drupal\Tests\UnitTestCase;
+use Drupal\Core\Session\AccountInterface;
 use Psr\Log\LoggerInterface;
 use ReflectionClass;
 use Symfony\Component\HttpFoundation\Request;
@@ -111,6 +112,13 @@ class LingotekDashboardControllerTest extends UnitTestCase {
   protected $controller;
 
   /**
+   * The user with permissions we're testing
+   *
+   * @var \Drupal\Core\Session\AccountInterface
+   */
+  protected $currentUser;
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp(): void {
@@ -126,6 +134,7 @@ class LingotekDashboardControllerTest extends UnitTestCase {
     $this->formBuilder = $this->createMock(FormBuilderInterface::class);
     $this->logger = $this->createMock(LoggerInterface::class);
     $this->urlGenerator = $this->createMock(UrlGeneratorInterface::class);
+    $this->user = $this->createMock(AccountInterface::class);
 
     $this->controller = new LingotekDashboardController(
       $this->request,
@@ -137,7 +146,8 @@ class LingotekDashboardControllerTest extends UnitTestCase {
       $this->lingotekConfiguration,
       $this->formBuilder,
       $this->logger,
-      $this->urlGenerator
+      $this->urlGenerator,
+      $this->user
     );
     $this->controller->setStringTranslation($this->getStringTranslationStub());
   }

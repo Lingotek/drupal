@@ -4,6 +4,7 @@ namespace Drupal\Tests\lingotek\Functional;
 
 use Drupal\Core\Url;
 use Drupal\language\Entity\ConfigurableLanguage;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Tests the Lingotek dashboard.
@@ -54,6 +55,36 @@ class LingotekDashboardTest extends LingotekTestBase {
 
     // @ToDo: The native language is not saved.
     // $config_translation = \Drupal::languageManager()->getLanguageConfigOverride('it', $italian_language->id());
+  }
+
+  /**
+   * Test that a language can't be added.
+   */
+  public function testDashboardCanNotAddLanguageWithoutPermission() {
+    $url = Url::fromRoute('lingotek.dashboard_endpoint')->setAbsolute()->toString();
+
+    $no_administer_languages = $this->createUser([
+      'administer lingotek',
+    ]);
+    $this->drupalLogin($no_administer_languages);
+
+    $post = [
+      'code' => 'it_IT',
+      'language' => 'Italian',
+      'native' => 'Italiano',
+      'direction' => '',
+    ];
+    $request = $this->client->post($url, [
+      'body' => http_build_query($post),
+      'cookies' => $this->cookies,
+      'headers' => [
+        'Accept' => 'application/json',
+        'Content-Type' => 'application/x-www-form-urlencoded',
+      ],
+      'http_errors' => FALSE,
+    ]);
+    $response = json_decode($request->getBody(), TRUE);
+    $this->assertEquals($request->getStatusCode(), Response::HTTP_FORBIDDEN);
   }
 
   /**
