@@ -239,6 +239,8 @@ interface LingotekInterface extends ContainerInjectionInterface {
    *   (optional) The profile being used.
    * @param string $job_id
    *   (optional) The job ID that will be associated.
+   * @param string $locale
+   *   (optional) The Lingotek locale.
    *
    * @return bool|string
    *   TRUE if the document was successfully updated. FALSE if not (v5.1).
@@ -249,7 +251,7 @@ interface LingotekInterface extends ContainerInjectionInterface {
    * @throws \Drupal\lingotek\Exception\LingotekDocumentLockedException
    * @throws \Drupal\lingotek\Exception\LingotekApiException
    */
-  public function updateDocument($doc_id, $content, $url = NULL, $title = NULL, LingotekProfileInterface $profile = NULL, $job_id = NULL);
+  public function updateDocument($doc_id, $content, $url = NULL, $title = NULL, LingotekProfileInterface $profile = NULL, $job_id = NULL, $locale = NULL);
 
   /**
    * Requests a translation to the Lingotek service.

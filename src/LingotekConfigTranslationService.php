@@ -481,7 +481,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
 
     $newDocumentID = NULL;
     try {
-      $newDocumentID = $this->lingotek->updateDocument($document_id, $source_data, $url, $document_name, $this->lingotekConfiguration->getConfigEntityProfile($entity), $job_id);
+      $newDocumentID = $this->lingotek->updateDocument($document_id, $source_data, $url, $document_name, $this->lingotekConfiguration->getConfigEntityProfile($entity), $job_id, $this->getSourceLocale($entity));
     }
     catch (LingotekDocumentLockedException $exception) {
       $this->setDocumentId($entity, $exception->getNewDocumentId());
@@ -1524,7 +1524,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
 
     $newDocumentID = NULL;
     try {
-      $newDocumentID = $this->lingotek->updateDocument($document_id, $source_data, NULL, $document_name, $profile, $job_id);
+      $newDocumentID = $this->lingotek->updateDocument($document_id, $source_data, NULL, $document_name, $profile, $job_id, $this->getConfigSourceLocale($mapper));
     }
     catch (LingotekDocumentLockedException $exception) {
       $this->setConfigDocumentId($mapper, $exception->getNewDocumentId());
@@ -1634,7 +1634,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     $newDocumentID = FALSE;
     if ($update_tms && $document_id = $this->getConfigDocumentId($mapper)) {
       try {
-        $newDocumentID = $this->lingotek->updateDocument($document_id, NULL, NULL, NULL, NULL, $job_id);
+        $newDocumentID = $this->lingotek->updateDocument($document_id, NULL, NULL, NULL, NULL, $job_id, $this->getConfigSourceLocale($mapper));
       }
       catch (LingotekDocumentLockedException $exception) {
         $this->setConfigDocumentId($mapper, $exception->getNewDocumentId());
@@ -1691,7 +1691,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     $metadata = LingotekConfigMetadata::loadByConfigName($entity->getEntityTypeId() . '.' . $entity->id());
     if ($update_tms && $document_id = $this->getDocumentId($entity)) {
       try {
-        $newDocumentID = $this->lingotek->updateDocument($document_id, NULL, NULL, NULL, NULL, $job_id);
+        $newDocumentID = $this->lingotek->updateDocument($document_id, NULL, NULL, NULL, NULL, $job_id, $this->getSourceLocale($entity));
       }
       catch (LingotekDocumentLockedException $exception) {
         $this->setDocumentId($entity, $exception->getNewDocumentId());

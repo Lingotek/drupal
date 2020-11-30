@@ -8,7 +8,7 @@ use Drupal\lingotek\LingotekProfileInterface;
 
 class LingotekFakeBC extends LingotekFake implements LingotekInterface {
 
-  public function updateDocument($doc_id, $content, $url = NULL, $title = NULL, LingotekProfileInterface $profile = NULL, $job_id = NULL) {
+  public function updateDocument($doc_id, $content, $url = NULL, $title = NULL, LingotekProfileInterface $profile = NULL, $job_id = NULL, $locale = NULL) {
     if (\Drupal::state()->get('lingotek.must_error_in_upload', FALSE)) {
       throw new LingotekApiException('Error was forced.');
     }

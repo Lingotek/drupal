@@ -116,7 +116,7 @@ class LingotekApi implements LingotekApiInterface {
   public function patchDocument($id, $args) {
     try {
       $this->logger->debug('Lingotek::patchDocument (PATCH /api/document) called with id %id and args %args', ['%id' => $id, '%args' => var_export($args, TRUE)]);
-      $response = $this->lingotekClient->patch('/api/document/' . $id, $args);
+      $response = $this->lingotekClient->patch('/api/document/' . $id, $args, TRUE);
     }
     catch (\Exception $e) {
       $this->logger->error('Error updating document: %message.', ['%message' => $e->getMessage()]);

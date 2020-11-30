@@ -358,7 +358,8 @@ class Lingotek implements LingotekInterface {
   /**
    * {@inheritdoc}
    */
-  public function updateDocument($doc_id, $content, $url = NULL, $title = NULL, LingotekProfileInterface $profile = NULL, $job_id = NULL) {
+  public function updateDocument($doc_id, $content, $url = NULL, $title = NULL, LingotekProfileInterface $profile = NULL, $job_id = NULL, $locale = NULL) {
+    // TODO: Fix the order of the arguments to be consistent with uploadDocument. We can't do this right now without breaking backwards compatibility
     if (!is_array($content)) {
       if ($content !== NULL) {
         $data = json_decode($content, TRUE);
@@ -374,7 +375,18 @@ class Lingotek implements LingotekInterface {
       'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0',
     ];
 
+    if ($profile && $project = $profile->getProject()) {
+      if ($project !== 'default') {
+        $defaults['project_id'] = $project;
+      }
+    }
     $metadata = $this->getIntelligenceMetadata($content);
+    if ($profile !== NULL && ($workflow_id = $profile->getWorkflow()) && $workflow_id !== 'default') {
+      $defaults['translation_workflow_id'] = $workflow_id;
+    }
+    else {
+      $defaults['translation_workflow_id'] = $this->configFactory->get(static::SETTINGS)->get('default.workflow');
+    }
     $args = array_merge($metadata, $defaults);
 
     if ($url !== NULL) {
@@ -398,6 +410,35 @@ class Lingotek implements LingotekInterface {
       unset($args['external_application_id']);
     }
 
+    $request_locales = [];
+    $request_workflows = [];
+    $workflow_id = NULL;
+    if ($profile) {
+      $languages = $this->lingotekConfiguration->getEnabledLanguages();
+      if (!empty($languages)) {
+        foreach ($languages as $language) {
+          if ($profile->hasAutomaticRequestForTarget($language->getId())) {
+            $target_locale = $this->languageLocaleMapper->getLocaleForLangcode($language->getId());
+            if ($locale && $target_locale !== $locale) {
+              $workflow_id = $profile->getWorkflowForTarget($language->getId());
+              if ($workflow_id === 'default') {
+                $workflow_id = $this->configFactory->get(static::SETTINGS)->get('default.workflow');
+              }
+              $request_locales[] = $target_locale;
+              $request_workflows[] = $workflow_id;
+            }
+          }
+        }
+      }
+    }
+
+    if (!empty($request_locales) && !empty($request_workflows)) {
+      $args['translation_locale_code'] = $request_locales;
+      $args['translation_workflow_id'] = $request_workflows;
+    }
+    if (($workflow_id && $workflow_id === 'project_default') || empty($request_locales)) {
+      unset($args['translation_workflow_id']);
+    }
     $response = $this->api->patchDocument($doc_id, $args);
     $statusCode = $response->getStatusCode();
     if ($statusCode == Response::HTTP_ACCEPTED) {

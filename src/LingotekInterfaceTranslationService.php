@@ -678,7 +678,7 @@ class LingotekInterfaceTranslationService implements LingotekInterfaceTranslatio
     \Drupal::moduleHandler()->invokeAll('lingotek_interface_translation_document_upload', [&$source_data, &$component]);
 
     try {
-      $newDocumentID = $this->lingotek->updateDocument($document_id, $source_data, NULL, $document_name, NULL, $job_id);
+      $newDocumentID = $this->lingotek->updateDocument($document_id, $source_data, NULL, $document_name, NULL, $job_id, $this->getSourceLocale($component));
     }
     catch (LingotekDocumentLockedException $exception) {
       $this->setDocumentId($component, $exception->getNewDocumentId());

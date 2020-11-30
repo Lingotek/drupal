@@ -738,7 +738,7 @@ class LingotekUnitTest extends UnitTestCase {
 
     $this->config->expects($this->any())
       ->method('get')
-      ->will($this->returnValueMap([['default.project', 'default_project'], ['default.vault', 'default_vault']]));
+      ->will($this->returnValueMap([['default.project', 'default_project'], ['default.vault', 'default_vault'], ['default.workflow', 'default_workflow']]));
 
     // Simplest update.
     $this->api->expects($this->at(0))
@@ -815,6 +815,7 @@ class LingotekUnitTest extends UnitTestCase {
         'fprm_id' => '4f91482b-5aa1-4a4a-a43f-712af7b39625',
         'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0',
         'job_id' => 'my_job_id',
+        'project_id' => 'test_project',
       ])
       ->will($this->returnValue($response));
 
@@ -822,6 +823,37 @@ class LingotekUnitTest extends UnitTestCase {
       ->method('patchDocument')
       ->with('my_doc_id', [
         'job_id' => 'my_job_id',
+        'project_id' => 'test_project',
+      ])
+      ->will($this->returnValue($response));
+
+    $this->api->expects($this->at(7))
+      ->method('patchDocument')
+      ->with('my_doc_id', [
+        'format' => 'JSON',
+        'content' => '"content"',
+        'title' => 'title',
+        'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
+        'fprm_id' => '4f91482b-5aa1-4a4a-a43f-712af7b39625',
+        'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0',
+        'project_id' => 'test_project',
+        'translation_locale_code' => ['es_ES', 'ca_ES', 'it_IT'],
+        'translation_workflow_id' => ['es_workflow', 'ca_workflow', 'default_workflow'],
+      ])
+      ->will($this->returnValue($response));
+
+    $this->api->expects($this->at(8))
+      ->method('patchDocument')
+      ->with('my_doc_id', [
+        'format' => 'JSON',
+        'content' => '"content"',
+        'title' => 'title',
+        'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
+        'fprm_id' => '4f91482b-5aa1-4a4a-a43f-712af7b39625',
+        'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0',
+        'project_id' => 'test_project',
+        'translation_locale_code' => ['es_ES', 'ca_ES', 'it_IT'],
+        'translation_workflow_id' => ['es_workflow', 'test_workflow', 'default_workflow'],
       ])
       ->will($this->returnValue($response));
 
@@ -846,6 +878,46 @@ class LingotekUnitTest extends UnitTestCase {
 
     // Only update Job ID.
     $this->lingotek->updateDocument('my_doc_id', NULL, NULL, NULL, $profile, 'my_job_id');
+    $english = $this->createMock(ConfigurableLanguageInterface::class);
+    $english->expects($this->any())->method('getId')->willReturn('en');
+    $spanish = $this->createMock(ConfigurableLanguageInterface::class);
+    $spanish->expects($this->any())->method('getId')->willReturn('es');
+    $catalan = $this->createMock(ConfigurableLanguageInterface::class);
+    $catalan->expects($this->any())->method('getId')->willReturn('ca');
+    $italian = $this->createMock(ConfigurableLanguageInterface::class);
+    $italian->expects($this->any())->method('getId')->willReturn('it');
+    $this->lingotekConfiguration->expects($this->any())
+      ->method('getEnabledLanguages')
+      ->willReturn(['en' => $english, 'es' => $spanish, 'ca' => $catalan, 'it' => $italian]);
+    $this->languageLocaleMapper->expects($this->any())
+      ->method('getLocaleForLangcode')
+      ->willReturnMap([['es', 'es_ES'], ['ca', 'ca_ES'], ['en', 'en_US'], ['it', 'it_IT']]);
+    $profile = new LingotekProfile([
+      'id' => 'profile0',
+      'project' => 'test_project',
+      'vault' => 'test_vault',
+      'workflow' => 'test_workflow',
+      'language_overrides' => [
+        'es' => ['overrides' => 'custom', 'custom' => ['auto_request' => TRUE, 'workflow' => 'es_workflow', 'vault' => 'default']],
+        'ca' => ['overrides' => 'custom', 'custom' => ['auto_request' => TRUE, 'workflow' => 'ca_workflow', 'vault' => 'ca_vault']],
+        'it' => ['overrides' => 'custom', 'custom' => ['auto_request' => TRUE, 'workflow' => 'default', 'vault' => 'it_vault']],
+      ],
+    ], 'lingotek_profile');
+    // If profile contains target specific settings in proper order
+    $this->lingotek->updateDocument('my_doc_id', 'content', NULL, 'title', $profile, NULL, 'en');
+    $profile = new LingotekProfile([
+      'id' => 'profile0',
+      'project' => 'test_project',
+      'vault' => 'test_vault',
+      'workflow' => 'test_workflow',
+      'language_overrides' => [
+        'es' => ['overrides' => 'custom', 'custom' => ['auto_request' => TRUE, 'workflow' => 'es_workflow', 'vault' => 'default']],
+        'ca' => ['overrides' => 'custom', 'custom' => ['auto_request' => TRUE, 'vault' => 'ca_vault']],
+        'it' => ['overrides' => 'custom', 'custom' => ['auto_request' => TRUE, 'workflow' => 'default', 'vault' => 'it_vault']],
+      ],
+    ], 'lingotek_profile');
+    // If amount of translation_workflow_ids doesn't match ammount of translation_locale_codes, use project workflow
+    $this->lingotek->updateDocument('my_doc_id', 'content', NULL, 'title', $profile, NULL, 'en');
   }
 
   /**

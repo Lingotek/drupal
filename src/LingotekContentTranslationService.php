@@ -1140,6 +1140,8 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     }
     $source_data = $this->getSourceData($entity);
     $document_id = $this->getDocumentId($entity);
+    $source_langcode = $entity->getUntranslated()->language()->getId();
+    $source_locale = $this->languageLocaleMapper->getLocaleForLangcode($source_langcode);
     $url = $entity->hasLinkTemplate('canonical') ? $entity->toUrl()->setAbsolute(TRUE)->toString() : NULL;
     $extended_name = $entity->bundle() . ' (' . $entity->getEntityTypeId() . '): ' . $entity->label();
     $profile_preference = $profile->getAppendContentTypeToTitle();
@@ -1165,7 +1167,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     \Drupal::moduleHandler()->invokeAll('lingotek_content_entity_document_upload', [&$source_data, &$entity, &$url]);
 
     try {
-      $newDocumentID = $this->lingotek->updateDocument($document_id, $source_data, $url, $document_name, $profile, $job_id);
+      $newDocumentID = $this->lingotek->updateDocument($document_id, $source_data, $url, $document_name, $profile, $job_id, $source_locale);
     }
     catch (LingotekDocumentLockedException $exception) {
       $this->setDocumentId($entity, $exception->getNewDocumentId());
@@ -1903,11 +1905,12 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     }
     /** @var \Drupal\lingotek\Entity\LingotekContentMetadata $metadata */
     $metadata = &$entity->lingotek_metadata->entity;
-
+    $source_langcode = $entity->getUntranslated()->language()->getId();
+    $source_locale = $this->languageLocaleMapper->getLocaleForLangcode($source_langcode);
     $newDocumentID = FALSE;
     if ($update_tms && $document_id = $this->getDocumentId($entity)) {
       try {
-        $newDocumentID = $this->lingotek->updateDocument($document_id, NULL, NULL, NULL, NULL, $job_id);
+        $newDocumentID = $this->lingotek->updateDocument($document_id, NULL, NULL, NULL, NULL, $job_id, $source_locale);
       }
       catch (LingotekDocumentLockedException $exception) {
         $this->setDocumentId($entity, $exception->getNewDocumentId());
