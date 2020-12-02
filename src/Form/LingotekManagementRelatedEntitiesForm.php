@@ -171,7 +171,8 @@ class LingotekManagementRelatedEntitiesForm extends LingotekManagementFormBase {
 
   /**
    * @deprecated in lingotek:3.1.0 and is removed from lingotek:4.0.0.
-   * @see ::getNestedEntities
+   *
+   * @see \Drupal\lingotek\RelatedEntities\RelatedEntitiesDetectorInterface
    */
   public function calculateNestedEntities(ContentEntityInterface &$entity, &$visited = [], &$entities = []) {
     $visited[$entity->bundle()][] = $entity->id();
@@ -196,51 +197,20 @@ class LingotekManagementRelatedEntitiesForm extends LingotekManagementFormBase {
     return $entities;
   }
 
-  protected function getNestedEntities(ContentEntityInterface &$entity, &$visited = [], &$entities = [], $depth = 1, &$related = []) {
-    $visited[$entity->bundle()][] = $entity->id();
-    $entities[$entity->getEntityTypeId()][$entity->id()] = $entity->getUntranslated();
-    if ($depth > 0) {
-      --$depth;
-      $field_definitions = $this->entityFieldManager->getFieldDefinitions($entity->getEntityTypeId(), $entity->bundle());
-      foreach ($field_definitions as $k => $definition) {
-        $field_type = $field_definitions[$k]->getType();
-        if (in_array($field_type, ['entity_reference', 'cohesion_entity_reference_revisions', 'entity_reference_revisions', 'er_viewmode'])) {
-          $target_entity_type_id = $field_definitions[$k]->getFieldStorageDefinition()
-            ->getSetting('target_type');
-          $target_entity_type = $this->entityTypeManager->getDefinition($target_entity_type_id);
-          if ($target_entity_type instanceof ContentEntityType) {
-            $child_entities = $entity->{$k}->referencedEntities();
-            foreach ($child_entities as $embedded_entity) {
-              if ($embedded_entity !== NULL) {
-                // We need to avoid cycles if we have several entity references
-                // referencing each other.
-                if (!isset($visited[$embedded_entity->bundle()]) || !in_array($embedded_entity->id(), $visited[$embedded_entity->bundle()])) {
-                  if ($embedded_entity instanceof ContentEntityInterface && $embedded_entity->isTranslatable() && $this->lingotekConfiguration->isEnabled($embedded_entity->getEntityTypeId(), $embedded_entity->bundle())) {
-                    if (!$this->lingotekConfiguration->isFieldLingotekEnabled($entity->getEntityTypeId(), $entity->bundle(), $k)) {
-                      $entities = $this->getNestedEntities($embedded_entity, $visited, $entities, $depth, $related);
-                    }
-                    else {
-                      $related[$embedded_entity->getEntityTypeId()][$embedded_entity->id()] = $embedded_entity->getUntranslated();
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-    $this->related = $related;
-    return $entities;
-  }
-
   protected function getFilteredEntities() {
-    // This implies recursion through all the related content.
-    $visited = [];
     $entities = [];
     $related = [];
+    $visited = [];
     $recursion_depth = $this->getRecursionDepth();
-    $entities = $this->getNestedEntities($this->node, $visited, $entities, $recursion_depth, $related);
+    $type = \Drupal::service('plugin.manager.related_entities_detector');
+    $plugin_definitions = $type->getDefinitions();
+    uasort($plugin_definitions, 'Drupal\Component\Utility\SortArray::sortByWeightElement');
+    foreach ($plugin_definitions as $plugin_definition_id => $plugin_definition) {
+      /** @var \Drupal\lingotek\RelatedEntities\RelatedEntitiesDetectorInterface $plugin */
+      $plugin = $type->createInstance($plugin_definition_id, []);
+      $entities = $plugin->extract($this->node, $entities, $related, $recursion_depth, $visited);
+    }
+    $this->related = $related;
     return $entities;
   }
 
