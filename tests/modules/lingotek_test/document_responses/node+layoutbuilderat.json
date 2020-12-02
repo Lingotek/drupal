@@ -1,0 +1,35 @@
+{
+  "title": [
+    {
+      "value": "Las llamas son chulas"
+    }
+  ],
+  "body": [
+    {
+      "value": "Las llamas son muy chulas"
+    }
+  ],
+  "layout_builder__layout": {
+    "components": {
+      "###UID_LINKS###": {
+        "label": ""
+      },
+      "###UID_BODY###": {
+        "label": ""
+      },
+      "###UID_POWEREDBY###": {
+        "label": "Título de bloque de layout builder sobreescrito"
+      },
+      "###UID_RICHTEXT###": {
+        "label": "Título de texto enriquecido",
+        "rich_text.value": "Valor de texto enriquecido"
+      }
+    }
+  },
+  "_lingotek_metadata": {
+    "_entity_type_id": "node",
+    "_entity_id": "1",
+    "_entity_revision": "2"
+  }
+}
+
