@@ -2514,4 +2514,62 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $this->assertNoText('Article cancelled cancelled cancelled');
   }
 
+  public function testTargetStatusFilterPagination() {
+    // Add a language.
+    ConfigurableLanguage::createFromLangcode('de')->setThirdPartySetting('lingotek', 'locale', 'de_DE')->save();
+    $this->saveLingotekContentTranslationSettingsForNodeTypes(['article', 'custom_type'], 'manual');
+    $node_defaults = [
+      'type' => 'article',
+      'langcode' => 'en',
+    ];
+    /** @var \Drupal\node\Entity\Node[] $nodes */
+    $nodes = [
+      Node::create(['title' => 'Article 1'] + $node_defaults),
+      Node::create(['title' => 'Article 2'] + $node_defaults),
+      Node::create(['title' => 'Article 3'] + $node_defaults),
+      Node::create(['title' => 'Article 4'] + $node_defaults),
+      Node::create(['title' => 'Article 5'] + $node_defaults),
+      Node::create(['title' => 'Article 6'] + $node_defaults),
+      Node::create(['title' => 'Article 7'] + $node_defaults),
+      Node::create(['title' => 'Article 8'] + $node_defaults),
+      Node::create(['title' => 'Article 9'] + $node_defaults),
+      Node::create(['title' => 'Article 10'] + $node_defaults),
+      Node::create(['title' => 'Article 11'] + $node_defaults),
+    ];
+
+    foreach ($nodes as $node) {
+      $node->save();
+    }
+
+    $metadata_data = [
+      'profile' => 'automatic',
+      'translation_source' => 'en',
+      'translation_status' => [
+        ['language' => 'en', 'value' => 'current'],
+        ['language' => 'de', 'value' => 'cancelled'],
+        ['language' => 'es', 'value' => 'cancelled'],
+      ],
+    ];
+
+    $index = 0;
+    while ($index < 11) {
+      ++$index;
+      $metadata = LingotekContentMetadata::loadByTargetId('node', $index);
+      $metadata->setDocumentId('document_id_' . $index);
+      $metadata->set('translation_status', $metadata_data['translation_status']);
+      $metadata->set('profile', $metadata_data['profile']);
+      $metadata->set('translation_source', $metadata_data['translation_source']);
+      $metadata->save();
+    }
+
+    $this->goToContentBulkManagementForm();
+    $edit = [
+      'filters[advanced_options][target_status]' => Lingotek::STATUS_CANCELLED,
+    ];
+    $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
+    // This ensures that pagination is working correctly with the Target Status filter.
+    // If it isn't, there will be fewer than 10 nodes on the content bulk management form
+    $this->assertText('Article 10');
+  }
+
 }
