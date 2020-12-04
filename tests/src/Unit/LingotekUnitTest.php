@@ -1467,6 +1467,80 @@ class LingotekUnitTest extends UnitTestCase {
   /**
    * @covers ::updateDocument
    */
+  public function testUpdateDocumentManualProfile() {
+    $response = $this->getMockBuilder(ResponseInterface::class)
+      ->disableOriginalConstructor()
+      ->getMock();
+    $response->expects($this->any())
+      ->method('getStatusCode')
+      ->willReturn(Response::HTTP_ACCEPTED);
+
+    $this->lingotekFilterManager->expects($this->any())
+      ->method('getFilterId')
+      ->willReturn('4f91482b-5aa1-4a4a-a43f-712af7b39625');
+
+    $this->lingotekFilterManager->expects($this->any())
+      ->method('getSubfilterId')
+      ->willReturn('0e79f34d-f27b-4a0c-880e-cd9181a5d265');
+
+    $this->config->expects($this->any())
+      ->method('get')
+      ->will($this->returnValueMap([['default.project', 'default_project'], ['default.vault', 'default_vault'], ['default.workflow', 'default_workflow']]));
+
+    $english = $this->createMock(ConfigurableLanguageInterface::class);
+    $english->expects($this->any())->method('getId')->willReturn('en');
+    $spanish = $this->createMock(ConfigurableLanguageInterface::class);
+    $spanish->expects($this->any())->method('getId')->willReturn('es');
+    $catalan = $this->createMock(ConfigurableLanguageInterface::class);
+    $catalan->expects($this->any())->method('getId')->willReturn('ca');
+    $italian = $this->createMock(ConfigurableLanguageInterface::class);
+    $italian->expects($this->any())->method('getId')->willReturn('it');
+
+    $this->lingotekConfiguration->expects($this->any())
+      ->method('getEnabledLanguages')
+      ->willReturn(['en' => $english, 'es' => $spanish, 'ca' => $catalan, 'it' => $italian]);
+
+    $this->languageLocaleMapper->expects($this->any())
+      ->method('getLocaleForLangcode')
+      ->willReturnMap([['es', 'es_ES'], ['ca', 'ca_ES'], ['en', 'en_US'], ['it', 'it_IT']]);
+
+    $this->api->expects($this->at(0))
+      ->method('patchDocument')
+      ->with('my_doc_id', [
+        'format' => 'JSON',
+        'content' => '"content"',
+        'title' => 'title',
+        'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
+        'fprm_id' => '4f91482b-5aa1-4a4a-a43f-712af7b39625',
+        'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0',
+        'project_id' => 'test_project',
+        'translation_locale_code' => ['es_ES', 'ca_ES', 'it_IT'],
+        'translation_workflow_id' => ['es_workflow', 'ca_workflow', 'default_workflow'],
+      ])
+      ->will($this->returnValue($response));
+
+    $profile = new LingotekProfile([
+        'id' => 'profile',
+        'project' => 'test_project',
+        'vault' => 'test_vault',
+        'workflow' => 'test_workflow',
+        'language_overrides' => [
+          'es' => ['overrides' => 'custom', 'custom' => ['auto_request' => FALSE, 'workflow' => 'es_workflow', 'vault' => 'default']],
+          'ca' => ['overrides' => 'custom', 'custom' => ['auto_request' => FALSE, 'workflow' => 'ca_workflow', 'vault' => 'ca_vault']],
+          'it' => ['overrides' => 'custom', 'custom' => ['auto_request' => FALSE, 'workflow' => 'default', 'vault' => 'it_vault']],
+        ],
+      ], 'lingotek_profile');
+
+    // Ensure that all automatic settings are turned off
+    $profile->setAutomaticDownload(FALSE);
+    $profile->setAutomaticUpload(FALSE);
+    $profile->setAutomaticRequest(FALSE);
+    $this->lingotek->updateDocument('my_doc_id', 'content', NULL, 'title', $profile, NULL, 'en');
+  }
+
+  /**
+   * @covers ::updateDocument
+   */
   public function testUpdateDocumentPaymentRequired() {
     $response = $this->getMockBuilder(ResponseInterface::class)
       ->disableOriginalConstructor()
