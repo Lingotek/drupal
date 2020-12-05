@@ -416,10 +416,9 @@ class Lingotek implements LingotekInterface {
     if ($profile) {
       $languages = $this->lingotekConfiguration->getEnabledLanguages();
       if (!empty($languages)) {
-        $source_locale = $this->languageLocaleMapper->getLocaleForLangcode($locale);
         foreach ($languages as $language) {
           $target_locale = $this->languageLocaleMapper->getLocaleForLangcode($language->getId());
-          if ($source_locale && $target_locale !== $source_locale) {
+          if ($locale !== NULL && $target_locale !== $locale) {
             $workflow_id = $profile->getWorkflowForTarget($language->getId());
             if ($workflow_id === 'default') {
               $workflow_id = $this->configFactory->get(static::SETTINGS)->get('default.workflow');
