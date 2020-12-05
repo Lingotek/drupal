@@ -904,7 +904,7 @@ class LingotekUnitTest extends UnitTestCase {
       ],
     ], 'lingotek_profile');
     // If profile contains target specific settings in proper order
-    $this->lingotek->updateDocument('my_doc_id', 'content', NULL, 'title', $profile, NULL, 'en');
+    $this->lingotek->updateDocument('my_doc_id', 'content', NULL, 'title', $profile, NULL, 'en_US');
     $profile = new LingotekProfile([
       'id' => 'profile0',
       'project' => 'test_project',
@@ -917,7 +917,7 @@ class LingotekUnitTest extends UnitTestCase {
       ],
     ], 'lingotek_profile');
     // If amount of translation_workflow_ids doesn't match ammount of translation_locale_codes, use project workflow
-    $this->lingotek->updateDocument('my_doc_id', 'content', NULL, 'title', $profile, NULL, 'en');
+    $this->lingotek->updateDocument('my_doc_id', 'content', NULL, 'title', $profile, NULL, 'en_US');
   }
 
   /**
@@ -1535,7 +1535,7 @@ class LingotekUnitTest extends UnitTestCase {
     $profile->setAutomaticDownload(FALSE);
     $profile->setAutomaticUpload(FALSE);
     $profile->setAutomaticRequest(FALSE);
-    $this->lingotek->updateDocument('my_doc_id', 'content', NULL, 'title', $profile, NULL, 'en');
+    $this->lingotek->updateDocument('my_doc_id', 'content', NULL, 'title', $profile, NULL, 'en_US');
   }
 
   /**
