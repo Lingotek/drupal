@@ -101,6 +101,8 @@ class LingotekMetadataEditFormTest extends LingotekTestBase {
    * Tests that if debug is not enabled, metadata tab is not available.
    */
   public function testMetadataEditForm() {
+    $assert_session = $this->assertSession();
+
     // Enable debug operations.
     $this->drupalPostForm('admin/lingotek/settings', [], 'Enable debug operations');
 
@@ -119,9 +121,9 @@ class LingotekMetadataEditFormTest extends LingotekTestBase {
 
     // Assert that the values are correct.
     $this->assertFieldById('edit-lingotek-document-id', 'dummy-document-hash-id');
-    $this->assertOptionSelected('edit-lingotek-source-status', Lingotek::STATUS_IMPORTING);
-    $this->assertOptionSelected('edit-en', Lingotek::STATUS_IMPORTING);
-    $this->assertOptionSelected('edit-es', Lingotek::STATUS_REQUEST);
+    $assert_session->optionExists('edit-lingotek-source-status', Lingotek::STATUS_IMPORTING);
+    $assert_session->optionExists('edit-en', Lingotek::STATUS_IMPORTING);
+    $assert_session->optionExists('edit-es', Lingotek::STATUS_REQUEST);
     $this->assertFieldById('edit-lingotek-job-id', '');
     $timestamp = \Drupal::time()->getRequestTime();
     $this->assertSession()->fieldValueEquals('verbatim_area[verbatim]', <<<JSON
@@ -192,10 +194,10 @@ JSON
     // Assert that the values are correct.
     $this->assertFieldById('edit-lingotek-document-id', 'another-id');
     // ToDo: We should avoid that an upload is triggered, even if using automatic profile.
-    // $this->assertOptionSelected('edit-lingotek-source-status', Lingotek::STATUS_CURRENT);
-    $this->assertOptionSelected('edit-lingotek-source-status', Lingotek::STATUS_UNTRACKED);
-    $this->assertOptionSelected('edit-en', Lingotek::STATUS_UNTRACKED);
-    $this->assertOptionSelected('edit-es', Lingotek::STATUS_READY);
+    // $assert_session->optionExists('edit-lingotek-source-status', Lingotek::STATUS_CURRENT);
+    $assert_session->optionExists('edit-lingotek-source-status', Lingotek::STATUS_UNTRACKED);
+    $assert_session->optionExists('edit-en', Lingotek::STATUS_UNTRACKED);
+    $assert_session->optionExists('edit-es', Lingotek::STATUS_READY);
     $this->assertFieldById('edit-lingotek-job-id', 'a new edited job id');
     $this->assertSession()->fieldValueEquals('verbatim_area[verbatim]', <<<JSON
 {
@@ -297,9 +299,9 @@ JSON
 
     // Assert that the values are defaults.
     $this->assertFieldById('edit-lingotek-document-id', '');
-    $this->assertOptionSelected('edit-lingotek-source-status', Lingotek::STATUS_UNTRACKED);
-    $this->assertOptionSelected('edit-en', Lingotek::STATUS_UNTRACKED);
-    $this->assertOptionSelected('edit-es', Lingotek::STATUS_UNTRACKED);
+    $assert_session->optionExists('edit-lingotek-source-status', Lingotek::STATUS_UNTRACKED);
+    $assert_session->optionExists('edit-en', Lingotek::STATUS_UNTRACKED);
+    $assert_session->optionExists('edit-es', Lingotek::STATUS_UNTRACKED);
     $this->assertFieldById('edit-lingotek-job-id', '');
     $this->assertFieldByName('verbatim_area[verbatim]', 'NULL');
 
@@ -339,9 +341,9 @@ JSON
 
     // Assert that the values are defaults.
     $this->assertFieldById('edit-lingotek-document-id', '');
-    $this->assertOptionSelected('edit-lingotek-source-status', Lingotek::STATUS_UNTRACKED);
-    $this->assertOptionSelected('edit-en', Lingotek::STATUS_UNTRACKED);
-    $this->assertOptionSelected('edit-es', Lingotek::STATUS_UNTRACKED);
+    $assert_session->optionExists('edit-lingotek-source-status', Lingotek::STATUS_UNTRACKED);
+    $assert_session->optionExists('edit-en', Lingotek::STATUS_UNTRACKED);
+    $assert_session->optionExists('edit-es', Lingotek::STATUS_UNTRACKED);
     $this->assertFieldById('edit-lingotek-job-id', '');
     $this->assertFieldByName('verbatim_area[verbatim]', 'NULL');
 
@@ -359,10 +361,10 @@ JSON
     // Assert that the values are correct.
     $this->assertFieldById('edit-lingotek-document-id', 'another-id');
     // ToDo: We should avoid that an upload is triggered, even if using automatic profile.
-    // $this->assertOptionSelected('edit-lingotek-source-status', Lingotek::STATUS_CURRENT);
-    $this->assertOptionSelected('edit-lingotek-source-status', Lingotek::STATUS_UNTRACKED);
-    $this->assertOptionSelected('edit-en', Lingotek::STATUS_UNTRACKED);
-    $this->assertOptionSelected('edit-es', Lingotek::STATUS_READY);
+    // $assert_session->optionExists('edit-lingotek-source-status', Lingotek::STATUS_CURRENT);
+    $assert_session->optionExists('edit-lingotek-source-status', Lingotek::STATUS_UNTRACKED);
+    $assert_session->optionExists('edit-en', Lingotek::STATUS_UNTRACKED);
+    $assert_session->optionExists('edit-es', Lingotek::STATUS_READY);
     $this->assertFieldById('edit-lingotek-job-id', 'a new edited job id');
     $this->assertSession()->fieldValueEquals('verbatim_area[verbatim]', <<<JSON
 {

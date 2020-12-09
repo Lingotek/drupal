@@ -2990,7 +2990,8 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
    *   The selection key.
    */
   protected function assertSelectionIsKept(string $key) {
-    $this->assertOptionSelected($this->getBulkOperationFormName(), $this->getBulkOperationNameForDeleteTranslation('es', 'node'));
+    $assert_session = $this->assertSession();
+    $assert_session->optionExists($this->getBulkOperationFormName(), $this->getBulkOperationNameForDeleteTranslation('es', 'node'));
     $this->assertFieldChecked($key);
   }
 

@@ -102,10 +102,8 @@ class LingotekWorkbenchModerationSettingsTest extends LingotekTestBase {
       'The field for setting the state when a content should be uploaded exists.');
     $this->assertField('node[article][moderation][download_transition]',
       'The field for setting the transition that must happen after download exists.');
-    $this->assertOptionSelected('edit-node-article-moderation-upload-status', 'published',
-      'The default value is a published one.');
-    $this->assertOptionSelected('edit-node-article-moderation-download-transition', 'published_published',
-      'The default transition is from published to published.');
+    $assert_session->optionExists('edit-node-article-moderation-upload-status', 'published');
+    $assert_session->optionExists('edit-node-article-moderation-download-transition', 'published_published');
 
     // The content types without moderation enabled should show a link instead
     // for configuring them.
@@ -134,10 +132,8 @@ class LingotekWorkbenchModerationSettingsTest extends LingotekTestBase {
     ]);
 
     // Assert the values are saved.
-    $this->assertOptionSelected('edit-node-article-moderation-upload-status', 'draft',
-      'The desired status for upload is stored correctly.');
-    $this->assertOptionSelected('edit-node-article-moderation-download-transition', 'draft_needs_review',
-      'The desired transition after download is stored correctly.');
+    $assert_session->optionExists('edit-node-article-moderation-upload-status', 'draft');
+    $assert_session->optionExists('edit-node-article-moderation-download-transition', 'draft_needs_review');
 
     $this->assertNoField("taxonomy_term[$vocabulary_id][moderation][upload_status]",
       'The field for setting the state when a content should be uploaded does not exist as workbench moderation is not available for this entity type.');

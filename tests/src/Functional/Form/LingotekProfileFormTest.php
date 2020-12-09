@@ -134,6 +134,8 @@ class LingotekProfileFormTest extends LingotekTestBase {
    * Test editing profiles.
    */
   public function testEditingProfile() {
+    $assert_session = $this->assertSession();
+
     /** @var \Drupal\lingotek\LingotekProfileInterface $profile */
     $profile = LingotekProfile::create([
       'id' => strtolower($this->randomMachineName()),
@@ -171,12 +173,12 @@ class LingotekProfileFormTest extends LingotekTestBase {
     $this->drupalGet("/admin/lingotek/settings/profile/$profile_id/edit");
     $this->assertNoFieldChecked("edit-auto-upload");
     $this->assertFieldChecked("edit-auto-download");
-    $this->assertOptionSelected('edit-append-type-to-title', 'no');
-    $this->assertOptionSelected('edit-project', 'test_project');
-    $this->assertOptionSelected('edit-vault', 'test_vault');
-    $this->assertOptionSelected('edit-workflow', 'test_workflow');
-    $this->assertOptionSelected('edit-filter', 'test_filter');
-    $this->assertOptionSelected('edit-subfilter', 'test_filter2');
+    $assert_session->optionExists('edit-append-type-to-title', 'no');
+    $assert_session->optionExists('edit-project', 'test_project');
+    $assert_session->optionExists('edit-vault', 'test_vault');
+    $assert_session->optionExists('edit-workflow', 'test_workflow');
+    $assert_session->optionExists('edit-filter', 'test_filter');
+    $assert_session->optionExists('edit-subfilter', 'test_filter2');
   }
 
   /**
@@ -390,6 +392,8 @@ class LingotekProfileFormTest extends LingotekTestBase {
    * Test profiles language settings override.
    */
   public function testProfileSettingsOverride() {
+    $assert_session = $this->assertSession();
+
     // Add a language.
     ConfigurableLanguage::createFromLangcode('es')->setThirdPartySetting('lingotek', 'locale', 'es_MX')->save();
     ConfigurableLanguage::createFromLangcode('de')->setThirdPartySetting('lingotek', 'locale', 'de_DE')->save();
@@ -403,8 +407,8 @@ class LingotekProfileFormTest extends LingotekTestBase {
     $profile_id = $profile->id();
 
     $this->drupalGet("/admin/lingotek/settings/profile/$profile_id/edit");
-    $this->assertOptionSelected('edit-language-overrides-es-overrides', 'default');
-    $this->assertOptionSelected('edit-language-overrides-en-overrides', 'default');
+    $assert_session->optionExists('edit-language-overrides-es-overrides', 'default');
+    $assert_session->optionExists('edit-language-overrides-en-overrides', 'default');
 
     $edit = [
       'auto_upload' => FALSE,
@@ -440,18 +444,18 @@ class LingotekProfileFormTest extends LingotekTestBase {
     $this->drupalGet("/admin/lingotek/settings/profile/$profile_id/edit");
     $this->assertNoFieldChecked("edit-auto-upload");
     $this->assertFieldChecked("edit-auto-download");
-    $this->assertOptionSelected('edit-project', 'default');
-    $this->assertOptionSelected('edit-vault', 'default');
-    $this->assertOptionSelected('edit-workflow', 'test_workflow2');
-    $this->assertOptionSelected('edit-language-overrides-es-overrides', 'custom');
-    $this->assertOptionSelected('edit-language-overrides-de-overrides', 'custom');
-    $this->assertOptionSelected('edit-language-overrides-en-overrides', 'default');
+    $assert_session->optionExists('edit-project', 'default');
+    $assert_session->optionExists('edit-vault', 'default');
+    $assert_session->optionExists('edit-workflow', 'test_workflow2');
+    $assert_session->optionExists('edit-language-overrides-es-overrides', 'custom');
+    $assert_session->optionExists('edit-language-overrides-de-overrides', 'custom');
+    $assert_session->optionExists('edit-language-overrides-en-overrides', 'default');
     $this->assertNoFieldChecked('edit-language-overrides-es-custom-auto-download');
     $this->assertNoFieldChecked('edit-language-overrides-de-custom-auto-download');
     $this->assertFieldChecked('edit-language-overrides-en-custom-auto-download');
-    $this->assertOptionSelected('edit-language-overrides-es-custom-workflow', 'test_workflow');
-    $this->assertOptionSelected('edit-language-overrides-de-custom-workflow', 'default');
-    $this->assertOptionSelected('edit-language-overrides-en-custom-workflow', 'default');
+    $assert_session->optionExists('edit-language-overrides-es-custom-workflow', 'test_workflow');
+    $assert_session->optionExists('edit-language-overrides-de-custom-workflow', 'default');
+    $assert_session->optionExists('edit-language-overrides-en-custom-workflow', 'default');
 
     // Assert that the override languages are present and ordered alphabetically.
     $selects = $this->xpath('//details[@id="edit-language-overrides"]/*/*//select');
@@ -466,6 +470,8 @@ class LingotekProfileFormTest extends LingotekTestBase {
    * defining overrides.
    */
   public function testLanguageDisabled() {
+    $assert_session = $this->assertSession();
+
     /** @var \Drupal\lingotek\LingotekConfigurationServiceInterface $configLingotek */
     $configLingotek = \Drupal::service('lingotek.configuration');
 
@@ -485,8 +491,8 @@ class LingotekProfileFormTest extends LingotekTestBase {
 
     $this->drupalGet("/admin/lingotek/settings/profile/$profile_id/edit");
     $this->assertFieldByName('language_overrides[es][overrides]');
-    $this->assertOptionSelected('edit-language-overrides-de-overrides', 'default');
-    $this->assertOptionSelected('edit-language-overrides-de-overrides', 'default');
+    $assert_session->optionExists('edit-language-overrides-de-overrides', 'default');
+    $assert_session->optionExists('edit-language-overrides-de-overrides', 'default');
 
     // We disable a language.
     $configLingotek->disableLanguage($es);
@@ -494,15 +500,15 @@ class LingotekProfileFormTest extends LingotekTestBase {
     // The form shouldn't have the field.
     $this->drupalGet("/admin/lingotek/settings/profile/$profile_id/edit");
     $this->assertNoFieldByName('language_overrides[es][overrides]');
-    $this->assertOptionSelected('edit-language-overrides-de-overrides', 'default');
+    $assert_session->optionExists('edit-language-overrides-de-overrides', 'default');
 
     // We enable the language back.
     $configLingotek->enableLanguage($es);
 
     $this->drupalGet("/admin/lingotek/settings/profile/$profile_id/edit");
     $this->assertFieldByName('language_overrides[es][overrides]');
-    $this->assertOptionSelected('edit-language-overrides-es-overrides', 'default');
-    $this->assertOptionSelected('edit-language-overrides-de-overrides', 'default');
+    $assert_session->optionExists('edit-language-overrides-es-overrides', 'default');
+    $assert_session->optionExists('edit-language-overrides-de-overrides', 'default');
   }
 
   /**

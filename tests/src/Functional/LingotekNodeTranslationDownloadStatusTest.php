@@ -71,12 +71,14 @@ class LingotekNodeTranslationDownloadStatusTest extends LingotekTestBase {
    * based on the lingotek setting.
    */
   public function testNodeTargetDownloadUnpublishedStatusTranslation() {
+    $assert_session = $this->assertSession();
+
     $this->drupalGet('admin/lingotek/settings');
     $edit = ['target_download_status' => 'unpublished'];
     $this->submitForm($edit, 'Save', 'lingoteksettings-tab-preferences-form');
 
     // Assert the settings are saved successfully.
-    $this->assertOptionSelected('edit-target-download-status', 'unpublished');
+    $assert_session->optionExists('edit-target-download-status', 'unpublished');
 
     // Create a node and complete the translation with Lingotek.
     $this->createAndDownloadANodeTranslation(self::PUBLISHED);
@@ -91,12 +93,14 @@ class LingotekNodeTranslationDownloadStatusTest extends LingotekTestBase {
    * based on the lingotek setting.
    */
   public function testNodeTargetDownloadPublishedStatusTranslation() {
+    $assert_session = $this->assertSession();
+
     $this->drupalGet('admin/lingotek/settings');
     $edit = ['target_download_status' => 'published'];
     $this->submitForm($edit, 'Save', 'lingoteksettings-tab-preferences-form');
 
     // Assert the settings are saved successfully.
-    $this->assertOptionSelected('edit-target-download-status', 'published');
+    $assert_session->optionExists('edit-target-download-status', 'published');
 
     // Create a node and complete the translation with Lingotek.
     $this->createAndDownloadANodeTranslation(self::UNPUBLISHED);
@@ -111,12 +115,14 @@ class LingotekNodeTranslationDownloadStatusTest extends LingotekTestBase {
    * as the lingotek setting.
    */
   public function testNodeTargetDownloadSameAsSourcePublishedStatusTranslation() {
+    $assert_session = $this->assertSession();
+
     $this->drupalGet('admin/lingotek/settings');
     $edit = ['target_download_status' => 'same-as-source'];
     $this->submitForm($edit, 'Save', 'lingoteksettings-tab-preferences-form');
 
     // Assert the settings are saved successfully.
-    $this->assertOptionSelected('edit-target-download-status', 'same-as-source');
+    $assert_session->optionExists('edit-target-download-status', 'same-as-source');
 
     // Create a node and complete the translation with Lingotek.
     $this->createAndDownloadANodeTranslation(self::PUBLISHED);
@@ -131,12 +137,14 @@ class LingotekNodeTranslationDownloadStatusTest extends LingotekTestBase {
    * as the lingotek setting.
    */
   public function testNodeTargetDownloadSameAsSourceUnpublishedStatusTranslation() {
+    $assert_session = $this->assertSession();
+
     $this->drupalGet('admin/lingotek/settings');
     $edit = ['target_download_status' => 'same-as-source'];
     $this->submitForm($edit, 'Save', 'lingoteksettings-tab-preferences-form');
 
     // Assert the settings are saved successfully.
-    $this->assertOptionSelected('edit-target-download-status', 'same-as-source');
+    $assert_session->optionExists('edit-target-download-status', 'same-as-source');
 
     // Create a node and complete the translation with Lingotek.
     $this->createAndDownloadANodeTranslation(self::UNPUBLISHED);

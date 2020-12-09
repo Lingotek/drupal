@@ -127,10 +127,8 @@ class LingotekContentModerationSettingsTest extends LingotekTestBase {
       'The field for setting the state when a content should be uploaded exists.');
     $this->assertField('node[article][moderation][download_transition]',
       'The field for setting the transition that must happen after download exists.');
-    $this->assertOptionSelected('edit-node-article-moderation-upload-status', 'published',
-      'The default value is a published one.');
-    $this->assertOptionSelected('edit-node-article-moderation-download-transition', 'publish',
-      'The default transition is from published to published.');
+    $assert_session->optionExists('edit-node-article-moderation-upload-status', 'published');
+    $assert_session->optionExists('edit-node-article-moderation-download-transition', 'publish');
 
     // But not for the other content types. There is still a message for configuring.
     $this->assertNoField('node[page][moderation][upload_status]',
@@ -158,10 +156,8 @@ class LingotekContentModerationSettingsTest extends LingotekTestBase {
     ]);
 
     // Assert the values are saved.
-    $this->assertOptionSelected('edit-node-article-moderation-upload-status', 'draft',
-      'The desired status for upload is stored correctly.');
-    $this->assertOptionSelected('edit-node-article-moderation-download-transition', 'archive',
-      'The desired transition after download is stored correctly.');
+    $assert_session->optionExists('edit-node-article-moderation-upload-status', 'draft');
+    $assert_session->optionExists('edit-node-article-moderation-download-transition', 'archive');
 
     // It never existed for taxonomies.
     $this->assertNoField("taxonomy_term[{$this->vocabulary->id()}][moderation][upload_status]",
