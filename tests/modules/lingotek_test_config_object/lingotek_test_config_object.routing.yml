@@ -1,0 +1,7 @@
+lingotek_test_config_object.settings:
+  path: '/admin/config/lingotek/lingotek_test_config_object'
+  defaults:
+    _title: 'Lingotek test config object'
+    _form: 'Drupal\lingotek_test_config_object\Form\SettingsForm'
+  requirements:
+    _permission: 'administer site configuration'

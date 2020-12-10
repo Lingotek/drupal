@@ -14,7 +14,7 @@ class LingotekConfigObjectTranslationDocumentUploadHookTest extends LingotekTest
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['views', 'node', 'user'];
+  public static $modules = ['node', 'user', 'lingotek_test_config_object'];
 
   /**
    * {@inheritdoc}
@@ -26,35 +26,42 @@ class LingotekConfigObjectTranslationDocumentUploadHookTest extends LingotekTest
     ConfigurableLanguage::createFromLangcode('es')->setThirdPartySetting('lingotek', 'locale', 'es_MX')->save();
 
     // This is a hack for avoiding writing different lingotek endpoint mocks.
-    \Drupal::state()->set('lingotek.uploaded_content_type', 'rss-publishing');
-
-    // Create a node.
-    $this->drupalCreateContentType(['type' => 'article', 'name' => t('Article')]);
-    $this->drupalCreateNode(['type' => 'article', 'promote' => 1]);
+    \Drupal::state()->set('lingotek.uploaded_content_type', 'lingotek_test_config_object');
   }
 
   /**
-   * Tests that rss publishing settings can be translated.
+   * Tests that account config object settings can be translated.
    */
-  public function testRssPublishingTranslation() {
+  public function testConfigObjectTranslation() {
     // Login as admin.
     $this->drupalLogin($this->rootUser);
 
-    $this->drupalGet('admin/config/services/rss-publishing');
+    $this->drupalGet('/admin/config/lingotek/lingotek_test_config_object');
     $edit = [
-      'feed_description' => 'Llamas feed description',
+      'property_1' => 'Llamas feed description',
+      'property_2' => 'Llamas feed description',
+      'property_3' => 'Llamas feed description',
+      'property_4' => 'Llamas feed description',
+      'property_5' => 'Llamas feed description',
+      'property_6' => 'Llamas feed description',
     ];
-    $this->drupalPostForm(NULL, $edit, 'Save configuration');
+    $this->submitForm($edit, 'Save configuration');
 
     $this->goToConfigBulkManagementForm();
 
-    $this->clickLink('EN', 2);
+    $this->clickLink('EN', 0);
 
     // Check that Llamas is replaced via hook_lingotek_config_object_document_upload().
     // @see lingotek_test_lingotek_config_object_document_upload()
+
     $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), TRUE);
-    $this->verbose(var_export($data, TRUE));
-    $this->assertEqual($data['system.rss']['channel.description'], 'Cats feed description');
+    // Only the proper translatable typed properties are being uploaded.
+    $this->assertFalse(isset($data['lingotek_test_config_object.settings']['property_1']));
+    $this->assertFalse(isset($data['lingotek_test_config_object.settings']['property_2']));
+    $this->assertEqual($data['lingotek_test_config_object.settings']['property_3'], 'Cats feed description');
+    $this->assertEqual($data['lingotek_test_config_object.settings']['property_4'], 'Llamas feed description');
+    $this->assertEqual($data['lingotek_test_config_object.settings']['property_5'], 'Cats feed description');
+    $this->assertEqual($data['lingotek_test_config_object.settings']['property_6'], 'Llamas feed description');
   }
 
 }

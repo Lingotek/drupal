@@ -1,0 +1,6 @@
+name: Lingotek Translation Test Config Object Helper
+type: module
+package: Testing
+
+dependencies:
+  - lingotek:lingotek
