@@ -1,0 +1,22 @@
+lingotek_test_config_object.settings:
+  type: config_object
+  label: 'Lingotek Test Config Object'
+  mapping:
+    property_1:
+      type: string
+      label: 'Property 1 (string)'
+    property_2:
+      type: string
+      label: 'Property 2 (string)'
+    property_3:
+      type: text
+      label: 'Property 3 (text)'
+    property_4:
+      type: text
+      label: 'Property 4 (text)'
+    property_5:
+      type: label
+      label: 'Property 5 (label)'
+    property_6:
+      type: label
+      label: 'Property 6 (label)'
