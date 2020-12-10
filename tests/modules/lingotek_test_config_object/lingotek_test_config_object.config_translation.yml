@@ -1,0 +1,5 @@
+lingotek_test_config_object.settings:
+  title: 'Lingotek Test Config Object'
+  base_route_name: lingotek_test_config_object.settings
+  names:
+    - lingotek_test_config_object.settings
