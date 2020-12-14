@@ -1900,7 +1900,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
                     $property_data = $revision->get($name)->offsetGet($delta)->{$property};
                   }
                 }
-                if (method_exists($translation->get($name)->offsetGet($delta), "set")) {
+                if ($translation->get($name)->offsetExists($delta) && method_exists($translation->get($name)->offsetGet($delta), "set")) {
                   $translation->get($name)->offsetGet($delta)->set($property, html_entity_decode($property_data));
                 }
                 elseif ($translation->get($name)) {
