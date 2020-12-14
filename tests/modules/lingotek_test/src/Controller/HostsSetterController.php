@@ -52,9 +52,7 @@ class HostsSetterController extends ControllerBase {
   public function setHosts(Request $request) {
     $basepath = $request->getSchemeAndHttpHost();
 
-    $config = $this->configFactory->getEditable('lingotek.settings');
-    $config->set('account.use_production', TRUE)
-      ->set('account.sandbox_host', $basepath)
+    $config = $this->configFactory->getEditable('lingotek.settings')
       ->set('account.host', $basepath);
     $config->save();
 

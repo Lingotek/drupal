@@ -28,7 +28,6 @@ class LingotekFakeConfigWrapper extends Config {
           $host = \Drupal::request()->getSchemeAndHttpHost();
           return [
             'host' => $host,
-            'sandbox_host' => $host,
             'authorize_path' => $this->get('account.authorize_path'),
             'default_client_id' => $this->get('account.default_client_id'),
             'access_token' => $this->get('account.access_token'),

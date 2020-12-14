@@ -168,7 +168,7 @@ class LingotekSettingsTabAccountForm extends LingotekConfigFormBase {
 
     $tmsRow = [
       ['#markup' => $this->t('Lingotek TMS Server:'), '#prefix' => '<b>', '#suffix' => '</b>'],
-      ['#markup' => $config->get('account.use_production') ? $config->get('account.host') : $config->get('account.sandbox_host')],
+      ['#markup' => $config->get('account.host')],
       ['#markup' => ''],
     ];
     $gmcRow = [

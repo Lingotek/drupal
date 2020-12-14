@@ -47,8 +47,6 @@ intelligence:
   use_base_domain: true
   use_reference_url: true
 account:
-  use_production: false
-  sandbox_host: 'https://myaccount.lingotek.com'
   host: 'https://myaccount.lingotek.com'
   authorize_path: 'auth/authorize.html'
   default_client_id: 'e39e24c7-6c69-4126-946d-cf8fbff38ef0'

@@ -27,6 +27,16 @@ function lingotek_post_update_lingotek_profile_target_save_to_vault(&$sandbox = 
 }
 
 /**
+ * Remove obsolete Lingotek account configuration.
+ */
+function lingotek_post_update_delete_sandbox_host_settings() {
+  \Drupal::configFactory()->getEditable('lingotek.settings')
+    ->clear('account.use_production')
+    ->clear('account.sandbox_host')
+    ->save();
+}
+
+/**
  * Implements hook_removed_post_updates().
  */
 function lingotek_removed_post_updates() {

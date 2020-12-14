@@ -166,10 +166,11 @@ lingotek.settings:
         use_production:
           type: boolean
           label: 'Use production'
+          deprecated: "account.use_production lingotek setting is unused since lingotek:3.5.0. Will be removed in lingotek:4.0.0"
         sandbox_host:
           type: string
           label: 'Sandbox Host'
-          deprecated: "This option is unused since lingotek:8.x-2.6. Will be removed in lingotek:4.0.0"
+          deprecated: "account.sandbox_host property lingotek setting is unused since lingotek:8.x-2.6. Will be removed in lingotek:4.0.0"
         host:
           type: string
           label: 'Lingotek Host'
