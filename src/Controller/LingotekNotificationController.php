@@ -139,7 +139,7 @@ class LingotekNotificationController extends LingotekControllerBase {
           if ($entity instanceof ConfigEntityInterface) {
             $translation_service = $this->lingotekConfigTranslation;
           }
-          if ($entity instanceof string) {
+          elseif (is_string($entity)) {
             $translation_service = $this->lingotekInterfaceTranslation;
           }
           // We need to unset the document id first, so there's no cancelling
@@ -149,7 +149,7 @@ class LingotekNotificationController extends LingotekControllerBase {
 
           $http_status_code = Response::HTTP_OK;
           $messages[] = new FormattableMarkup('Document @label was archived in Lingotek.', [
-            '@label' => $entity->label(),
+            '@label' => is_string($entity) ? $entity : $entity->label(),
           ]);
         }
         break;
@@ -165,7 +165,7 @@ class LingotekNotificationController extends LingotekControllerBase {
           elseif ($entity instanceof ContentEntityInterface) {
             $this->lingotekConfiguration->setProfile($entity, NULL);
           }
-          if ($entity instanceof string) {
+          elseif (is_string($entity)) {
             $translation_service = $this->lingotekInterfaceTranslation;
           }
           $http_status_code = Response::HTTP_OK;
@@ -175,10 +175,10 @@ class LingotekNotificationController extends LingotekControllerBase {
           $translation_service->setTargetStatuses($entity, Lingotek::STATUS_CANCELLED);
 
           $this->logger->log(LogLevel::DEBUG, 'Document @label cancelled in TMS.', [
-            '@label' => $entity->label(),
+            '@label' => is_string($entity) ? $entity : $entity->label(),
           ]);
           $messages[] = new FormattableMarkup('Document @label cancelled in TMS.', [
-            '@label' => $entity->label(),
+            '@label' => is_string($entity) ? $entity : $entity->label(),
           ]);
         }
         else {
@@ -275,12 +275,12 @@ class LingotekNotificationController extends LingotekControllerBase {
           $translation_service->setDocumentId($entity, $prevDocumentId);
           $translation_service->setSourceStatus($entity, Lingotek::STATUS_ERROR);
           $this->logger->log(LogLevel::DEBUG, 'Document import for entity @label failed. Reverting @documentId to previous id @prevDocumentId', [
-            '@label' => $entity->label(),
+            '@label' => is_string($entity) ? $entity : $entity->label(),
             '@documentId' => $documentId,
             '@prevDocumentId' => $prevDocumentId ?: '(NULL)',
           ]);
           $messages[] = new FormattableMarkup('Document import for entity @label failed. Reverting @documentId to previous id @prevDocumentId', [
-            '@label' => $entity->label(),
+            '@label' => is_string($entity) ? $entity : $entity->label(),
             '@documentId' => $documentId,
             '@prevDocumentId' => $prevDocumentId ?: '(NULL)',
           ]);
@@ -309,11 +309,11 @@ class LingotekNotificationController extends LingotekControllerBase {
           $translation_service->setTargetStatus($entity, $langcode, Lingotek::STATUS_CANCELLED);
 
           $this->logger->log(LogLevel::DEBUG, 'Document @label target @locale cancelled in TMS.', [
-            '@label' => $entity->label(),
+            '@label' => is_string($entity) ? $entity : $entity->label(),
             '@locale' => $locale,
           ]);
           $messages[] = new FormattableMarkup('Document @label target @locale cancelled in TMS.', [
-            '@label' => $entity->label(),
+            '@label' => is_string($entity) ? $entity : $entity->label(),
             '@locale' => $locale,
           ]);
         }
@@ -366,13 +366,13 @@ class LingotekNotificationController extends LingotekControllerBase {
           $this->logger->log(LogLevel::DEBUG, 'Target @locale for entity @label deleted by @user_login', [
             '@locale' => $locale,
             '@user_login' => $user_login,
-            '@label' => $entity->label(),
+            '@label' => is_string($entity) ? $entity : $entity->label(),
           ]);
           $http_status_code = Response::HTTP_OK;
           $messages[] = new FormattableMarkup('Target @locale for entity @label deleted by @user_login', [
             '@locale' => $locale,
             '@user_login' => $user_login,
-            '@label' => $entity->label(),
+            '@label' => is_string($entity) ? $entity : $entity->label(),
           ]);
 
         }
@@ -419,12 +419,12 @@ class LingotekNotificationController extends LingotekControllerBase {
           $translation_service->deleteMetadata($entity);
           $this->logger->log(LogLevel::DEBUG, 'Document for entity @label deleted by @user_login in the TMS.', [
             '@user_login' => $user_login,
-            '@label' => $entity->label(),
+            '@label' => is_string($entity) ? $entity : $entity->label(),
           ]);
           $http_status_code = Response::HTTP_OK;
           $messages[] = new FormattableMarkup('Document for entity @label deleted by @user_login in the TMS.', [
             '@user_login' => $user_login,
-            '@label' => $entity->label(),
+            '@label' => is_string($entity) ? $entity : $entity->label(),
           ]);
         }
         else {

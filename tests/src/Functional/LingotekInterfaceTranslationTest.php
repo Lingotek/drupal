@@ -735,4 +735,192 @@ class LingotekInterfaceTranslationTest extends LingotekTestBase {
     $this->assertIdentical(Lingotek::STATUS_CURRENT, $translation_service->getTargetStatus($component, 'es'));
   }
 
+  /**
+   * Tests that a node can be translated using the links on the management page.
+   */
+  public function testAutomatedArchivedNotificationInterfaceTranslation() {
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
+    // In Drupal.org CI the module will be at modules/contrib/lingotek.
+    // In my local that's modules/lingotek. We need to generate the path and not
+    // hardcode it.
+    $path = drupal_get_path('module', 'lingotek_interface_translation_test');
+    $component = $path;
+    $indexOfModuleLink = 2;
+    $assert_session = $this->assertSession();
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
+    $this->goToInterfaceTranslationManagementForm();
+    $assert_session->responseContains('lingotek_interface_translation_test');
+
+    // Clicking English must init the upload of content.
+    $this->assertLingotekInterfaceTranslationUploadLink($component);
+    $this->clickLink('EN', $indexOfModuleLink);
+
+    /** @var \Drupal\lingotek\LingotekInterfaceTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.interface_translation');
+    // Assert the content is importing.
+    $this->assertIdentical(Lingotek::STATUS_IMPORTING, $translation_service->getSourceStatus($component));
+
+    $this->goToInterfaceTranslationManagementForm();
+
+    // Simulate the notification of content successfully uploaded.
+    $url = Url::fromRoute('lingotek.notify', [], [
+      'query' => [
+        'project_id' => 'test_project',
+        'document_id' => 'dummy-document-hash-id',
+        'complete' => 'false',
+        'type' => 'document_uploaded',
+        'progress' => '0',
+      ],
+    ])->setAbsolute()->toString();
+    $request = $this->client->post($url, [
+      'cookies' => $this->cookies,
+      'headers' => [
+        'Accept' => 'application/json',
+        'Content-Type' => 'application/json',
+      ],
+      'http_errors' => FALSE,
+    ]);
+    $response = json_decode($request->getBody(), TRUE);
+    $this->verbose($request);
+    $this->assertIdentical([], $response['result']['request_translations'], 'No translations have been requested after notification automatically.');
+
+    $this->goToInterfaceTranslationManagementForm();
+
+    // Assert the content is imported.
+    $this->assertIdentical(Lingotek::STATUS_CURRENT, $translation_service->getSourceStatus($component));
+    // Assert the target is ready for requesting.
+    $this->assertIdentical(Lingotek::STATUS_REQUEST, $translation_service->getTargetStatus($component, 'es'));
+
+    // Request Spanish manually.
+    $this->clickLink('ES');
+    // Assert the target is pending.
+    $this->goToInterfaceTranslationManagementForm();
+    $this->assertIdentical(Lingotek::STATUS_PENDING, $translation_service->getTargetStatus($component, 'es'));
+
+    // Simulate the notification of content successfully translated.
+    $url = Url::fromRoute('lingotek.notify', [], [
+      'query' => [
+        'project_id' => 'test_project',
+        'document_id' => 'dummy-document-hash-id',
+        'locale_code' => 'es-ES',
+        'locale' => 'es_ES',
+        'complete' => 'true',
+        'type' => 'document_archived',
+        'progress' => '100',
+      ],
+    ])->setAbsolute()->toString();
+    $request = $this->client->post($url, [
+      'cookies' => $this->cookies,
+      'headers' => [
+        'Accept' => 'application/json',
+        'Content-Type' => 'application/json',
+      ],
+      'http_errors' => FALSE,
+    ]);
+    $response = json_decode($request->getBody(), TRUE);
+    $this->verbose($request);
+    $this->assertEquals($response['messages'][0], "Document $path was archived in Lingotek.");
+
+    $this->goToInterfaceTranslationManagementForm();
+    $this->assertIdentical(Lingotek::STATUS_UNTRACKED, $translation_service->getTargetStatus($component, 'es'));
+  }
+
+  /**
+   * Tests that a node can be translated using the links on the management page.
+   */
+  public function testAutomatedCancelledNotificationInterfaceTranslation() {
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
+    // In Drupal.org CI the module will be at modules/contrib/lingotek.
+    // In my local that's modules/lingotek. We need to generate the path and not
+    // hardcode it.
+    $path = drupal_get_path('module', 'lingotek_interface_translation_test');
+    $component = $path;
+    $indexOfModuleLink = 2;
+    $assert_session = $this->assertSession();
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
+    $this->goToInterfaceTranslationManagementForm();
+    $assert_session->responseContains('lingotek_interface_translation_test');
+
+    // Clicking English must init the upload of content.
+    $this->assertLingotekInterfaceTranslationUploadLink($component);
+    $this->clickLink('EN', $indexOfModuleLink);
+
+    /** @var \Drupal\lingotek\LingotekInterfaceTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.interface_translation');
+    // Assert the content is importing.
+    $this->assertIdentical(Lingotek::STATUS_IMPORTING, $translation_service->getSourceStatus($component));
+
+    $this->goToInterfaceTranslationManagementForm();
+
+    // Simulate the notification of content successfully uploaded.
+    $url = Url::fromRoute('lingotek.notify', [], [
+      'query' => [
+        'project_id' => 'test_project',
+        'document_id' => 'dummy-document-hash-id',
+        'complete' => 'false',
+        'type' => 'document_uploaded',
+        'progress' => '0',
+      ],
+    ])->setAbsolute()->toString();
+    $request = $this->client->post($url, [
+      'cookies' => $this->cookies,
+      'headers' => [
+        'Accept' => 'application/json',
+        'Content-Type' => 'application/json',
+      ],
+      'http_errors' => FALSE,
+    ]);
+    $response = json_decode($request->getBody(), TRUE);
+    $this->verbose($request);
+    $this->assertIdentical([], $response['result']['request_translations'], 'No translations have been requested after notification automatically.');
+
+    $this->goToInterfaceTranslationManagementForm();
+
+    // Assert the content is imported.
+    $this->assertIdentical(Lingotek::STATUS_CURRENT, $translation_service->getSourceStatus($component));
+    // Assert the target is ready for requesting.
+    $this->assertIdentical(Lingotek::STATUS_REQUEST, $translation_service->getTargetStatus($component, 'es'));
+
+    // Request Spanish manually.
+    $this->clickLink('ES');
+    // Assert the target is pending.
+    $this->goToInterfaceTranslationManagementForm();
+    $this->assertIdentical(Lingotek::STATUS_PENDING, $translation_service->getTargetStatus($component, 'es'));
+
+    // Simulate the notification of content successfully translated.
+    $url = Url::fromRoute('lingotek.notify', [], [
+      'query' => [
+        'project_id' => 'test_project',
+        'document_id' => 'dummy-document-hash-id',
+        'locale_code' => 'es-ES',
+        'locale' => 'es_ES',
+        'complete' => 'true',
+        'type' => 'document_cancelled',
+        'progress' => '100',
+      ],
+    ])->setAbsolute()->toString();
+    $request = $this->client->post($url, [
+      'cookies' => $this->cookies,
+      'headers' => [
+        'Accept' => 'application/json',
+        'Content-Type' => 'application/json',
+      ],
+      'http_errors' => FALSE,
+    ]);
+    $response = json_decode($request->getBody(), TRUE);
+    $this->verbose($request);
+    $this->assertEquals($response['messages'][0], "Document $path cancelled in TMS.");
+
+    $this->goToInterfaceTranslationManagementForm();
+    $this->assertIdentical(Lingotek::STATUS_CANCELLED, $translation_service->getTargetStatus($component, 'es'));
+  }
+
 }
