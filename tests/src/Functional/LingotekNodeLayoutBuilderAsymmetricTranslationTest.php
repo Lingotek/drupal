@@ -122,7 +122,7 @@ class LingotekNodeLayoutBuilderAsymmetricTranslationTest extends LingotekTestBas
   /**
    * Tests that a node can be translated.
    */
-  public function xxxtestNodeWithLayoutBuilderATBlockTranslation() {
+  public function testNodeWithLayoutBuilderATBlockTranslation() {
     // This is a hack for avoiding writing different lingotek endpoint mocks.
     \Drupal::state()->set('lingotek.uploaded_content_type', 'node+layoutbuilderat');
 
