@@ -10,18 +10,18 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\entity_test\FieldStorageDefinition;
 use Drupal\lingotek\LingotekConfigurationServiceInterface;
-use Drupal\lingotek\Plugin\RelatedEntitiesDetector\NestedEntityReferencesDetector;
+use Drupal\lingotek\Plugin\RelatedEntitiesDetector\NestedErViewmodeEntitiesDetector;
 use Drupal\Tests\UnitTestCase;
-use Psr\Container\ContainerInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Unit test for the nested entitiy detector plugin
+ * Unit test for the nested entity references revisions detector plugin
  *
- * @covers DefaultClass \Drupal\lingotek\Plugin\RelatedEntitiesDetector\NestedEntitiesDetector
+ * @covers DefaultClass \Drupal\lingotek\Plugin\RelatedEntitiesDetector\NestedErViewmodeEntitiesDetector
  * @group lingotek
  * @preserve GlobalState disabled
  */
-class NestedEntityReferencesDetectorTest extends UnitTestCase {
+class NestedErViewmodeEntitiesDetectorTest extends UnitTestCase {
 
   /**
    * The class instance under test.
@@ -66,7 +66,7 @@ class NestedEntityReferencesDetectorTest extends UnitTestCase {
     $this->entityTypeManager = $this->createMock(EntityTypeManagerInterface::class);
     $this->entityFieldManager = $this->createMock(EntityFieldManagerInterface::class);
     $this->lingotekConfiguration = $this->createMock(LingotekConfigurationServiceInterface::class);
-    $this->detector = new NestedEntityReferencesDetector([], 'nested_entity_detector', [], $this->entityTypeManager, $this->entityFieldManager, $this->lingotekConfiguration);
+    $this->detector = new NestedErViewmodeEntitiesDetector([], 'nested_entity_detector', [], $this->entityTypeManager, $this->entityFieldManager, $this->lingotekConfiguration);
     $this->entityType = $this->createMock(ContentEntityTypeInterface::class);
     $this->entityType->expects($this->any())
       ->method('hasKey')
@@ -84,7 +84,7 @@ class NestedEntityReferencesDetectorTest extends UnitTestCase {
   }
 
   public function testConstruct() {
-    $detector = new NestedEntityReferencesDetector([], 'nested_entity_detector', [], $this->entityTypeManager, $this->entityFieldManager, $this->lingotekConfiguration);
+    $detector = new NestedErViewmodeEntitiesDetector([], 'nested_entity_detector', [], $this->entityTypeManager, $this->entityFieldManager, $this->lingotekConfiguration);
     $this->assertNotNull($detector);
   }
 
@@ -94,11 +94,11 @@ class NestedEntityReferencesDetectorTest extends UnitTestCase {
       ->method('get')
       ->withConsecutive(['entity_type.manager'], ['entity_field.manager'], ['lingotek.configuration'])
       ->willReturnOnConsecutiveCalls($this->entityTypeManager, $this->entityFieldManager, $this->lingotekConfiguration);
-    $detector = NestedEntityReferencesDetector::create($container, [], 'nested_entity_detector', []);
+    $detector = NestedErViewmodeEntitiesDetector::create($container, [], 'nested_entity_detector', []);
     $this->assertNotNull($detector);
   }
 
-  public function testRunWithoutNestedEntityReferenceFields() {
+  public function testRunWithoutNestedEntityReferenceRevisionFields() {
     $titleFieldDefinition = $this->createMock(BaseFieldDefinition::class);
     $titleFieldDefinition->expects($this->any())
       ->method('getName')
@@ -119,7 +119,7 @@ class NestedEntityReferencesDetectorTest extends UnitTestCase {
     $entities = [];
     $related = [];
     $visited = [];
-    $this->detector->run($entity, $entities, $related, 1, $visited);
+    $this->detector->extract($entity, $entities, $related, 1, $visited);
     $this->assertNotEmpty($entities);
   }
 
@@ -136,23 +136,23 @@ class NestedEntityReferencesDetectorTest extends UnitTestCase {
       ->willReturn('Title');
 
     $target_entity_type = $this->createMock(ContentEntityType::class);
-    $embedded_entity_reference = $this->createmock(ContentEntityInterface::class);
-    $embedded_entity_reference->expects($this->any())
+    $embedded_er_viewmode = $this->createmock(ContentEntityInterface::class);
+    $embedded_er_viewmode->expects($this->any())
       ->method('referencedEntities')
-      ->willReturn([$embedded_entity_reference]);
-    $embedded_entity_reference->expects($this->any())
+      ->willReturn([$embedded_er_viewmode]);
+    $embedded_er_viewmode->expects($this->any())
       ->method('bundle')
       ->willReturn($this->entityType->id());
-    $embedded_entity_reference->expects($this->any())
+    $embedded_er_viewmode->expects($this->any())
       ->method('id')
       ->willreturn(2);
-    $embedded_entity_reference->expects($this->once())
+    $embedded_er_viewmode->expects($this->once())
       ->method('isTranslatable')
       ->willReturn(TRUE);
-    $embedded_entity_reference->expects($this->any())
+    $embedded_er_viewmode->expects($this->any())
       ->method('getUntranslated')
-      ->willReturn('embbedded entity reference content');
-    $embedded_entity_reference->expects($this->any())
+      ->willReturn('embbedded er viewmode');
+    $embedded_er_viewmode->expects($this->any())
       ->method('getEntityTypeId')
       ->willReturn($this->entityType->id());
 
@@ -164,7 +164,7 @@ class NestedEntityReferencesDetectorTest extends UnitTestCase {
     $nestedEntityReferenceFieldDefinition = $this->createMock(BaseFieldDefinition::class);
     $nestedEntityReferenceFieldDefinition->expects($this->any())
       ->method('getType')
-      ->willReturn('entity_reference');
+      ->willReturn('er_viewmode');
     $nestedEntityReferenceFieldDefinition->expects($this->any())
       ->method('getName')
       ->willReturn('Nested Reference');
@@ -180,7 +180,7 @@ class NestedEntityReferencesDetectorTest extends UnitTestCase {
       ->method('getFieldDefinitions')
       ->willReturn([
         'title' => $titleFieldDefinition,
-        'entity_reference' => $nestedEntityReferenceFieldDefinition,
+        'er_viewmode' => $nestedEntityReferenceFieldDefinition,
       ]);
 
     $entity = $this->createMock(ContentEntityInterface::class);
@@ -196,42 +196,42 @@ class NestedEntityReferencesDetectorTest extends UnitTestCase {
     $entity->expects($this->any())
       ->method('getUntranslated')
       ->willReturn(['title' => 'entity content']);
-    $entity->entity_reference = $embedded_entity_reference;
+    $entity->er_viewmode = $embedded_er_viewmode;
 
     $entities = [];
     $related = [];
     $visited = [];
-    $this->detector->run($entity, $entities, $related, 2, $visited);
+    $this->detector->extract($entity, $entities, $related, 2, $visited);
     $this->assertNotEmpty($entities);
     $this->assertNotEmpty($related);
   }
 
-  public function testRunWithNonTranslatableNestedEntityReferenceFields() {
+  public function testRunWithNonTranslatableNestedCohesionEntityReferenceFields() {
     $titleFieldDefinition = $this->createMock(BaseFieldDefinition::class);
     $titleFieldDefinition->expects($this->any())
       ->method('getName')
       ->willReturn('Title');
 
     $target_entity_type = $this->createMock(ContentEntityType::class);
-    $embedded_entity_reference = $this->createmock(ContentEntityInterface::class);
-    $embedded_entity_reference->expects($this->any())
+    $embedded_er_viewmode = $this->createmock(ContentEntityInterface::class);
+    $embedded_er_viewmode->expects($this->any())
       ->method('referencedEntities')
-      ->willReturn([$embedded_entity_reference]);
-    $embedded_entity_reference->expects($this->any())
+      ->willReturn([$embedded_er_viewmode]);
+    $embedded_er_viewmode->expects($this->any())
       ->method('bundle')
       ->willReturn($this->entityType->id());
-    $embedded_entity_reference->expects($this->any())
+    $embedded_er_viewmode->expects($this->any())
       ->method('id')
       ->willreturn(2);
-    $embedded_entity_reference->expects($this->once())
+    $embedded_er_viewmode->expects($this->any())
       ->method('isTranslatable')
       ->willReturn(FALSE);
-    $embedded_entity_reference->expects($this->any())
+    $embedded_er_viewmode->expects($this->any())
       ->method('getUntranslated')
       ->willReturn('embbedded entity reference content');
-    $embedded_entity_reference->expects($this->any())
+    $embedded_er_viewmode->expects($this->any())
       ->method('getEntityTypeId')
-      ->willReturn($this->entityType->id());
+      ->willReturn('er_$embedded_er_viewmode');
 
     $nestedEntityReferenceFieldStorageDefinition = $this->createMock(FieldStorageDefinition::class);
     $nestedEntityReferenceFieldStorageDefinition->expects($this->any())
@@ -241,7 +241,7 @@ class NestedEntityReferencesDetectorTest extends UnitTestCase {
     $nestedEntityReferenceFieldDefinition = $this->createMock(BaseFieldDefinition::class);
     $nestedEntityReferenceFieldDefinition->expects($this->any())
       ->method('getType')
-      ->willReturn('entity_reference');
+      ->willReturn('er_$embedded_er_viewmode');
     $nestedEntityReferenceFieldDefinition->expects($this->any())
       ->method('getName')
       ->willReturn('Nested Reference');
@@ -257,7 +257,7 @@ class NestedEntityReferencesDetectorTest extends UnitTestCase {
       ->method('getFieldDefinitions')
       ->willReturn([
         'title' => $titleFieldDefinition,
-        'entity_reference' => $nestedEntityReferenceFieldDefinition,
+        'er_$embedded_er_viewmode' => $nestedEntityReferenceFieldDefinition,
       ]);
 
     $entity = $this->createMock(ContentEntityInterface::class);
@@ -273,12 +273,12 @@ class NestedEntityReferencesDetectorTest extends UnitTestCase {
     $entity->expects($this->any())
       ->method('getUntranslated')
       ->willReturn(['title' => 'entity content']);
-    $entity->entity_reference = $embedded_entity_reference;
+    $entity->er_viewmode = $embedded_er_viewmode;
 
     $entities = [];
     $related = [];
     $visited = [];
-    $this->detector->run($entity, $entities, $related, 2, $visited);
+    $this->detector->extract($entity, $entities, $related, 2, $visited);
     $this->assertNotEmpty($entities);
     $this->assertLessThan(2, count($entities));
   }

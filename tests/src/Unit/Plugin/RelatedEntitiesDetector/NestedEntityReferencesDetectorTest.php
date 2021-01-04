@@ -10,18 +10,18 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\entity_test\FieldStorageDefinition;
 use Drupal\lingotek\LingotekConfigurationServiceInterface;
-use Psr\Container\ContainerInterface;
-use Drupal\lingotek\Plugin\RelatedEntitiesDetector\NestedCohesionEntityReferenceRevisionsDetector;
+use Drupal\lingotek\Plugin\RelatedEntitiesDetector\NestedEntityReferencesDetector;
 use Drupal\Tests\UnitTestCase;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Unit test for the nested entity references revisions detector plugin
+ * Unit test for the nested entitiy detector plugin
  *
- * @covers DefaultClass \Drupal\lingotek\Plugin\RelatedEntitiesDetector\NestedCohesionEntityReferenceRevisionsDetector
+ * @covers DefaultClass \Drupal\lingotek\Plugin\RelatedEntitiesDetector\NestedEntitiesDetector
  * @group lingotek
  * @preserve GlobalState disabled
  */
-class NestedCohesionEntityReferenceRevisionsDetectorTest extends UnitTestCase {
+class NestedEntityReferencesDetectorTest extends UnitTestCase {
 
   /**
    * The class instance under test.
@@ -66,7 +66,7 @@ class NestedCohesionEntityReferenceRevisionsDetectorTest extends UnitTestCase {
     $this->entityTypeManager = $this->createMock(EntityTypeManagerInterface::class);
     $this->entityFieldManager = $this->createMock(EntityFieldManagerInterface::class);
     $this->lingotekConfiguration = $this->createMock(LingotekConfigurationServiceInterface::class);
-    $this->detector = new NestedCohesionEntityReferenceRevisionsDetector([], 'nested_entity_detector', [], $this->entityTypeManager, $this->entityFieldManager, $this->lingotekConfiguration);
+    $this->detector = new NestedEntityReferencesDetector([], 'nested_entity_detector', [], $this->entityTypeManager, $this->entityFieldManager, $this->lingotekConfiguration);
     $this->entityType = $this->createMock(ContentEntityTypeInterface::class);
     $this->entityType->expects($this->any())
       ->method('hasKey')
@@ -84,7 +84,7 @@ class NestedCohesionEntityReferenceRevisionsDetectorTest extends UnitTestCase {
   }
 
   public function testConstruct() {
-    $detector = new NestedCohesionEntityReferenceRevisionsDetector([], 'nested_entity_detector', [], $this->entityTypeManager, $this->entityFieldManager, $this->lingotekConfiguration);
+    $detector = new NestedEntityReferencesDetector([], 'nested_entity_detector', [], $this->entityTypeManager, $this->entityFieldManager, $this->lingotekConfiguration);
     $this->assertNotNull($detector);
   }
 
@@ -94,11 +94,11 @@ class NestedCohesionEntityReferenceRevisionsDetectorTest extends UnitTestCase {
       ->method('get')
       ->withConsecutive(['entity_type.manager'], ['entity_field.manager'], ['lingotek.configuration'])
       ->willReturnOnConsecutiveCalls($this->entityTypeManager, $this->entityFieldManager, $this->lingotekConfiguration);
-    $detector = NestedCohesionEntityReferenceRevisionsDetector::create($container, [], 'nested_entity_detector', []);
+    $detector = NestedEntityReferencesDetector::create($container, [], 'nested_entity_detector', []);
     $this->assertNotNull($detector);
   }
 
-  public function testRunWithoutNestedCohesionEntityReferenceRevisionFields() {
+  public function testRunWithoutNestedEntityReferenceFields() {
     $titleFieldDefinition = $this->createMock(BaseFieldDefinition::class);
     $titleFieldDefinition->expects($this->any())
       ->method('getName')
@@ -119,11 +119,11 @@ class NestedCohesionEntityReferenceRevisionsDetectorTest extends UnitTestCase {
     $entities = [];
     $related = [];
     $visited = [];
-    $this->detector->run($entity, $entities, $related, 1, $visited);
+    $this->detector->extract($entity, $entities, $related, 1, $visited);
     $this->assertNotEmpty($entities);
   }
 
-  public function testRunWithLingotekEnabledNestedCohesionEntityReferenceField() {
+  public function testRunWithLingotekEnabledNestedEntityReferenceField() {
     $this->lingotekConfiguration->expects($this->once())
       ->method('isFieldLingotekEnabled')
       ->willReturn(TRUE);
@@ -136,25 +136,25 @@ class NestedCohesionEntityReferenceRevisionsDetectorTest extends UnitTestCase {
       ->willReturn('Title');
 
     $target_entity_type = $this->createMock(ContentEntityType::class);
-    $embedded_cohesion_entity_reference_revisions = $this->createmock(ContentEntityInterface::class);
-    $embedded_cohesion_entity_reference_revisions->expects($this->any())
+    $embedded_entity_reference = $this->createmock(ContentEntityInterface::class);
+    $embedded_entity_reference->expects($this->any())
       ->method('referencedEntities')
-      ->willReturn([$embedded_cohesion_entity_reference_revisions]);
-    $embedded_cohesion_entity_reference_revisions->expects($this->any())
+      ->willReturn([$embedded_entity_reference]);
+    $embedded_entity_reference->expects($this->any())
       ->method('bundle')
       ->willReturn($this->entityType->id());
-    $embedded_cohesion_entity_reference_revisions->expects($this->any())
+    $embedded_entity_reference->expects($this->any())
       ->method('id')
       ->willreturn(2);
-    $embedded_cohesion_entity_reference_revisions->expects($this->once())
+    $embedded_entity_reference->expects($this->once())
       ->method('isTranslatable')
       ->willReturn(TRUE);
-    $embedded_cohesion_entity_reference_revisions->expects($this->any())
+    $embedded_entity_reference->expects($this->any())
       ->method('getUntranslated')
-      ->willReturn('embbedded cohesion entity reference revisions');
-    $embedded_cohesion_entity_reference_revisions->expects($this->any())
+      ->willReturn('embbedded entity reference content');
+    $embedded_entity_reference->expects($this->any())
       ->method('getEntityTypeId')
-      ->willReturn('cohesion_entity_reference_revisions');
+      ->willReturn($this->entityType->id());
 
     $nestedEntityReferenceFieldStorageDefinition = $this->createMock(FieldStorageDefinition::class);
     $nestedEntityReferenceFieldStorageDefinition->expects($this->any())
@@ -164,7 +164,7 @@ class NestedCohesionEntityReferenceRevisionsDetectorTest extends UnitTestCase {
     $nestedEntityReferenceFieldDefinition = $this->createMock(BaseFieldDefinition::class);
     $nestedEntityReferenceFieldDefinition->expects($this->any())
       ->method('getType')
-      ->willReturn('cohesion_entity_reference_revisions');
+      ->willReturn('entity_reference');
     $nestedEntityReferenceFieldDefinition->expects($this->any())
       ->method('getName')
       ->willReturn('Nested Reference');
@@ -180,7 +180,7 @@ class NestedCohesionEntityReferenceRevisionsDetectorTest extends UnitTestCase {
       ->method('getFieldDefinitions')
       ->willReturn([
         'title' => $titleFieldDefinition,
-        'cohesion_entity_reference_revisions' => $nestedEntityReferenceFieldDefinition,
+        'entity_reference' => $nestedEntityReferenceFieldDefinition,
       ]);
 
     $entity = $this->createMock(ContentEntityInterface::class);
@@ -196,43 +196,42 @@ class NestedCohesionEntityReferenceRevisionsDetectorTest extends UnitTestCase {
     $entity->expects($this->any())
       ->method('getUntranslated')
       ->willReturn(['title' => 'entity content']);
-    $entity->cohesion_entity_reference_revisions = $embedded_cohesion_entity_reference_revisions;
+    $entity->entity_reference = $embedded_entity_reference;
 
     $entities = [];
     $related = [];
     $visited = [];
-    $this->detector->run($entity, $entities, $related, 2, $visited);
+    $this->detector->extract($entity, $entities, $related, 2, $visited);
     $this->assertNotEmpty($entities);
     $this->assertNotEmpty($related);
-    $this->assertArrayHasKey('cohesion_entity_reference_revisions', $related);
   }
 
-  public function testRunWithNonTranslatableNestedCohesionEntityReferenceFields() {
+  public function testRunWithNonTranslatableNestedEntityReferenceFields() {
     $titleFieldDefinition = $this->createMock(BaseFieldDefinition::class);
     $titleFieldDefinition->expects($this->any())
       ->method('getName')
       ->willReturn('Title');
 
     $target_entity_type = $this->createMock(ContentEntityType::class);
-    $embedded_cohesion_entity_reference = $this->createmock(ContentEntityInterface::class);
-    $embedded_cohesion_entity_reference->expects($this->any())
+    $embedded_entity_reference = $this->createmock(ContentEntityInterface::class);
+    $embedded_entity_reference->expects($this->any())
       ->method('referencedEntities')
-      ->willReturn([$embedded_cohesion_entity_reference]);
-    $embedded_cohesion_entity_reference->expects($this->any())
+      ->willReturn([$embedded_entity_reference]);
+    $embedded_entity_reference->expects($this->any())
       ->method('bundle')
       ->willReturn($this->entityType->id());
-    $embedded_cohesion_entity_reference->expects($this->any())
+    $embedded_entity_reference->expects($this->any())
       ->method('id')
       ->willreturn(2);
-    $embedded_cohesion_entity_reference->expects($this->any())
+    $embedded_entity_reference->expects($this->once())
       ->method('isTranslatable')
       ->willReturn(FALSE);
-    $embedded_cohesion_entity_reference->expects($this->any())
+    $embedded_entity_reference->expects($this->any())
       ->method('getUntranslated')
       ->willReturn('embbedded entity reference content');
-    $embedded_cohesion_entity_reference->expects($this->any())
+    $embedded_entity_reference->expects($this->any())
       ->method('getEntityTypeId')
-      ->willReturn('cohesion_entity_reference');
+      ->willReturn($this->entityType->id());
 
     $nestedEntityReferenceFieldStorageDefinition = $this->createMock(FieldStorageDefinition::class);
     $nestedEntityReferenceFieldStorageDefinition->expects($this->any())
@@ -242,7 +241,7 @@ class NestedCohesionEntityReferenceRevisionsDetectorTest extends UnitTestCase {
     $nestedEntityReferenceFieldDefinition = $this->createMock(BaseFieldDefinition::class);
     $nestedEntityReferenceFieldDefinition->expects($this->any())
       ->method('getType')
-      ->willReturn('cohesion_entity_reference');
+      ->willReturn('entity_reference');
     $nestedEntityReferenceFieldDefinition->expects($this->any())
       ->method('getName')
       ->willReturn('Nested Reference');
@@ -258,7 +257,7 @@ class NestedCohesionEntityReferenceRevisionsDetectorTest extends UnitTestCase {
       ->method('getFieldDefinitions')
       ->willReturn([
         'title' => $titleFieldDefinition,
-        'cohesion_entity_reference' => $nestedEntityReferenceFieldDefinition,
+        'entity_reference' => $nestedEntityReferenceFieldDefinition,
       ]);
 
     $entity = $this->createMock(ContentEntityInterface::class);
@@ -274,12 +273,12 @@ class NestedCohesionEntityReferenceRevisionsDetectorTest extends UnitTestCase {
     $entity->expects($this->any())
       ->method('getUntranslated')
       ->willReturn(['title' => 'entity content']);
-    $entity->cohesion_entity_reference = $embedded_cohesion_entity_reference;
+    $entity->entity_reference = $embedded_entity_reference;
 
     $entities = [];
     $related = [];
     $visited = [];
-    $this->detector->run($entity, $entities, $related, 2, $visited);
+    $this->detector->extract($entity, $entities, $related, 2, $visited);
     $this->assertNotEmpty($entities);
     $this->assertLessThan(2, count($entities));
   }
