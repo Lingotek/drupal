@@ -96,7 +96,7 @@ class NestedEntityReferenceRevisionsDetector extends PluginBase implements Relat
             ->getSetting('target_type');
           $target_entity_type = $this->entityTypeManager->getDefinition($target_entity_type_id);
           if ($target_entity_type instanceof ContentEntityType) {
-            $child_entities = $entity->{$k}->referencedEntities();
+            $child_entities = $entity->get($k)->referencedEntities();
             foreach ($child_entities as $embedded_entity) {
               if ($embedded_entity !== NULL) {
                 // We need to avoid cycles if we have several entity references
