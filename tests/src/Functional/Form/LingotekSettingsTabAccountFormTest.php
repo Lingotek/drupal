@@ -36,7 +36,7 @@ class LingotekSettingsTabAccountFormTest extends LingotekTestBase {
     $this->assertTableValue('status', 'Active');
     $this->assertTableValue('plan', 'No');
     $this->assertTableValue('activation', 'testUser@example.com');
-    $this->assertTableValue('token', 'test_token');
+    $this->assertTableValue('token', 'ef4b4d69-5be2-4513-b4f1-7e0f6f9511a0');
     $this->assertTableValue('community', 'Test community (test_community)');
     $this->assertTableValue('workflow', 'Test workflow (test_workflow)');
     $this->assertTableValue('project', 'Test project (test_project)');
@@ -61,7 +61,7 @@ class LingotekSettingsTabAccountFormTest extends LingotekTestBase {
     $this->assertTableValue('status', 'Active');
     $this->assertTableValue('plan', 'No');
     $this->assertTableValue('activation', 'testUser@example.com');
-    $this->assertTableValue('token', 'test_token');
+    $this->assertTableValue('token', 'ef4b4d69-5be2-4513-b4f1-7e0f6f9511a0');
     $this->assertTableValue('community', 'Test community 2 (test_community2)');
     $this->assertTableValue('workflow', 'Test workflow 2 (test_workflow2)');
     $this->assertTableValue('project', 'Test project 2 (test_project2)');

@@ -76,8 +76,9 @@ class LingotekApi implements LingotekApiInterface {
   public function getAccountInfo() {
     try {
       $access_token = $this->lingotekClient->getCurrentToken();
-      $this->logger->debug('Starting account info request: /auth/oauth2/access_token_info?access_token=%token', ['%token' => $access_token]);
-      $response = $this->lingotekClient->get('/auth/oauth2/access_token_info?access_token=' . $access_token);
+      $trimmed_token = $access_token ? substr($access_token, 0, 8) . '…' : '';
+      $this->logger->debug('Starting account info request: /auth/oauth2/access_token_info Token: %token', ['%token' => $trimmed_token]);
+      $response = $this->lingotekClient->get('/auth/oauth2/access_token_info');
     }
     catch (\Exception $e) {
       $this->logger->error('Error requesting account info: %message.', ['%message' => $e->getMessage()]);
