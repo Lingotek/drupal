@@ -101,7 +101,7 @@ class LingotekSettingsTabAccountFormTest extends UnitTestCase {
       ->method('get')
       ->willReturnMap([
         ['account.login_id', 'test@example.com'],
-        ['account.access_token', 'my-token'],
+        ['account.access_token', 'ef4b4d69-5be2-4513-b4f1-7e0f6f9511a0'],
       ]);
     $this->configFactory->expects($this->once())
       ->method('get')
@@ -117,7 +117,7 @@ class LingotekSettingsTabAccountFormTest extends UnitTestCase {
     $build = [];
     $form_state = $this->createMock(FormStateInterface::class);
     $build = $this->form->buildForm($build, $form_state);
-    $this->assertSame('my-token', $build['account']['account_table']['token_row'][1]['#markup']);
+    $this->assertSame('ef4b4d69-5be2-4513-b4f1-7e0f6f9511a0', $build['account']['account_table']['token_row'][1]['#markup']);
   }
 
   /**

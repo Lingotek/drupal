@@ -98,7 +98,7 @@ class LingotekSettingsConnectFormTest extends UnitTestCase {
       ->method('get')
       ->willReturnMap([
         ['account.login_id', 'test@example.com'],
-        ['account.access_token', 'my-token'],
+        ['account.access_token', 'ef4b4d69-5be2-4513-b4f1-7e0f6f9511a0'],
         ['account.default_client_id', 'my-client-id'],
         ['account.host', 'http://example.com'],
       ]);

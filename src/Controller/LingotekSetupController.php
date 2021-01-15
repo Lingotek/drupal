@@ -12,6 +12,8 @@ use Drupal\lingotek\Form\LingotekSettingsDefaultsForm;
  */
 class LingotekSetupController extends LingotekControllerBase {
 
+  public const LINGOTEK_TOKEN_COOKIE = 'lingotek_access_token';
+
   /**
    * Presents a connection page to Lingotek Services
    *
@@ -29,8 +31,9 @@ class LingotekSetupController extends LingotekControllerBase {
   }
 
   public function handshake() {
-    if ($this->receivedToken()) {
-      $this->saveToken($this->receivedToken());
+    if ($token = $this->getAccessToken()) {
+      $this->saveToken($token);
+      $this->deleteAccessTokenCookie();
       $config = \Drupal::configFactory()->getEditable('lingotek.settings');
       $config->set('account.use_production', TRUE)->save();
       $account_info = $this->fetchAccountInfo();
@@ -106,8 +109,12 @@ class LingotekSetupController extends LingotekControllerBase {
     ];
   }
 
-  protected function receivedToken() {
-    return $this->request->get('access_token');
+  protected function getAccessToken() {
+    return $this->request->cookies->get(static::LINGOTEK_TOKEN_COOKIE);
+  }
+
+  protected function deleteAccessTokenCookie() {
+    setcookie(static::LINGOTEK_TOKEN_COOKIE, '', time() - 60);
   }
 
   protected function saveToken($token) {
