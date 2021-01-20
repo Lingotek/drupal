@@ -1287,6 +1287,15 @@ class LingotekConfigBulkFormTest extends LingotekTestBase {
     foreach (range(1, 9) as $j) {
       $this->assertText('Content Type ' . $indexes[$j]);
     }
+    // If we filter with extra spaces, we still show configs.
+    $edit = [
+      'filters[wrapper][label]' => '  even   ',
+    ];
+    $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
+    foreach ([1, 3, 5, 7, 9] as $j) {
+      $this->assertText('Content Type ' . $indexes[$j]);
+    }
+    $this->assertFieldByName('filters[wrapper][label]', 'even', 'The value is trimmed in the filter.');
   }
 
   /**

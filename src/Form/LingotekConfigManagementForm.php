@@ -399,7 +399,7 @@ class LingotekConfigManagementForm extends FormBase {
     $temp_store = $this->getFilterTempStore();
     $temp_store->set('bundle', $value);
     $temp_store->set('job', $job_id);
-    $temp_store->set('label', $label);
+    $temp_store->set('label', trim($label));
     $this->filter = $value;
     // If we apply any filters, we need to go to the first page again.
     $form_state->setRedirect('<current>');

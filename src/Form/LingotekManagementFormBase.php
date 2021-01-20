@@ -452,7 +452,11 @@ abstract class LingotekManagementFormBase extends FormBase {
     /** @var \Drupal\user\PrivateTempStore $temp_store */
     $temp_store = $this->tempStoreFactory->get($this->getTempStorageFilterKey());
     $keys = $this->getFilterKeys();
+    $trimmableKeys = ['label'];
     foreach ($keys as $key) {
+      if (in_array($key[1], $trimmableKeys)) {
+        $form_state->setValue(['filters', $key[0], $key[1]], trim($form_state->getValue(['filters', $key[0], $key[1]])));
+      }
       // This sets and gets the values of the specific key. $key[0] can be either 'wrapper' or 'advanced_filters', and $key[1] is the specific filter itself.
       $temp_store->set($key[1], $form_state->getValue(['filters', $key[0], $key[1]]));
     }

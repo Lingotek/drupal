@@ -403,6 +403,16 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     }
 
     $assert_session->linkByHrefExists('?page=1');
+
+    // If we filter with extra spaces, we still show content.
+    $edit = [
+      'filters[wrapper][label]' => '  Cats   ',
+    ];
+    $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
+    foreach ([3, 9] as $j) {
+      $assert_session->linkExists('Cats are cool ' . $j);
+    }
+    $this->assertFieldByName('filters[wrapper][label]', 'Cats', 'The value is trimmed in the filter.');
   }
 
   /**
