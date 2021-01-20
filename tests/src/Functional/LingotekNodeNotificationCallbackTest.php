@@ -801,6 +801,10 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
    * Tests that a node can be translated using the links on the management page.
    */
   public function testProfileTargetOverridesNotificationNodeTranslation() {
+    ConfigurableLanguage::createFromLangcode('de')->save();
+    ConfigurableLanguage::createFromLangcode('it')->save();
+    ConfigurableLanguage::createFromLangcode('ca')->setThirdPartySetting('lingotek', 'locale', 'ca_ES')->save();
+
     $profile = LingotekProfile::create([
       'id' => 'profile2',
       'label' => 'Profile with overrides',
@@ -816,12 +820,12 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
             'auto_download' => FALSE,
           ],
         ],
+        'ca' => [
+          'overrides' => 'disabled',
+        ],
       ],
     ]);
     $profile->save();
-
-    ConfigurableLanguage::createFromLangcode('de')->save();
-    ConfigurableLanguage::createFromLangcode('it')->save();
 
     // Login as admin.
     $this->drupalLogin($this->rootUser);
@@ -874,6 +878,9 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     // Assert the target is pending.
     $this->assertIdentical(Lingotek::STATUS_REQUEST, $content_translation_service->getTargetStatus($node, 'es'));
     $this->assertIdentical(Lingotek::STATUS_PENDING, $content_translation_service->getTargetStatus($node, 'de'));
+    // We assert for the UI, as the status is not really stored.
+    // TODO: This should actually be stored.
+    $this->assertTargetStatus('ca', Lingotek::STATUS_DISABLED);
 
     $this->goToContentBulkManagementForm();
     // Request Spanish manually.
@@ -901,6 +908,30 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     ]);
     $response = json_decode($request->getBody(), TRUE);
     $this->verbose($request);
+    $this->assertEmpty($response['result']['download'], 'No translations has been downloaded after notification automatically.');
+
+    // Simulate the notification of content successfully translated.
+    $url = Url::fromRoute('lingotek.notify', [], [
+      'query' => [
+        'project_id' => 'test_project',
+        'document_id' => 'dummy-document-hash-id',
+        'locale_code' => 'ca-ES',
+        'locale' => 'ca_ES',
+        'complete' => 'true',
+        'type' => 'target',
+        'progress' => '100',
+      ],
+    ])->setAbsolute()->toString();
+    $request = $this->client->post($url, [
+      'body' => http_build_query([]),
+      'cookies' => $this->cookies,
+      'headers' => [
+        'Accept' => 'application/json',
+        'Content-Type' => 'application/json',
+      ],
+      'http_errors' => FALSE,
+    ]);
+    $response = json_decode($request->getBody(), TRUE);
     $this->assertEmpty($response['result']['download'], 'No translations has been downloaded after notification automatically.');
 
     $url = Url::fromRoute('lingotek.notify', [], [
@@ -933,6 +964,9 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     // Assert the target is ready.
     $this->assertIdentical(Lingotek::STATUS_READY, $content_translation_service->getTargetStatus($node, 'es'));
     $this->assertIdentical(Lingotek::STATUS_CURRENT, $content_translation_service->getTargetStatus($node, 'de'));
+    // We assert for the UI, as the status is not really stored.
+    // TODO: This should actually be stored.
+    $this->assertTargetStatus('ca', Lingotek::STATUS_DISABLED);
 
     // Go to the bulk node management page and download them.
     $this->goToContentBulkManagementForm();

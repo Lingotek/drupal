@@ -144,6 +144,11 @@ class RenderElementTypesTest extends LingotekTestBase {
     $this->drupalGet('/lingotek_form_test/lingotek_translation_statuses/node/1');
     $this->assertSession()->responseContains('lingotek/css/base.css');
     $this->assertSession()->responseContains('<a href="' . $basepath . '/admin/lingotek/entity/download/test-document-id/es_ES?destination=' . $basepath . '/lingotek_form_test/lingotek_translation_statuses/node/1" class="language-icon target-error" title="Spanish - Error">ES</a>');
+
+    $translation_service->setTargetStatus($entity, 'es', Lingotek::STATUS_DISABLED);
+    $this->drupalGet('/lingotek_form_test/lingotek_translation_statuses/node/1');
+    $this->assertSession()->responseContains('lingotek/css/base.css');
+    $this->assertSession()->responseContains('<span class="language-icon target-disabled" title="Spanish - Disabled">ES</span>');
   }
 
   /**
@@ -190,6 +195,11 @@ class RenderElementTypesTest extends LingotekTestBase {
     $this->drupalGet('/lingotek_form_test/lingotek_translation_status/node/1');
     $this->assertSession()->responseContains('lingotek/css/base.css');
     $this->assertSession()->responseContains('<a href="' . $basepath . '/admin/lingotek/entity/download/test-document-id/es_ES?destination=' . $basepath . '/lingotek_form_test/lingotek_translation_status/node/1" class="language-icon target-error" title="Spanish - Error">ES</a>');
+
+    $translation_service->setTargetStatus($entity, 'es', Lingotek::STATUS_DISABLED);
+    $this->drupalGet('/lingotek_form_test/lingotek_translation_status/node/1');
+    $this->assertSession()->responseContains('lingotek/css/base.css');
+    $this->assertSession()->responseContains('<span class="language-icon target-disabled" title="Spanish - Disabled">ES</span>');
   }
 
 }

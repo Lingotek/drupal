@@ -174,6 +174,9 @@ class LingotekTargetStatuses extends RenderElement {
     $language = ConfigurableLanguage::load($langcode);
 
     switch ($status) {
+      case Lingotek::STATUS_DISABLED:
+        return $language->label() . ' - ' . $this->t('Disabled');
+
       case Lingotek::STATUS_UNTRACKED:
         return $language->label() . ' - ' . $this->t('Translation exists, but it is not being tracked by Lingotek');
 
@@ -264,6 +267,9 @@ class LingotekTargetStatuses extends RenderElement {
           ],
           ['query' => $this->getDestinationWithQueryArray()]);
       }
+      if ($target_status == Lingotek::STATUS_DISABLED) {
+        $url = NULL;
+      }
     }
     return $url;
   }
@@ -318,6 +324,9 @@ class LingotekTargetStatuses extends RenderElement {
                 'locale' => $locale,
               ] + $this->getDestinationWithQueryArray(),
           ]);
+      }
+      if ($target_status == Lingotek::STATUS_DISABLED) {
+        $url = NULL;
       }
     }
     return $url;

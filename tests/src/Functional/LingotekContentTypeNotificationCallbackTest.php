@@ -865,6 +865,10 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
    * Tests that a node can be translated using the links on the management page.
    */
   public function testProfileTargetOverridesNotificationContentTypeTranslation() {
+    ConfigurableLanguage::createFromLangcode('de')->save();
+    ConfigurableLanguage::createFromLangcode('it')->save();
+    ConfigurableLanguage::createFromLangcode('ca')->setThirdPartySetting('lingotek', 'locale', 'ca_ES')->save();
+
     $profile = LingotekProfile::create([
       'id' => 'profile2',
       'label' => 'Profile with overrides',
@@ -880,12 +884,12 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
             'auto_download' => FALSE,
           ],
         ],
+        'ca' => [
+          'overrides' => 'disabled',
+        ],
       ],
     ]);
     $profile->save();
-
-    ConfigurableLanguage::createFromLangcode('de')->save();
-    ConfigurableLanguage::createFromLangcode('it')->save();
 
     // Login as admin.
     $this->drupalLogin($this->rootUser);
@@ -952,6 +956,9 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
     // Assert the target is pending.
     $this->assertIdentical(Lingotek::STATUS_REQUEST, $config_translation_service->getTargetStatus($entity, 'es'));
     $this->assertIdentical(Lingotek::STATUS_PENDING, $config_translation_service->getTargetStatus($entity, 'de'));
+    // We assert for the UI, as the status is not really stored.
+    // TODO: This should actually be stored.
+    $this->assertTargetStatus('ca', Lingotek::STATUS_DISABLED);
 
     // Go to the bulk config management page.
     $this->goToConfigBulkManagementForm();
@@ -965,6 +972,30 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
         'document_id' => 'dummy-document-hash-id',
         'locale_code' => 'es-ES',
         'locale' => 'es_ES',
+        'complete' => 'true',
+        'type' => 'target',
+        'progress' => '100',
+      ],
+    ])->setAbsolute()->toString();
+    $request = $this->client->post($url, [
+      'body' => http_build_query([]),
+      'cookies' => $this->cookies,
+      'headers' => [
+        'Accept' => 'application/json',
+        'Content-Type' => 'application/json',
+      ],
+      'http_errors' => FALSE,
+    ]);
+    $response = json_decode($request->getBody(), TRUE);
+    $this->assertEmpty($response['result']['download'], 'No translations has been downloaded after notification automatically.');
+
+    // Simulate the notification of content successfully translated.
+    $url = Url::fromRoute('lingotek.notify', [], [
+      'query' => [
+        'project_id' => 'test_project',
+        'document_id' => 'dummy-document-hash-id',
+        'locale_code' => 'ca-ES',
+        'locale' => 'ca_ES',
         'complete' => 'true',
         'type' => 'target',
         'progress' => '100',
@@ -1014,6 +1045,9 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
     // Assert the target is ready.
     $this->assertIdentical(Lingotek::STATUS_READY, $config_translation_service->getTargetStatus($entity, 'es'));
     $this->assertIdentical(Lingotek::STATUS_CURRENT, $config_translation_service->getTargetStatus($entity, 'de'));
+    // We assert for the UI, as the status is not really stored.
+    // TODO: This should actually be stored.
+    $this->assertTargetStatus('ca', Lingotek::STATUS_DISABLED);
 
     // Go to the bulk config management page.
     $this->goToConfigBulkManagementForm();

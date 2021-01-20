@@ -1492,6 +1492,17 @@ class LingotekConfigManagementForm extends FormBase {
       $this->translationService->getTargetStatuses($entity) :
       $this->translationService->getConfigTargetStatuses($mapper);
 
+    /** @var \Drupal\lingotek\LingotekProfileInterface $profile */
+    $profile = $mapper instanceof ConfigEntityMapper ?
+      $this->lingotekConfiguration->getConfigEntityProfile($entity, TRUE) :
+      $this->lingotekConfiguration->getConfigProfile($mapper->getPluginId());
+
+    array_walk($translations_statuses, function (&$status, $langcode) use ($entity, $profile) {
+      if ($profile !== NULL && $profile->hasDisabledTarget($langcode)) {
+        $status = Lingotek::STATUS_DISABLED;
+      }
+    });
+
     foreach ($languages as $langcode => $language) {
       // Show the untracked translations in the bulk management form, unless it's the
       // source one.
@@ -1522,13 +1533,22 @@ class LingotekConfigManagementForm extends FormBase {
         }
       }
     }
-    array_walk($languages, function ($language, $langcode) use ($document_id, $mapper, &$translations) {
+    array_walk($languages, function ($language, $langcode) use ($document_id, $mapper, &$translations, $profile) {
       if ($document_id && !isset($translations[$langcode]) && $langcode !== $mapper->getLangcode()) {
-        $translations[$langcode] = [
-          'status' => Lingotek::STATUS_REQUEST,
-          'url' => $this->getTargetActionUrl($mapper, Lingotek::STATUS_REQUEST, $langcode),
-          'new_window' => FALSE,
-        ];
+        if ($profile !== NULL && $profile->hasDisabledTarget($langcode)) {
+          $translations[$langcode] = [
+            'status' => Lingotek::STATUS_DISABLED,
+            'url' => NULL,
+            'new_window' => FALSE,
+          ];
+        }
+        else {
+          $translations[$langcode] = [
+            'status' => Lingotek::STATUS_REQUEST,
+            'url' => $this->getTargetActionUrl($mapper, Lingotek::STATUS_REQUEST, $langcode),
+            'new_window' => FALSE,
+          ];
+        }
       }
     });
     ksort($translations);

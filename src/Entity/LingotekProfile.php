@@ -816,8 +816,6 @@ class LingotekProfile extends ConfigEntityBase implements LingotekProfileInterfa
     return $this;
   }
 
-  // ToDo: Avoid deletion if this profile is being used.
-
   /**
    * {@inheritdoc}
    */
@@ -825,6 +823,9 @@ class LingotekProfile extends ConfigEntityBase implements LingotekProfileInterfa
     $workflow = $this->getWorkflow();
     if ($this->hasCustomSettingsForTarget($langcode) && isset($this->language_overrides[$langcode]['custom']['workflow'])) {
       $workflow = $this->language_overrides[$langcode]['custom']['workflow'];
+    }
+    if ($this->hasDisabledTarget($langcode)) {
+      $workflow = NULL;
     }
     return $workflow;
   }
@@ -845,6 +846,9 @@ class LingotekProfile extends ConfigEntityBase implements LingotekProfileInterfa
     if (isset($this->language_overrides[$langcode]) && $this->hasCustomSettingsForTarget($langcode)) {
       $auto_request = $this->language_overrides[$langcode]['custom']['auto_request'];
     }
+    if ($this->hasDisabledTarget($langcode)) {
+      $auto_request = FALSE;
+    }
     return $auto_request;
   }
 
@@ -864,6 +868,9 @@ class LingotekProfile extends ConfigEntityBase implements LingotekProfileInterfa
     if (isset($this->language_overrides[$langcode]) && $this->hasCustomSettingsForTarget($langcode)) {
       $auto_download = $this->language_overrides[$langcode]['custom']['auto_download'];
     }
+    if ($this->hasDisabledTarget($langcode)) {
+      $auto_download = FALSE;
+    }
     return $auto_download;
   }
 
@@ -880,6 +887,13 @@ class LingotekProfile extends ConfigEntityBase implements LingotekProfileInterfa
    */
   public function hasCustomSettingsForTarget($langcode) {
     return isset($this->language_overrides[$langcode]) && $this->language_overrides[$langcode]['overrides'] === 'custom';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function hasDisabledTarget($langcode) {
+    return isset($this->language_overrides[$langcode]) && $this->language_overrides[$langcode]['overrides'] === 'disabled';
   }
 
   /**
@@ -904,6 +918,9 @@ class LingotekProfile extends ConfigEntityBase implements LingotekProfileInterfa
     $vault = $this->getVault();
     if (isset($this->language_overrides[$langcode]) && $this->hasCustomSettingsForTarget($langcode)) {
       $vault = $this->language_overrides[$langcode]['custom']['vault'];
+    }
+    if ($this->hasDisabledTarget($langcode)) {
+      $vault = NULL;
     }
     return $vault;
   }

@@ -233,6 +233,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    * {@inheritdoc}
    */
   public function checkTargetStatuses(ContentEntityInterface &$entity) {
+    /** @var \Drupal\lingotek\LingotekProfileInterface $profile */
     $profile = $this->lingotekConfiguration->getEntityProfile($entity);
     if ($profile->id() === Lingotek::PROFILE_DISABLED || $this->getSourceStatus($entity) === Lingotek::STATUS_CANCELLED) {
       return FALSE;
@@ -266,7 +267,12 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
           $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_READY);
         }
         else {
-          $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_PENDING);
+          if (!$profile->hasDisabledTarget($langcode)) {
+            $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_PENDING);
+          }
+          else {
+            $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_DISABLED);
+          }
         }
       }
       if ($source_status !== Lingotek::STATUS_CURRENT && $statuses[$langcode] === Lingotek::STATUS_EDITED && $langcode !== $entity->getUntranslated()->language()->getId()) {
@@ -274,6 +280,9 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       }
       if ($source_status === Lingotek::STATUS_CURRENT && $statuses[$langcode] === Lingotek::STATUS_CURRENT && $langcode !== $entity->getUntranslated()->language()->getId()) {
         $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_CURRENT);
+      }
+      if ($profile->hasDisabledTarget($langcode)) {
+        $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_DISABLED);
       }
     }
     if ($this->getSourceStatus($entity) == Lingotek::STATUS_DISABLED) {
@@ -285,8 +294,10 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    * {@inheritdoc}
    */
   public function checkTargetStatus(ContentEntityInterface &$entity, $langcode) {
+    /** @var \Drupal\lingotek\LingotekProfileInterface $profile */
     $profile = $this->lingotekConfiguration->getEntityProfile($entity);
-    if ($profile->id() === Lingotek::PROFILE_DISABLED || $this->getSourceStatus($entity) === Lingotek::STATUS_CANCELLED) {
+    if ($profile->id() === Lingotek::PROFILE_DISABLED || $this->getSourceStatus($entity) === Lingotek::STATUS_CANCELLED
+        || $profile->hasDisabledTarget($langcode)) {
       return FALSE;
     }
     $current_status = $this->getTargetStatus($entity, $langcode);
@@ -904,8 +915,11 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    * {@inheritdoc}
    */
   public function addTarget(ContentEntityInterface &$entity, $locale) {
+    /** @var \Drupal\lingotek\LingotekProfileInterface $profile */
     $profile = $this->lingotekConfiguration->getEntityProfile($entity);
-    if ($profile->id() === Lingotek::PROFILE_DISABLED || $this->getSourceStatus($entity) === Lingotek::STATUS_CANCELLED) {
+    $drupal_language = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale);
+    if ($profile->id() === Lingotek::PROFILE_DISABLED || $this->getSourceStatus($entity) === Lingotek::STATUS_CANCELLED ||
+            $profile->hasDisabledTarget($drupal_language->getId())) {
       return FALSE;
     }
     $source_langcode = $entity->getUntranslated()->language()->getId();
@@ -916,7 +930,6 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       return FALSE;
     }
     if ($document_id = $this->getDocumentId($entity)) {
-      $drupal_language = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale);
       $source_status = $this->getSourceStatus($entity);
       $current_status = $this->getTargetStatus($entity, $drupal_language->id());
 
@@ -970,6 +983,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    * {@inheritdoc}
    */
   public function requestTranslations(ContentEntityInterface &$entity) {
+    /** @var \Drupal\lingotek\LingotekProfileInterface $profile */
     $profile = $this->lingotekConfiguration->getEntityProfile($entity);
     if ($profile->id() === Lingotek::PROFILE_DISABLED || $this->getSourceStatus($entity) === Lingotek::STATUS_CANCELLED) {
       return FALSE;
@@ -987,34 +1001,36 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       foreach ($target_languages as $langcode => $language) {
         $locale = $this->languageLocaleMapper->getLocaleForLangcode($langcode);
         if ($langcode !== $entity_langcode) {
-          $source_status = $this->getSourceStatus($entity);
-          $current_status = $this->getTargetStatus($entity, $langcode);
-          if ($current_status !== Lingotek::STATUS_PENDING && $current_status !== Lingotek::STATUS_CURRENT && $current_status !== Lingotek::STATUS_EDITED  && $current_status !== Lingotek::STATUS_READY) {
-            try {
-              $result = $this->lingotek->addTarget($document_id, $locale, $this->lingotekConfiguration->getEntityProfile($entity));
-            }
-            catch (LingotekDocumentLockedException $exception) {
-              $this->setDocumentId($entity, $exception->getNewDocumentId());
-              throw $exception;
-            }
-            catch (LingotekDocumentArchivedException $exception) {
-              $this->setDocumentId($entity, NULL);
-              $this->deleteMetadata($entity);
-              throw $exception;
-            }
-            catch (LingotekPaymentRequiredException $exception) {
-              throw $exception;
-            }
-            catch (LingotekApiException $exception) {
-              throw $exception;
-            }
-            if ($result) {
-              $languages[] = $langcode;
-              $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_PENDING);
-              // If the status was "Importing", and the target was added
-              // successfully, we can ensure that the content is current now.
-              if ($source_status == Lingotek::STATUS_IMPORTING) {
-                $this->setSourceStatus($entity, Lingotek::STATUS_CURRENT);
+          if (!$profile->hasDisabledTarget($langcode)) {
+            $source_status = $this->getSourceStatus($entity);
+            $current_status = $this->getTargetStatus($entity, $langcode);
+            if ($current_status !== Lingotek::STATUS_PENDING && $current_status !== Lingotek::STATUS_CURRENT && $current_status !== Lingotek::STATUS_EDITED && $current_status !== Lingotek::STATUS_READY) {
+              try {
+                $result = $this->lingotek->addTarget($document_id, $locale, $this->lingotekConfiguration->getEntityProfile($entity));
+              }
+              catch (LingotekDocumentLockedException $exception) {
+                $this->setDocumentId($entity, $exception->getNewDocumentId());
+                throw $exception;
+              }
+              catch (LingotekDocumentArchivedException $exception) {
+                $this->setDocumentId($entity, NULL);
+                $this->deleteMetadata($entity);
+                throw $exception;
+              }
+              catch (LingotekPaymentRequiredException $exception) {
+                throw $exception;
+              }
+              catch (LingotekApiException $exception) {
+                throw $exception;
+              }
+              if ($result) {
+                $languages[] = $langcode;
+                $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_PENDING);
+                // If the status was "Importing", and the target was added
+                // successfully, we can ensure that the content is current now.
+                if ($source_status == Lingotek::STATUS_IMPORTING) {
+                  $this->setSourceStatus($entity, Lingotek::STATUS_CURRENT);
+                }
               }
             }
           }

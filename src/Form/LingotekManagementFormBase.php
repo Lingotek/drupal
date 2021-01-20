@@ -1574,6 +1574,19 @@ abstract class LingotekManagementFormBase extends FormBase {
    */
   protected function getTranslationsStatuses(ContentEntityInterface &$entity) {
     $statuses = $this->translationService->getTargetStatuses($entity);
+    /** @var \Drupal\lingotek\LingotekProfileInterface $profile */
+    $profile = $this->lingotekConfiguration->getEntityProfile($entity);
+    array_walk($statuses, function (&$status, $langcode) use ($entity, $profile) {
+      if ($profile !== NULL && $profile->hasDisabledTarget($langcode)) {
+        $status = Lingotek::STATUS_DISABLED;
+      }
+    });
+    $languages = $this->lingotekConfiguration->getEnabledLanguages();
+    foreach ($languages as $langcode => $language) {
+      if ($profile !== NULL && $profile->hasDisabledTarget($langcode)) {
+        $statuses[$langcode] = Lingotek::STATUS_DISABLED;
+      }
+    }
     return [
       'data' => [
         '#type' => 'lingotek_target_statuses',

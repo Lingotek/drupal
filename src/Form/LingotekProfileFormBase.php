@@ -272,7 +272,11 @@ class LingotekProfileFormBase extends EntityForm {
         'overrides' => [
           '#type' => 'select',
           '#title' => $language->getName() . ' (' . $language->getId() . ')',
-          '#options' => ['default' => $this->t('Use default settings'), 'custom' => $this->t('Use custom settings')],
+          '#options' => [
+            'default' => $this->t('Use default settings'),
+            'custom' => $this->t('Use custom settings'),
+            'disabled' => $this->t('Disabled'),
+          ],
           '#default_value' => $profile->hasCustomSettingsForTarget($langcode) ? 'custom' : 'default',
         ],
         'custom' => [

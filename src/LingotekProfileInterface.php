@@ -294,6 +294,17 @@ interface LingotekProfileInterface extends ConfigEntityInterface, LingotekFilter
   public function hasCustomSettingsForTarget($langcode);
 
   /**
+   * Checks if the profile has disabled the given target language.
+   *
+   * @param string $langcode
+   *   The language code.
+   *
+   * @return bool
+   *   TRUE if it is disabled, FALSE if not.
+   */
+  public function hasDisabledTarget($langcode);
+
+  /**
    * Checks if the profile overrides settings for Intelligence metadata.
    *
    * @return bool

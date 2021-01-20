@@ -630,6 +630,25 @@ class LingotekUnitTest extends UnitTestCase {
      ])
       ->will($this->returnValue($response));
 
+    $this->api->expects($this->at(11))
+      ->method('addDocument')
+      ->with([
+        'title' => 'title',
+        'content' => '{"content":"wedgiePlatypus"}',
+        'locale_code' => 'en_US',
+        'format' => 'JSON',
+        'project_id' => 'test_project',
+        'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
+        'fprm_id' => '4f91482b-5aa1-4a4a-a43f-712af7b39625',
+        'vault_id' => 'test_vault',
+        'job_id' => 'my_job_id',
+        'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0',
+        'translation_locale_code' => ['es_ES', 'it_IT'],
+        'translation_workflow_id' => ['es_workflow', 'default_workflow'],
+        'translation_vault_id'  => ['default_vault', 'it_vault'],
+      ])
+      ->will($this->returnValue($response));
+
     // We upload with a profile that has a vault and a project.
     $profile = new LingotekProfile(['id' => 'profile1', 'project' => 'my_test_project', 'vault' => 'my_test_vault'], 'lingotek_profile');
     $doc_id = $this->lingotek->uploadDocument('title', 'content', 'es', NULL, $profile);
@@ -703,6 +722,22 @@ class LingotekUnitTest extends UnitTestCase {
       'language_overrides' => [
         'es' => ['overrides' => 'custom', 'custom' => ['auto_request' => TRUE, 'workflow' => 'es_workflow', 'vault' => 'default']],
         'ca' => ['overrides' => 'custom', 'custom' => ['auto_request' => TRUE, 'workflow' => 'ca_workflow', 'vault' => 'ca_vault']],
+        'it' => ['overrides' => 'custom', 'custom' => ['auto_request' => TRUE, 'workflow' => 'default', 'vault' => 'it_vault']],
+      ],
+    ], 'lingotek_profile');
+    $profile->setAutomaticUpload(TRUE);
+    $profile->setAutomaticRequest(TRUE);
+    $doc_id = $this->lingotek->uploadDocument('title', ['content' => 'wedgiePlatypus'], 'en_US', NULL, $profile, 'my_job_id');
+    $this->assertEquals('my-document-id', $doc_id);
+
+    $profile = new LingotekProfile([
+      'id' => 'profile_with_disabled_targets',
+      'project' => 'test_project',
+      'vault' => 'test_vault',
+      'workflow' => 'test_workflow',
+      'language_overrides' => [
+        'es' => ['overrides' => 'custom', 'custom' => ['auto_request' => TRUE, 'workflow' => 'es_workflow', 'vault' => 'default']],
+        'ca' => ['overrides' => 'disabled', 'custom' => ['auto_request' => TRUE, 'workflow' => 'ca_workflow', 'vault' => 'ca_vault']],
         'it' => ['overrides' => 'custom', 'custom' => ['auto_request' => TRUE, 'workflow' => 'default', 'vault' => 'it_vault']],
       ],
     ], 'lingotek_profile');

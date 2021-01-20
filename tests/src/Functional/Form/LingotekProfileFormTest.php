@@ -466,6 +466,57 @@ class LingotekProfileFormTest extends LingotekTestBase {
   }
 
   /**
+   * Tests that a profile target can be set as disabled.
+   */
+  public function testProfileTargetOverrideAsDisabled() {
+    // Add a language.
+    $es = ConfigurableLanguage::createFromLangcode('es')->setThirdPartySetting('lingotek', 'locale', 'es_MX');
+    $de = ConfigurableLanguage::createFromLangcode('de')->setThirdPartySetting('lingotek', 'locale', 'de_DE');
+    $es->save();
+    $de->save();
+
+    /** @var \Drupal\lingotek\LingotekProfileInterface $profile */
+    $profile = LingotekProfile::create([
+      'id' => strtolower($this->randomMachineName()),
+      'label' => $this->randomString(),
+    ]);
+    $profile->save();
+    $profile_id = $profile->id();
+
+    $this->drupalGet("/admin/lingotek/settings/profile/$profile_id/edit");
+
+    $edit = [
+      'auto_upload' => FALSE,
+      'auto_download' => 1,
+      'project' => 'default',
+      'vault' => 'default',
+      'workflow' => 'test_workflow2',
+      'language_overrides[es][overrides]' => 'disabled',
+      'language_overrides[de][overrides]' => 'custom',
+      'language_overrides[de][custom][auto_request]' => TRUE,
+      'language_overrides[de][custom][auto_download]' => TRUE,
+      'language_overrides[de][custom][workflow]' => 'default',
+      'language_overrides[de][custom][vault]' => 'default',
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Save'));
+
+    /** @var \Drupal\lingotek\LingotekProfileInterface $profile */
+    $profile = LingotekProfile::load($profile_id);
+    $this->assertFalse($profile->hasAutomaticUpload());
+    $this->assertTrue($profile->hasAutomaticDownload());
+    $this->assertIdentical('default', $profile->getProject());
+    $this->assertIdentical('default', $profile->getVault());
+    $this->assertIdentical('test_workflow2', $profile->getWorkflow());
+    $this->assertIdentical(NULL, $profile->getWorkflowForTarget('es'));
+    $this->assertIdentical(NULL, $profile->getVaultForTarget('es'));
+    $this->assertTrue($profile->hasDisabledTarget('es'));
+    $this->assertFalse($profile->hasAutomaticRequestForTarget('es'));
+    $this->assertTrue($profile->hasAutomaticRequestForTarget('de'));
+    $this->assertFalse($profile->hasAutomaticDownloadForTarget('es'));
+    $this->assertTrue($profile->hasAutomaticDownloadForTarget('de'));
+  }
+
+  /**
    * Tests that disabled languages are not shown in the profile form for
    * defining overrides.
    */
