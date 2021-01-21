@@ -55,6 +55,7 @@
     "drupal/potx": "dev-1.x",
     "drupal/layout_builder_at": "dev-2.x",
     "drupal/layout_builder_st": "dev-1.x",
+    "drupal/webform": "dev-6.x",
     "acquia/cohesion": "6.3.*"
   },
   "suggest": {

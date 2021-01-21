@@ -26,3 +26,4 @@ test_dependencies:
   - potx:potx
   - layout_builder_st:layout_builder_st
   - layout_builder_at:layout_builder_at
+  - webform:webform

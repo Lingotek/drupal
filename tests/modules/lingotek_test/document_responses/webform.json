@@ -1,0 +1,58 @@
+{
+  "title": "Prueba",
+  "description": null,
+  "category": null,
+  "elements": {
+    "first_name": {
+      "#title": "Nombre"
+    },
+    "last_name": {
+      "#title": "Apellidos"
+    },
+    "sex": {
+      "#title": "Sexo"
+    },
+    "martial_status": {
+      "#title": "Estado civil"
+    },
+    "employment_status": {
+      "#title": "Situación laboral"
+    },
+    "age": {
+      "#title": "Edad"
+    }
+  },
+  "settings.form_exception_message": "",
+  "settings.form_open_message": "",
+  "settings.form_close_message": "",
+  "settings.form_confidential_message": "",
+  "settings.form_access_denied_title": "",
+  "settings.form_access_denied_message": "",
+  "settings.submission_label": "",
+  "settings.submission_access_denied_title": "",
+  "settings.submission_access_denied_message": "",
+  "settings.submission_exception_message": "",
+  "settings.submission_locked_message": "",
+  "settings.previous_submission_message": "",
+  "settings.previous_submissions_message": "",
+  "settings.autofill_message": "",
+  "settings.wizard_start_label": "",
+  "settings.wizard_confirmation_label": "",
+  "settings.wizard_track": "",
+  "settings.wizard_prev_button_label": "",
+  "settings.wizard_next_button_label": "",
+  "settings.wizard_toggle_show_label": "",
+  "settings.wizard_toggle_hide_label": "",
+  "settings.preview_label": "",
+  "settings.preview_title": "",
+  "settings.preview_message": "",
+  "settings.draft_saved_message": "",
+  "settings.draft_loaded_message": "",
+  "settings.draft_pending_single_message": "",
+  "settings.draft_pending_multiple_message": "",
+  "settings.confirmation_title": "",
+  "settings.confirmation_message": "",
+  "settings.confirmation_back_label": "",
+  "settings.limit_total_message": "",
+  "settings.limit_user_message": ""
+}
