@@ -114,11 +114,11 @@ class LingotekCliService {
               $languages[] = $langcode;
             }
             else {
-              $this->logger->error($this->t('Language %langcode could not be requested.', ['%langcode' => $langcode]));
+              $this->logger->error('Language %langcode could not be requested.', ['%langcode' => $langcode]);
             }
           }
           else {
-            $this->logger->error($this->t('Language %langcode is not valid.', ['%langcode' => $langcode]));
+            $this->logger->error('Language %langcode is not valid.', ['%langcode' => $langcode]);
           }
         }
       }
@@ -170,7 +170,7 @@ class LingotekCliService {
             $this->translationService->downloadDocument($entity, $locale);
           }
           else {
-            $this->logger->error($this->t('Language %langcode is not valid.', ['%langcode' => $langcode]));
+            $this->logger->error('Language %langcode is not valid.', ['%langcode' => $langcode]);
           }
         }
       }
@@ -183,13 +183,13 @@ class LingotekCliService {
   public function getEntity($entity_type_id, $entity_id) {
     $entity_storage = NULL;
     if (!$this->entityTypeManager->hasDefinition($entity_type_id) || !$entity_storage = $this->entityTypeManager->getStorage($entity_type_id)) {
-      $this->logger->error($this->t('Invalid entity type id: @entity_type_id', ['@entity_type_id' => $entity_type_id]));
+      $this->logger->error('Invalid entity type id: @entity_type_id', ['@entity_type_id' => $entity_type_id]);
       return self::COMMAND_ERROR_ENTITY_TYPE_ID;
     }
     /** @var \Drupal\Core\Entity\EntityInterface $entity */
     $entity = $entity_storage->load($entity_id);
     if (!$entity) {
-      $this->logger->error($this->t('Entity of type @entity_type_id with id @entity_id not found.', ['@entity_type_id' => $entity_type_id, '@entity_id' => $entity_id]));
+      $this->logger->error('Entity of type @entity_type_id with id @entity_id not found.', ['@entity_type_id' => $entity_type_id, '@entity_id' => $entity_id]);
       return self::COMMAND_ERROR_ENTITY_NOT_FOUND;
     }
     return $entity;

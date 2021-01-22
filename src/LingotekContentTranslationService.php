@@ -1121,7 +1121,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
   public function downloadDocument(ContentEntityInterface &$entity, $locale) {
     $profile = $this->lingotekConfiguration->getEntityProfile($entity);
     if ($profile->id() === Lingotek::PROFILE_DISABLED || $this->getSourceStatus($entity) === Lingotek::STATUS_CANCELLED) {
-      \Drupal::logger('lingotek')->warning($this->t('Avoided download for (%entity_id,%revision_id): Source status is %source_status.', ['%entity_id' => $entity->id(), '%revision_id' => $entity->getRevisionId(), '%source_status' => $this->getSourceStatus($entity)]));
+      \Drupal::logger('lingotek')->warning('Avoided download for (%entity_id,%revision_id): Source status is %source_status.', ['%entity_id' => $entity->id(), '%revision_id' => $entity->getRevisionId(), '%source_status' => $this->getSourceStatus($entity)]);
       return FALSE;
     }
     if ($document_id = $this->getDocumentId($entity)) {
@@ -1134,12 +1134,12 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
           $data = $this->lingotek->downloadDocument($document_id, $locale);
         }
         else {
-          \Drupal::logger('lingotek')->warning($this->t('Avoided download for (%entity_id,%revision_id): Source status is %source_status.', ['%entity_id' => $entity->id(), '%revision_id' => $entity->getRevisionId(), '%source_status' => $this->getSourceStatus($entity)]));
+          \Drupal::logger('lingotek')->warning('Avoided download for (%entity_id,%revision_id): Source status is %source_status.', ['%entity_id' => $entity->id(), '%revision_id' => $entity->getRevisionId(), '%source_status' => $this->getSourceStatus($entity)]);
           return NULL;
         }
       }
       catch (LingotekApiException $exception) {
-        \Drupal::logger('lingotek')->error($this->t('Error happened downloading %document_id %locale: %message', ['%document_id' => $document_id, '%locale' => $locale, '%message' => $exception->getMessage()]));
+        \Drupal::logger('lingotek')->error('Error happened downloading %document_id %locale: %message', ['%document_id' => $document_id, '%locale' => $locale, '%message' => $exception->getMessage()]);
         $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_ERROR);
         throw $exception;
       }
@@ -1169,11 +1169,11 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
         }
         catch (LingotekContentEntityStorageException $storageException) {
           $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_ERROR);
-          \Drupal::logger('lingotek')->error($this->t('Error happened (storage) saving %document_id %locale: %message', ['%document_id' => $document_id, '%locale' => $locale, '%message' => $storageException->getMessage()]));
+          \Drupal::logger('lingotek')->error('Error happened (storage) saving %document_id %locale: %message', ['%document_id' => $document_id, '%locale' => $locale, '%message' => $storageException->getMessage()]);
           throw $storageException;
         }
         catch (\Exception $exception) {
-          \Drupal::logger('lingotek')->error($this->t('Error happened (unknown) saving %document_id %locale: %message', ['%document_id' => $document_id, '%locale' => $locale, '%message' => $exception->getMessage()]));
+          \Drupal::logger('lingotek')->error('Error happened (unknown) saving %document_id %locale: %message', ['%document_id' => $document_id, '%locale' => $locale, '%message' => $exception->getMessage()]);
           $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_ERROR);
           $transaction->rollBack();
           return FALSE;
@@ -1184,7 +1184,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     if ($this->getSourceStatus($entity) == Lingotek::STATUS_DISABLED) {
       $this->setTargetStatuses($entity, Lingotek::STATUS_DISABLED);
     }
-    \Drupal::logger('lingotek')->warning($this->t('Error happened trying to download (%entity_id,%revision_id): no document id found.', ['%entity_id' => $entity->id(), '%revision_id' => $entity->getRevisionId()]));
+    \Drupal::logger('lingotek')->warning('Error happened trying to download (%entity_id,%revision_id): no document id found.', ['%entity_id' => $entity->id(), '%revision_id' => $entity->getRevisionId()]);
     return FALSE;
   }
 
@@ -1566,7 +1566,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
                     $this->saveTargetData($embedded_entity, $langcode, $field_item);
                   }
                   else {
-                    \Drupal::logger('lingotek')->warning($this->t('Field %field not saved as its referenced entity is not translatable by Lingotek', ['%field' => $name]));
+                    \Drupal::logger('lingotek')->warning('Field %field not saved as its referenced entity is not translatable by Lingotek', ['%field' => $name]);
                   }
                 }
                 elseif ($embedded_entity instanceof ConfigEntityInterface) {
@@ -1698,8 +1698,8 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
             $alias = $field_data[0]['alias'];
             // Validate the alias before saving.
             if (!UrlHelper::isValid($alias)) {
-              \Drupal::logger('lingotek')->warning($this->t('Alias for %type %label in language %langcode not saved, invalid uri "%uri"',
-                ['%type' => $entity->getEntityTypeId(), '%label' => $entity->label(), '%langcode' => $langcode, '%uri' => $alias]));
+              \Drupal::logger('lingotek')->warning('Alias for %type %label in language %langcode not saved, invalid uri "%uri"',
+                ['%type' => $entity->getEntityTypeId(), '%label' => $entity->label(), '%langcode' => $langcode, '%uri' => $alias]);
               // Default to the original path.
               if (count($original_paths) > 0) {
                 $original_path = reset($original_paths);
@@ -1784,8 +1784,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
                       $this->saveTargetData($embedded_entity, $langcode, $blockContentData);
                     }
                     else {
-                      \Drupal::logger('lingotek')
-                        ->warning($this->t('Field %field not saved as its referenced entity is not translatable by Lingotek', ['%field' => $name]));
+                      \Drupal::logger('lingotek')->warning('Field %field not saved as its referenced entity is not translatable by Lingotek', ['%field' => $name]);
                     }
                   }
                 }
@@ -1843,8 +1842,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
                       $this->saveTargetData($embedded_entity, $langcode, $blockContentData);
                     }
                     else {
-                      \Drupal::logger('lingotek')
-                        ->warning($this->t('Field %field not saved as its referenced entity is not translatable by Lingotek', ['%field' => $name]));
+                      \Drupal::logger('lingotek')->warning('Field %field not saved as its referenced entity is not translatable by Lingotek', ['%field' => $name]);
                     }
                   }
                 }
@@ -1889,8 +1887,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
                           $this->saveTargetData($embedded_entity, $langcode, $entityData);
                         }
                         else {
-                          \Drupal::logger('lingotek')
-                            ->warning($this->t('Field %field not saved as its referenced entity is not translatable by Lingotek', ['%field' => $name]));
+                          \Drupal::logger('lingotek')->warning('Field %field not saved as its referenced entity is not translatable by Lingotek', ['%field' => $name]);
                         }
                       }
                     }
@@ -1910,8 +1907,8 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
                 if ($data_type === 'uri') {
                   // Validate an uri.
                   if (!\Drupal::pathValidator()->isValid($property_data)) {
-                    \Drupal::logger('lingotek')->warning($this->t('Field %field for %type %label in language %langcode not saved, invalid uri "%uri"',
-                      ['%field' => $name, '%type' => $entity->getEntityTypeId(), '%label' => $entity->label(), '%langcode' => $langcode, '%uri' => $property_data]));
+                    \Drupal::logger('lingotek')->warning('Field %field for %type %label in language %langcode not saved, invalid uri "%uri"',
+                      ['%field' => $name, '%type' => $entity->getEntityTypeId(), '%label' => $entity->label(), '%langcode' => $langcode, '%uri' => $property_data]);
                     // Let's default to the original value given that there was a problem.
                     $property_data = $revision->get($name)->offsetGet($delta)->{$property};
                   }

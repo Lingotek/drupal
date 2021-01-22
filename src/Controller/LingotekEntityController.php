@@ -320,7 +320,7 @@ class LingotekEntityController extends LingotekControllerBase {
         $this->messenger()->addStatus(t('The translation of @entity_type %title into @locale has been downloaded.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label(), '@locale' => $locale]));
       }
       else {
-        \Drupal::logger('lingotek')->warning($this->t('Error happened trying to download (%entity_id,%revision_id).', ['%entity_id' => $entity->id(), '%revision_id' => $entity->getRevisionId()]));
+        \Drupal::logger('lingotek')->warning('Error happened trying to download (%entity_id,%revision_id).', ['%entity_id' => $entity->id(), '%revision_id' => $entity->getRevisionId()]);
         $this->messenger()->addError(t('The translation of @entity_type %title into @locale failed to download.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label(), '@locale' => $locale]));
       }
     }

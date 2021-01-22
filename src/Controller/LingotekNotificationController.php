@@ -19,7 +19,6 @@ use Drupal\lingotek\LingotekContentTranslationServiceInterface;
 use Drupal\lingotek\LingotekInterfaceTranslationServiceInterface;
 use Drupal\lingotek\LingotekInterface;
 use Psr\Log\LoggerInterface;
-use Psr\Log\LogLevel;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -174,7 +173,7 @@ class LingotekNotificationController extends LingotekControllerBase {
           $translation_service->setSourceStatus($entity, Lingotek::STATUS_CANCELLED);
           $translation_service->setTargetStatuses($entity, Lingotek::STATUS_CANCELLED);
 
-          $this->logger->log(LogLevel::DEBUG, 'Document @label cancelled in TMS.', [
+          $this->logger->debug('Document @label cancelled in TMS.', [
             '@label' => is_string($entity) ? $entity : $entity->label(),
           ]);
           $messages[] = new FormattableMarkup('Document @label cancelled in TMS.', [
@@ -274,7 +273,7 @@ class LingotekNotificationController extends LingotekControllerBase {
           // was a new document, we want to set the document id to NULL anyway.
           $translation_service->setDocumentId($entity, $prevDocumentId);
           $translation_service->setSourceStatus($entity, Lingotek::STATUS_ERROR);
-          $this->logger->log(LogLevel::DEBUG, 'Document import for entity @label failed. Reverting @documentId to previous id @prevDocumentId', [
+          $this->logger->debug('Document import for entity @label failed. Reverting @documentId to previous id @prevDocumentId', [
             '@label' => is_string($entity) ? $entity : $entity->label(),
             '@documentId' => $documentId,
             '@prevDocumentId' => $prevDocumentId ?: '(NULL)',
@@ -308,7 +307,7 @@ class LingotekNotificationController extends LingotekControllerBase {
             ->id();
           $translation_service->setTargetStatus($entity, $langcode, Lingotek::STATUS_CANCELLED);
 
-          $this->logger->log(LogLevel::DEBUG, 'Document @label target @locale cancelled in TMS.', [
+          $this->logger->debug('Document @label target @locale cancelled in TMS.', [
             '@label' => is_string($entity) ? $entity : $entity->label(),
             '@locale' => $locale,
           ]);
@@ -363,7 +362,7 @@ class LingotekNotificationController extends LingotekControllerBase {
             ->id();
           $user_login = $request->query->get('deleted_by_user_login');
           $translation_service->setTargetStatus($entity, $langcode, Lingotek::STATUS_UNTRACKED);
-          $this->logger->log(LogLevel::DEBUG, 'Target @locale for entity @label deleted by @user_login', [
+          $this->logger->debug('Target @locale for entity @label deleted by @user_login', [
             '@locale' => $locale,
             '@user_login' => $user_login,
             '@label' => is_string($entity) ? $entity : $entity->label(),
@@ -381,7 +380,7 @@ class LingotekNotificationController extends LingotekControllerBase {
           $document_id = $request->query->get('document_id');
           $user_login = $request->query->get('deleted_by_user_login');
           $locale = $request->query->get('locale');
-          $this->logger->log(LogLevel::WARNING, 'Target @locale for document @document_id deleted by @user_login in the TMS, but document not found on the system.', [
+          $this->logger->warning('Target @locale for document @document_id deleted by @user_login in the TMS, but document not found on the system.', [
             '@locale' => $locale,
             '@user_login' => $user_login,
             '@document_id' => $document_id,
@@ -417,7 +416,7 @@ class LingotekNotificationController extends LingotekControllerBase {
           }
           $user_login = $request->query->get('deleted_by_user_login');
           $translation_service->deleteMetadata($entity);
-          $this->logger->log(LogLevel::DEBUG, 'Document for entity @label deleted by @user_login in the TMS.', [
+          $this->logger->debug('Document for entity @label deleted by @user_login in the TMS.', [
             '@user_login' => $user_login,
             '@label' => is_string($entity) ? $entity : $entity->label(),
           ]);
@@ -431,7 +430,7 @@ class LingotekNotificationController extends LingotekControllerBase {
           $http_status_code = Response::HTTP_NO_CONTENT;
           $document_id = $request->query->get('document_id');
           $user_login = $request->query->get('deleted_by_user_login');
-          $this->logger->log(LogLevel::WARNING, 'Document @document_id deleted by @user_login in the TMS, but not found on the system.', [
+          $this->logger->warning('Document @document_id deleted by @user_login in the TMS, but not found on the system.', [
             '@user_login' => $user_login,
             '@document_id' => $document_id,
           ]);
@@ -545,7 +544,7 @@ class LingotekNotificationController extends LingotekControllerBase {
 
       // ignore
       default:
-        $this->logger->log(LogLevel::WARNING, 'Unmanaged notification callback from the TMS. Arguments were: @arguments.', [
+        $this->logger->warning('Unmanaged notification callback from the TMS. Arguments were: @arguments.', [
           '@arguments' => var_export($request->query->all(), TRUE),
         ]);
         $http_status_code = Response::HTTP_ACCEPTED;

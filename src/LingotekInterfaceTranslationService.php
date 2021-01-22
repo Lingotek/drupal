@@ -608,19 +608,19 @@ class LingotekInterfaceTranslationService implements LingotekInterfaceTranslatio
           $data = $this->lingotek->downloadDocument($document_id, $locale);
         }
         else {
-          \Drupal::logger('lingotek')->warning($this->t('Avoided download for (%component): Source status is %source_status.', [
+          \Drupal::logger('lingotek')->warning('Avoided download for (%component): Source status is %source_status.', [
               '%component' => $component,
               '%source_status' => $this->getSourceStatus($component),
-          ]));
+          ]);
           return NULL;
         }
       }
       catch (LingotekApiException $exception) {
-        \Drupal::logger('lingotek')->error($this->t('Error happened downloading %document_id %locale: %message', [
+        \Drupal::logger('lingotek')->error('Error happened downloading %document_id %locale: %message', [
           '%document_id' => $document_id,
           '%locale' => $locale,
           '%message' => $exception->getMessage(),
-        ]));
+        ]);
         $this->setTargetStatus($component, $langcode, Lingotek::STATUS_ERROR);
         throw $exception;
       }
@@ -649,7 +649,7 @@ class LingotekInterfaceTranslationService implements LingotekInterfaceTranslatio
           }
         }
         catch (\Exception $exception) {
-          \Drupal::logger('lingotek')->error($this->t('Error happened (unknown) saving %document_id %locale: %message', ['%document_id' => $document_id, '%locale' => $locale, '%message' => $exception->getMessage()]));
+          \Drupal::logger('lingotek')->error('Error happened (unknown) saving %document_id %locale: %message', ['%document_id' => $document_id, '%locale' => $locale, '%message' => $exception->getMessage()]);
           $this->setTargetStatus($component, $langcode, Lingotek::STATUS_ERROR);
           $transaction->rollBack();
           return FALSE;
@@ -657,7 +657,7 @@ class LingotekInterfaceTranslationService implements LingotekInterfaceTranslatio
         return TRUE;
       }
     }
-    \Drupal::logger('lingotek')->warning($this->t('Error happened trying to download (%component): no document id found.', ['%component' => $component]));
+    \Drupal::logger('lingotek')->warning('Error happened trying to download (%component): no document id found.', ['%component' => $component]);
     return FALSE;
   }
 
