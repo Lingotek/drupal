@@ -65,6 +65,7 @@ class LingotekTranslationStatusFormatter extends FormatterBase implements Contai
     $elements['#attached'] = [
       'library' => [
         'lingotek/lingotek',
+        'lingotek/lingotek.target_actions',
       ],
     ];
     $elements['#cache'] = ['max-age' => 0];

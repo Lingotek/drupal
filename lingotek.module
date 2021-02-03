@@ -734,6 +734,7 @@ function lingotek_theme() {
         'url' => NULL,
         'status_text' => '',
         'new_window' => FALSE,
+        'actions' => [],
       ],
     ],
     'lingotek_target_statuses' => [

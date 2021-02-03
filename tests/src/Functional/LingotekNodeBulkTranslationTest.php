@@ -119,7 +119,7 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
       ->get('lingotek.downloaded_locale'));
 
     // Now the link is to the workbench, and it opens in a new tab.
-    $this->assertLingotekWorkbenchLink('es_MX');
+    $this->assertLingotekWorkbenchLink('es_MX', 'dummy-document-hash-id', 'ES');
   }
 
   /**
@@ -268,7 +268,7 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
       ->get('lingotek.downloaded_locale'));
 
     // Now the link is to the workbench, and it opens in a new tab.
-    $this->assertLingotekWorkbenchLink('de_AT');
+    $this->assertLingotekWorkbenchLink('de_AT', 'dummy-document-hash-id', 'DE');
   }
 
   /**
@@ -350,8 +350,8 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
       ->get('lingotek.downloaded_locale'));
 
     // Now the link is to the workbench, and it opens in a new tab.
-    $this->assertLingotekWorkbenchLink('es_MX');
-    $this->assertLingotekWorkbenchLink('de_AT');
+    $this->assertLingotekWorkbenchLink('es_MX', 'dummy-document-hash-id', 'ES');
+    $this->assertLingotekWorkbenchLink('de_AT', 'dummy-document-hash-id', 'DE');
   }
 
   /**
@@ -431,8 +431,8 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
       ->get('lingotek.downloaded_locale'));
 
     // Now the link is to the workbench, and it opens in a new tab.
-    $this->assertLingotekWorkbenchLink('es_MX', 'dummy-document-hash-id-1');
-    $this->assertLingotekWorkbenchLink('de_AT', 'dummy-document-hash-id-1');
+    $this->assertLingotekWorkbenchLink('es_MX', 'dummy-document-hash-id-1', 'ES');
+    $this->assertLingotekWorkbenchLink('de_AT', 'dummy-document-hash-id-1', 'DE');
   }
 
   public function testNodeTranslationUsingActionsForMultipleLocalesAfterEditingWithPendingPhases() {

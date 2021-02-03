@@ -122,7 +122,8 @@ class RenderElementTypesTest extends LingotekTestBase {
     $translation_service->setTargetStatus($entity, 'es', Lingotek::STATUS_UNTRACKED);
     $this->drupalGet('/lingotek_form_test/lingotek_translation_statuses/node/1');
     $this->assertSession()->responseContains('lingotek/css/base.css');
-    $this->assertSession()->responseContains('<span class="language-icon target-untracked" title="Spanish - Translation exists, but it is not being tracked by Lingotek">ES</span>');
+    $link = $this->xpath("//span[@class='language-icon target-untracked' and @title='Spanish - Translation exists, but it is not being tracked by Lingotek' and text()='ES']");
+    $this->assertEqual(count($link), 1, 'Span exists.');
 
     $translation_service->setDocumentId($entity, 'test-document-id');
 
@@ -130,25 +131,88 @@ class RenderElementTypesTest extends LingotekTestBase {
     $translation_service->setTargetStatus($entity, 'de', Lingotek::STATUS_PENDING);
     $translation_service->setTargetStatus($entity, 'ca', Lingotek::STATUS_READY);
     $this->drupalGet('/lingotek_form_test/lingotek_translation_statuses/node/1');
+
+    $this->assertTargetAction("Check translation status",
+      "$basepath/admin/lingotek/entity/check_target/test-document-id/de_DE?destination=$basepath/lingotek_form_test/lingotek_translation_statuses/node/1",
+      );
+    $this->assertTargetAction("Open in Lingotek Workbench",
+      "$basepath/admin/lingotek/workbench/test-document-id/de_DE",
+    );
+    $this->assertTargetAction("Request translation",
+      "$basepath/admin/lingotek/entity/add_target/test-document-id/es_ES?destination=$basepath/lingotek_form_test/lingotek_translation_statuses/node/1",
+    );
+    $this->assertTargetAction("Open in Lingotek Workbench",
+      "$basepath/admin/lingotek/workbench/test-document-id/ca_ES",
+    );
+    $this->assertTargetAction("Download translation",
+      "$basepath/admin/lingotek/entity/download/test-document-id/ca_ES?destination=$basepath/lingotek_form_test/lingotek_translation_statuses/node/1",
+    );
+
     $this->assertSession()->responseContains('lingotek/css/base.css');
-    $this->assertSession()->responseContains('<a href="' . $basepath . '/admin/lingotek/entity/download/test-document-id/ca_ES?destination=' . $basepath . '/lingotek_form_test/lingotek_translation_statuses/node/1" class="language-icon target-ready" title="Catalan - Ready for Download">CA</a><a href="' . $basepath . '/admin/lingotek/entity/check_target/test-document-id/de_DE?destination=' . $basepath . '/lingotek_form_test/lingotek_translation_statuses/node/1" class="language-icon target-pending" title="German - In-progress">DE</a><a href="' . $basepath . '/admin/lingotek/entity/add_target/test-document-id/es_ES?destination=' . $basepath . '/lingotek_form_test/lingotek_translation_statuses/node/1" class="language-icon target-request" title="Spanish - Request translation">ES</a>');
+    $link = $this->xpath("//a[@href='$basepath/admin/lingotek/entity/download/test-document-id/ca_ES?destination=" . $basepath . "/lingotek_form_test/lingotek_translation_statuses/node/1' and @class='language-icon target-ready' and @title='Catalan - Ready for Download' and text()='CA']");
+    $this->assertEqual(count($link), 1, 'Link exists.');
+    $link = $this->xpath("//a[@href='$basepath/admin/lingotek/entity/check_target/test-document-id/de_DE?destination=" . $basepath . "/lingotek_form_test/lingotek_translation_statuses/node/1' and @class='language-icon target-pending' and @title='German - In-progress' and text()='DE']");
+    $this->assertEqual(count($link), 1, 'Link exists.');
+    $link = $this->xpath("//a[@href='$basepath/admin/lingotek/entity/add_target/test-document-id/es_ES?destination=" . $basepath . "/lingotek_form_test/lingotek_translation_statuses/node/1' and @class='language-icon target-request' and @title='Spanish - Request translation' and text()='ES']");
+    $this->assertEqual(count($link), 1, 'Link exists.');
 
     $translation_service->setTargetStatus($entity, 'es', Lingotek::STATUS_INTERMEDIATE);
     $translation_service->setTargetStatus($entity, 'de', Lingotek::STATUS_CURRENT);
     $translation_service->setTargetStatus($entity, 'ca', Lingotek::STATUS_EDITED);
     $this->drupalGet('/lingotek_form_test/lingotek_translation_statuses/node/1');
+
+    $this->assertTargetAction("Open in Lingotek Workbench",
+      "$basepath/admin/lingotek/workbench/test-document-id/de_DE",
+    );
+    $this->assertTargetAction("Open in Lingotek Workbench",
+      "$basepath/admin/lingotek/workbench/test-document-id/es_ES",
+    );
+    $this->assertTargetAction("Open in Lingotek Workbench",
+      "$basepath/admin/lingotek/workbench/test-document-id/ca_ES",
+    );
+
     $this->assertSession()->responseContains('lingotek/css/base.css');
-    $this->assertSession()->responseContains('<a href="' . $basepath . '/admin/lingotek/workbench/test-document-id/ca_ES" target="_blank" class="language-icon target-edited" title="Catalan - Not current">CA</a><a href="' . $basepath . '/admin/lingotek/workbench/test-document-id/de_DE" target="_blank" class="language-icon target-current" title="German - Current">DE</a><a href="' . $basepath . '/admin/lingotek/workbench/test-document-id/es_ES" target="_blank" class="language-icon target-intermediate" title="Spanish - In-progress (interim translation downloaded)">ES</a>');
+    $link = $this->xpath("//a[@href='$basepath/admin/lingotek/workbench/test-document-id/ca_ES' and @target='_blank' and @class='language-icon target-edited' and @title='Catalan - Not current' and text()='CA']");
+    $this->assertEqual(count($link), 1, 'Link exists.');
+    $link = $this->xpath("//a[@href='$basepath/admin/lingotek/workbench/test-document-id/de_DE' and @target='_blank' and @class='language-icon target-current' and @title='German - Current' and text()='DE']");
+    $this->assertEqual(count($link), 1, 'Link exists.');
+    $link = $this->xpath("//a[@href='$basepath/admin/lingotek/workbench/test-document-id/es_ES' and @target='_blank' and @class='language-icon target-intermediate' and @title='Spanish - In-progress (interim translation downloaded)' and text()='ES']");
+    $this->assertEqual(count($link), 1, 'Link exists.');
 
     $translation_service->setTargetStatus($entity, 'es', Lingotek::STATUS_ERROR);
     $this->drupalGet('/lingotek_form_test/lingotek_translation_statuses/node/1');
+
+    $this->assertTargetAction("Open in Lingotek Workbench",
+      "$basepath/admin/lingotek/workbench/test-document-id/de_DE",
+    );
+    $this->assertTargetAction("Retry",
+      "$basepath/admin/lingotek/entity/add_target/test-document-id/es_ES?destination=$basepath/lingotek_form_test/lingotek_translation_statuses/node/1",
+    );
+
+    $this->assertTargetAction("Open in Lingotek Workbench",
+      "$basepath/admin/lingotek/workbench/test-document-id/ca_ES",
+    );
+
     $this->assertSession()->responseContains('lingotek/css/base.css');
-    $this->assertSession()->responseContains('<a href="' . $basepath . '/admin/lingotek/entity/download/test-document-id/es_ES?destination=' . $basepath . '/lingotek_form_test/lingotek_translation_statuses/node/1" class="language-icon target-error" title="Spanish - Error">ES</a>');
+    $link = $this->xpath("//a[@href='$basepath/admin/lingotek/entity/download/test-document-id/es_ES?destination=" . $basepath . "/lingotek_form_test/lingotek_translation_statuses/node/1' and @class='language-icon target-error' and @title='Spanish - Error' and text()='ES']");
+    $this->assertEqual(count($link), 1, 'Link exists.');
 
     $translation_service->setTargetStatus($entity, 'es', Lingotek::STATUS_DISABLED);
     $this->drupalGet('/lingotek_form_test/lingotek_translation_statuses/node/1');
+
+    $this->assertTargetAction("Open in Lingotek Workbench",
+      "$basepath/admin/lingotek/workbench/test-document-id/de_DE",
+    );
+    $this->assertNoTargetAction("Open in Lingotek Workbench",
+      "$basepath/admin/lingotek/workbench/test-document-id/es_ES",
+    );
+    $this->assertTargetAction("Open in Lingotek Workbench",
+      "$basepath/admin/lingotek/workbench/test-document-id/ca_ES",
+    );
+
     $this->assertSession()->responseContains('lingotek/css/base.css');
-    $this->assertSession()->responseContains('<span class="language-icon target-disabled" title="Spanish - Disabled">ES</span>');
+    $link = $this->xpath("//span[@class='language-icon target-disabled' and @title='Spanish - Disabled' and text()='ES']");
+    $this->assertEqual(count($link), 1, 'Span exists.');
   }
 
   /**
@@ -173,7 +237,8 @@ class RenderElementTypesTest extends LingotekTestBase {
     $translation_service->setTargetStatus($entity, 'es', Lingotek::STATUS_UNTRACKED);
     $this->drupalGet('/lingotek_form_test/lingotek_translation_status/node/1');
     $this->assertSession()->responseContains('lingotek/css/base.css');
-    $this->assertSession()->responseContains('<span class="language-icon target-untracked" title="Spanish - Translation exists, but it is not being tracked by Lingotek">ES</span>');
+    $link = $this->xpath("//span[@class='language-icon target-untracked' and @title='Spanish - Translation exists, but it is not being tracked by Lingotek' and text()='ES']");
+    $this->assertEqual(count($link), 1, 'Span exists.');
 
     $translation_service->setDocumentId($entity, 'test-document-id');
 
@@ -181,25 +246,100 @@ class RenderElementTypesTest extends LingotekTestBase {
     $translation_service->setTargetStatus($entity, 'de', Lingotek::STATUS_PENDING);
     $translation_service->setTargetStatus($entity, 'ca', Lingotek::STATUS_READY);
     $this->drupalGet('/lingotek_form_test/lingotek_translation_status/node/1');
+
+    $this->assertTargetAction("Check translation status",
+      "$basepath/admin/lingotek/entity/check_target/test-document-id/de_DE?destination=$basepath/lingotek_form_test/lingotek_translation_status/node/1",
+    );
+    $this->assertTargetAction("Open in Lingotek Workbench",
+      "$basepath/admin/lingotek/workbench/test-document-id/de_DE",
+    );
+    $this->assertTargetAction("Request translation",
+      "$basepath/admin/lingotek/entity/add_target/test-document-id/es_ES?destination=$basepath/lingotek_form_test/lingotek_translation_status/node/1",
+    );
+    $this->assertTargetAction("Open in Lingotek Workbench",
+      "$basepath/admin/lingotek/workbench/test-document-id/ca_ES",
+    );
+    $this->assertTargetAction("Download translation",
+      "$basepath/admin/lingotek/entity/download/test-document-id/ca_ES?destination=$basepath/lingotek_form_test/lingotek_translation_status/node/1",
+    );
+
     $this->assertSession()->responseContains('lingotek/css/base.css');
-    $this->assertSession()->responseContains('<a href="' . $basepath . '/admin/lingotek/entity/add_target/test-document-id/es_ES?destination=' . $basepath . '/lingotek_form_test/lingotek_translation_status/node/1" class="language-icon target-request" title="Spanish - Request translation">ES</a><a href="' . $basepath . '/admin/lingotek/entity/check_target/test-document-id/de_DE?destination=' . $basepath . '/lingotek_form_test/lingotek_translation_status/node/1" class="language-icon target-pending" title="German - In-progress">DE</a><a href="' . $basepath . '/admin/lingotek/entity/download/test-document-id/ca_ES?destination=' . $basepath . '/lingotek_form_test/lingotek_translation_status/node/1" class="language-icon target-ready" title="Catalan - Ready for Download">CA</a>');
+    $link = $this->xpath("//a[@href='$basepath/admin/lingotek/entity/download/test-document-id/ca_ES?destination=" . $basepath . "/lingotek_form_test/lingotek_translation_status/node/1' and @class='language-icon target-ready' and @title='Catalan - Ready for Download' and text()='CA']");
+    $this->assertEqual(count($link), 1, 'Link exists.');
+    $link = $this->xpath("//a[@href='$basepath/admin/lingotek/entity/check_target/test-document-id/de_DE?destination=" . $basepath . "/lingotek_form_test/lingotek_translation_status/node/1' and @class='language-icon target-pending' and @title='German - In-progress' and text()='DE']");
+    $this->assertEqual(count($link), 1, 'Link exists.');
+    $link = $this->xpath("//a[@href='$basepath/admin/lingotek/entity/add_target/test-document-id/es_ES?destination=" . $basepath . "/lingotek_form_test/lingotek_translation_status/node/1' and @class='language-icon target-request' and @title='Spanish - Request translation' and text()='ES']");
+    $this->assertEqual(count($link), 1, 'Link exists.');
 
     $translation_service->setTargetStatus($entity, 'es', Lingotek::STATUS_INTERMEDIATE);
     $translation_service->setTargetStatus($entity, 'de', Lingotek::STATUS_CURRENT);
     $translation_service->setTargetStatus($entity, 'ca', Lingotek::STATUS_EDITED);
     $this->drupalGet('/lingotek_form_test/lingotek_translation_status/node/1');
+
+    $this->assertTargetAction("Open in Lingotek Workbench",
+      "$basepath/admin/lingotek/workbench/test-document-id/de_DE",
+    );
+    $this->assertTargetAction("Open in Lingotek Workbench",
+      "$basepath/admin/lingotek/workbench/test-document-id/es_ES",
+    );
+    $this->assertTargetAction("Open in Lingotek Workbench",
+      "$basepath/admin/lingotek/workbench/test-document-id/ca_ES",
+    );
+
     $this->assertSession()->responseContains('lingotek/css/base.css');
-    $this->assertSession()->responseContains('<a href="' . $basepath . '/admin/lingotek/workbench/test-document-id/es_ES" target="_blank" class="language-icon target-intermediate" title="Spanish - In-progress (interim translation downloaded)">ES</a><a href="' . $basepath . '/admin/lingotek/workbench/test-document-id/de_DE" target="_blank" class="language-icon target-current" title="German - Current">DE</a><a href="' . $basepath . '/admin/lingotek/workbench/test-document-id/ca_ES" target="_blank" class="language-icon target-edited" title="Catalan - Not current">CA</a>');
+    $link = $this->xpath("//a[@href='$basepath/admin/lingotek/workbench/test-document-id/ca_ES' and @target='_blank' and @class='language-icon target-edited' and @title='Catalan - Not current' and text()='CA']");
+    $this->assertEqual(count($link), 1, 'Link exists.');
+    $link = $this->xpath("//a[@href='$basepath/admin/lingotek/workbench/test-document-id/de_DE' and @target='_blank' and @class='language-icon target-current' and @title='German - Current' and text()='DE']");
+    $this->assertEqual(count($link), 1, 'Link exists.');
+    $link = $this->xpath("//a[@href='$basepath/admin/lingotek/workbench/test-document-id/es_ES' and @target='_blank' and @class='language-icon target-intermediate' and @title='Spanish - In-progress (interim translation downloaded)' and text()='ES']");
+    $this->assertEqual(count($link), 1, 'Link exists.');
 
     $translation_service->setTargetStatus($entity, 'es', Lingotek::STATUS_ERROR);
     $this->drupalGet('/lingotek_form_test/lingotek_translation_status/node/1');
+
+    $this->assertTargetAction("Open in Lingotek Workbench",
+      "$basepath/admin/lingotek/workbench/test-document-id/de_DE",
+    );
+    $this->assertTargetAction("Retry",
+      "$basepath/admin/lingotek/entity/add_target/test-document-id/es_ES?destination=$basepath/lingotek_form_test/lingotek_translation_status/node/1",
+    );
+
+    $this->assertTargetAction("Open in Lingotek Workbench",
+      "$basepath/admin/lingotek/workbench/test-document-id/ca_ES",
+    );
+
     $this->assertSession()->responseContains('lingotek/css/base.css');
-    $this->assertSession()->responseContains('<a href="' . $basepath . '/admin/lingotek/entity/download/test-document-id/es_ES?destination=' . $basepath . '/lingotek_form_test/lingotek_translation_status/node/1" class="language-icon target-error" title="Spanish - Error">ES</a>');
+    $link = $this->xpath("//a[@href='$basepath/admin/lingotek/entity/download/test-document-id/es_ES?destination=" . $basepath . "/lingotek_form_test/lingotek_translation_status/node/1' and @class='language-icon target-error' and @title='Spanish - Error' and text()='ES']");
+    $this->assertEqual(count($link), 1, 'Link exists.');
 
     $translation_service->setTargetStatus($entity, 'es', Lingotek::STATUS_DISABLED);
     $this->drupalGet('/lingotek_form_test/lingotek_translation_status/node/1');
+
+    $this->assertTargetAction("Open in Lingotek Workbench",
+      "$basepath/admin/lingotek/workbench/test-document-id/de_DE",
+    );
+    $this->assertNoTargetAction("Open in Lingotek Workbench",
+      "$basepath/admin/lingotek/workbench/test-document-id/es_ES",
+    );
+    $this->assertTargetAction("Open in Lingotek Workbench",
+      "$basepath/admin/lingotek/workbench/test-document-id/ca_ES",
+    );
+
     $this->assertSession()->responseContains('lingotek/css/base.css');
-    $this->assertSession()->responseContains('<span class="language-icon target-disabled" title="Spanish - Disabled">ES</span>');
+    $link = $this->xpath("//span[@class='language-icon target-disabled' and @title='Spanish - Disabled' and text()='ES']");
+    $this->assertEqual(count($link), 1, 'Span exists.');
+  }
+
+  protected function assertTargetAction($text, $url) {
+    // Should be better with ul[@class="lingotek-target-actions"], but somehow doesn't work.
+    $link = $this->xpath('//ul//li//a[@href="' . $url . '" and text()="' . $text . '"]');
+    $this->assertCount(1, $link, 'Action exists.');
+  }
+
+  protected function assertNoTargetAction($text, $url) {
+    // Should be better with ul[@class="lingotek-target-actions"], but somehow doesn't work.
+    $link = $this->xpath('//ul//li//a[@href="' . $url . '" and text()="' . $text . '"]');
+    $this->assertCount(0, $link, 'Action exists.');
   }
 
 }

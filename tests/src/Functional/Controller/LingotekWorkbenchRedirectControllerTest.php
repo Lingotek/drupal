@@ -3,7 +3,6 @@
 namespace Drupal\Tests\lingotek\Functional\Controller;
 
 use Drupal\Core\Url;
-use Drupal\frozenintime\FrozenTime;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\Tests\lingotek\Functional\LingotekTestBase;
@@ -18,7 +17,7 @@ class LingotekWorkbenchRedirectControllerTest extends LingotekTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['block', 'node', 'frozenintime'];
+  public static $modules = ['block', 'node'];
 
   /**
    * {@inheritdoc}
@@ -92,8 +91,7 @@ class LingotekWorkbenchRedirectControllerTest extends LingotekTestBase {
     $this->clickLink('ES');
 
     // Now the link is to the workbench, and it opens in a new tab.
-    $this->assertLingotekWorkbenchLink('es_AR');
-    $expiration = FrozenTime::MY_BIRTHDAY + (60 * 30);
+    $this->assertLingotekWorkbenchLink('es_AR', 'dummy-document-hash-id', 'ES');
 
     // Click the workbench tab.
     $this->clickLink('ES');

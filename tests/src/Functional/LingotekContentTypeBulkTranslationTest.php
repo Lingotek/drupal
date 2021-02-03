@@ -97,7 +97,7 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.downloaded_locale'));
 
     // Now the link is to the workbench, and it opens in a new tab.
-    $this->assertLingotekWorkbenchLink('es_MX');
+    $this->assertLingotekWorkbenchLink('es_MX', 'dummy-document-hash-id', 'ES');
   }
 
   /**
@@ -162,7 +162,7 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->assertIdentical('de_AT', \Drupal::state()->get('lingotek.downloaded_locale'));
 
     // Now the link is to the workbench, and it opens in a new tab.
-    $this->assertLingotekWorkbenchLink('de_AT');
+    $this->assertLingotekWorkbenchLink('de_AT', 'dummy-document-hash-id', 'DE');
   }
 
   /**

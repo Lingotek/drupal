@@ -180,7 +180,7 @@ class LingotekInterfaceTranslationTest extends LingotekTestBase {
     $this->assertSame('es_MX', \Drupal::state()->get('lingotek.downloaded_locale'));
 
     // Now the link is to the workbench, and it opens in a new tab.
-    $this->assertLingotekWorkbenchLink('es_MX');
+    $this->assertLingotekWorkbenchLink('es_MX', 'dummy-document-hash-id', 'ES');
 
     $this->drupalGet('es/lingotek-interface-translation-test');
     $assert_session->responseContains('Título de Prueba para Traducción de Interfaz');

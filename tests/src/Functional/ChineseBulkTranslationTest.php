@@ -107,7 +107,7 @@ class ChineseBulkTranslationTest extends LingotekTestBase {
     $this->assertText('The translation of node Llamas are cool into zh_CN has been downloaded.');
 
     // Now the link is to the workbench, and it opens in a new tab.
-    $this->assertLingotekWorkbenchLink('zh_CN');
+    $this->assertLingotekWorkbenchLink('zh_CN', 'dummy-document-hash-id', 'ZH-HANS');
   }
 
   /**
@@ -163,7 +163,7 @@ class ChineseBulkTranslationTest extends LingotekTestBase {
     $this->assertIdentical('zh_CN', \Drupal::state()->get('lingotek.downloaded_locale'));
 
     // Now the link is to the workbench, and it opens in a new tab.
-    $this->assertLingotekWorkbenchLink('zh_CN');
+    $this->assertLingotekWorkbenchLink('zh_CN', 'dummy-document-hash-id', 'ZH-HANS');
   }
 
   /**
@@ -217,7 +217,7 @@ class ChineseBulkTranslationTest extends LingotekTestBase {
     $this->assertIdentical('zh_CN', \Drupal::state()->get('lingotek.downloaded_locale'));
 
     // Now the link is to the workbench, and it opens in a new tab.
-    $this->assertLingotekWorkbenchLink('zh_CN');
+    $this->assertLingotekWorkbenchLink('zh_CN', 'dummy-document-hash-id', 'ZH-HANS');
   }
 
 }

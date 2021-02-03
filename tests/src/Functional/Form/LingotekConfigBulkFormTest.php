@@ -88,10 +88,15 @@ class LingotekConfigBulkFormTest extends LingotekTestBase {
 
     // Assert that there is a bundle printed with the Body field, and by that
     // Body must be appear twice.
-    $this->assertUniqueText('Article');
-    $this->assertUniqueText('Page');
-    $this->assertText('Body');
-    $this->assertNoUniqueText('Body');
+    $td = $this->xpath('//td[text()="Article"]');
+    $this->assertCount(1, $td);
+
+    $td = $this->xpath('//td[text()="Page"]');
+    $this->assertCount(1, $td);
+
+    // There are two bodies, one for page and one for article.
+    $td = $this->xpath('//td[text()="Body"]');
+    $this->assertCount(2, $td);
   }
 
   /**

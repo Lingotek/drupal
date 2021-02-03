@@ -247,7 +247,7 @@ class LingotekConfigManagementForm extends FormBase {
         ];
         $rows[$mapper_id] = [];
         $rows[$mapper_id] += [
-          'title' => $mapper->getTitle(),
+          'title' => trim($mapper->getTitle()),
           'source' => $source,
           'translations' => $translations,
           'profile' => $profile ? $profile->label() : '',
@@ -256,11 +256,11 @@ class LingotekConfigManagementForm extends FormBase {
         if ($is_config_entity) {
           $link = NULL;
           if ($mapper->getEntity()->hasLinkTemplate('canonical')) {
-            $link = $mapper->getEntity()->toLink($mapper->getTitle());
+            $link = $mapper->getEntity()->toLink(trim($mapper->getTitle()));
           }
           elseif ($mapper->getEntity()->hasLinkTemplate('edit-form')) {
             $link = $mapper->getEntity()
-              ->toLink($mapper->getTitle(), 'edit-form');
+              ->toLink(trim($mapper->getTitle()), 'edit-form');
           }
           if ($link !== NULL) {
             $rows[$mapper_id]['title'] = $link;
@@ -273,10 +273,10 @@ class LingotekConfigManagementForm extends FormBase {
           $bundle_info = \Drupal::service('entity_type.bundle.info')
             ->getBundleInfo($entity_type_id);
           if (isset($bundle_info[$bundle])) {
-            $rows[$mapper_id]['bundle'] = $bundle_info[$bundle]['label'];
+            $rows[$mapper_id]['bundle'] = trim($bundle_info[$bundle]['label']);
           }
           else {
-            $rows[$mapper_id]['bundle'] = $bundle;
+            $rows[$mapper_id]['bundle'] = trim($bundle);
           }
         }
       }
@@ -1571,8 +1571,8 @@ class LingotekConfigManagementForm extends FormBase {
     foreach ($translations as $langcode => $data) {
       if ($this->languageManager->getLanguage($langcode)) {
         $languages[] = [
-          'language' => strtoupper($langcode),
-          'status' => strtolower($data['status']),
+          'language' => $langcode,
+          'status' => $data['status'],
           'status_text' => $this->getTargetStatusText($mapper, $data['status'], $langcode),
           'url' => $data['url'],
           'new_window' => $data['new_window'],
@@ -1581,14 +1581,12 @@ class LingotekConfigManagementForm extends FormBase {
     }
     return [
       'data' => [
-        '#type' => 'inline_template',
-        '#template' => '{% for language in languages %}{% if language.url %}<a href="{{ language.url }}" {%if language.new_window%}target="_blank"{%endif%}{%else%}<span {%endif%} class="language-icon target-{{language.status}}" title="{{language.status_text}}">{{language.language}}{%if language.url%}</a>{%else%}</span>{%endif%}{% endfor %}',
-        '#context' => [
-          'languages' => $languages,
-        ],
+        '#type' => 'lingotek_target_statuses',
+        '#mapper' => $mapper,
+        '#source_langcode' => $mapper->getLangcode(),
+        '#statuses' => $languages,
       ],
     ];
-
   }
 
   /**

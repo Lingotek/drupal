@@ -139,7 +139,7 @@ class LingotekContentTranslationPreSaveHookTest extends LingotekTestBase {
     $this->assertNoText('Not published');
 
     // Check that the Edit link points to the workbench and it is opened in a new tab.
-    $this->assertLingotekWorkbenchLink('es_MX');
+    $this->assertLingotekWorkbenchLink('es_MX', 'dummy-document-hash-id', 'Edit in Lingotek Workbench');
 
     // Download translation.
     $this->clickLink('Download completed translation');

@@ -355,7 +355,7 @@ class LingotekUtilitiesDisassociateAllDocumentsTest extends LingotekTestBase {
       'table[2]' => TRUE,
       $this->getBulkOperationFormName() => $this->getBulkOperationNameForCancel('node'),
     ];
-    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $this->submitForm($edit, $this->getApplyActionsButtonLabel());
   }
 
   protected function createAndCancelATerm() {

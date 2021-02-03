@@ -17,4 +17,35 @@
  * @ingroup themeable
  */
 #}
-{% if url %}<a href="{{ url }}"{%if new_window%} target="_blank"{%endif%}{%else%}<span{%endif%} class="language-icon target-{{status|lower}}" title="{{status_text}}">{{language|upper}}{%if url%}</a>{%else%}</span>{%endif%}
+
+{% set text = language|upper %}
+{% set attributes = create_attribute()
+  .setAttribute('title', status_text)
+  .addClass('language-icon')
+  .addClass('target-' ~ status|lower) %}
+{% set toggle_attributes = create_attribute()
+  .addClass('language-icon')
+  .addClass('lingotek-target-dropdown-toggle')
+  .addClass('target-' ~ status|lower) %}
+
+{% if actions %}
+<ul class="lingotek-target-dropdown">
+{% endif %}
+{% if url %}
+  <a href="{{ url }}" {% if new_window %}target="_blank"{% endif %} {{ attributes }}>{{ text }}</a>
+{% else %}
+  <span {{ attributes }}>{{ text }}</span>
+{% endif %}
+
+{% if actions %}
+  <button {{ toggle_attributes }}><span class="visually-hidden">{% trans %}Toggle Actions{% endtrans %}</span></button>
+  <ul class="lingotek-target-actions" {{ toggle_attributes }}>
+    {% for action in actions %}
+    <li>
+      <a href="{{ action.url }}" {% if action.new_window %}target="_blank"{% endif %}>{{ action.title }}</a>
+    </li>
+    {% endfor %}
+  </ul>
+  </div>
+{% endif %}
+</div>

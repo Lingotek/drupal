@@ -258,10 +258,13 @@ trait LingotekManagementTestTrait {
    * @param string $document_id
    *   The Lingotek document ID. Optional, defaults to 'dummy-document-hash-id'.
    */
-  protected function assertLingotekWorkbenchLink($locale, $document_id = 'dummy-document-hash-id') {
+  protected function assertLingotekWorkbenchLink($locale, $document_id = 'dummy-document-hash-id', $text = NULL) {
     $basepath = \Drupal::request()->getBasePath();
     $this->assertLinkByHref($basepath . '/admin/lingotek/workbench/' . $document_id . '/' . $locale);
     $workbench_link = $this->xpath("//a[@href='$basepath/admin/lingotek/workbench/$document_id/$locale' and @target='_blank']");
+    if ($text !== NULL) {
+      $workbench_link = $this->xpath("//a[@href='$basepath/admin/lingotek/workbench/$document_id/$locale' and @target='_blank' and text()='$text']");
+    }
     $this->assertEqual(count($workbench_link), 1, 'Workbench links open in a new tab.');
   }
 

@@ -64,3 +64,17 @@ lingotek.locales_listing:
     - core/jquery
     - core/drupal
     - core/jquery.once
+
+lingotek.target_actions:
+  css:
+    theme:
+      css/lingotek.actions.css: {}
+  js:
+    js/lingotek.actions.js: {}
+  dependencies:
+    - core/drupalSettings
+    - core/jquery.once
+    - core/jquery
+    - core/jquery.form
+    - core/drupal.ajax
+    - core/drupal

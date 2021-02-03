@@ -72,6 +72,7 @@ class LingotekTranslationStatusesFormatter extends FormatterBase implements Cont
       '#attached' => [
         'library' => [
           'lingotek/lingotek',
+          'lingotek/lingotek.target_actions',
         ],
       ],
       '#cache' => [

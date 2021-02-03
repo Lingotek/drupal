@@ -142,7 +142,7 @@ class LingotekNodeWhenFieldIsRemovedTest extends LingotekTestBase {
     $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.downloaded_locale'));
 
     // Now the link is to the workbench, and it opens in a new tab.
-    $this->assertLingotekWorkbenchLink('es_MX');
+    $this->assertLingotekWorkbenchLink('es_MX', 'dummy-document-hash-id', 'ES');
 
     // Open the node and it works.
     $this->clickLink('Llamas are cool');

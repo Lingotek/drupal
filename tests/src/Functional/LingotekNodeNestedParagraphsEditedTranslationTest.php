@@ -147,7 +147,7 @@ class LingotekNodeNestedParagraphsEditedTranslationTest extends LingotekTestBase
     $this->assertText('The es_AR translation for node Llamas are cool is ready for download.');
 
     // Check that the Edit link points to the workbench and it is opened in a new tab.
-    $this->assertLingotekWorkbenchLink('es_AR');
+    $this->assertLingotekWorkbenchLink('es_AR', 'dummy-document-hash-id', 'Edit in Lingotek Workbench');
 
     // Edit the original node.
     $this->drupalGet('node/1');

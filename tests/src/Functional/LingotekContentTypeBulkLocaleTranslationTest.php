@@ -104,7 +104,7 @@ class LingotekContentTypeBulkLocaleTranslationTest extends LingotekTestBase {
     $this->assertIdentical('es_AR', \Drupal::state()->get('lingotek.downloaded_locale'));
 
     // Now the link is to the workbench, and it opens in a new tab.
-    $this->assertLingotekWorkbenchLink('es_AR');
+    $this->assertLingotekWorkbenchLink('es_AR', 'dummy-document-hash-id', 'ES');
 
     // Check that the order of target languages is always alphabetical.
     $target_links = $this->xpath("//a[contains(@class,'language-icon')]");
