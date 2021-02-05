@@ -83,7 +83,8 @@ class LingotekAccountTest extends BrowserTestBase {
     $this->clickLink('Connect Lingotek Account');
     // Our fake backend generates a token, returns to the site and waits for the
     // redirect.
-    $this->assertText('Connecting... Please wait to be redirected');
+    // $this->assertText('Connecting... Please wait to be redirected');
+    $assert_session->addressEquals('admin/lingotek/setup/account');
   }
 
   public function testAccountCreationCancelled() {
@@ -98,7 +99,7 @@ class LingotekAccountTest extends BrowserTestBase {
     // This will simulate a "cancel" click, so we need to ensure we are back
     // at the same page. We cannot test that we will be redirected, as it's done
     // via js. There is no way on the server to know the hash part of the url.
-    $this->assertUrl('/admin/lingotek/setup/account/handshake?success=true&prod=prod');
+    $this->assertUrl('/admin/lingotek/setup/account');
   }
 
 }
