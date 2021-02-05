@@ -2,17 +2,18 @@
 
 namespace Drupal\lingotek\Controller;
 
+use Drupal\Component\Serialization\Json;
 use Drupal\lingotek\Form\LingotekSettingsAccountForm;
 use Drupal\lingotek\Form\LingotekSettingsCommunityForm;
 use Drupal\lingotek\Form\LingotekSettingsConnectForm;
 use Drupal\lingotek\Form\LingotekSettingsDefaultsForm;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Returns responses for lingotek module setup routes.
  */
 class LingotekSetupController extends LingotekControllerBase {
-
-  public const LINGOTEK_TOKEN_COOKIE = 'lingotek_access_token';
 
   /**
    * Presents a connection page to Lingotek Services
@@ -30,22 +31,41 @@ class LingotekSetupController extends LingotekControllerBase {
     ];
   }
 
-  public function handshake() {
-    if ($token = $this->getAccessToken()) {
-      $this->saveToken($token);
-      $this->deleteAccessTokenCookie();
-      $config = \Drupal::configFactory()->getEditable('lingotek.settings');
-      $config->set('account.use_production', TRUE)->save();
-      $account_info = $this->fetchAccountInfo();
-      $this->saveAccountInfo($account_info);
-      $this->messenger()->addStatus($this->t('Your account settings have been saved.'));
-      $this->logger->notice('Account connected to Lingotek.');
+  public function handshake(Request $request) {
+    if (Request::METHOD_POST === $request->getMethod()) {
+      $body = Json::decode($request->getContent());
+      if (isset($body['access_token'])) {
+        $config = \Drupal::configFactory()->getEditable('lingotek.settings');
+        $config->set('account.access_token', $body['access_token']);
+        $config->set('account.use_production', TRUE);
+        $config->save();
 
-      // No need to show the username and token if everything worked correctly
-      // Just go to the community page
-      return $this->redirect('lingotek.setup_community');
+        $account_info = $this->fetchAccountInfo();
+        $this->saveAccountInfo($account_info);
+        $this->messenger()
+          ->addStatus($this->t('Your account settings have been saved.'));
+        $this->logger->notice('Account connected to Lingotek.');
+        return new JsonResponse([
+          'status' => TRUE,
+          'message' => 'Account connected to Lingotek.',
+        ]);
+      }
+      else {
+        return new JsonResponse([
+          'status' => FALSE,
+          'message' => 'Account not connected to Lingotek.',
+        ]);
+      }
     }
-    else {
+    elseif (Request::METHOD_GET === $request->getMethod()) {
+      // Is a GET.
+      $config = \Drupal::config('lingotek.settings');
+      if ($config->get('account.access_token')) {
+        // No need to show the username and token if everything worked correctly
+        // Just go to the community page
+        return $this->redirect('lingotek.setup_community');
+      }
+      // Is a GET, but don't have the token yet.
       return [
         '#type' => 'markup',
         '#markup' => $this->t('Connecting... Please wait to be redirected'),
@@ -107,14 +127,6 @@ class LingotekSetupController extends LingotekControllerBase {
       '#type' => 'markup',
       'markup' => $this->formBuilder->getForm(LingotekSettingsDefaultsForm::class),
     ];
-  }
-
-  protected function getAccessToken() {
-    return $this->request->cookies->get(static::LINGOTEK_TOKEN_COOKIE);
-  }
-
-  protected function deleteAccessTokenCookie() {
-    setcookie(static::LINGOTEK_TOKEN_COOKIE, '', time() - 60);
   }
 
   protected function saveToken($token) {
