@@ -256,11 +256,18 @@ class LingotekDashboardController extends LingotekControllerBase {
       }
 
       $language_report = $this->getLanguageReport($language);
-      if ($lingotek_locale_requested == $lingotek_locale) {
+      if ($lingotek_locale_requested === $lingotek_locale) {
         $response = $language_report;
       }
       else {
-        $response[$lingotek_locale] = $language_report;
+        if (!empty($lingotek_locale)) {
+          $response[$lingotek_locale] = $language_report;
+        }
+        else {
+          // There are some edge cases where there is no locale.
+          // We default to the only known code, which is only the langcode.
+          $response[$language->getId()] = $language_report;
+        }
       }
       $source_total += $language_report['source']['total'];
       $target_total += $language_report['target']['total'];
@@ -401,14 +408,6 @@ class LingotekDashboardController extends LingotekControllerBase {
       }
     }
     return $return;
-
-    $sumArray = [];
-    foreach ($myArray as $k => $subArray) {
-      foreach ($subArray as $id => $value) {
-        $sumArray[$id] += $value;
-      }
-    }
-    return $sumArray;
   }
 
 }

@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\lingotek\Functional;
 
+use Drupal\Component\Serialization\Json;
 use Drupal\Core\Url;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Symfony\Component\HttpFoundation\Response;
@@ -616,6 +617,38 @@ class LingotekDashboardTest extends LingotekTestBase {
     // Using an absolute url can be problematic in https environments, ensure we
     // use a relative one.
     $this->assertEquals($basepath . '/admin/lingotek/dashboard_endpoint', $drupalSettings['lingotek']['cms_data']['endpoint_url']);
+  }
+
+  /**
+   * Ensure language without locale doesn't mess with the response.
+   */
+  public function testEndpointResponseWithEmptyLocale() {
+    $basepath = \Drupal::request()->getBasePath();
+
+    $language = ConfigurableLanguage::create([
+      'id' => 'en-hk',
+      'name' => 'English (Hong-Kong)',
+    ]);
+    $language->setThirdPartySetting('lingotek', 'locale', '');
+    $language->save();
+
+    $url = Url::fromRoute('lingotek.dashboard_endpoint')->setAbsolute()->toString();
+
+    // Check the stats.
+    $request = $this->client->get($url, [
+      'cookies' => $this->cookies,
+      'headers' => [
+        'Accept' => 'application/json',
+        'Content-Type' => 'application/x-www-form-urlencoded',
+      ],
+      'http_errors' => FALSE,
+    ]);
+    $responseData = Json::decode($request->getBody());
+    $this->assertEquals($responseData['count'], 2);
+    $this->assertCount(2, $responseData['languages']);
+    // We default to the known code, which is only the langcode.
+    $this->assertEquals($responseData['languages']['en-hk']['active'], 1);
+    $this->assertEquals($responseData['languages']['en_US']['active'], 1);
   }
 
 }
