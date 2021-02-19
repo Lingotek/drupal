@@ -58,7 +58,7 @@ class LingotekManagementForm extends LingotekManagementFormBase {
 
     $has_bundles = $entity_type->get('bundle_entity_type') != 'bundle';
 
-    $groupsExists = $this->moduleHandler->moduleExists('group') && $this->entityTypeId === 'node';
+    $groupsExists = $this->moduleHandler->moduleExists('gnode') && $this->entityTypeId === 'node';
 
     // Filter results
     // Default options
@@ -255,7 +255,7 @@ class LingotekManagementForm extends LingotekManagementFormBase {
     $properties = $this->entityFieldManager->getBaseFieldDefinitions($this->entityTypeId);
     $has_bundles = $entity_type->get('bundle_entity_type') != 'bundle';
 
-    $groupsExists = $this->moduleHandler->moduleExists('group') && $this->entityTypeId === 'node';
+    $groupsExists = $this->moduleHandler->moduleExists('gnode') && $this->entityTypeId === 'node';
 
     $labelFilter = $temp_store->get('label');
     $bundleFilter = $temp_store->get('bundle');
@@ -339,7 +339,7 @@ class LingotekManagementForm extends LingotekManagementFormBase {
    * {@inheritdoc}
    */
   protected function getFilterKeys() {
-    $groupsExists = $this->moduleHandler->moduleExists('group') && $this->entityTypeId === 'node';
+    $groupsExists = $this->moduleHandler->moduleExists('gnode') && $this->entityTypeId === 'node';
     // We need specific identifiers for default and advanced filters since the advanced filters bundle is unique.
     $filtersKeys = [['wrapper', 'label'], ['wrapper', 'bundle'], ['wrapper', 'job'], ['advanced_options', 'document_id'], ['advanced_options', 'entity_id'], ['advanced_options', 'profile'], ['advanced_options', 'source_language'], ['advanced_options', 'source_status'], ['advanced_options', 'target_status'], ['advanced_options', 'content_state']];
     if ($groupsExists) {

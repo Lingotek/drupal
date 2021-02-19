@@ -339,7 +339,7 @@ namespace Drupal\Tests\lingotek\Unit\Form {
 
       $this->moduleHandler->expects($this->at(0))
         ->method('moduleExists')
-        ->with('group')
+        ->with('gnode')
         ->willReturn(FALSE);
 
       $this->form->buildForm([], new FormState());

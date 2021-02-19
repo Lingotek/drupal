@@ -132,6 +132,20 @@ class LingotekNodeBulkFormWithGroupModuleTest extends LingotekTestBase {
   }
 
   /**
+   * Tests that the bulk management group filtering exists for nodes.
+   */
+  public function testGroupFilterDoesntExistForNodesIfNoGnode() {
+    /** @var \Drupal\Core\Extension\ModuleInstallerInterface  $moduleInstaller */
+    $moduleInstaller = \Drupal::service('module_installer');
+    $moduleInstaller->uninstall(['gnode']);
+
+    $this->goToContentBulkManagementForm();
+
+    // Assert there is a select for group.
+    $this->assertNoField('filters[wrapper][group]', 'There is not a filter for group');
+  }
+
+  /**
    * Tests that the bulk management group filtering doesn't exist for other content entities.
    */
   public function testGroupFilterDoesntExistForNonNodes() {
