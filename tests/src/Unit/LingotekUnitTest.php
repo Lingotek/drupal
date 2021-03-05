@@ -892,6 +892,19 @@ class LingotekUnitTest extends UnitTestCase {
       ])
       ->will($this->returnValue($response));
 
+    $this->api->expects($this->at(9))
+      ->method('patchDocument')
+      ->with('my_doc_id', [
+        'format' => 'JSON',
+        'content' => '"content"',
+        'title' => 'title',
+        'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
+        'fprm_id' => '4f91482b-5aa1-4a4a-a43f-712af7b39625',
+        'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0',
+        'project_id' => 'test_project',
+      ])
+      ->will($this->returnValue($response));
+
     // Simplest update.
     $this->lingotek->updateDocument('my_doc_id', 'content');
 
@@ -951,7 +964,14 @@ class LingotekUnitTest extends UnitTestCase {
         'it' => ['overrides' => 'custom', 'custom' => ['auto_request' => TRUE, 'workflow' => 'default', 'vault' => 'it_vault']],
       ],
     ], 'lingotek_profile');
-    // If amount of translation_workflow_ids doesn't match ammount of translation_locale_codes, use project workflow
+    // If amount of translation_workflow_ids doesn't match amount of translation_locale_codes, use project workflow
+    $this->lingotek->updateDocument('my_doc_id', 'content', NULL, 'title', $profile, NULL, 'en_US');
+    $profile = new LingotekProfile([
+      'id' => 'profile0',
+      'project' => 'test_project',
+      'vault' => 'test_vault',
+      'workflow' => 'test_workflow',
+    ], 'lingotek_profile');
     $this->lingotek->updateDocument('my_doc_id', 'content', NULL, 'title', $profile, NULL, 'en_US');
   }
 
@@ -1549,8 +1569,6 @@ class LingotekUnitTest extends UnitTestCase {
         'fprm_id' => '4f91482b-5aa1-4a4a-a43f-712af7b39625',
         'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0',
         'project_id' => 'test_project',
-        'translation_locale_code' => ['es_ES', 'ca_ES', 'it_IT'],
-        'translation_workflow_id' => ['es_workflow', 'ca_workflow', 'default_workflow'],
       ])
       ->will($this->returnValue($response));
 
