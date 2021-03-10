@@ -824,7 +824,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     return $data;
   }
 
-  private function processCohesionComponentsValues($values, $component_model, $model_key = []) {
+  private function processCohesionComponentsValues($values, $component_model, $nested_key = []) {
     $data_layout = [];
     foreach ($values as $key => $value) {
       // If the key in the model matches a uuid then it a component field value
@@ -832,10 +832,12 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       if (preg_match(ElementModel::MATCH_UUID, $key)) {
         if (is_array($value)) {
           foreach ($value as $index => $inner_value) {
-            $data_layout = array_merge($data_layout, $this->processCohesionComponentsValues($inner_value, $component_model, array_merge($model_key, [
-              $key,
-              $index,
-            ])));
+            $inner_key = array_keys(get_object_vars($inner_value))[0];
+
+            $data_layout = array_merge_recursive(
+              $data_layout,
+              $this->processCohesionComponentsValues($inner_value, $component_model, array_merge($nested_key, [$key, $inner_key]))
+            );
           }
         }
         elseif (isset($component_model[$key]) && $component_model[$key]->getProperty([
@@ -860,10 +862,20 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
             if (isset($form_field['translate']) && $form_field['translate'] === TRUE) {
               // Only expose value that is a string or a WYSIWYG
               if (is_string($value) && !empty($value)) {
-                $data_layout[$key] = $value;
+                $exposed_value = $value;
               }
               elseif (is_object($value) && property_exists($value, 'text') && property_exists($value, 'textFormat')) {
-                $data_layout[$key] = Html::escape($value->text);
+                $exposed_value = Html::escape($value->text);
+              }
+
+              if ($exposed_value) {
+                if (!empty($nested_key)) {
+                  $inner_key = array_pop($nested_key);
+                  NestedArray::setValue($data_layout, $nested_key, [[$inner_key => $exposed_value]]);
+                }
+                else {
+                  $data_layout[$key] = $exposed_value;
+                }
               }
             }
           }
@@ -1737,6 +1749,16 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
                 if (isset($field_data[$element_uuid]) && isset($field_data[$element_uuid][$key])) {
                   if (is_string($value) && !empty($value)) {
                     $model->setProperty($key, $field_data[$element_uuid][$key]);
+                  }
+                  // This can happen if we get a repeater field.
+                  elseif (is_array($value)) {
+                    $new_value = $value;
+                    foreach ($value as $delta => $inner_value) {
+                      $innerKey = array_keys(get_object_vars($inner_value))[0];
+                      $inner_value->{$innerKey} = Html::decodeEntities($field_data[$element_uuid][$key][$delta][$innerKey]);
+                      $new_value[$delta] = $inner_value;
+                    }
+                    $model->setProperty($key, $new_value);
                   }
                   elseif (is_object($value) && property_exists($value, 'text') && property_exists($value, 'textFormat')) {
                     $new_value = $value;
