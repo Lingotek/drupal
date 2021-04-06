@@ -175,7 +175,7 @@ JSON;
     $this->assertEquals($data['title'][0]['value'], 'Llamas are cool');
     $this->assertTrue(isset($data['layout_canvas'][0]['json_values'][$modelUuid]));
     $this->assertTrue(isset($data['layout_canvas'][0]['json_values'][$modelUuid][$componentUuid]));
-    $this->assertEquals($data['layout_canvas'][0]['json_values'][$modelUuid][$componentUuid], "&lt;p&gt;Llamas are very cool&lt;/p&gt;\n");
+    $this->assertEquals($data['layout_canvas'][0]['json_values'][$modelUuid][$componentUuid], '<p>Llamas are very cool</p>' . PHP_EOL . '');
 
     // Check that the url used was the right one.
     $uploaded_url = \Drupal::state()->get('lingotek.uploaded_url');
@@ -226,7 +226,7 @@ JSON;
     $jsonValues = $layout->get('json_values')->value;
     $jsonValuesData = Json::decode($jsonValues);
     $textValue = $jsonValuesData['model'][$modelUuid][$componentUuid]['text'];
-    $this->assertEquals("<p>Las llamas son muy chulas</p>\n", $textValue);
+    $this->assertEquals($textValue, '&lt;p&gt;Las llamas son muy chulas&lt;/p&gt;' . PHP_EOL . '');
 
     // The original content didn't change.
     $this->drupalGet('node/1');

@@ -6,7 +6,6 @@ use Drupal\cohesion\LayoutCanvas\ElementModel;
 use Drupal\cohesion\LayoutCanvas\LayoutCanvas;
 use Drupal\cohesion_elements\Entity\Component;
 use Drupal\Component\Render\FormattableMarkup;
-use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Component\Utility\SortArray;
 use Drupal\Component\Utility\UrlHelper;
@@ -782,11 +781,16 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
             $component_model = $component->getLayoutCanvasInstance()
               ->iterateModels('component_form');
             if ($element->getModel()) {
-              $data_layout = array_merge($data_layout, $this->processCohesionComponentsValues($element->getModel()
-                ->getValues(), $component_model));
+              $data_layout = array_merge(
+                $data_layout,
+                $this->extractCohesionComponentValues($component_model, $element->getModel()->getValues())
+              );
             }
           }
-          $data[$k][$element->getModelUUID()] = $data_layout;
+
+          if (!empty($data_layout)) {
+            $data[$k][$element->getModelUUID()] = $data_layout;
+          }
         }
         unset($data[$k][0]);
       }
@@ -824,65 +828,148 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     return $data;
   }
 
-  private function processCohesionComponentsValues($values, $component_model, $nested_key = []) {
-    $data_layout = [];
+  protected function extractCohesionComponentValues(array $component_model, $values) {
+    $field_values = [];
+
     foreach ($values as $key => $value) {
-      // If the key in the model matches a uuid then it a component field value
-      // If the model contains (property) and is TRUE, the field is excluded from being expose as translatable
-      if (preg_match(ElementModel::MATCH_UUID, $key)) {
-        if (is_array($value)) {
-          foreach ($value as $index => $inner_value) {
-            $inner_key = array_keys(get_object_vars($inner_value))[0];
+      // If the key does not match a UUID, then it's not a component field and we can skip it.
+      if (!preg_match(ElementModel::MATCH_UUID, $key)) {
+        continue;
+      }
 
-            $data_layout = array_merge_recursive(
-              $data_layout,
-              $this->processCohesionComponentsValues($inner_value, $component_model, array_merge($nested_key, [$key, $inner_key]))
-            );
-          }
-        }
-        elseif (isset($component_model[$key]) && $component_model[$key]->getProperty([
-            'settings',
-            'translate',
-          ]) !== FALSE) {
+      $component = $component_model[$key] ?? NULL;
+      // If we can't find a component with this uuid, we skip it.
+      if (!$component) {
+        continue;
+      }
 
-          $form_elements = \Drupal::keyValue('cohesion.assets.form_elements');
-          $field_uid = $component_model[$key]->getElement()->getProperty('uid');
-          $form_field = $form_elements->get($field_uid);
-          $model = $component = $component_model[$key]->getElement()
-            ->getProperty('uuid');
-          // We default to true if not set, so we can fallback to including it
-          // if we cannot explicitly discard it.
-          $componentType = isset($form_field['model']['settings']['type']) ? $form_field['model']['settings']['type'] : 'notDiscardedType';
-          $protectedComponentTypes = [
-            'cohTypeahead',
-            'cohEntityBrowser',
-            'cohFileBrowser',
-          ];
-          if (!in_array($componentType, $protectedComponentTypes)) {
-            if (isset($form_field['translate']) && $form_field['translate'] === TRUE) {
-              // Only expose value that is a string or a WYSIWYG
-              if (is_string($value) && !empty($value)) {
-                $exposed_value = $value;
-              }
-              elseif (is_object($value) && property_exists($value, 'text') && property_exists($value, 'textFormat')) {
-                $exposed_value = Html::escape($value->text);
-              }
+      $settings = $component->getProperty('settings');
+      // Skip this field if the component is not translatable.
+      if (($settings->translate ?? NULL) === FALSE) {
+        continue;
+      }
 
-              if ($exposed_value) {
-                if (!empty($nested_key)) {
-                  $inner_key = array_pop($nested_key);
-                  NestedArray::setValue($data_layout, $nested_key, [[$inner_key => $exposed_value]]);
-                }
-                else {
-                  $data_layout[$key] = $exposed_value;
-                }
-              }
-            }
-          }
+      $skippedComponentTypes = [
+        'cohTypeahead',
+        'cohEntityBrowser',
+        'cohFileBrowser',
+      ];
+      $component_type = $settings->type ?? NULL;
+      if (in_array($component_type, $skippedComponentTypes)) {
+        continue;
+      }
+
+      // Handle Field Repeaters before checking if the field is translatable,
+      // since Field Repeater fields aren't but their contents are.
+      if ($component_type === 'cohArray') {
+        foreach ($value as $index => $item) {
+          $field_values[$key][$index] = $this->extractCohesionComponentValues($component_model, (array) $item);
         }
       }
+
+      $form_field = \Drupal::keyValue('cohesion.assets.form_elements')
+        ->get($component->getElement()->getProperty('uid'));
+      if (($form_field['translate'] ?? NULL) !== TRUE) {
+        // Skip if the form_field is not translatable.
+        continue;
+      }
+
+      $schema_type = $settings->schema->type ?? NULL;
+      switch ($schema_type) {
+        case 'string':
+          if (!empty($value)) {
+            $field_values[$key] = $value;
+          }
+
+          break;
+
+        case 'object':
+          switch ($component_type) {
+            case 'cohWysiwyg':
+              if (!empty($value->text)) {
+                $field_values[$key] = $value->text;
+              }
+
+              break;
+
+            default:
+              \Drupal::logger('lingotek')
+                ->warning('Unhandled component type of \'%type\' (schema type: %schema) encountered when extracting cohesion component values.', [
+                  '%type' => $component_type,
+                  '%schema' => $schema_type,
+                ]);
+              break;
+          }
+
+          break;
+
+        default:
+          \Drupal::logger('lingotek')->warning(
+            'Unhandled schema type of \'%type\' encountered when extracting cohesion component values.',
+            ['%type' => $schema_type]
+          );
+          break;
+      }
     }
-    return $data_layout;
+
+    return $field_values;
+  }
+
+  protected function setCohesionComponentValues(array $component_model, $model, $translations, $path = []) {
+    foreach ($translations as $key => $translation) {
+      // If the key does not match a UUID, then it's not a component field and we can skip it.
+      if (!preg_match(ElementModel::MATCH_UUID, $key)) {
+        continue;
+      }
+
+      $component = $component_model[$key] ?? NULL;
+      // If we can't find a component with this uuid, we skip it.
+      if (!$component) {
+        continue;
+      }
+
+      // Keep track of the path to the property so we can handle nested components.
+      $property_path = [...$path, $key];
+
+      $settings = $component->getProperty('settings');
+      $component_type = $settings->type ?? NULL;
+      $schema_type = $settings->schema->type ?? NULL;
+      switch ($schema_type) {
+        case 'string':
+          $model->setProperty($property_path, $translation);
+          break;
+
+        case 'array':
+          foreach ($translation as $index => $item) {
+            $this->setCohesionComponentValues($component_model, $model, $item, [...$property_path, $index]);
+          }
+          break;
+
+        case 'object':
+          switch ($component_type) {
+            case 'cohWysiwyg':
+              $model->setProperty([...$property_path, 'text'], $translation);
+              break;
+
+            default:
+              \Drupal::logger('lingotek')
+                ->warning('Unhandled component type of \'%type\' (schema type: %schema) encountered when setting cohesion component values.', [
+                  '%type' => $component_type,
+                  '%schema' => $schema_type,
+                ]);
+              break;
+          }
+
+          break;
+
+        default:
+          \Drupal::logger('lingotek')->warning(
+            'Unhandled schema type of \'%type\' encountered when setting cohesion component values.',
+            ['%type' => $schema_type]
+          );
+          break;
+      }
+    }
   }
 
   /**
@@ -1744,29 +1831,24 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
           elseif ($field_type === 'string_long' && $field_definition->getName() === 'json_values' && $field_definition->getTargetEntityTypeId() === 'cohesion_layout') {
             $existingData = $revision->get($name)->offsetGet(0)->value;
             $layout_canvas = new LayoutCanvas($existingData);
-            foreach ($layout_canvas->iterateModels() as $element_uuid => &$model) {
-              foreach ($model->getValues() as $key => $value) {
-                if (isset($field_data[$element_uuid]) && isset($field_data[$element_uuid][$key])) {
-                  if (is_string($value) && !empty($value)) {
-                    $model->setProperty($key, $field_data[$element_uuid][$key]);
-                  }
-                  // This can happen if we get a repeater field.
-                  elseif (is_array($value)) {
-                    $new_value = $value;
-                    foreach ($value as $delta => $inner_value) {
-                      $innerKey = array_keys(get_object_vars($inner_value))[0];
-                      $inner_value->{$innerKey} = Html::decodeEntities($field_data[$element_uuid][$key][$delta][$innerKey]);
-                      $new_value[$delta] = $inner_value;
-                    }
-                    $model->setProperty($key, $new_value);
-                  }
-                  elseif (is_object($value) && property_exists($value, 'text') && property_exists($value, 'textFormat')) {
-                    $new_value = $value;
-                    $new_value->text = Html::decodeEntities($field_data[$element_uuid][$key]);
-                    $model->setProperty($key, $new_value);
-                  }
-                }
+            foreach ($layout_canvas->iterateCanvas() as $element) {
+              if (!$element->isComponent() || !$component = Component::load($element->getComponentID())) {
+                continue;
               }
+
+              if (!$model = $element->getModel()) {
+                continue;
+              }
+
+              $component_model = $component->getLayoutCanvasInstance()
+                ->iterateModels('component_form');
+
+              $component_data = $field_data[$element->getUUID()] ?? NULL;
+              if (!$component_data) {
+                continue;
+              }
+
+              $this->setCohesionComponentValues($component_model, $model, $component_data);
             }
             $translation->get($name)->offsetGet(0)->set('value', json_encode($layout_canvas));
           }
