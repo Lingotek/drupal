@@ -94,7 +94,7 @@ class LingotekContentModerationHandler implements LingotekModerationHandlerInter
   /**
    * {@inheritdoc}
    */
-  public  function performModerationTransitionIfNeeded(ContentEntityInterface &$entity) {
+  public function performModerationTransitionIfNeeded(ContentEntityInterface &$entity) {
     if ($this->moderationInfo->shouldModerateEntitiesOfBundle($entity->getEntityType(), $entity->bundle())) {
       $transition = $this->moderationConfiguration->getDownloadTransition($entity->getEntityTypeId(), $entity->bundle());
       if ($transition) {
@@ -104,7 +104,7 @@ class LingotekContentModerationHandler implements LingotekModerationHandlerInter
           /** @var \Drupal\workflows\WorkflowInterface $workflow */
           $workflow = $this->entityTypeManager->getStorage('workflow')
             ->load($bundles[$entity->bundle()]['workflow']);
-          if ($workflow) {
+          if ($workflow && $workflow->getTypePlugin()->hasTransition($transition)) {
             $theTransition = $workflow->getTypePlugin()->getTransition($transition);
             if ($theTransition !== NULL) {
               // Ensure we can execute this transition.
@@ -115,6 +115,14 @@ class LingotekContentModerationHandler implements LingotekModerationHandlerInter
                 $this->setModerationState($entity, $theTransition->to()->id());
               }
             }
+          }
+          else {
+            \Drupal::logger('lingotek')->warning('Cannot execute transition for @bundle @entity as the workflow @workflow transition @transition cannot be loaded', [
+              '@bundle' => $entity->bundle(),
+              '@entity' => (string) $entity->label(),
+              '@workflow' => (string) $workflow->label(),
+              '@transition' => $transition,
+            ]);
           }
         }
       }
