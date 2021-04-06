@@ -370,6 +370,51 @@ class LingotekContentModerationTest extends LingotekTestBase {
     $this->assertTargetStatus('ES', Lingotek::STATUS_CURRENT);
   }
 
+  public function testDownloadWithInvalidTransition() {
+    $this->configureNeedsReviewAsUploadState();
+
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
+    $this->saveAsNewDraftNodeForm($edit, 'article');
+
+    $this->config('lingotek.settings')
+      ->set('translate.entity.node.article.content_moderation.download_transition', 'invalid_transition')
+      ->save();
+
+    // The status is draft.
+    $value = $this->xpath('//div[@id="edit-current"]/text()');
+    $value = trim($value[1]->getText());
+    $this->assertEquals($value, 'Draft', 'Workbench current status is draft');
+
+    // Moderate to Needs review, so it's uploaded.
+    $edit = ['new_state' => 'needs_review'];
+    $this->drupalPostForm(NULL, $edit, 'Apply');
+
+    // The status is needs review.
+    $value = $this->xpath('//div[@id="edit-current"]/text()');
+    $value = trim($value[1]->getText());
+    $this->assertEquals($value, 'Needs Review', 'Workbench current status is Needs Review');
+
+    $this->goToContentBulkManagementForm();
+    // Request translation.
+    $this->clickLink('ES');
+    // Check translation.
+    $this->clickLink('ES');
+    // Download translation.
+    $this->clickLink('ES');
+    $this->assertText('The translation of node Llamas are cool into es_MX has been downloaded.');
+
+    // Let's see the current status is modified.
+    $this->clickLink('Llamas are cool');
+    // The status didn't change.
+    $value = $this->xpath('//div[@id="edit-current"]/text()');
+    $value = trim($value[1]->getText());
+    $this->assertEquals($value, 'Needs Review', 'Content moderation current status is Needs Review');
+  }
+
   public function testDownloadFromNotUploadStateDoesntTriggerATransition() {
     // This is a hack for avoiding writing different lingotek endpoint mocks.
     \Drupal::state()->set('lingotek.uploaded_content_type', 'node+revision');
