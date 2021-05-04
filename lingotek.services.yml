@@ -139,6 +139,16 @@ services:
     tags:
       - { name: breadcrumb_builder, priority: 100 }
 
+  lingotek.depcalc_exclude_content_metadata_subscriber:
+    class: Drupal\lingotek\EventSubscriber\DepCalcExcludeLingotekContentMetadataSubscriber
+    tags:
+      - { name: event_subscriber }
+
+  lingotek.acquia_contenthub_exclude_content_metadata_subscriber:
+    class: Drupal\lingotek\EventSubscriber\AcquiaContentHubExcludeLingotekContentMetadataFromSerializationSubscriber
+    tags:
+      - { name: event_subscriber }
+
   lingotek.cli_service:
     class: Drupal\lingotek\Cli\LingotekCliService
     arguments: ['@entity_type.manager', '@lingotek.content_translation', '@lingotek.language_locale_mapper']
