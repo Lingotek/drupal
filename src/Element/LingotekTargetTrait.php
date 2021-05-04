@@ -149,7 +149,7 @@ trait LingotekTargetTrait {
       }
       if ($target_status == Lingotek::STATUS_ERROR) {
         $actions[] = [
-          'title' => $this->t('Retry'),
+          'title' => $this->t('Retry request'),
           'url' => Url::fromRoute('lingotek.entity.request_translation',
             [
               'doc_id' => $document_id,
@@ -158,6 +158,17 @@ trait LingotekTargetTrait {
             ['query' => $this->getDestinationWithQueryArray()]),
           'new_window' => FALSE,
         ];
+        $actions[] = [
+          'title' => $this->t('Retry download'),
+          'url' => Url::fromRoute('lingotek.entity.download',
+            [
+              'doc_id' => $document_id,
+              'locale' => $locale,
+            ],
+            ['query' => $this->getDestinationWithQueryArray()]),
+          'new_window' => FALSE,
+        ];
+
       }
       if ($target_status == Lingotek::STATUS_CURRENT) {
         if ($entity->hasLinkTemplate('canonical') && $entity->hasTranslation($langcode)) {

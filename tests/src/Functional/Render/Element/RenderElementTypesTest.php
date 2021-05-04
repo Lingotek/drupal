@@ -185,8 +185,11 @@ class RenderElementTypesTest extends LingotekTestBase {
     $this->assertTargetAction("Open in Lingotek Workbench",
       "$basepath/admin/lingotek/workbench/test-document-id/de_DE",
     );
-    $this->assertTargetAction("Retry",
+    $this->assertTargetAction("Retry request",
       "$basepath/admin/lingotek/entity/add_target/test-document-id/es_ES?destination=$basepath/lingotek_form_test/lingotek_translation_statuses/node/1",
+    );
+    $this->assertTargetAction("Retry download",
+      "$basepath/admin/lingotek/entity/download/test-document-id/es_ES?destination=$basepath/lingotek_form_test/lingotek_translation_statuses/node/1",
     );
 
     $this->assertTargetAction("Open in Lingotek Workbench",
@@ -300,8 +303,11 @@ class RenderElementTypesTest extends LingotekTestBase {
     $this->assertTargetAction("Open in Lingotek Workbench",
       "$basepath/admin/lingotek/workbench/test-document-id/de_DE",
     );
-    $this->assertTargetAction("Retry",
+    $this->assertTargetAction("Retry request",
       "$basepath/admin/lingotek/entity/add_target/test-document-id/es_ES?destination=$basepath/lingotek_form_test/lingotek_translation_status/node/1",
+    );
+    $this->assertTargetAction("Retry download",
+      "$basepath/admin/lingotek/entity/download/test-document-id/es_ES?destination=$basepath/lingotek_form_test/lingotek_translation_status/node/1",
     );
 
     $this->assertTargetAction("Open in Lingotek Workbench",

@@ -649,9 +649,9 @@ class LingotekInterfaceTranslationService implements LingotekInterfaceTranslatio
           }
         }
         catch (\Exception $exception) {
+          $transaction->rollBack();
           \Drupal::logger('lingotek')->error('Error happened (unknown) saving %document_id %locale: %message', ['%document_id' => $document_id, '%locale' => $locale, '%message' => $exception->getMessage()]);
           $this->setTargetStatus($component, $langcode, Lingotek::STATUS_ERROR);
-          $transaction->rollBack();
           return FALSE;
         }
         return TRUE;
@@ -765,8 +765,8 @@ class LingotekInterfaceTranslationService implements LingotekInterfaceTranslatio
                   throw $storageException;
                 }
                 catch (\Exception $exception) {
-                  $this->setTargetStatus($component, $langcode, Lingotek::STATUS_ERROR);
                   $transaction->rollBack();
+                  $this->setTargetStatus($component, $langcode, Lingotek::STATUS_ERROR);
                 }
               }
               else {

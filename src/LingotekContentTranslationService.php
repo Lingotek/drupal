@@ -1274,9 +1274,9 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
           throw $storageException;
         }
         catch (\Exception $exception) {
-          \Drupal::logger('lingotek')->error('Error happened (unknown) saving %document_id %locale: %message', ['%document_id' => $document_id, '%locale' => $locale, '%message' => $exception->getMessage()]);
-          $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_ERROR);
           $transaction->rollBack();
+          $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_ERROR);
+          \Drupal::logger('lingotek')->error('Error happened (unknown) saving %document_id %locale: %message', ['%document_id' => $document_id, '%locale' => $locale, '%message' => $exception->getMessage()]);
           return FALSE;
         }
         return TRUE;
@@ -1421,8 +1421,8 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
                   throw $storageException;
                 }
                 catch (\Exception $exception) {
-                  $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_ERROR);
                   $transaction->rollBack();
+                  $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_ERROR);
                 }
               }
               else {
