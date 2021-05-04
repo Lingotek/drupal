@@ -1858,25 +1858,9 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
             // TODO: Ensure we use LB_AT.
             $sourceSections = $revision->{$name};
             $translation->{$name} = NULL;
-            foreach ($sourceSections as $delta => &$field_item) {
-              /** @var \Drupal\layout_builder\SectionComponent $sectionObject */
-              $sectionObject = clone $field_item->section;
-              $components = $sectionObject->getComponents();
-              /** @var \Drupal\layout_builder\SectionComponent $component */
-              foreach ($components as $componentUuid => &$component) {
-                $config = $component->get('configuration');
-                if (isset($field_data['components'][$componentUuid])) {
-                  $componentData = $field_data['components'][$componentUuid];
-                  foreach ($componentData as $componentDataKey => $componentDataValue) {
-                    $componentDataKeyParts = explode('.', $componentDataKey);
-                    NestedArray::setValue($config, $componentDataKeyParts, $componentDataValue);
-                  }
-                }
-                $component->setConfiguration($config);
-              }
-              $translation->{$name}->set($delta, ['section' => $sectionObject]);
-            }
             // If we are embedding content blocks, we need to translate those too.
+            // And we need to do that before saving the sections, as we need to
+            // reference the latest revision.
             if (isset($field_data['entities']['block_content'])) {
               foreach ($field_data['entities']['block_content'] as $embedded_entity_revision_id => $blockContentData) {
                 $target_entity_type_id = 'block_content';
@@ -1895,6 +1879,33 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
                   }
                 }
               }
+            }
+            foreach ($sourceSections as $delta => &$field_item) {
+              /** @var \Drupal\layout_builder\SectionComponent $sectionObject */
+              $sectionObject = clone $field_item->section;
+              $components = $sectionObject->getComponents();
+              /** @var \Drupal\layout_builder\SectionComponent $component */
+              foreach ($components as $componentUuid => &$component) {
+                $config = $component->get('configuration');
+                if (isset($field_data['components'][$componentUuid])) {
+                  $componentData = $field_data['components'][$componentUuid];
+                  foreach ($componentData as $componentDataKey => $componentDataValue) {
+                    $componentDataKeyParts = explode('.', $componentDataKey);
+                    NestedArray::setValue($config, $componentDataKeyParts, $componentDataValue);
+                  }
+                }
+                // We need to reference the latest revision.
+                if (isset($config['block_revision_id']) && strpos($config['id'], 'inline_block') === 0) {
+                  $old_revision_id = $config['block_revision_id'];
+                  $storage = $this->entityTypeManager->getStorage('block_content');
+                  $bc = $storage->loadRevision($old_revision_id);
+                  $latest = $storage->load($bc->id());
+                  $rev = $latest->getRevisionId();
+                  $config['block_revision_id'] = $rev;
+                }
+                $component->setConfiguration($config);
+              }
+              $translation->{$name}->set($delta, ['section' => $sectionObject]);
             }
           }
           elseif ($field_type === 'layout_translation') {
