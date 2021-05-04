@@ -49,7 +49,10 @@ class LingotekConfigObjectTranslationDocumentUploadHookTest extends LingotekTest
 
     $this->goToConfigBulkManagementForm();
 
-    $this->clickLink('EN', 0);
+    // In Drupal 9.2 the order of the elements changed, so we need to find it.
+    $label = "Lingotek Test Config Object";
+    $enLink = $this->xpath("//td[contains(text(), :label)]/following-sibling::td//a", [':label' => $label]);
+    $enLink[0]->click();
 
     // Check that Llamas is replaced via hook_lingotek_config_object_document_upload().
     // @see lingotek_test_lingotek_config_object_document_upload()
