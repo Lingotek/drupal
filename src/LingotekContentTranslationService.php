@@ -929,7 +929,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       }
 
       // Keep track of the path to the property so we can handle nested components.
-      $property_path = [...$path, $key];
+      $property_path = array_merge($path, [$key]);
 
       $settings = $component->getProperty('settings');
       $component_type = $settings->type ?? NULL;
@@ -941,14 +941,16 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
 
         case 'array':
           foreach ($translation as $index => $item) {
-            $this->setCohesionComponentValues($component_model, $model, $item, [...$property_path, $index]);
+            $newPath = array_merge($property_path, [$index]);
+            $this->setCohesionComponentValues($component_model, $model, $item, $newPath);
           }
           break;
 
         case 'object':
           switch ($component_type) {
             case 'cohWysiwyg':
-              $model->setProperty([...$property_path, 'text'], $translation);
+              $newPath = array_merge($property_path, ['text']);
+              $model->setProperty($newPath, $translation);
               break;
 
             default:
