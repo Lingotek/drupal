@@ -89,7 +89,7 @@ class NestedLayoutBuilderEntitiesDetector extends PluginBase implements RelatedE
       $container->get('entity_type.manager'),
       $container->get('entity_field.manager'),
       $container->get('lingotek.configuration'),
-      $container->get('module_handler'),
+      $container->get('module_handler')
     );
   }
 
