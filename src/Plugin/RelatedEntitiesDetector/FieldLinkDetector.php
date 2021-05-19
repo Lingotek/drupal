@@ -82,7 +82,7 @@ class FieldLinkDetector extends PluginBase implements RelatedEntitiesDetectorInt
       $plugin_definition,
       $container->get('entity_type.manager'),
       $container->get('entity_field.manager'),
-      $container->get('lingotek.configuration'),
+      $container->get('lingotek.configuration')
     );
   }
 

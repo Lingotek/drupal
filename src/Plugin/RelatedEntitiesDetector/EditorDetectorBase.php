@@ -82,7 +82,7 @@ class EditorDetectorBase extends PluginBase implements RelatedEntitiesDetectorIn
       $plugin_definition,
       $container->get('entity.repository'),
       $container->get('entity_field.manager'),
-      $container->get('lingotek.configuration'),
+      $container->get('lingotek.configuration')
     );
   }
 
