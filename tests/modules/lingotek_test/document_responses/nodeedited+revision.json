@@ -1,0 +1,17 @@
+{
+  "title": [
+    {
+      "value": "Los perros son chulos"
+    }
+  ],
+  "body": [
+    {
+      "value": "Los perros son muy chulos"
+    }
+  ],
+  "_lingotek_metadata": {
+    "_entity_type_id": "node",
+    "_entity_revision": 2,
+    "_entity_id": 1
+  }
+}

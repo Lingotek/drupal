@@ -18,6 +18,7 @@ use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\EntityStorageException;
 use Drupal\Core\Entity\RevisionableEntityBundleInterface;
+use Drupal\Core\Entity\RevisionableInterface;
 use Drupal\Core\Entity\RevisionLogInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
@@ -503,6 +504,16 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
   public function getSourceData(ContentEntityInterface &$entity, &$visited = []) {
     // Logic adapted from Content Translation core module and TMGMT contrib
     // module for pulling translatable field info from content entities.
+    $source_entity = NULL;
+    if ($entity instanceof RevisionableInterface) {
+      $storage = $this->entityTypeManager->getStorage($entity->getEntityTypeId());
+      if ($revision_id = $storage->getLatestTranslationAffectedRevisionId($entity->id(), $entity->getUntranslated()->language()->getId())) {
+        $source_entity = $storage->loadRevision($revision_id);
+      }
+      else {
+        $source_entity = $entity->getUntranslated();
+      }
+    }
     $isParentEntity = count($visited) === 0;
     $visited[$entity->bundle()][] = $entity->id();
     $entity_type = $entity->getEntityType();
@@ -526,7 +537,6 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     }
 
     $data = [];
-    $source_entity = $entity->getUntranslated();
     foreach ($translatable_fields as $k => $definition) {
       // If there is only one relevant attribute, upload it.
       // Get the column translatability configuration.
@@ -573,7 +583,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
         }
       }
       if ($field_type === 'block_field') {
-        foreach ($entity->{$k} as $field_item) {
+        foreach ($source_entity->{$k} as $field_item) {
           $pluginId = $field_item->get('plugin_id')->getValue();
           $block_instance = $field_item->getBlock();
           $lingotekConfigTranslation = \Drupal::service('lingotek.config_translation');
@@ -611,7 +621,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
           /** @var \Drupal\Core\Config\TypedConfigManagerInterface $typedConfigManager */
           $typedConfigManager = \Drupal::service('config.typed');
           $data[$k] = ['components' => []];
-          foreach ($entity->{$k} as $field_item) {
+          foreach ($source_entity->{$k} as $field_item) {
             $sectionObject = $field_item->getValue()['section'];
             $components = $sectionObject->getComponents();
             /** @var \Drupal\layout_builder\SectionComponent $component */
@@ -653,7 +663,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
         $layoutBuilderST = \Drupal::moduleHandler()->moduleExists('layout_builder_st');
         if ($layoutBuilderST) {
           $data[$k] = ['components' => []];
-          $layoutField = $entity->{OverridesSectionStorage::FIELD_NAME};
+          $layoutField = $source_entity->{OverridesSectionStorage::FIELD_NAME};
           $block_manager = \Drupal::service('plugin.manager.block');
           $lingotekConfigTranslation = \Drupal::service('lingotek.config_translation');
           /** @var \Drupal\Core\Config\TypedConfigManagerInterface $typedConfigManager */
@@ -700,7 +710,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       // If we have an entity reference, we may want to embed it.
       if ($field_type === 'entity_reference' || $field_type === 'er_viewmode' || $field_type === 'bricks') {
         $target_entity_type_id = $field_definitions[$k]->getFieldStorageDefinition()->getSetting('target_type');
-        foreach ($entity->{$k} as $field_item) {
+        foreach ($source_entity->{$k} as $field_item) {
           $embedded_entity_id = $field_item->get('target_id')->getValue();
           $embedded_entity = $this->entityTypeManager->getStorage($target_entity_type_id)->load($embedded_entity_id);
           // We may have orphan references, so ensure that they exist before
@@ -737,7 +747,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       // Cohesion uses a similar type and we can reuse this.
       elseif ($field_type === 'entity_reference_revisions' || $field_type === 'cohesion_entity_reference_revisions') {
         $target_entity_type_id = $field_definitions[$k]->getFieldStorageDefinition()->getSetting('target_type');
-        foreach ($entity->{$k} as $field_item) {
+        foreach ($source_entity->{$k} as $field_item) {
           $embedded_entity_id = $field_item->get('target_id')->getValue();
           $embedded_entity_revision_id = $field_item->get('target_revision_id')->getValue();
           $embedded_entity = $this->entityTypeManager->getStorage($target_entity_type_id)->loadRevision($embedded_entity_revision_id);
@@ -754,7 +764,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
         }
       }
       elseif ($field_type === 'tablefield') {
-        foreach ($entity->{$k} as $index => $field_item) {
+        foreach ($source_entity->{$k} as $index => $field_item) {
           $tableValue = $field_item->value;
           $embedded_data = [];
           foreach ($tableValue as $row_index => $row) {
@@ -772,7 +782,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       }
       // Special treatment for Acquia Site Builder (Cohesion) values.
       elseif ($field_type === 'string_long' && $field->getName() === 'json_values' && $field->getEntity()->getEntityTypeId() === 'cohesion_layout') {
-        $value = $entity->{$k}->value;
+        $value = $source_entity->{$k}->value;
         $layout_canvas = new LayoutCanvas($value);
         foreach ($layout_canvas->iterateCanvas() as $element) {
           $data_layout = [];
@@ -795,7 +805,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
         unset($data[$k][0]);
       }
       elseif ($field_type === 'metatag') {
-        foreach ($entity->{$k} as $field_item) {
+        foreach ($source_entity->{$k} as $field_item) {
           $metatag_serialized = $field_item->get('value')->getValue();
           $metatags = unserialize($metatag_serialized);
           if ($metatags) {
@@ -805,12 +815,12 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       }
       // We could have a path as computed field.
       elseif ($field_type === 'path') {
-        if ($entity->id()) {
-          $source = '/' . $entity->toUrl()->getInternalPath();
+        if ($source_entity->id()) {
+          $source = '/' . $source_entity->toUrl()->getInternalPath();
           /** @var \Drupal\Core\Entity\EntityStorageInterface $aliasStorage */
           $alias_storage = $this->entityTypeManager->getStorage('path_alias');
           /** @var \Drupal\path_alias\PathAliasInterface[] $paths */
-          $paths = $alias_storage->loadByProperties(['path' => $source, 'langcode' => $entity->language()->getId()]);
+          $paths = $alias_storage->loadByProperties(['path' => $source, 'langcode' => $source_entity->language()->getId()]);
           if (count($paths) > 0) {
             $path = reset($paths);
             $alias = $path->getAlias();
@@ -823,8 +833,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     }
     // Embed entity metadata. We need to exclude intelligence metadata if it is
     // a child entity.
-    $this->includeMetadata($entity, $data, $isParentEntity);
-
+    $this->includeMetadata($source_entity, $data, $isParentEntity);
     return $data;
   }
 

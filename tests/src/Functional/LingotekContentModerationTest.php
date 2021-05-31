@@ -430,7 +430,7 @@ class LingotekContentModerationTest extends LingotekTestBase {
     // The status is draft.
     $value = $this->xpath('//div[@id="edit-current"]/text()');
     $value = trim($value[1]->getText());
-    $this->assertEqual($value, 'Draft', 'Workbench current status is draft');
+    $this->assertEquals($value, 'Draft', 'Workbench current status is draft');
 
     // Moderate to Needs review, so it's uploaded.
     $edit = ['new_state' => 'needs_review'];
@@ -452,7 +452,255 @@ class LingotekContentModerationTest extends LingotekTestBase {
     $this->clickLink('Llamas are cool');
     $value = $this->xpath('//div[@id="edit-current"]/text()');
     $value = trim($value[1]->getText());
-    $this->assertEqual($value, 'Draft', 'The transition to a new content moderation status didn\'t happen because the source wasn\'t the expected.');
+    $this->assertEquals($value, 'Draft', 'The transition to a new content moderation status didn\'t happen because the source wasn\'t the expected.');
+  }
+
+  public function testPublishedRevisionDownloadDoesntOverwriteDraftNonDefaultRevision() {
+    // This is a hack for avoiding writing different lingotek endpoint mocks.
+    \Drupal::state()
+      ->set('lingotek.uploaded_content_type', 'nodesource+revision');
+
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
+    $this->saveAndPublishNodeForm($edit, 'article');
+    $this->assertText('Article Llamas are cool has been created.');
+
+    $this->goToContentBulkManagementForm();
+
+    // Upload.
+    $this->clickLink('EN');
+    $this->assertText('Node Llamas are cool has been uploaded.');
+
+    // Request translation.
+    $this->clickLink('ES');
+    $this->assertText('Locale \'es_MX\' was added as a translation target for node Llamas are cool.');
+    // Check translation.
+    $this->clickLink('ES');
+    $this->assertText('The es_MX translation for node Llamas are cool is ready for download.');
+
+    // Edit the original as a new draft.
+    $edit = [];
+    $edit['title[0][value]'] = 'Dogs are cool';
+    $edit['body[0][value]'] = 'Dogs are very cool';
+    $this->editAsNewDraftNodeForm('/node/1/edit', $edit);
+    $this->assertNoText('Dogs are cool was updated and sent to Lingotek successfully.');
+    $this->assertText('Article Dogs are cool has been updated.');
+
+    // The source published revision is the default one.
+    $this->drupalGet('node/1');
+    $this->assertText('Llamas are cool');
+
+    $this->goToContentBulkManagementForm();
+
+    // Download translation.
+    $edit = [
+      'table[1]' => TRUE,
+      'operation' => 'download:es',
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->assertText('Operations completed.');
+
+    // The source published revision must be the same still.
+    $this->drupalGet('node/1');
+    $this->assertText('Llamas are cool');
+
+    // But the latest revision should keep the unpublished revision content.
+    $this->drupalGet('node/1/latest');
+    $this->assertText('Dogs are cool');
+
+    // The published revision for the translated content is the right one.
+    $this->drupalGet('es/node/1');
+    $this->assertText('Las llamas son chulas');
+
+    // There's only one revision for Spanish so we cannot check the latest.
+  }
+
+  public function testPublishedRevisionMultipleDownloadsDoesntOverwriteDraftNonDefaultRevision() {
+    // Add another language.
+    ConfigurableLanguage::createFromLangcode('it')
+      ->setThirdPartySetting('lingotek', 'locale', 'it_IT')
+      ->save();
+
+    // This is a hack for avoiding writing different lingotek endpoint mocks.
+    \Drupal::state()
+      ->set('lingotek.uploaded_content_type', 'nodesource+revision');
+
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
+    $this->saveAndPublishNodeForm($edit, 'article');
+    $this->assertText('Article Llamas are cool has been created.');
+
+    $this->goToContentBulkManagementForm();
+
+    // Upload.
+    $this->clickLink('EN');
+    $this->assertText('Node Llamas are cool has been uploaded.');
+
+    // Request translation.
+    $this->clickLink('ES');
+    $this->assertText('Locale \'es_MX\' was added as a translation target for node Llamas are cool.');
+    // Check translation.
+    $this->clickLink('ES');
+    $this->assertText('The es_MX translation for node Llamas are cool is ready for download.');
+
+    // Request translation.
+    $this->clickLink('IT');
+    $this->assertText('Locale \'it_IT\' was added as a translation target for node Llamas are cool.');
+    // Check translation.
+    $this->clickLink('IT');
+    $this->assertText('The it_IT translation for node Llamas are cool is ready for download.');
+
+    // Edit the original as a new draft.
+    $edit = [];
+    $edit['title[0][value]'] = 'Dogs are cool';
+    $edit['body[0][value]'] = 'Dogs are very cool';
+    $this->editAsNewDraftNodeForm('/node/1/edit', $edit);
+    $this->assertNoText('Dogs are cool was updated and sent to Lingotek successfully.');
+    $this->assertText('Article Dogs are cool has been updated.');
+
+    // The source published revision is the default one.
+    $this->drupalGet('node/1');
+    $this->assertText('Llamas are cool');
+
+    $this->goToContentBulkManagementForm();
+
+    // Download translation.
+    $edit = [
+      'table[1]' => TRUE,
+      'operation' => 'download',
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->assertText('Operations completed.');
+
+    // The source published revision must be the same still.
+    $this->drupalGet('node/1');
+    $this->assertText('Llamas are cool');
+
+    // But the latest revision should keep the unpublished revision content.
+    $this->drupalGet('node/1/latest');
+    $this->assertText('Dogs are cool');
+
+    // The published revision for the Spanish translated content is the right one.
+    $this->drupalGet('es/node/1');
+    $this->assertText('Las llamas son chulas');
+
+    // There's only one revision for Spanish so we cannot check the latest.
+
+    // The published revision for the Italian translated content is the right one.
+    $this->drupalGet('it/node/1');
+    $this->assertText('Las llamas son chulas');
+
+    // There's only one revision for Italian too so we cannot check the latest.
+  }
+
+  public function testDraftRevisionDownloadDoesntOverwriteDraftNonDefaultRevision() {
+    // This is a hack for avoiding writing different lingotek endpoint mocks.
+    \Drupal::state()
+      ->set('lingotek.uploaded_content_type', 'nodeedited+revision');
+
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
+    $this->saveAndPublishNodeForm($edit, 'article');
+    $this->assertText('Article Llamas are cool has been created.');
+
+    // Edit the original as a new draft.
+    $edit = [];
+    $edit['title[0][value]'] = 'Dogs are cool';
+    $edit['body[0][value]'] = 'Dogs are very cool';
+    $this->editAsNewDraftNodeForm('/node/1/edit', $edit);
+    $this->assertNoText('Dogs are cool was updated and sent to Lingotek successfully.');
+    $this->assertText('Article Dogs are cool has been updated.');
+
+    $this->goToContentBulkManagementForm();
+
+    // Upload.
+    $this->clickLink('EN');
+    $this->assertText('Node Llamas are cool has been uploaded.');
+
+    // Request translation.
+    $this->clickLink('ES');
+    $this->assertText('Locale \'es_MX\' was added as a translation target for node Llamas are cool.');
+    // Check translation.
+    $this->clickLink('ES');
+    $this->assertText('The es_MX translation for node Llamas are cool is ready for download.');
+
+    // The source published revision is the default one.
+    $this->drupalGet('node/1');
+    $this->assertText('Llamas are cool');
+
+    $this->goToContentBulkManagementForm();
+
+    // Download translation.
+    $edit = [
+      'table[1]' => TRUE,
+      'operation' => 'download:es',
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->assertText('Operations completed.');
+
+    // The source published revision must be the same still.
+    $this->drupalGet('node/1');
+    $this->assertText('Llamas are cool');
+
+    // But the latest revision should keep the unpublished revision content.
+    $this->drupalGet('node/1/latest');
+    $this->assertText('Dogs are cool');
+
+    // The translated revision is not published, so the source published
+    // revision is displayed.
+    $this->drupalGet('es/node/1');
+    $this->assertText('Llamas are cool');
+
+    // And it's also the latest published revision.
+    $this->drupalGet('es/node/1/latest');
+    $this->assertText('Los perros son chulos');
+  }
+
+  public function testBulkManagementUploadsLatestDraftRevision() {
+    // This is a hack for avoiding writing different lingotek endpoint mocks.
+    \Drupal::state()
+      ->set('lingotek.uploaded_content_type', 'nodeedited+revision');
+
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
+    $this->saveAndPublishNodeForm($edit, 'article');
+    $this->assertText('Article Llamas are cool has been created.');
+
+    // Edit the original as a new draft.
+    $edit = [];
+    $edit['title[0][value]'] = 'Dogs are cool';
+    $edit['body[0][value]'] = 'Dogs are very cool';
+    $this->editAsNewDraftNodeForm('/node/1/edit', $edit);
+    $this->assertNoText('Dogs are cool was updated and sent to Lingotek successfully.');
+    $this->assertText('Article Dogs are cool has been updated.');
+
+    $this->goToContentBulkManagementForm();
+
+    // Upload.
+    $this->clickLink('EN');
+    $this->assertText('Node Llamas are cool has been uploaded.');
+
+    // Check that only the last revision fields have been uploaded.
+    $data = json_decode(\Drupal::state()
+      ->get('lingotek.uploaded_content', '[]'), TRUE);
+    $this->assertUploadedDataFieldCount($data, 2);
+    $this->assertEquals('Dogs are cool', $data['title'][0]['value']);
+    $this->assertEquals(1, count($data['body'][0]));
+    $this->assertEquals('Dogs are very cool', $data['body'][0]['value']);
+    $this->assertSame('en_US', \Drupal::state()
+      ->get('lingotek.uploaded_locale'));
   }
 
   /**
