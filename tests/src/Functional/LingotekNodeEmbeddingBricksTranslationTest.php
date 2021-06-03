@@ -184,7 +184,7 @@ class LingotekNodeEmbeddingBricksTranslationTest extends LingotekTestBase {
     $this->drupalGet('admin/structure/types/manage/article/fields');
     $this->clickLink('Add field');
     $edit = [
-      'new_storage_type' => 'field_ui:bricks:taxonomy_term',
+      'new_storage_type' => 'field_ui:entity_reference:taxonomy_term',
       'label' => 'Brick field',
       'field_name' => 'brick',
     ];
