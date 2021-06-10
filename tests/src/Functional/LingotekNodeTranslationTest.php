@@ -741,7 +741,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
     $translation_service = \Drupal::service('lingotek.content_translation');
     $source_status = $translation_service->getSourceStatus($this->node);
-    $this->assertEqual(Lingotek::STATUS_UNTRACKED, $source_status, 'The node has been marked as untracked, needs new upload.');
+    $this->assertEquals(Lingotek::STATUS_ARCHIVED, $source_status);
 
     // I can still re-try the upload.
     \Drupal::state()->set('lingotek.must_document_archived_error_in_update', FALSE);
@@ -769,14 +769,14 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $this->saveAndKeepPublishedNodeForm($edit, 1);
 
     // The document was updated automatically and failed.
-    $this->assertText('Document node Llamas are cool EDITED has been archived. Please upload again.');
+    $this->assertText('Document node Llamas are cool EDITED has been archived. Uploading again.');
 
     // The node has been marked with the error status.
     $this->node = Node::load(1);
     /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
     $translation_service = \Drupal::service('lingotek.content_translation');
     $source_status = $translation_service->getSourceStatus($this->node);
-    $this->assertEqual(Lingotek::STATUS_UNTRACKED, $source_status, 'The node has been marked as untracked, needs new upload.');
+    $this->assertEquals(Lingotek::STATUS_IMPORTING, $source_status);
   }
 
   /**
@@ -1085,14 +1085,14 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     // Request translation.
     $this->clickLink('Request translation');
 
-    $this->assertText('Document node Llamas are cool has been archived. Please upload again.');
+    $this->assertText('Document node Llamas are cool has been archived. Uploading again.');
 
     $this->node = Node::load(1);
     /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
     $translation_service = \Drupal::service('lingotek.content_translation');
     $source_status = $translation_service->getSourceStatus($this->node);
-    $this->assertEqual($source_status, Lingotek::STATUS_UNTRACKED);
-    $this->assertEqual($translation_service->getTargetStatus($this->node, 'ES'), Lingotek::STATUS_UNTRACKED);
+    $this->assertEquals($source_status, Lingotek::STATUS_IMPORTING);
+    $this->assertEquals($translation_service->getTargetStatus($this->node, 'ES'), Lingotek::STATUS_UNTRACKED);
   }
 
   /**

@@ -30,7 +30,7 @@ trait LingotekTargetTrait {
     $document_id = \Drupal::service('lingotek.content_translation')->getDocumentId($entity);
     $locale = \Drupal::service('lingotek.language_locale_mapper')->getLocaleForLangcode($langcode);
     if ($document_id) {
-      if ($target_status == Lingotek::STATUS_REQUEST) {
+      if (in_array($target_status, [Lingotek::STATUS_REQUEST, Lingotek::STATUS_DELETED])) {
         $url = Url::fromRoute('lingotek.entity.request_translation',
           [
             'doc_id' => $document_id,
@@ -97,7 +97,7 @@ trait LingotekTargetTrait {
     $langcode_upper = strtoupper($langcode);
     $actions = [];
     if ($document_id) {
-      if ($target_status == Lingotek::STATUS_REQUEST) {
+      if (in_array($target_status, [Lingotek::STATUS_REQUEST, Lingotek::STATUS_DELETED])) {
         $actions[] = [
           'title' => $this->t('Request translation'),
           'url' => Url::fromRoute('lingotek.entity.request_translation', [
@@ -222,7 +222,7 @@ trait LingotekTargetTrait {
         ];
       }
     }
-    if ($target_status == Lingotek::STATUS_UNTRACKED) {
+    if (in_array($target_status, [Lingotek::STATUS_UNTRACKED, Lingotek::STATUS_ARCHIVED])) {
       if ($entity->hasLinkTemplate('canonical') && $entity->hasTranslation($langcode)) {
         $actions[] = [
           'title' => $this->t('View translation'),
@@ -298,6 +298,12 @@ trait LingotekTargetTrait {
 
       case Lingotek::STATUS_CANCELLED:
         return $language->label() . ' - ' . $this->t('Cancelled by user');
+
+      case Lingotek::STATUS_DELETED:
+        return $language->label() . ' - ' . $this->t('Deleted in Lingotek');
+
+      case Lingotek::STATUS_ARCHIVED:
+        return $language->label() . ' - ' . $this->t('Archived in Lingotek');
 
       default:
         return $language->label() . ' - ' . ucfirst(strtolower($status));

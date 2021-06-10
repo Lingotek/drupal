@@ -139,9 +139,11 @@ class LingotekFake implements LingotekInterface {
 
   public function uploadDocument($title, $content, $locale, $url = NULL, LingotekProfileInterface $profile = NULL, $job_id = NULL) {
     if (\Drupal::state()->get('lingotek.must_error_in_upload', FALSE)) {
+      \Drupal::state()->set('lingotek.must_error_in_upload', FALSE);
       throw new LingotekApiException('Error was forced.');
     }
     if (\Drupal::state()->get('lingotek.must_payment_required_error_in_upload', FALSE)) {
+      \Drupal::state()->set('lingotek.must_payment_required_error_in_upload', FALSE);
       throw new LingotekPaymentRequiredException('Error was forced.');
     }
     if (is_array($content)) {
@@ -177,15 +179,19 @@ class LingotekFake implements LingotekInterface {
   public function updateDocument($doc_id, $content, $url = NULL, $title = NULL, LingotekProfileInterface $profile = NULL, $job_id = NULL, $locale = NULL) {
     $newId = TRUE;
     if (\Drupal::state()->get('lingotek.must_error_in_upload', FALSE)) {
+      \Drupal::state()->set('lingotek.must_error_in_upload', FALSE);
       throw new LingotekApiException('Error was forced.');
     }
     if (\Drupal::state()->get('lingotek.must_payment_required_error_in_update', FALSE)) {
+      \Drupal::state()->set('lingotek.must_payment_required_error_in_update', FALSE);
       throw new LingotekPaymentRequiredException('Error was forced.');
     }
     if (\Drupal::state()->get('lingotek.must_document_archived_error_in_update', FALSE)) {
+      \Drupal::state()->set('lingotek.must_document_archived_error_in_update', FALSE);
       throw new LingotekDocumentArchivedException($doc_id, 'Error was forced.');
     }
     if (\Drupal::state()->get('lingotek.must_document_locked_error_in_update', FALSE)) {
+      \Drupal::state()->set('lingotek.must_document_locked_error_in_update', FALSE);
       throw new LingotekDocumentLockedException($doc_id, 'new-doc-id', 'Error was forced.');
     }
     if (is_array($content)) {
@@ -243,15 +249,19 @@ class LingotekFake implements LingotekInterface {
 
   public function addTarget($doc_id, $locale, LingotekProfileInterface $profile = NULL) {
     if (\Drupal::state()->get('lingotek.must_error_in_request_translation', FALSE)) {
+      \Drupal::state()->set('lingotek.must_error_in_request_translation', FALSE);
       throw new LingotekApiException('Error was forced.');
     }
     if (\Drupal::state()->get('lingotek.must_payment_required_error_in_request_translation', FALSE)) {
+      \Drupal::state()->set('lingotek.must_payment_required_error_in_request_translation', FALSE);
       throw new LingotekPaymentRequiredException('Error was forced.');
     }
     if (\Drupal::state()->get('lingotek.must_document_archived_error_in_request_translation', FALSE)) {
+      \Drupal::state()->set('lingotek.must_document_archived_error_in_request_translation', FALSE);
       throw new LingotekDocumentArchivedException($doc_id, 'Error was forced.');
     }
     if (\Drupal::state()->get('lingotek.must_document_locked_error_in_request_translation', FALSE)) {
+      \Drupal::state()->set('lingotek.must_document_locked_error_in_request_translation', FALSE);
       throw new LingotekDocumentLockedException($doc_id, 'new-doc-id', 'Error was forced.');
     }
     $requested_locales = \Drupal::state()->get('lingotek.requested_locales', []);
@@ -266,6 +276,7 @@ class LingotekFake implements LingotekInterface {
 
   public function getDocumentStatus($doc_id) {
     if (\Drupal::state()->get('lingotek.must_error_in_check_source_status', FALSE)) {
+      \Drupal::state()->set('lingotek.must_error_in_check_source_status', FALSE);
       throw new LingotekApiException('Error was forced.');
     }
     return \Drupal::state()->get('lingotek.document_status_completion', TRUE);
@@ -276,6 +287,7 @@ class LingotekFake implements LingotekInterface {
    */
   public function getDocumentTranslationStatus($doc_id, $locale) {
     if (\Drupal::state()->get('lingotek.must_error_in_check_target_status', FALSE)) {
+      \Drupal::state()->set('lingotek.must_error_in_check_target_status', FALSE);
       throw new LingotekApiException('Error was forced.');
     }
     \Drupal::state()->set('lingotek.checked_target_locale', $locale);
@@ -341,6 +353,7 @@ class LingotekFake implements LingotekInterface {
    */
   public function cancelDocument($doc_id) {
     if (\Drupal::state()->get('lingotek.must_error_in_cancel', FALSE)) {
+      \Drupal::state()->set('lingotek.must_error_in_cancel', FALSE);
       throw new LingotekApiException('Error was forced.');
     }
     $cancelled_docs = \Drupal::state()->get('lingotek.cancelled_docs', []);
@@ -354,6 +367,7 @@ class LingotekFake implements LingotekInterface {
    */
   public function cancelDocumentTarget($doc_id, $locale) {
     if (\Drupal::state()->get('lingotek.must_error_in_cancel', FALSE)) {
+      \Drupal::state()->set('lingotek.must_error_in_cancel', FALSE);
       throw new LingotekApiException('Error was forced.');
     }
     $cancelled_locales = \Drupal::state()->get('lingotek.cancelled_locales', []);
@@ -369,6 +383,7 @@ class LingotekFake implements LingotekInterface {
    */
   public function getLocales() {
     if (\Drupal::state()->get('lingotek.locales_error', FALSE)) {
+      \Drupal::state()->set('lingotek.locales_error', FALSE);
       throw new LingotekApiException('{"messages":["HTTP 401 Unauthorized"]}', 401);
     }
     return ['es-ES', 'de-AT', 'de-DE'];
@@ -379,6 +394,7 @@ class LingotekFake implements LingotekInterface {
    */
   public function getLocalesInfo() {
     if (\Drupal::state()->get('lingotek.locales_error', FALSE)) {
+      \Drupal::state()->set('lingotek.locales_error', FALSE);
       throw new LingotekApiException('{"messages":["HTTP 401 Unauthorized"]}', 401);
     }
     return [
@@ -414,6 +430,7 @@ class LingotekFake implements LingotekInterface {
       throw new LingotekApiException('Error requesting statuses without document id.');
     }
     if (\Drupal::state()->get('lingotek.must_error_in_check_target_status', FALSE)) {
+      \Drupal::state()->set('lingotek.must_error_in_check_target_status', FALSE);
       throw new LingotekApiException('Error was forced.');
     }
     $statuses = \Drupal::state()->get('lingotek.document_completion_statuses', []);

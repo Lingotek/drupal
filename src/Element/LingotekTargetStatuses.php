@@ -248,7 +248,7 @@ class LingotekTargetStatuses extends RenderElement {
     $locale = \Drupal::service('lingotek.language_locale_mapper')
       ->getLocaleForLangcode($langcode);
     if ($document_id) {
-      if ($target_status == Lingotek::STATUS_REQUEST) {
+      if (in_array($target_status, [Lingotek::STATUS_REQUEST, Lingotek::STATUS_DELETED])) {
         $url = Url::fromRoute('lingotek.interface_translation.request_translation', [],
           [
             'query' => [
@@ -283,7 +283,7 @@ class LingotekTargetStatuses extends RenderElement {
           'locale' => $locale,
         ]);
       }
-      if ($target_status == Lingotek::STATUS_UNTRACKED) {
+      if (in_array($target_status, [Lingotek::STATUS_UNTRACKED, Lingotek::STATUS_ARCHIVED])) {
         $url = Url::fromRoute('lingotek.interface_translation.request_translation', [],
           [
             'query' => [
@@ -329,7 +329,7 @@ class LingotekTargetStatuses extends RenderElement {
 
     $actions = [];
     if ($document_id) {
-      if ($target_status == Lingotek::STATUS_REQUEST) {
+      if (in_array($target_status, [Lingotek::STATUS_REQUEST, Lingotek::STATUS_DELETED])) {
         $actions[] = [
           'title' => $this->t('Request translation'),
           'url' => Url::fromRoute('lingotek.config.request',
@@ -412,7 +412,7 @@ class LingotekTargetStatuses extends RenderElement {
         ];
       }
     }
-    if ($target_status == Lingotek::STATUS_UNTRACKED) {
+    if (in_array($target_status, [Lingotek::STATUS_UNTRACKED, Lingotek::STATUS_ARCHIVED])) {
       if ($document_id) {
         $actions[] = [
           'title' => $this->t('Request translation'),

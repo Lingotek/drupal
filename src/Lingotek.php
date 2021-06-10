@@ -63,6 +63,17 @@ class Lingotek implements LingotekInterface {
    * Status untracked means the target has not been added yet.
    */
   const STATUS_UNTRACKED = 'UNTRACKED';
+
+  /**
+   * Status DELETED means the document or target have been deleted.
+   */
+  const STATUS_DELETED = 'DELETED';
+
+  /**
+   * Status ARCHIVED means the document has been archived.
+   */
+  const STATUS_ARCHIVED = 'ARCHIVED';
+
   const PROGRESS_COMPLETE = 100;
   // Translation Profile.
   const PROFILE_AUTOMATIC = 'automatic';

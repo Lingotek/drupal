@@ -1437,12 +1437,12 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
     $this->goToConfigBulkManagementForm('node_type');
 
     // Check the right class is added.
-    $this->assertTargetStatus('IT', Lingotek::STATUS_UNTRACKED);
+    $this->assertTargetStatus('IT', Lingotek::STATUS_DELETED);
 
     // Check that the Target Status is Untracked
     $node_type = NodeType::load('article');
     $translation_service = \Drupal::service('lingotek.config_translation');
-    $this->assertEquals(Lingotek::STATUS_UNTRACKED, $translation_service->getTargetStatus($node_type, 'it'));
+    $this->assertEquals(Lingotek::STATUS_DELETED, $translation_service->getTargetStatus($node_type, 'it'));
   }
 
   /**
@@ -1564,17 +1564,17 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
     // Go to the bulk config management page.
     $this->goToConfigBulkManagementForm('node_type');
     // Check the right class is added.
-    $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
-    $this->assertTargetStatus('IT', Lingotek::STATUS_UNTRACKED);
-    $this->assertTargetStatus('ES', Lingotek::STATUS_UNTRACKED);
+    $this->assertSourceStatus('EN', Lingotek::STATUS_DELETED);
+    $this->assertTargetStatus('IT', Lingotek::STATUS_DELETED);
+    $this->assertTargetStatus('ES', Lingotek::STATUS_DELETED);
 
     // Check that the Target Status is Untracked
     $node_type = NodeType::load('article');
     $translation_service = \Drupal::service('lingotek.config_translation');
     $this->assertEmpty($translation_service->getDocumentId($node_type));
-    $this->assertEquals(Lingotek::STATUS_UNTRACKED, $translation_service->getTargetStatus($node_type, 'it'));
-    $this->assertEquals(Lingotek::STATUS_UNTRACKED, $translation_service->getTargetStatus($node_type, 'es'));
-    $this->assertEquals(Lingotek::STATUS_UNTRACKED, $translation_service->getSourceStatus($node_type));
+    $this->assertEquals(Lingotek::STATUS_DELETED, $translation_service->getTargetStatus($node_type, 'it'));
+    $this->assertEquals(Lingotek::STATUS_DELETED, $translation_service->getTargetStatus($node_type, 'es'));
+    $this->assertEquals(Lingotek::STATUS_DELETED, $translation_service->getSourceStatus($node_type));
   }
 
   /**

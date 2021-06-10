@@ -98,7 +98,7 @@ class LingotekContentTypeBulkDisabledTargetOverrideTranslationTest extends Lingo
   /**
    * Tests that a field can be translated using the actions on the management page.
    */
-  public function xxxtestFieldBodyTranslationUsingActions() {
+  public function testFieldBodyTranslationUsingActions() {
     $assert_session = $this->assertSession();
     $basepath = \Drupal::request()->getBasePath();
 

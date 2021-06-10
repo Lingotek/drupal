@@ -73,7 +73,7 @@ class LingotekSourceStatus extends RenderElement {
         ['doc_id' => \Drupal::service('lingotek.content_translation')->getDocumentId($entity)],
         ['query' => $this->getDestinationWithQueryArray()]);
     }
-    if ($source_status == Lingotek::STATUS_EDITED || $source_status == Lingotek::STATUS_UNTRACKED || $source_status == Lingotek::STATUS_ERROR || $source_status == Lingotek::STATUS_CANCELLED) {
+    if (in_array($source_status, [Lingotek::STATUS_EDITED, Lingotek::STATUS_UNTRACKED, Lingotek::STATUS_ERROR, Lingotek::STATUS_CANCELLED, Lingotek::STATUS_ARCHIVED, Lingotek::STATUS_DELETED])) {
       if ($doc_id = \Drupal::service('lingotek.content_translation')->getDocumentId($entity)) {
         $url = Url::fromRoute('lingotek.entity.update',
           ['doc_id' => $doc_id],
@@ -97,7 +97,7 @@ class LingotekSourceStatus extends RenderElement {
       $url = Url::fromRoute('lingotek.interface_translation.check_upload', [],
         ['query' => ['component' => $component] + $this->getDestinationWithQueryArray()]);
     }
-    if ($source_status == Lingotek::STATUS_EDITED || $source_status == Lingotek::STATUS_UNTRACKED || $source_status == Lingotek::STATUS_ERROR || $source_status == Lingotek::STATUS_CANCELLED) {
+    if (in_array($source_status, [Lingotek::STATUS_EDITED, Lingotek::STATUS_UNTRACKED, Lingotek::STATUS_ERROR, Lingotek::STATUS_CANCELLED, Lingotek::STATUS_ARCHIVED, Lingotek::STATUS_DELETED])) {
       if ($doc_id = \Drupal::service('lingotek.interface_translation')->getDocumentId($component)) {
         $url = Url::fromRoute('lingotek.interface_translation.update', [],
           ['query' => ['component' => $component] + $this->getDestinationWithQueryArray()]);
@@ -146,6 +146,12 @@ class LingotekSourceStatus extends RenderElement {
       case Lingotek::STATUS_CANCELLED:
         return $this->t('Cancelled by user');
 
+      case Lingotek::STATUS_ARCHIVED:
+        return $this->t('This document was archived in Lingotek. Re-upload to translate.');
+
+      case Lingotek::STATUS_DELETED:
+        return $this->t('This document was deleted in Lingotek. Re-upload to translate.');
+
       default:
         return ucfirst(strtolower($source_status));
     }
@@ -175,6 +181,12 @@ class LingotekSourceStatus extends RenderElement {
 
       case Lingotek::STATUS_CANCELLED:
         return $this->t('Cancelled by user');
+
+      case Lingotek::STATUS_ARCHIVED:
+        return $this->t('This document was archived in Lingotek. Re-upload to translate.');
+
+      case Lingotek::STATUS_DELETED:
+        return $this->t('This document was deleted in Lingotek. Re-upload to translate.');
 
       default:
         return ucfirst(strtolower($source_status));

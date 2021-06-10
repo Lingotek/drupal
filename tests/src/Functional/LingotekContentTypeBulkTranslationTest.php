@@ -594,22 +594,22 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
 
     // Update the document, which must fail.
     $this->clickLink('EN');
-    $this->assertText('Document node_type Blogpost has been archived. Please upload again.');
+    $this->assertText('Document node_type Blogpost has been archived. Uploading again.');
 
     // Check the right class is added.
-    $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
+    $this->assertSourceStatus('EN', Lingotek::STATUS_IMPORTING);
 
     // The node type has been marked with the error status.
     $nodeType = NodeType::load('article');
     /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
     $translation_service = \Drupal::service('lingotek.config_translation');
     $source_status = $translation_service->getSourceStatus($nodeType);
-    $this->assertEqual(Lingotek::STATUS_UNTRACKED, $source_status, 'The node type has been marked as error.');
+    $this->assertEquals(Lingotek::STATUS_IMPORTING, $source_status);
 
     // I can still re-try the upload.
     \Drupal::state()->set('lingotek.must_document_archived_error_in_update', FALSE);
     $this->clickLink('EN');
-    $this->assertText('Blogpost uploaded successfully');
+    $this->assertText('Blogpost status checked successfully');
   }
 
   /**
@@ -944,22 +944,22 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
-    $this->assertText('Document node_type Blogpost has been archived. Please upload again.');
+    $this->assertText('Document node_type Blogpost has been archived. Uploading again.');
 
     // Check the right class is added.
-    $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
+    $this->assertSourceStatus('EN', Lingotek::STATUS_IMPORTING);
 
     // The node type has been marked with the error status.
     $nodeType = NodeType::load('article');
     /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
     $translation_service = \Drupal::service('lingotek.config_translation');
     $source_status = $translation_service->getSourceStatus($nodeType);
-    $this->assertEqual(Lingotek::STATUS_UNTRACKED, $source_status, 'The node type has been marked as error.');
+    $this->assertEqual(Lingotek::STATUS_IMPORTING, $source_status);
 
     // I can still re-try the upload.
     \Drupal::state()->set('lingotek.must_document_archived_error_in_update', FALSE);
     $this->clickLink('EN');
-    $this->assertText('Blogpost uploaded successfully');
+    $this->assertText('Blogpost status checked successfully');
   }
 
   /**
@@ -1030,9 +1030,9 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
-    $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
-    $this->assertNoLingotekRequestTranslationLink('es_MX');
-    $this->assertText('Document node_type Article has been archived. Please upload again.');
+    $this->assertSourceStatus('EN', Lingotek::STATUS_IMPORTING);
+    $this->assertLingotekRequestTranslationLink('es_MX');
+    $this->assertText('Document node_type Article has been archived. Uploading again.');
   }
 
   /**
@@ -1199,9 +1199,9 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
 
     $this->clickLink('ES');
 
-    $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
+    $this->assertSourceStatus('EN', Lingotek::STATUS_IMPORTING);
     $this->assertNoLingotekRequestTranslationLink('es_MX');
-    $this->assertText('Document node_type Article has been archived. Please upload again.');
+    $this->assertText('Document node_type Article has been archived. Uploading again.');
   }
 
   /**
@@ -1304,9 +1304,9 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
-    $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
-    $this->assertNoLingotekRequestTranslationLink('es_MX');
-    $this->assertText('Document node_type Article has been archived. Please upload again.');
+    $this->assertSourceStatus('EN', Lingotek::STATUS_IMPORTING);
+    $this->assertLingotekRequestTranslationLink('es_MX');
+    $this->assertText('Document node_type Article has been archived. Uploading again.');
   }
 
   /**

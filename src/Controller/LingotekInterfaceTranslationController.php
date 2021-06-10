@@ -78,8 +78,9 @@ class LingotekInterfaceTranslationController extends LingotekControllerBase {
           }
         }
         catch (LingotekDocumentArchivedException $exception) {
-          $this->messenger()->addError($this->t('Document %label has been archived. Please upload again.',
+          $this->messenger()->addWarning($this->t('Document %label has been archived. Uploading again.',
             ['%label' => $component]));
+          return $this->upload($request);
         }
         catch (LingotekDocumentLockedException $exception) {
           $this->messenger()->addError($this->t('Document %label has a new version. The document id has been updated for all future interactions. Please try again.',
@@ -107,7 +108,8 @@ class LingotekInterfaceTranslationController extends LingotekControllerBase {
         }
       }
       catch (LingotekDocumentArchivedException $exception) {
-        $this->messenger()->addError($this->t('Document %label has been archived. Please upload again.', ['%label' => $component]));
+        $this->messenger()->addWarning($this->t('Document %label has been archived. Uploading again.', ['%label' => $component]));
+        return $this->upload($request);
       }
       catch (LingotekDocumentLockedException $exception) {
         $this->messenger()->addError($this->t('Document %label has a new version. The document id has been updated for all future interactions. Please try again.',
@@ -156,8 +158,9 @@ class LingotekInterfaceTranslationController extends LingotekControllerBase {
         }
       }
       catch (LingotekDocumentArchivedException $exception) {
-        $this->messenger()->addError($this->t('Document %label has been archived. Please upload again.',
+        $this->messenger()->addWarning($this->t('Document %label has been archived. Uploading again.',
           ['%label' => $component]));
+        return $this->upload($request);
       }
       catch (LingotekDocumentLockedException $exception) {
         $this->messenger()->addError($this->t('Document %label has a new version. The document id has been updated for all future interactions. Please try again.',
@@ -188,8 +191,9 @@ class LingotekInterfaceTranslationController extends LingotekControllerBase {
         }
       }
       catch (LingotekDocumentArchivedException $exception) {
-        $this->messenger()->addError($this->t('Document %label has been archived. Please upload again.',
+        $this->messenger()->addWarning($this->t('Document %label has been archived. Uploading again.',
           ['%label' => $component]));
+        return $this->upload($request);
       }
       catch (LingotekDocumentLockedException $exception) {
         $this->messenger()->addError($this->t('Document %label has a new version. The document id has been updated for all future interactions. Please try again.',
@@ -219,8 +223,9 @@ class LingotekInterfaceTranslationController extends LingotekControllerBase {
         }
       }
       catch (LingotekDocumentArchivedException $exception) {
-        $this->messenger()->addError($this->t('Document %label has been archived. Please upload again.',
+        $this->messenger()->addWarning($this->t('Document %label has been archived. Uploading again.',
           ['%label' => $component]));
+        return $this->upload($request);
       }
       catch (LingotekDocumentLockedException $exception) {
         $this->messenger()->addError($this->t('Document %label has a new version. The document id has been updated for all future interactions. Please try again.',

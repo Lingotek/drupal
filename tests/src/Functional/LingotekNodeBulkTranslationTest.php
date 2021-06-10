@@ -1026,17 +1026,17 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
 
     // Update the document, which must fail.
     $this->clickLink('EN');
-    $this->assertText('Document node Llamas are cool EDITED has been archived. Please upload again.');
+    $this->assertText('Document node Llamas are cool EDITED has been archived. Uploading again.');
 
     // Check the right class is added.
-    $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
+    $this->assertSourceStatus('EN', Lingotek::STATUS_IMPORTING);
 
     // The node has been marked with the error status.
     $this->node = Node::load(1);
     /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
     $translation_service = \Drupal::service('lingotek.content_translation');
     $source_status = $translation_service->getSourceStatus($this->node);
-    $this->assertEqual(Lingotek::STATUS_UNTRACKED, $source_status, 'The node has been marked as error.');
+    $this->assertEquals(Lingotek::STATUS_IMPORTING, $source_status);
 
     // I can still re-try the upload.
     \Drupal::state()->set('lingotek.must_document_archived_error_in_update', FALSE);
@@ -1045,12 +1045,12 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     $key = $this->getBulkSelectionKey('en', 1);
     $edit = [
       $key => TRUE,
-      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node'),
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForCheckUpload('node'),
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     // We cannot click, as for views there won't be a link.
     // $this->assertText('Node Llamas are cool EDITED has been uploaded.');
-    $this->assertSourceStatus('EN', Lingotek::STATUS_IMPORTING);
+    $this->assertSourceStatus('EN', Lingotek::STATUS_CURRENT);
   }
 
   /**
@@ -1286,17 +1286,17 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
-    $this->assertText('Document node Llamas are cool EDITED has been archived. Please upload again.');
+    $this->assertText('Document node Llamas are cool EDITED has been archived. Uploading again.');
 
     // Check the right class is added.
-    $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
+    $this->assertSourceStatus('EN', Lingotek::STATUS_IMPORTING);
 
     // The node has been marked with the error status.
     $this->node = Node::load(1);
     /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
     $translation_service = \Drupal::service('lingotek.content_translation');
     $source_status = $translation_service->getSourceStatus($this->node);
-    $this->assertEqual(Lingotek::STATUS_UNTRACKED, $source_status, 'The node has been marked as error.');
+    $this->assertEqual(Lingotek::STATUS_IMPORTING, $source_status);
 
     // I can still re-try the upload.
     \Drupal::state()->set('lingotek.must_document_archived_error_in_update', FALSE);
@@ -1305,12 +1305,12 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     $key = $this->getBulkSelectionKey('en', 1);
     $edit = [
       $key => TRUE,
-      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node'),
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForCheckUpload('node'),
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     // We cannot click, as for views there won't be a link.
     // $this->assertText('Node Llamas are cool EDITED has been uploaded.');
-    $this->assertSourceStatus('EN', Lingotek::STATUS_IMPORTING);
+    $this->assertSourceStatus('EN', Lingotek::STATUS_CURRENT);
   }
 
   /**
@@ -1857,9 +1857,9 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
 
     $this->clickLink('ES');
 
-    $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
-    $this->assertNoLingotekRequestTranslationLink('es_MX');
-    $this->assertText('Document node Llamas are cool has been archived. Please upload again.');
+    $this->assertSourceStatus('EN', Lingotek::STATUS_IMPORTING);
+    $this->assertLingotekRequestTranslationLink('es_MX', 'dummy-document-hash-id-1');
+    $this->assertText('Document node Llamas are cool has been archived. Uploading again.');
   }
 
   /**
@@ -1986,9 +1986,9 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
-    $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
-    $this->assertNoLingotekRequestTranslationLink('es_MX');
-    $this->assertText('Document node Llamas are cool has been archived. Please upload again.');
+    $this->assertSourceStatus('EN', Lingotek::STATUS_IMPORTING);
+    $this->assertLingotekRequestTranslationLink('es_MX', 'dummy-document-hash-id-1');
+    $this->assertText('Document node Llamas are cool has been archived. Uploading again.');
   }
 
   /**
@@ -2163,9 +2163,9 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
-    $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
-    $this->assertNoLingotekRequestTranslationLink('es_MX');
-    $this->assertText('Document node Llamas are cool has been archived. Please upload again.');
+    $this->assertSourceStatus('EN', Lingotek::STATUS_IMPORTING);
+    $this->assertLingotekRequestTranslationLink('es_MX', 'dummy-document-hash-id-1');
+    $this->assertText('Document node Llamas are cool has been archived. Uploading again.');
   }
 
   /**

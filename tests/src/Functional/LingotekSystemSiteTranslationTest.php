@@ -385,10 +385,10 @@ class LingotekSystemSiteTranslationTest extends LingotekTestBase {
 
     \Drupal::state()->set('lingotek.must_document_archived_error_in_update', TRUE);
 
-    // Re-upload. Must fail now.
+    // Re-upload. Must fail now, but will retry.
     $this->clickLink('Upload');
     $this->checkForMetaRefresh();
-    $this->assertText('Document System information has been archived. Please upload again.');
+    $this->assertText('Document System information has been archived. Uploading again.');
 
     // The config mapper has been marked with the error status.
     /** @var \Drupal\config_translation\ConfigMapperManagerInterface $mapperManager */
@@ -397,13 +397,13 @@ class LingotekSystemSiteTranslationTest extends LingotekTestBase {
     /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
     $translation_service = \Drupal::service('lingotek.config_translation');
     $source_status = $translation_service->getConfigSourceStatus($mapper);
-    $this->assertEqual(Lingotek::STATUS_UNTRACKED, $source_status, 'The system information has been marked as error.');
+    $this->assertEquals(Lingotek::STATUS_IMPORTING, $source_status);
 
-    // I can still re-try the upload.
+    // I have re-uploaded it.
     \Drupal::state()->set('lingotek.must_document_archived_error_in_update', FALSE);
-    $this->clickLink('Upload');
+    $this->clickLink('Check upload');
     $this->checkForMetaRefresh();
-    $this->assertText('System information uploaded successfully');
+    $this->assertText('System information status checked successfully');
   }
 
   /**

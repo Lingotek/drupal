@@ -212,7 +212,7 @@ a.language-icon {
 
 .language-icon.source-disabled,
 .language-icon.target-disabled {
-   background-color:#FFFFFF;
+   background-color:#ffffff;
    border: 1px solid #999999;
    color: #999999;
    text-decoration:line-through;
@@ -225,7 +225,7 @@ a.language-icon {
 
 .language-icon.source-none,
 .language-icon.target-none {
-   background-color:#FFFFFF;
+   background-color:#ffffff;
    border: 1px solid #999999;
    color: #999999;
 }
@@ -234,3 +234,19 @@ a.language-icon {
   .language-icon.target-none a {
      color: #999999;
   }
+
+.language-icon.source-archived,
+.language-icon.source-deleted,
+.language-icon.target-archived,
+.language-icon.target-deleted {
+  background-color: #ffffff;
+  border: 1px solid #404040;
+  color: #404040;
+}
+
+.language-icon.source-archived a,
+.language-icon.source-deleted a,
+.language-icon.target-archived a,
+.language-icon.target-deleted a {
+  color: #404040;
+}

@@ -332,10 +332,7 @@ class LingotekInterfaceTranslationService implements LingotekInterfaceTranslatio
         elseif ($current_status == Lingotek::STATUS_EDITED && in_array($status, [Lingotek::STATUS_CURRENT, Lingotek::STATUS_PENDING])) {
           $this->setTargetStatus($component, $langcode, $status);
         }
-        if ($status === Lingotek::STATUS_CANCELLED) {
-          $this->setTargetStatus($component, $langcode, $status);
-        }
-        if ($status === Lingotek::STATUS_DISABLED) {
+        if (in_array($status, [Lingotek::STATUS_ARCHIVED, Lingotek::STATUS_DELETED, Lingotek::STATUS_CANCELLED, Lingotek::STATUS_DISABLED])) {
           $this->setTargetStatus($component, $langcode, $status);
         }
       }
@@ -466,6 +463,7 @@ class LingotekInterfaceTranslationService implements LingotekInterfaceTranslatio
         Lingotek::STATUS_REQUEST,
         Lingotek::STATUS_UNTRACKED,
         Lingotek::STATUS_EDITED,
+        Lingotek::STATUS_DELETED,
       ];
 
       if (in_array($current_status, $pristine_statuses)) {

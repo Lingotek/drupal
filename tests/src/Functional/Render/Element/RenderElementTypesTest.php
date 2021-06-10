@@ -98,6 +98,18 @@ class RenderElementTypesTest extends LingotekTestBase {
     $this->drupalGet('/lingotek_form_test/lingotek_source_status/node/1');
     $this->assertSession()->responseContains('lingotek/css/base.css');
     $this->assertSession()->responseContains('<span class="language-icon source-error" title="Error"><a href="' . $basepath . '/admin/lingotek/entity/update/test-document-id?destination=' . $basepath . '/lingotek_form_test/lingotek_source_status/node/1">EN</a></span>');
+
+    $translation_service->setDocumentId($entity, NULL);
+    $translation_service->setSourceStatus($entity, Lingotek::STATUS_DELETED);
+    $this->drupalGet('/lingotek_form_test/lingotek_source_status/node/1');
+    $this->assertSession()->responseContains('lingotek/css/base.css');
+    $this->assertSession()->responseContains('<span class="language-icon source-deleted" title="This document was deleted in Lingotek. Re-upload to translate."><a href="' . $basepath . '/admin/lingotek/entity/upload/node/1?destination=' . $basepath . '/lingotek_form_test/lingotek_source_status/node/1">EN</a></span>');
+
+    $translation_service->setDocumentId($entity, NULL);
+    $translation_service->setSourceStatus($entity, Lingotek::STATUS_ARCHIVED);
+    $this->drupalGet('/lingotek_form_test/lingotek_source_status/node/1');
+    $this->assertSession()->responseContains('lingotek/css/base.css');
+    $this->assertSession()->responseContains('<span class="language-icon source-archived" title="This document was archived in Lingotek. Re-upload to translate."><a href="' . $basepath . '/admin/lingotek/entity/upload/node/1?destination=' . $basepath . '/lingotek_form_test/lingotek_source_status/node/1">EN</a></span>');
   }
 
   /**
@@ -216,6 +228,22 @@ class RenderElementTypesTest extends LingotekTestBase {
     $this->assertSession()->responseContains('lingotek/css/base.css');
     $link = $this->xpath("//span[@class='language-icon target-disabled' and @title='Spanish - Disabled' and text()='ES']");
     $this->assertEqual(count($link), 1, 'Span exists.');
+
+    $translation_service->setTargetStatus($entity, 'es', Lingotek::STATUS_DELETED);
+    $translation_service->setTargetStatus($entity, 'de', Lingotek::STATUS_ARCHIVED);
+    $this->drupalGet('/lingotek_form_test/lingotek_translation_statuses/node/1');
+
+    $this->assertTargetAction("Request translation",
+      "$basepath/admin/lingotek/entity/add_target/test-document-id/es_ES?destination=$basepath/lingotek_form_test/lingotek_translation_statuses/node/1",
+    );
+    $this->assertTargetAction("Request translation",
+      "$basepath/admin/lingotek/entity/add_target/test-document-id/de_DE?destination=$basepath/lingotek_form_test/lingotek_translation_statuses/node/1",
+    );
+
+    $link = $this->xpath("//a[@href='$basepath/admin/lingotek/entity/add_target/test-document-id/es_ES?destination=" . $basepath . "/lingotek_form_test/lingotek_translation_statuses/node/1' and @class='language-icon target-deleted' and @title='Spanish - Deleted in Lingotek' and text()='ES']");
+    $this->assertEqual(count($link), 1, 'Link exists.');
+    $link = $this->xpath("//span[@class='language-icon target-archived' and @title='German - Archived in Lingotek' and text()='DE']");
+    $this->assertEqual(count($link), 1, 'Span exists.');
   }
 
   /**
@@ -333,6 +361,22 @@ class RenderElementTypesTest extends LingotekTestBase {
 
     $this->assertSession()->responseContains('lingotek/css/base.css');
     $link = $this->xpath("//span[@class='language-icon target-disabled' and @title='Spanish - Disabled' and text()='ES']");
+    $this->assertEqual(count($link), 1, 'Span exists.');
+
+    $translation_service->setTargetStatus($entity, 'es', Lingotek::STATUS_DELETED);
+    $translation_service->setTargetStatus($entity, 'de', Lingotek::STATUS_ARCHIVED);
+    $this->drupalGet('/lingotek_form_test/lingotek_translation_status/node/1');
+
+    $this->assertTargetAction("Request translation",
+      "$basepath/admin/lingotek/entity/add_target/test-document-id/es_ES?destination=$basepath/lingotek_form_test/lingotek_translation_status/node/1",
+    );
+    $this->assertTargetAction("Request translation",
+      "$basepath/admin/lingotek/entity/add_target/test-document-id/de_DE?destination=$basepath/lingotek_form_test/lingotek_translation_status/node/1",
+    );
+
+    $link = $this->xpath("//a[@href='$basepath/admin/lingotek/entity/add_target/test-document-id/es_ES?destination=" . $basepath . "/lingotek_form_test/lingotek_translation_status/node/1' and @class='language-icon target-deleted' and @title='Spanish - Deleted in Lingotek' and text()='ES']");
+    $this->assertEqual(count($link), 1, 'Link exists.');
+    $link = $this->xpath("//span[@class='language-icon target-archived' and @title='German - Archived in Lingotek' and text()='DE']");
     $this->assertEqual(count($link), 1, 'Span exists.');
   }
 

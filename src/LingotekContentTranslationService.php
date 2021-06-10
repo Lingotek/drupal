@@ -426,10 +426,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
         elseif ($current_status == Lingotek::STATUS_EDITED && in_array($status, [Lingotek::STATUS_CURRENT, Lingotek::STATUS_PENDING])) {
           $this->setTargetStatus($entity, $langcode, $status);
         }
-        if ($status === Lingotek::STATUS_CANCELLED) {
-          $this->setTargetStatus($entity, $langcode, $status);
-        }
-        if ($status === Lingotek::STATUS_DISABLED) {
+        if (in_array($status, [Lingotek::STATUS_ARCHIVED, Lingotek::STATUS_DELETED, Lingotek::STATUS_CANCELLED, Lingotek::STATUS_DISABLED])) {
           $this->setTargetStatus($entity, $langcode, $status);
         }
       }
@@ -1051,6 +1048,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
         Lingotek::STATUS_REQUEST,
         Lingotek::STATUS_UNTRACKED,
         Lingotek::STATUS_EDITED,
+        Lingotek::STATUS_DELETED,
       ];
 
       if (in_array($current_status, $pristine_statuses)) {
@@ -1063,7 +1061,8 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
         }
         catch (LingotekDocumentArchivedException $exception) {
           $this->setDocumentId($entity, NULL);
-          $this->deleteMetadata($entity);
+          $this->setSourceStatus($entity, Lingotek::STATUS_ARCHIVED);
+          $this->setTargetStatuses($entity, Lingotek::STATUS_ARCHIVED);
           throw $exception;
         }
         catch (LingotekPaymentRequiredException $exception) {
@@ -1124,7 +1123,8 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
               }
               catch (LingotekDocumentArchivedException $exception) {
                 $this->setDocumentId($entity, NULL);
-                $this->deleteMetadata($entity);
+                $this->setSourceStatus($entity, Lingotek::STATUS_ARCHIVED);
+                $this->setTargetStatuses($entity, Lingotek::STATUS_ARCHIVED);
                 throw $exception;
               }
               catch (LingotekPaymentRequiredException $exception) {
@@ -1347,7 +1347,8 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     }
     catch (LingotekDocumentArchivedException $exception) {
       $this->setDocumentId($entity, NULL);
-      $this->deleteMetadata($entity);
+      $this->setSourceStatus($entity, Lingotek::STATUS_ARCHIVED);
+      $this->setTargetStatuses($entity, Lingotek::STATUS_ARCHIVED);
       throw $exception;
     }
     catch (LingotekPaymentRequiredException $exception) {
@@ -2148,10 +2149,9 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       catch (LingotekDocumentArchivedException $exception) {
         $old_job_id = $this->getJobId($entity);
         $this->setDocumentId($entity, NULL);
-        $this->deleteMetadata($entity);
-        $metadata = LingotekContentMetadata::create(['content_entity_type_id' => $entity->getEntityTypeId(), 'content_entity_id' => $entity->id()]);
-        $metadata->setJobId($old_job_id);
-        $metadata->save();
+        $this->setSourceStatus($entity, Lingotek::STATUS_ARCHIVED);
+        $this->setTargetStatuses($entity, Lingotek::STATUS_ARCHIVED);
+        $this->setJobId($entity, $old_job_id);
         throw $exception;
       }
       catch (LingotekPaymentRequiredException $exception) {

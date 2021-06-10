@@ -514,9 +514,17 @@ class LingotekInterfaceTranslationTest extends LingotekTestBase {
     // We cannot use ::assertSourceStatus, there are lots of untracked docs, but
     // checking the upload link should suffice.
     // $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
-    $this->assertLingotekInterfaceTranslationUploadLink($component);
-    $this->assertNoLingotekInterfaceTranslationRequestTranslationLink($component, 'es_MX');
-    $assert_session->responseContains('Document <em class="placeholder">' . $component . '</em> has been archived. Please upload again.');
+
+    // This assertions were true when we marked them as archived. Now we autorequest them again.
+    // $this->assertLingotekInterfaceTranslationUploadLink($component);
+    // $this->assertNoLingotekInterfaceTranslationRequestTranslationLink($component, 'es_MX');
+
+    $this->assertNoLingotekInterfaceTranslationUploadLink($component);
+    $this->assertLingotekInterfaceTranslationCheckSourceStatusLink($component);
+    $this->assertLingotekInterfaceTranslationRequestTranslationLink($component, 'es_MX');
+
+    $assert_session->responseContains('Document <em class="placeholder">' . $component . '</em> has been archived. Uploading again.');
+    $assert_session->responseContains('<em class="placeholder">' . $component . '</em> uploaded successfully');
   }
 
   /**
@@ -826,7 +834,8 @@ class LingotekInterfaceTranslationTest extends LingotekTestBase {
     $this->assertEquals($response['messages'][0], "Document $path was archived in Lingotek.");
 
     $this->goToInterfaceTranslationManagementForm();
-    $this->assertIdentical(Lingotek::STATUS_UNTRACKED, $translation_service->getTargetStatus($component, 'es'));
+    $this->assertIdentical(Lingotek::STATUS_ARCHIVED, $translation_service->getSourceStatus($component));
+    $this->assertIdentical(Lingotek::STATUS_ARCHIVED, $translation_service->getTargetStatus($component, 'es'));
   }
 
   /**

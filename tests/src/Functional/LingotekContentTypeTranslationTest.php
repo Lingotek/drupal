@@ -465,20 +465,20 @@ class LingotekContentTypeTranslationTest extends LingotekTestBase {
     // Re-upload. Must fail now.
     $this->clickLink('Upload');
     $this->checkForMetaRefresh();
-    $this->assertText('Document Blogpost has been archived. Please upload again.');
+    $this->assertText('Document Blogpost has been archived. Uploading again.');
 
     // The node type has been marked with the error status.
     $nodeType = NodeType::load('article');
     /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
     $translation_service = \Drupal::service('lingotek.config_translation');
     $source_status = $translation_service->getSourceStatus($nodeType);
-    $this->assertEqual(Lingotek::STATUS_UNTRACKED, $source_status, 'The node type has been marked as error.');
+    $this->assertEqual(Lingotek::STATUS_IMPORTING, $source_status);
 
     // I can still re-try the upload.
     \Drupal::state()->set('lingotek.must_document_archived_error_in_update', FALSE);
-    $this->clickLink('Upload');
+    $this->clickLink('Check upload');
     $this->checkForMetaRefresh();
-    $this->assertText('Blogpost uploaded successfully');
+    $this->assertText('Blogpost status checked successfully');
   }
 
   /**
@@ -596,21 +596,21 @@ class LingotekContentTypeTranslationTest extends LingotekTestBase {
     $this->drupalPostForm('/admin/structure/types/manage/article', $edit, t('Save content type'));
     $this->assertText('The content type Blogpost has been updated.');
 
-    $this->assertText('Document node_type Blogpost has been archived. Please upload again.');
+    $this->assertText('Document node_type Blogpost has been archived. Uploading again.');
 
     // The node type has been marked with the error status.
     $nodeType = NodeType::load('article');
     /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
     $translation_service = \Drupal::service('lingotek.config_translation');
     $source_status = $translation_service->getSourceStatus($nodeType);
-    $this->assertEqual(Lingotek::STATUS_UNTRACKED, $source_status, 'The node type has been marked as error.');
+    $this->assertEqual(Lingotek::STATUS_IMPORTING, $source_status);
 
     // I can still re-try the upload.
     \Drupal::state()->set('lingotek.must_document_archived_error_in_update', FALSE);
     $this->clickLink(t('Translate'));
-    $this->clickLink('Upload');
+    $this->clickLink('Check upload');
     $this->checkForMetaRefresh();
-    $this->assertText('Blogpost uploaded successfully');
+    $this->assertText('Blogpost status checked successfully');
   }
 
   /**

@@ -349,20 +349,20 @@ class LingotekFieldBodyTranslationTest extends LingotekTestBase {
     // Re-upload. Must fail now.
     $this->clickLink('Upload');
     $this->checkForMetaRefresh();
-    $this->assertText('Document Contents has been archived. Please upload again.');
+    $this->assertText('Document Contents has been archived. Uploading again.');
 
     // The field has been marked with the error status.
     $fieldConfig = FieldConfig::load('node.article.body');
     /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
     $translation_service = \Drupal::service('lingotek.config_translation');
     $source_status = $translation_service->getSourceStatus($fieldConfig);
-    $this->assertEqual(Lingotek::STATUS_UNTRACKED, $source_status, 'The field has been marked as error.');
+    $this->assertEqual(Lingotek::STATUS_IMPORTING, $source_status);
 
     // I can still re-try the upload.
     \Drupal::state()->set('lingotek.must_document_archived_error_in_update', FALSE);
-    $this->clickLink('Upload');
+    $this->clickLink('Check upload');
     $this->checkForMetaRefresh();
-    $this->assertText('Contents uploaded successfully');
+    $this->assertText('Contents status checked successfully');
   }
 
   /**
@@ -390,21 +390,20 @@ class LingotekFieldBodyTranslationTest extends LingotekTestBase {
     $edit = ['label' => 'Contents'];
     $this->drupalPostForm('/admin/structure/types/manage/article/fields/node.article.body', $edit, t('Save settings'));
     $this->assertText('Saved Contents configuration.');
-    $this->assertText('Document field_config Contents has been archived. Please upload again.');
+    $this->assertText('Document field_config Contents has been archived. Uploading again.');
 
     // The field has been marked with the error status.
     $fieldConfig = FieldConfig::load('node.article.body');
     /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
     $translation_service = \Drupal::service('lingotek.config_translation');
     $source_status = $translation_service->getSourceStatus($fieldConfig);
-    $this->assertEqual(Lingotek::STATUS_UNTRACKED, $source_status, 'The field has been marked as error.');
+    $this->assertEqual(Lingotek::STATUS_IMPORTING, $source_status);
 
-    // I can still re-try the upload.
     \Drupal::state()->set('lingotek.must_document_archived_error_in_update', FALSE);
     $this->clickLink(t('Translate'));
-    $this->clickLink('Upload');
+    $this->clickLink('Check upload');
     $this->checkForMetaRefresh();
-    $this->assertText('Contents uploaded successfully');
+    $this->assertText('Contents status checked successfully');
   }
 
   /**

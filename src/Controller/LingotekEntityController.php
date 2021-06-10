@@ -193,10 +193,11 @@ class LingotekEntityController extends LingotekControllerBase {
       }
     }
     catch (LingotekDocumentArchivedException $exception) {
-      $this->messenger()->addError(t('Document @entity_type %title has been archived. Please upload again.', [
+      $this->messenger()->addWarning(t('Document @entity_type %title has been archived. Uploading again.', [
         '@entity_type' => $entity->getEntityTypeId(),
         '%title' => $entity->label(),
       ]));
+      return $this->upload($entity->getEntityTypeId(), $entity->id());
     }
     catch (LingotekDocumentLockedException $exception) {
       $this->messenger()->addError(t('Document @entity_type %title has a new version. The document id has been updated for all future interactions. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
@@ -276,10 +277,11 @@ class LingotekEntityController extends LingotekControllerBase {
       }
     }
     catch (LingotekDocumentArchivedException $exception) {
-      $this->messenger()->addError(t('Document @entity_type %title has been archived. Please upload again.', [
+      $this->messenger()->addWarning(t('Document @entity_type %title has been archived. Uploading again.', [
         '@entity_type' => $entity->getEntityTypeId(),
         '%title' => $entity->label(),
       ]));
+      $translation_service->uploadDocument($entity);
     }
     catch (LingotekDocumentLockedException $exception) {
       $this->messenger()->addError(t('Document @entity_type %title has a new version. The document id has been updated for all future interactions. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));

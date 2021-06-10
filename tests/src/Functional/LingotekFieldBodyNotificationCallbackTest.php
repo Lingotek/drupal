@@ -853,7 +853,7 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
     $this->goToConfigBulkManagementForm('node_fields');
 
     // Check the right class is added.
-    $this->assertTargetStatus('IT', Lingotek::STATUS_UNTRACKED);
+    $this->assertTargetStatus('IT', Lingotek::STATUS_DELETED);
 
     /** @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface $field_storage */
     $field_storage = $this->container->get('entity_type.manager')->getStorage('field_config');
@@ -861,7 +861,7 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
     $field_storage->resetCache();
     $entity = $field_storage->load('node.article.body');
     $translation_service = \Drupal::service('lingotek.config_translation');
-    $this->assertEquals(Lingotek::STATUS_UNTRACKED, $translation_service->getTargetStatus($entity, 'it'));
+    $this->assertEquals(Lingotek::STATUS_DELETED, $translation_service->getTargetStatus($entity, 'it'));
   }
 
   /**
@@ -987,9 +987,9 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
     $this->goToConfigBulkManagementForm('node_fields');
 
     // Check the right class is added.
-    $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
-    $this->assertTargetStatus('IT', Lingotek::STATUS_UNTRACKED);
-    $this->assertTargetStatus('ES', Lingotek::STATUS_UNTRACKED);
+    $this->assertSourceStatus('EN', Lingotek::STATUS_DELETED);
+    $this->assertTargetStatus('IT', Lingotek::STATUS_DELETED);
+    $this->assertTargetStatus('ES', Lingotek::STATUS_DELETED);
 
     // Check that the Target Status is Untracked
     /** @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface $field_storage */
@@ -1000,9 +1000,9 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
 
     $translation_service = \Drupal::service('lingotek.config_translation');
     $this->assertEmpty($translation_service->getDocumentId($entity));
-    $this->assertEquals(Lingotek::STATUS_UNTRACKED, $translation_service->getTargetStatus($entity, 'it'));
-    $this->assertEquals(Lingotek::STATUS_UNTRACKED, $translation_service->getTargetStatus($entity, 'es'));
-    $this->assertEquals(Lingotek::STATUS_UNTRACKED, $translation_service->getSourceStatus($entity));
+    $this->assertEquals(Lingotek::STATUS_DELETED, $translation_service->getTargetStatus($entity, 'it'));
+    $this->assertEquals(Lingotek::STATUS_DELETED, $translation_service->getTargetStatus($entity, 'es'));
+    $this->assertEquals(Lingotek::STATUS_DELETED, $translation_service->getSourceStatus($entity));
   }
 
   /**

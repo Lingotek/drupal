@@ -308,10 +308,13 @@ function lingotek_entity_update(EntityInterface $entity) {
           $translation_service->markTranslationsAsDirty($entity);
         }
         catch (LingotekDocumentArchivedException $exception) {
-          \Drupal::messenger()->addError(t('Document @entity_type %title has been archived. Please upload again.', [
+          \Drupal::messenger()->addWarning(t('Document @entity_type %title has been archived. Uploading again.', [
             '@entity_type' => $entity->getEntityTypeId(),
             '%title' => $entity->label(),
           ]));
+          // We need to reload the entity to ensure that the metadata saving doesn't produce errors.
+          $reloadedEntity = \Drupal::entityTypeManager()->getStorage($entity->getEntityTypeId())->load($entity->id());
+          lingotek_entity_insert($reloadedEntity);
         }
         catch (LingotekDocumentLockedException $exception) {
           \Drupal::messenger()->addError(t('Document @entity_type %title has a new version. The document id has been updated for all future interactions. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
@@ -405,10 +408,13 @@ function lingotek_entity_update(EntityInterface $entity) {
               \Drupal::messenger()->addStatus(t('<em>@title</em> was updated and sent to Lingotek successfully.', ['@title' => $entity->label()]));
             }
             catch (LingotekDocumentArchivedException $exception) {
-              \Drupal::messenger()->addError(t('Document @entity_type %title has been archived. Please upload again.', [
+              \Drupal::messenger()->addWarning(t('Document @entity_type %title has been archived. Uploading again.', [
                 '@entity_type' => $entity->getEntityTypeId(),
                 '%title' => $entity->label(),
               ]));
+              // We need to reload the entity to ensure that the metadata saving doesn't produce errors.
+              $reloadedEntity = \Drupal::entityTypeManager()->getStorage($entity->getEntityTypeId())->load($entity->id());
+              lingotek_entity_insert($reloadedEntity);
             }
             catch (LingotekDocumentLockedException $exception) {
               \Drupal::messenger()->addError(t('Document @entity_type %title has a new version. The document id has been updated for all future interactions. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));

@@ -1607,12 +1607,12 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     // Go to the bulk node management page.
     $this->goToContentBulkManagementForm();
     // Check the right class is added.
-    $this->assertTargetStatus('IT', Lingotek::STATUS_UNTRACKED);
+    $this->assertTargetStatus('IT', Lingotek::STATUS_DELETED);
 
     // Check that the Target Status is Untracked
     $node = Node::load(1);
     $content_translation_service = \Drupal::service('lingotek.content_translation');
-    $this->assertEquals(Lingotek::STATUS_UNTRACKED, $content_translation_service->getTargetStatus($node, 'it'));
+    $this->assertEquals(Lingotek::STATUS_DELETED, $content_translation_service->getTargetStatus($node, 'it'));
   }
 
   /**
@@ -1732,18 +1732,18 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     // Go to the bulk node management page.
     $this->goToContentBulkManagementForm();
     // Check the right class is added.
-    $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
-    $this->assertTargetStatus('IT', Lingotek::STATUS_UNTRACKED);
-    $this->assertTargetStatus('ES', Lingotek::STATUS_UNTRACKED);
+    $this->assertSourceStatus('EN', Lingotek::STATUS_DELETED);
+    $this->assertTargetStatus('IT', Lingotek::STATUS_DELETED);
+    $this->assertTargetStatus('ES', Lingotek::STATUS_DELETED);
 
     // Check that the Target Status is Untracked
     $node = Node::load(1);
     /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $content_translation_service */
     $content_translation_service = \Drupal::service('lingotek.content_translation');
     $this->assertEmpty($content_translation_service->getDocumentId($node));
-    $this->assertEquals(Lingotek::STATUS_UNTRACKED, $content_translation_service->getTargetStatus($node, 'it'));
-    $this->assertEquals(Lingotek::STATUS_UNTRACKED, $content_translation_service->getTargetStatus($node, 'es'));
-    $this->assertEquals(Lingotek::STATUS_UNTRACKED, $content_translation_service->getSourceStatus($node));
+    $this->assertEquals(Lingotek::STATUS_DELETED, $content_translation_service->getTargetStatus($node, 'it'));
+    $this->assertEquals(Lingotek::STATUS_DELETED, $content_translation_service->getTargetStatus($node, 'es'));
+    $this->assertEquals(Lingotek::STATUS_DELETED, $content_translation_service->getSourceStatus($node));
   }
 
   /**
@@ -1833,10 +1833,8 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     $node = $this->resetStorageCachesAndReloadNode();
 
     $this->assertNull($content_translation_service->getDocumentId($node));
-    $this->assertIdentical(Lingotek::STATUS_UNTRACKED, $content_translation_service->getSourceStatus($node));
-    $this->assertIdentical(Lingotek::STATUS_UNTRACKED, $content_translation_service->getTargetStatus($node, 'es'));
-
-    $this->goToContentBulkManagementForm();
+    $this->assertIdentical(Lingotek::STATUS_ARCHIVED, $content_translation_service->getSourceStatus($node));
+    $this->assertIdentical(Lingotek::STATUS_ARCHIVED, $content_translation_service->getTargetStatus($node, 'es'));
   }
 
   /**

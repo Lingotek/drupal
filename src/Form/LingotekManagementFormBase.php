@@ -1099,10 +1099,11 @@ abstract class LingotekManagementFormBase extends FormBase {
         $this->messenger()->addError(t('Community has been disabled. Please contact support@lingotek.com to re-enable your community.'));
       }
       catch (LingotekDocumentArchivedException $exception) {
-        $this->messenger()->addError(t('Document @entity_type %title has been archived. Please upload again.', [
+        $this->messenger()->addWarning(t('Document @entity_type %title has been archived. Uploading again.', [
           '@entity_type' => $entity->getEntityTypeId(),
           '%title' => $entity->label(),
         ]));
+        return $this->uploadDocument($entity, $language, $job_id, $context);
       }
       catch (LingotekDocumentLockedException $exception) {
         $this->messenger()->addError(t('Document @entity_type %title has a new version. The document id has been updated for all future interactions. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
@@ -1187,10 +1188,11 @@ abstract class LingotekManagementFormBase extends FormBase {
         $this->messenger()->addError(t('Community has been disabled. Please contact support@lingotek.com to re-enable your community.'));
       }
       catch (LingotekDocumentArchivedException $exception) {
-        $this->messenger()->addError(t('Document @entity_type %title has been archived. Please upload again.', [
+        $this->messenger()->addWarning(t('Document @entity_type %title has been archived. Uploading again.', [
           '@entity_type' => $entity->getEntityTypeId(),
           '%title' => $entity->label(),
         ]));
+        return $this->uploadDocument($entity, $language, $job_id, $context);
       }
       catch (LingotekDocumentLockedException $exception) {
         $this->messenger()->addError(t('Document @entity_type %title has a new version. The document id has been updated for all future interactions. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
@@ -1310,10 +1312,11 @@ abstract class LingotekManagementFormBase extends FormBase {
         $this->messenger()->addError(t('Community has been disabled. Please contact support@lingotek.com to re-enable your community.'));
       }
       catch (LingotekDocumentArchivedException $exception) {
-        $this->messenger()->addError(t('Document @entity_type %title has been archived. Please upload again.', [
+        $this->messenger()->addWarning(t('Document @entity_type %title has been archived. Uploading again.', [
           '@entity_type' => $entity->getEntityTypeId(),
           '%title' => $entity->label(),
         ]));
+        return $this->uploadDocument($entity, $langcode, $job_id, $context);
       }
       catch (LingotekDocumentLockedException $exception) {
         $this->messenger()->addError(t('Document @entity_type %title has a new version. The document id has been updated for all future interactions. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));

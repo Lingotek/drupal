@@ -219,9 +219,10 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
           }
         }
         catch (LingotekDocumentArchivedException $exception) {
-          $this->messenger()->addError($this->t('Document %label has been archived. Please upload again.', [
+          $this->messenger()->addWarning($this->t('Document %label has been archived. Uploading again.', [
             '%label' => $definition['title'],
           ]));
+          return $this->upload($entity_type, $entity_id, $request);
         }
         catch (LingotekDocumentLockedException $exception) {
           $this->messenger()->addError($this->t('Document %label has a new version. The document id has been updated for all future interactions. Please try again.',
@@ -242,8 +243,9 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
           }
         }
         catch (LingotekDocumentArchivedException $exception) {
-          $this->messenger()->addError($this->t('Document %label has been archived. Please upload again.',
+          $this->messenger()->addWarning($this->t('Document %label has been archived. Uploading again.',
             ['%label' => $mappers[$entity_type]->getTitle()]));
+          return $this->upload($entity_type, $entity_id, $request);
         }
         catch (LingotekDocumentLockedException $exception) {
           $this->messenger()->addError($this->t('Document %label has a new version. The document id has been updated for all future interactions. Please try again.',
@@ -273,9 +275,10 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
         }
       }
       catch (LingotekDocumentArchivedException $exception) {
-        $this->messenger()->addError($this->t('Document %label has been archived. Please upload again.', [
+        $this->messenger()->addError($this->t('Document %label has been archived. Uploading again.', [
           '%label' => $entity->label(),
         ]));
+        return $this->upload($entity_type, $entity_id, $request);
       }
       catch (LingotekDocumentLockedException $exception) {
         $this->messenger()->addError($this->t('Document @entity_type %title has a new version. The document id has been updated for all future interactions. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
@@ -295,10 +298,11 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
         }
       }
       catch (LingotekDocumentArchivedException $exception) {
-        $this->messenger()->addError($this->t('Document @entity_type %title has been archived. Please upload again.', [
+        $this->messenger()->addWarning($this->t('Document @entity_type %title has been archived. Uploading again.', [
           '@entity_type' => $entity->getEntityTypeId(),
           '%title' => $entity->label(),
         ]));
+        return $this->upload($entity_type, $entity_id, $request);
       }
       catch (LingotekDocumentLockedException $exception) {
         $this->messenger()->addError($this->t('Document @entity_type %title has a new version. The document id has been updated for all future interactions. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
@@ -326,9 +330,10 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
         }
       }
       catch (LingotekDocumentArchivedException $exception) {
-        $this->messenger()->addError($this->t('Document %label has been archived. Please upload again.', [
+        $this->messenger()->addWarning($this->t('Document %label has been archived. Uploading again.', [
           '%label' => $definition['title'],
         ]));
+        return $this->upload($entity_type, $entity_id, $request);
       }
       catch (LingotekDocumentLockedException $exception) {
         $this->messenger()->addError($this->t('Document %label has a new version. The document id has been updated for all future interactions. Please try again.',
@@ -355,10 +360,11 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
       }
     }
     catch (LingotekDocumentArchivedException $exception) {
-      $this->messenger()->addError($this->t('Document @entity_type %title has been archived. Please upload again.', [
+      $this->messenger()->addWarning($this->t('Document @entity_type %title has been archived. Uploading again.', [
         '@entity_type' => $entity->getEntityTypeId(),
         '%title' => $entity->label(),
       ]));
+      return $this->upload($entity_type, $entity_id, $request);
     }
     catch (LingotekDocumentLockedException $exception) {
       $this->messenger()->addError($this->t('Document @entity_type %title has a new version. The document id has been updated for all future interactions. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
@@ -417,8 +423,9 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
         }
       }
       catch (LingotekDocumentArchivedException $exception) {
-        $this->messenger()->addError($this->t('Document %label has been archived. Please upload again.',
+        $this->messenger()->addWarning($this->t('Document %label has been archived. Uploading again.',
           ['%label' => $definition['title']]));
+        return $this->upload($entity_type, $entity_id, $request);
       }
       catch (LingotekDocumentLockedException $exception) {
         $this->messenger()->addError($this->t('Document %label has a new version. The document id has been updated for all future interactions. Please try again.',
@@ -445,10 +452,11 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
       }
     }
     catch (LingotekDocumentArchivedException $exception) {
-      $this->messenger()->addError($this->t('Document @entity_type %title has been archived. Please upload again.', [
+      $this->messenger()->addWarning($this->t('Document @entity_type %title has been archived. Uploading again.', [
         '@entity_type' => $entity->getEntityTypeId(),
         '%title' => $entity->label(),
       ]));
+      return $this->upload($entity_type, $entity_id, $request);
     }
     catch (LingotekDocumentLockedException $exception) {
       $this->messenger()->addError($this->t('Document @entity_type %title has a new version. The document id has been updated for all future interactions. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));

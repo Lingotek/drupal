@@ -49,10 +49,14 @@ class UploadToLingotekAction extends LingotekContentEntityActionBase {
       $this->messenger()->addError(t('Community has been disabled. Please contact support@lingotek.com to re-enable your community.'));
     }
     catch (LingotekDocumentArchivedException $exception) {
-      $this->messenger()->addError(t('Document @entity_type %title has been archived. Please upload again.', [
+      $this->messenger()->addError(t('Document @entity_type %title has been archived. Uploading again.', [
         '@entity_type' => $entity->getEntityTypeId(),
         '%title' => $entity->label(),
       ]));
+      $plugin_manager = \Drupal::service('plugin.manager.action');
+      $plugin_manager
+        ->createInstance(str_replace('lingotek_upload_action', 'lingotek_upload_action', $this->getPluginId()), $this->configuration)
+        ->execute($entity);
     }
     catch (LingotekDocumentLockedException $exception) {
       $this->messenger()->addError(t('Document @entity_type %title has a new version. The document id has been updated for all future interactions. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));

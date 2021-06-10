@@ -543,22 +543,22 @@ class LingotekFieldBodyBulkTranslationTest extends LingotekTestBase {
 
     // Update the document, which must fail.
     $this->clickLink('EN');
-    $this->assertText('Document field_config Contents has been archived. Please upload again.');
+    $this->assertText('Document field_config Contents has been archived. Uploading again.');
 
     // Check the right class is added.
-    $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
+    $this->assertSourceStatus('EN', Lingotek::STATUS_IMPORTING);
 
     // The field has been marked with the error status.
     $fieldConfig = FieldConfig::load('node.article.body');
     /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
     $translation_service = \Drupal::service('lingotek.config_translation');
     $source_status = $translation_service->getSourceStatus($fieldConfig);
-    $this->assertEqual(Lingotek::STATUS_UNTRACKED, $source_status, 'The field has been marked as error.');
+    $this->assertEqual(Lingotek::STATUS_IMPORTING, $source_status, 'The field has been marked as error.');
 
     // I can still re-try the upload.
     \Drupal::state()->set('lingotek.must_document_archived_error_in_update', FALSE);
     $this->clickLink('EN');
-    $this->assertText('Contents uploaded successfully');
+    $this->assertText('Contents status checked successfully');
   }
 
   /**
@@ -783,22 +783,22 @@ class LingotekFieldBodyBulkTranslationTest extends LingotekTestBase {
       $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node'),
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
-    $this->assertText('Document field_config Contents has been archived. Please upload again.');
+    $this->assertText('Document field_config Contents has been archived. Uploading again.');
 
     // Check the right class is added.
-    $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
+    $this->assertSourceStatus('EN', Lingotek::STATUS_IMPORTING);
 
     // The field has been marked with the error status.
     $fieldConfig = FieldConfig::load('node.article.body');
     /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
     $translation_service = \Drupal::service('lingotek.config_translation');
     $source_status = $translation_service->getSourceStatus($fieldConfig);
-    $this->assertEqual(Lingotek::STATUS_UNTRACKED, $source_status, 'The field has been marked as error.');
+    $this->assertEqual(Lingotek::STATUS_IMPORTING, $source_status, 'The field has been marked as error.');
 
     // I can still re-try the upload.
     \Drupal::state()->set('lingotek.must_document_archived_error_in_update', FALSE);
     $this->clickLink('EN');
-    $this->assertText('Contents uploaded successfully');
+    $this->assertText('Contents status checked successfully');
   }
 
   /**
@@ -1277,9 +1277,9 @@ class LingotekFieldBodyBulkTranslationTest extends LingotekTestBase {
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
-    $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
-    $this->assertNoLingotekRequestTranslationLink('es_MX');
-    $this->assertText('Document field_config Body has been archived. Please upload again.');
+    $this->assertSourceStatus('EN', Lingotek::STATUS_IMPORTING);
+    $this->assertLingotekRequestTranslationLink('es_MX');
+    $this->assertText('Document field_config Body has been archived. Uploading again.');
   }
 
   /**
@@ -1446,9 +1446,9 @@ class LingotekFieldBodyBulkTranslationTest extends LingotekTestBase {
 
     $this->clickLink('ES');
 
-    $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
-    $this->assertNoLingotekRequestTranslationLink('es_MX');
-    $this->assertText('Document field_config Body has been archived. Please upload again.');
+    $this->assertSourceStatus('EN', Lingotek::STATUS_IMPORTING);
+    $this->assertLingotekRequestTranslationLink('es_MX');
+    $this->assertText('Document field_config Body has been archived. Uploading again.');
   }
 
   /**
@@ -1551,9 +1551,9 @@ class LingotekFieldBodyBulkTranslationTest extends LingotekTestBase {
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
-    $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
-    $this->assertNoLingotekRequestTranslationLink('es_MX');
-    $this->assertText('Document field_config Body has been archived. Please upload again.');
+    $this->assertSourceStatus('EN', Lingotek::STATUS_IMPORTING);
+    $this->assertLingotekRequestTranslationLink('es_MX');
+    $this->assertText('Document field_config Body has been archived. Uploading again.');
   }
 
   /**

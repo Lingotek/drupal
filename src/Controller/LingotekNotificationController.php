@@ -143,8 +143,9 @@ class LingotekNotificationController extends LingotekControllerBase {
           }
           // We need to unset the document id first, so there's no cancelling
           // call to the TMS.
+          $translation_service->setTargetStatuses($entity, Lingotek::STATUS_ARCHIVED);
+          $translation_service->setSourceStatus($entity, Lingotek::STATUS_ARCHIVED);
           $translation_service->setDocumentId($entity, NULL);
-          $translation_service->deleteMetadata($entity);
 
           $http_status_code = Response::HTTP_OK;
           $messages[] = new FormattableMarkup('Document @label was archived in Lingotek.', [
@@ -361,7 +362,7 @@ class LingotekNotificationController extends LingotekControllerBase {
           $langcode = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale)
             ->id();
           $user_login = $request->query->get('deleted_by_user_login');
-          $translation_service->setTargetStatus($entity, $langcode, Lingotek::STATUS_UNTRACKED);
+          $translation_service->setTargetStatus($entity, $langcode, Lingotek::STATUS_DELETED);
           $this->logger->debug('Target @locale for entity @label deleted by @user_login', [
             '@locale' => $locale,
             '@user_login' => $user_login,
@@ -415,7 +416,11 @@ class LingotekNotificationController extends LingotekControllerBase {
             $translation_service = $this->lingotekInterfaceTranslation;
           }
           $user_login = $request->query->get('deleted_by_user_login');
-          $translation_service->deleteMetadata($entity);
+          // We need to unset the document id first, so there's no cancelling
+          // call to the TMS.
+          $translation_service->setSourceStatus($entity, Lingotek::STATUS_DELETED);
+          $translation_service->setTargetStatuses($entity, Lingotek::STATUS_DELETED);
+          $translation_service->setDocumentId($entity, NULL);
           $this->logger->debug('Document for entity @label deleted by @user_login in the TMS.', [
             '@user_login' => $user_login,
             '@label' => is_string($entity) ? $entity : $entity->label(),
