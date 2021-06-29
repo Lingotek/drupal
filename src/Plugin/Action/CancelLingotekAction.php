@@ -3,6 +3,7 @@
 namespace Drupal\lingotek\Plugin\Action;
 
 use Drupal\lingotek\Exception\LingotekApiException;
+use Drupal\lingotek\Exception\LingotekDocumentNotFoundException;
 
 /**
  * Assigns ownership of a node to a user.
@@ -39,8 +40,19 @@ class CancelLingotekAction extends LingotekContentEntityActionBase {
       /** @var \Drupal\node\NodeInterface $entity */
       $result = $this->translationService->cancelDocument($entity);
     }
+    catch (LingotekDocumentNotFoundException $exc) {
+      $this->messenger()
+        ->addWarning(t('Document @entity_type %title was not found, so nothing to cancel.', [
+          '@entity_type' => $entity->getEntityTypeId(),
+          '%title' => $entity->label(),
+        ]));
+    }
     catch (LingotekApiException $exception) {
-      $this->messenger()->addError(t('The cancellation of @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
+      $this->messenger()
+        ->addError(t('The cancellation of @entity_type %title failed. Please try again.', [
+          '@entity_type' => $entity->getEntityTypeId(),
+          '%title' => $entity->label(),
+        ]));
     }
     return $result;
   }

@@ -48,6 +48,8 @@ interface LingotekContentTranslationServiceInterface {
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface &$entity
    *   The entity which status we want to check.
+   *
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentNotFoundException
    */
   public function checkTargetStatuses(ContentEntityInterface &$entity);
 
@@ -61,6 +63,8 @@ interface LingotekContentTranslationServiceInterface {
    *
    * @return bool
    *   True if the entity is uploaded succesfully.
+   *
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentNotFoundException
    */
   public function checkTargetStatus(ContentEntityInterface &$entity, $langcode);
 
@@ -207,6 +211,7 @@ interface LingotekContentTranslationServiceInterface {
    * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentArchivedException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentLockedException
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentNotFoundException
    * @throws \Drupal\lingotek\Exception\LingotekApiException
    */
   public function addTarget(ContentEntityInterface &$entity, $locale);
@@ -220,6 +225,7 @@ interface LingotekContentTranslationServiceInterface {
    * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentArchivedException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentLockedException
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentNotFoundException
    * @throws \Drupal\lingotek\Exception\LingotekApiException
    */
   public function requestTranslations(ContentEntityInterface &$entity);
@@ -236,11 +242,10 @@ interface LingotekContentTranslationServiceInterface {
    *   TRUE if the document was uploaded successfully, FALSE if not.
    *
    * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
-   * @throws \Drupal\lingotek\Exception\LingotekApiException
-   *
-   * Propagated from @see ::updateDocument :
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentNotFoundException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentArchivedException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentLockedException
+   * @throws \Drupal\lingotek\Exception\LingotekApiException
    */
   public function uploadDocument(ContentEntityInterface $entity, $job_id = NULL);
 
@@ -254,6 +259,9 @@ interface LingotekContentTranslationServiceInterface {
    *
    * @return bool
    *   TRUE if the document was downloaded successfully, FALSE if not.
+   *
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentNotFoundException
+   * @throws \Drupal\lingotek\Exception\LingotekApiException
    */
   public function downloadDocument(ContentEntityInterface &$entity, $locale);
 
@@ -265,6 +273,9 @@ interface LingotekContentTranslationServiceInterface {
    *
    * @return bool
    *   TRUE if the document was downloaded successfully, FALSE if not.
+   *
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentNotFoundException
+   * @throws \Drupal\lingotek\Exception\LingotekApiException
    */
   public function downloadDocuments(ContentEntityInterface &$entity);
 
@@ -282,6 +293,7 @@ interface LingotekContentTranslationServiceInterface {
    * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentArchivedException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentLockedException
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentNotFoundException
    * @throws \Drupal\lingotek\Exception\LingotekApiException
    */
   public function updateDocument(ContentEntityInterface &$entity, $job_id = NULL);
@@ -294,6 +306,9 @@ interface LingotekContentTranslationServiceInterface {
    *
    * @return \Drupal\Core\Entity\ContentEntityInterface
    *   The entity.
+   *
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentNotFoundException
+   * @throws \Drupal\lingotek\Exception\LingotekApiException
    */
   public function cancelDocument(ContentEntityInterface &$entity);
 
@@ -304,6 +319,9 @@ interface LingotekContentTranslationServiceInterface {
    *   The entity which target we want to cancel.
    * @param string $locale
    *   Lingotek translation language which we want to modify.
+   *
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentNotFoundException
+   * @throws \Drupal\lingotek\Exception\LingotekApiException
    */
   public function cancelDocumentTarget(ContentEntityInterface &$entity, $locale);
 
@@ -369,6 +387,7 @@ interface LingotekContentTranslationServiceInterface {
    * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentArchivedException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentLockedException
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentNotFoundException
    * @throws \Drupal\lingotek\Exception\LingotekApiException
    */
   public function setJobId(ContentEntityInterface $entity, $job_id, $update_tms = FALSE);

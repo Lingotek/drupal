@@ -19,6 +19,7 @@ use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\lingotek\Exception\LingotekApiException;
 use Drupal\lingotek\Exception\LingotekDocumentArchivedException;
 use Drupal\lingotek\Exception\LingotekDocumentLockedException;
+use Drupal\lingotek\Exception\LingotekDocumentNotFoundException;
 use Drupal\lingotek\Exception\LingotekPaymentRequiredException;
 use Drupal\lingotek\LanguageLocaleMapperInterface;
 use Drupal\lingotek\Lingotek;
@@ -218,6 +219,10 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
             $this->messenger()->addStatus($this->t('%label has been updated.', ['%label' => $definition['title']]));
           }
         }
+        catch (LingotekDocumentNotFoundException $exception) {
+          $this->messenger()->addError($this->t('Document %label was not found. Please upload again.',
+            ['%label' => $definition['title']]));
+        }
         catch (LingotekDocumentArchivedException $exception) {
           $this->messenger()->addWarning($this->t('Document %label has been archived. Uploading again.', [
             '%label' => $definition['title'],
@@ -242,6 +247,10 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
             $this->messenger()->addStatus($this->t('%label uploaded successfully', ['%label' => $definition['title']]));
           }
         }
+        catch (LingotekDocumentNotFoundException $exception) {
+          $this->messenger()->addError($this->t('Document %label was not found. Please upload again.',
+            ['%label' => $mappers[$entity_type]->getTitle()]));
+        }
         catch (LingotekDocumentArchivedException $exception) {
           $this->messenger()->addWarning($this->t('Document %label has been archived. Uploading again.',
             ['%label' => $mappers[$entity_type]->getTitle()]));
@@ -249,7 +258,7 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
         }
         catch (LingotekDocumentLockedException $exception) {
           $this->messenger()->addError($this->t('Document %label has a new version. The document id has been updated for all future interactions. Please try again.',
-            ['%label' => $definition['title']]));
+            ['%label' => $mappers[$entity_type]->getTitle()]));
         }
         catch (LingotekPaymentRequiredException $exception) {
           $this->messenger()->addError($this->t('Community has been disabled. Please contact support@lingotek.com to re-enable your community.'));
@@ -274,6 +283,11 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
           $this->messenger()->addStatus($this->t('%label has been updated.', ['%label' => $entity->label()]));
         }
       }
+      catch (LingotekDocumentNotFoundException $exception) {
+        $this->messenger()->addError($this->t('Document %label was not found. Please upload again.', [
+          '%label' => $entity->label(),
+        ]));
+      }
       catch (LingotekDocumentArchivedException $exception) {
         $this->messenger()->addError($this->t('Document %label has been archived. Uploading again.', [
           '%label' => $entity->label(),
@@ -296,6 +310,12 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
         if ($doc_id = $this->translationService->uploadDocument($entity)) {
           $this->messenger()->addStatus($this->t('%label uploaded successfully', ['%label' => $entity->label()]));
         }
+      }
+      catch (LingotekDocumentNotFoundException $exception) {
+        $this->messenger()->addError($this->t('Document @entity_type %title was not found. Please upload again.', [
+          '@entity_type' => $entity->getEntityTypeId(),
+          '%title' => $entity->label(),
+        ]));
       }
       catch (LingotekDocumentArchivedException $exception) {
         $this->messenger()->addWarning($this->t('Document @entity_type %title has been archived. Uploading again.', [
@@ -335,6 +355,10 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
         ]));
         return $this->upload($entity_type, $entity_id, $request);
       }
+      catch (LingotekDocumentNotFoundException $exception) {
+        $this->messenger()->addError($this->t('Document %label was not found. Please upload again.',
+          ['%label' => $definition['title']]));
+      }
       catch (LingotekDocumentLockedException $exception) {
         $this->messenger()->addError($this->t('Document %label has a new version. The document id has been updated for all future interactions. Please try again.',
           ['%label' => $definition['title']]));
@@ -358,6 +382,12 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
       if ($this->translationService->updateDocument($entity)) {
         $this->messenger()->addStatus($this->t('%label has been updated.', ['%label' => $entity->label()]));
       }
+    }
+    catch (LingotekDocumentNotFoundException $exception) {
+      $this->messenger()->addError($this->t('Document @entity_type %title was not found. Please upload again.', [
+        '@entity_type' => $entity->getEntityTypeId(),
+        '%title' => $entity->label(),
+      ]));
     }
     catch (LingotekDocumentArchivedException $exception) {
       $this->messenger()->addWarning($this->t('Document @entity_type %title has been archived. Uploading again.', [
@@ -385,12 +415,24 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
       $definition = $this->configMapperManager->getDefinition($entity_type);
       try {
         if ($this->translationService->checkConfigSourceStatus($entity_type)) {
-          $this->messenger()->addStatus($this->t('%label status checked successfully', ['%label' => $definition['title']]));
+          $this->messenger()
+            ->addStatus($this->t('%label status checked successfully', ['%label' => $definition['title']]));
+        }
+        else {
+          $this->messenger()
+            ->addStatus(t('The import for %label is still pending.', ['%label' => $definition['title']]));
         }
       }
+      catch (LingotekDocumentNotFoundException $exception) {
+        $this->messenger()
+          ->addError($this->t('Document %label was not found. Please upload again.', [
+            '%label' => $definition['title'],
+          ]));
+      }
       catch (LingotekApiException $e) {
-        $this->messenger()->addError($this->t('%label status check failed. Please try again.',
-          ['%label' => $definition['title']]));
+        $this->messenger()
+          ->addError($this->t('%label status check failed. Please try again.',
+            ['%label' => $definition['title']]));
       }
       return $this->redirectToConfigTranslateOverview($entity_type);
     }
@@ -404,6 +446,15 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
       if ($this->translationService->checkSourceStatus($entity)) {
         $this->messenger()->addStatus($this->t('%label status checked successfully', ['%label' => $entity->label()]));
       }
+      else {
+        $this->messenger()->addStatus(t('The import for %label is still pending.', ['%label' => $entity->label()]));
+      }
+    }
+    catch (LingotekDocumentNotFoundException $exception) {
+      $this->messenger()
+        ->addError($this->t('Document %label was not found. Please upload again.', [
+          '%label' => $entity->label(),
+        ]));
     }
     catch (LingotekApiException $e) {
       $this->messenger()->addError($this->t('%label status check failed. Please try again.',
@@ -421,6 +472,10 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
         if ($this->translationService->addConfigTarget($entity_id, $locale)) {
           $this->messenger()->addStatus($this->t('Translation to %locale requested successfully', ['%locale' => $locale]));
         }
+      }
+      catch (LingotekDocumentNotFoundException $exception) {
+        $this->messenger()->addError($this->t('Document %label was not found. Please upload again.',
+          ['%label' => $definition['title']]));
       }
       catch (LingotekDocumentArchivedException $exception) {
         $this->messenger()->addWarning($this->t('Document %label has been archived. Uploading again.',
@@ -450,6 +505,12 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
       if ($this->translationService->addTarget($entity, $locale)) {
         $this->messenger()->addStatus($this->t('Translation to %locale requested successfully', ['%locale' => $locale]));
       }
+    }
+    catch (LingotekDocumentNotFoundException $exception) {
+      $this->messenger()->addError($this->t('Document @entity_type %title was not found. Please upload again.', [
+        '@entity_type' => $entity->getEntityTypeId(),
+        '%title' => $entity->label(),
+      ]));
     }
     catch (LingotekDocumentArchivedException $exception) {
       $this->messenger()->addWarning($this->t('Document @entity_type %title has been archived. Uploading again.', [
@@ -525,6 +586,10 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
             ['%label' => $definition['title'], '@locale' => $locale]));
         }
       }
+      catch (LingotekDocumentNotFoundException $exception) {
+        $this->messenger()->addError($this->t('Document %label was not found. Please upload again.',
+          ['%label' => $definition['title']]));
+      }
       catch (LingotekApiException $e) {
         $mappers = $this->configMapperManager->getMappers();
         $this->translationService->setConfigTargetStatus($mappers[$entity_type], $langcode, Lingotek::STATUS_ERROR);
@@ -549,6 +614,10 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
         $this->messenger()->addError($this->t('%label @locale translation download failed. Please try again.',
           ['%label' => $entity->label(), '@locale' => $locale]));
       }
+    }
+    catch (LingotekDocumentNotFoundException $exception) {
+      $this->messenger()->addError($this->t('Document %label was not found. Please upload again.',
+        ['%label' => $entity->label()]));
     }
     catch (LingotekApiException $e) {
       $this->translationService->setTargetStatus($entity, $langcode, Lingotek::STATUS_ERROR);

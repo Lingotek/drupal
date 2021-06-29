@@ -3,6 +3,7 @@
 namespace Drupal\lingotek\Plugin\Action;
 
 use Drupal\lingotek\Exception\LingotekApiException;
+use Drupal\lingotek\Exception\LingotekDocumentNotFoundException;
 
 /**
  * Assigns ownership of a node to a user.
@@ -38,6 +39,13 @@ class CheckStatusAllTranslationsLingotekAction extends LingotekContentEntityActi
     try {
       /** @var \Drupal\node\NodeInterface $entity */
       $result = $this->translationService->checkTargetStatuses($entity);
+    }
+    catch (LingotekDocumentNotFoundException $exc) {
+      $this->messenger()
+        ->addError(t('Document @entity_type %title was not found. Please upload again.', [
+          '@entity_type' => $entity->getEntityTypeId(),
+          '%title' => $entity->label(),
+        ]));
     }
     catch (LingotekApiException $exception) {
       $this->messenger()->addError(t('The request for @entity_type %title translation status failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));

@@ -265,6 +265,103 @@ class LingotekSystemSiteTranslationTest extends LingotekTestBase {
   /**
    * Test that we handle errors in update.
    */
+  public function testCheckSourceStatusWithAnError() {
+    \Drupal::state()->set('lingotek.must_error_in_check_source_status', TRUE);
+
+    // Check that the translate tab is in the site information.
+    $this->drupalGet('/admin/config/system/site-information');
+    $this->clickLink('Translate system information');
+
+    // Upload the document, which must succeed.
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('System information uploaded successfully');
+
+    // Check that the upload succeeded.
+    $this->clickLink('Check upload status');
+
+    // We failed at checking status, but we don't know what happened.
+    // So we don't mark as error but keep it on importing.
+    $this->assertText('System information status check failed. Please try again.');
+
+    // The config mapper has been marked with the error status.
+    /** @var \Drupal\config_translation\ConfigMapperManagerInterface $mapperManager */
+    $mapperManager = \Drupal::service('plugin.manager.config_translation.mapper');
+    $mapper = $mapperManager->getMappers()['system.site_information_settings'];
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getConfigSourceStatus($mapper);
+    $this->assertEqual(Lingotek::STATUS_IMPORTING, $source_status, 'The system information has been marked as error.');
+  }
+
+  /**
+   * Test that we handle errors in update.
+   */
+  public function testCheckSourceStatusNotCompletedAndStillImporting() {
+    // Check that the translate tab is in the site information.
+    $this->drupalGet('/admin/config/system/site-information');
+    $this->clickLink('Translate system information');
+
+    // Upload the document, which must succeed.
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('System information uploaded successfully');
+
+    // The document has not been imported yet.
+    \Drupal::state()->set('lingotek.document_status_completion', FALSE);
+
+    // Check that the upload succeeded.
+    $this->clickLink('Check upload status');
+
+    // We failed at checking status, but we don't know what happened.
+    // So we don't mark as error but keep it on importing.
+    $this->assertText('The import for System information is still pending.');
+
+    // The config mapper has been marked with the error status.
+    /** @var \Drupal\config_translation\ConfigMapperManagerInterface $mapperManager */
+    $mapperManager = \Drupal::service('plugin.manager.config_translation.mapper');
+    $mapper = $mapperManager->getMappers()['system.site_information_settings'];
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getConfigSourceStatus($mapper);
+    $this->assertEqual(Lingotek::STATUS_IMPORTING, $source_status, 'The system information has been marked as error.');
+  }
+
+  /**
+   * Test that we handle errors in update.
+   */
+  public function testCheckSourceStatusCompletedAndContentMissing() {
+    \Drupal::state()->set('lingotek.must_document_not_found_error_in_check_source_status', TRUE);
+
+    // Check that the translate tab is in the site information.
+    $this->drupalGet('/admin/config/system/site-information');
+    $this->clickLink('Translate system information');
+
+    // Upload the document, which must succeed.
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('System information uploaded successfully');
+
+    // Check that the upload succeeded.
+    $this->clickLink('Check upload status');
+
+    // We failed at checking status, but we don't know what happened.
+    // So we don't mark as error but keep it on importing.
+    $this->assertText('Document System information was not found. Please upload again.');
+
+    // The config mapper has been marked with the error status.
+    /** @var \Drupal\config_translation\ConfigMapperManagerInterface $mapperManager */
+    $mapperManager = \Drupal::service('plugin.manager.config_translation.mapper');
+    $mapper = $mapperManager->getMappers()['system.site_information_settings'];
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getConfigSourceStatus($mapper);
+    $this->assertEqual(Lingotek::STATUS_UNTRACKED, $source_status, 'The system information has been marked as error.');
+  }
+
+  /**
+   * Test that we handle errors in update.
+   */
   public function testUpdatingWithAnError() {
     // Check that the translate tab is in the site information.
     $this->drupalGet('/admin/config/system/site-information');
@@ -356,6 +453,54 @@ class LingotekSystemSiteTranslationTest extends LingotekTestBase {
     $this->clickLink('Upload');
     $this->checkForMetaRefresh();
     $this->assertText('System information has been updated.');
+  }
+
+  /**
+   * Test that we handle errors in update.
+   */
+  public function testUpdatingWithADocumentNotFoundError() {
+    // Check that the translate tab is in the site information.
+    $this->drupalGet('/admin/config/system/site-information');
+    $this->clickLink('Translate system information');
+
+    // Upload the document, which must succeed.
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('System information uploaded successfully');
+
+    // Check that the upload succeeded.
+    $this->clickLink('Check upload status');
+    $this->assertText('System information status checked successfully');
+
+    // Edit the system site information.
+    $edit['site_name'] = 'Llamas are cool';
+    $this->drupalPostForm('/admin/config/system/site-information', $edit, t('Save configuration'));
+
+    // Go back to the form.
+    $this->drupalGet('/admin/config/system/site-information');
+    $this->clickLink('Translate system information');
+
+    \Drupal::state()->set('lingotek.must_document_not_found_error_in_update', TRUE);
+
+    // Re-upload. Must fail now.
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Document System information was not found. Please upload again.');
+
+    // The config mapper has been marked with the error status.
+    /** @var \Drupal\config_translation\ConfigMapperManagerInterface $mapperManager */
+    $mapperManager = \Drupal::service('plugin.manager.config_translation.mapper');
+    $mapper = $mapperManager->getMappers()['system.site_information_settings'];
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getConfigSourceStatus($mapper);
+    $this->assertEqual(Lingotek::STATUS_UNTRACKED, $source_status, 'The system information has been marked as error.');
+
+    // I can still re-try the upload.
+    \Drupal::state()->set('lingotek.must_document_not_found_error_in_update', FALSE);
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('System information uploaded successfully');
   }
 
   /**

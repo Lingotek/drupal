@@ -2,6 +2,7 @@
 
 namespace Drupal\lingotek;
 
+use Drupal\Component\Utility\NestedArray;
 use Drupal\config_translation\ConfigEntityMapper;
 use Drupal\config_translation\ConfigMapperManagerInterface;
 use Drupal\config_translation\ConfigNamesMapper;
@@ -15,6 +16,7 @@ use Drupal\lingotek\Entity\LingotekConfigMetadata;
 use Drupal\lingotek\Exception\LingotekApiException;
 use Drupal\lingotek\Exception\LingotekDocumentArchivedException;
 use Drupal\lingotek\Exception\LingotekDocumentLockedException;
+use Drupal\lingotek\Exception\LingotekDocumentNotFoundException;
 use Drupal\lingotek\Exception\LingotekPaymentRequiredException;
 
 /**
@@ -190,6 +192,9 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
    * {@inheritdoc}
    */
   public function setSourceStatus(ConfigEntityInterface &$entity, $status) {
+    if (in_array($status, [Lingotek::STATUS_CURRENT, Lingotek::STATUS_ERROR])) {
+      $this->clearUploadProcessId($entity);
+    }
     $source_language = NULL;
     $metadata = LingotekConfigMetadata::loadByConfigName($entity->getEntityTypeId() . '.' . $entity->id());
     $translation_source = $metadata->getSourceStatus();
@@ -391,8 +396,9 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     \Drupal::moduleHandler()->invokeAll('lingotek_config_entity_document_upload', [&$source_data, &$entity, &$url]);
     $encoded_data = json_encode($source_data);
 
+    $process_id = NULL;
     try {
-      $document_id = $this->lingotek->uploadDocument($document_name, $encoded_data, $this->getSourceLocale($entity), $url, $this->lingotekConfiguration->getConfigEntityProfile($entity), $job_id);
+      $document_id = $this->lingotek->uploadDocument($document_name, $encoded_data, $this->getSourceLocale($entity), $url, $this->lingotekConfiguration->getConfigEntityProfile($entity), $job_id, $process_id);
     }
     catch (LingotekPaymentRequiredException $exception) {
       $this->setSourceStatus($entity, Lingotek::STATUS_ERROR);
@@ -409,6 +415,9 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
       $this->setTargetStatuses($entity, Lingotek::STATUS_REQUEST);
       $this->setJobId($entity, $job_id);
       $this->setLastUploaded($entity, \Drupal::time()->getRequestTime());
+      if ($process_id !== NULL) {
+        $this->storeUploadProcessId($entity, $process_id);
+      }
       return $document_id;
     }
     if ($this->getSourceStatus($entity) == Lingotek::STATUS_DISABLED) {
@@ -426,9 +435,42 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
       return FALSE;
     }
     $document_id = $this->getDocumentId($entity);
-    if ($document_id && $this->lingotek->getDocumentStatus($document_id)) {
-      $this->setSourceStatus($entity, Lingotek::STATUS_CURRENT);
-      return TRUE;
+    if ($document_id) {
+      try {
+        $status = $this->lingotek->getDocumentStatus($document_id);
+      }
+      catch (LingotekDocumentLockedException $exception) {
+        $this->setDocumentId($entity, $exception->getNewDocumentId());
+        throw $exception;
+      }
+      catch (LingotekDocumentNotFoundException $exception) {
+        if ($this->checkUploadProcessId($entity)) {
+          // If the document was not found and the process completed means that
+          // the document might have been deleted afterwards.
+          // We check for timeout to set an error if needed.
+          $this->setDocumentId($entity, NULL);
+          $this->deleteMetadata($entity);
+          throw $exception;
+        }
+        else {
+          return FALSE;
+        }
+      }
+      catch (LingotekDocumentArchivedException $exception) {
+        $this->setDocumentId($entity, NULL);
+        $this->deleteMetadata($entity);
+        throw $exception;
+      }
+      catch (LingotekPaymentRequiredException $exception) {
+        throw $exception;
+      }
+      catch (LingotekApiException $exception) {
+        throw $exception;
+      }
+      if ($status) {
+        $this->setSourceStatus($entity, Lingotek::STATUS_CURRENT);
+        return TRUE;
+      }
     }
     if ($this->getSourceStatus($entity) == Lingotek::STATUS_DISABLED) {
       $this->setTargetStatuses($entity, Lingotek::STATUS_DISABLED);
@@ -477,8 +519,14 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     $encoded_data = json_encode($source_data);
 
     $newDocumentID = NULL;
+    $process_id = NULL;
     try {
-      $newDocumentID = $this->lingotek->updateDocument($document_id, $source_data, $url, $document_name, $this->lingotekConfiguration->getConfigEntityProfile($entity), $job_id, $this->getSourceLocale($entity));
+      $newDocumentID = $this->lingotek->updateDocument($document_id, $source_data, $url, $document_name, $this->lingotekConfiguration->getConfigEntityProfile($entity), $job_id, $this->getSourceLocale($entity), $process_id);
+    }
+    catch (LingotekDocumentNotFoundException $exception) {
+      $this->setDocumentId($entity, NULL);
+      $this->deleteMetadata($entity);
+      throw $exception;
     }
     catch (LingotekDocumentLockedException $exception) {
       $this->setDocumentId($entity, $exception->getNewDocumentId());
@@ -507,6 +555,9 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
       $this->setTargetStatuses($entity, Lingotek::STATUS_PENDING);
       $this->setJobId($entity, $job_id);
       $this->setLastUpdated($entity, \Drupal::time()->getRequestTime());
+      if ($process_id !== NULL) {
+        $this->storeUploadProcessId($entity, $process_id);
+      }
       return $newDocumentID;
     }
     if ($this->getSourceStatus($entity) == Lingotek::STATUS_DISABLED) {
@@ -535,6 +586,11 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
       if ($current_status !== Lingotek::STATUS_PENDING && $current_status !== Lingotek::STATUS_CURRENT && $current_status !== Lingotek::STATUS_READY) {
         try {
           $result = $this->lingotek->addTarget($document_id, $locale, $this->lingotekConfiguration->getConfigEntityProfile($entity));
+        }
+        catch (LingotekDocumentNotFoundException $exception) {
+          $this->setDocumentId($entity, NULL);
+          $this->deleteMetadata($entity);
+          throw $exception;
         }
         catch (LingotekDocumentLockedException $exception) {
           $this->setDocumentId($entity, $exception->getNewDocumentId());
@@ -598,6 +654,11 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
               }
               catch (LingotekDocumentLockedException $exception) {
                 $this->setDocumentId($entity, $exception->getNewDocumentId());
+                throw $exception;
+              }
+              catch (LingotekDocumentNotFoundException $exception) {
+                $this->setDocumentId($entity, NULL);
+                $this->deleteMetadata($entity);
                 throw $exception;
               }
               catch (LingotekDocumentArchivedException $exception) {
@@ -764,6 +825,11 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
         else {
           return NULL;
         }
+      }
+      catch (LingotekDocumentNotFoundException $exception) {
+        $this->setDocumentId($entity, NULL);
+        $this->deleteMetadata($entity);
+        throw $exception;
       }
       catch (LingotekApiException $exception) {
         // TODO: log issue
@@ -949,6 +1015,9 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
    * {@inheritdoc}
    */
   public function setConfigSourceStatus(ConfigNamesMapper $mapper, $status) {
+    if (in_array($status, [Lingotek::STATUS_CURRENT, Lingotek::STATUS_ERROR])) {
+      $this->clearConfigUploadProcessId($mapper->getPluginId());
+    }
     $config_names = $mapper->getConfigNames();
     $source_language = $mapper->getLangcode();
     $status_value = [$source_language => $status];
@@ -1098,8 +1167,9 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
         $document_name = $extended_name;
     }
 
+    $process_id = NULL;
     try {
-      $document_id = $this->lingotek->uploadDocument($document_name, $source_data, $this->getConfigSourceLocale($mapper), NULL, $this->lingotekConfiguration->getConfigProfile($mapper_id), $job_id);
+      $document_id = $this->lingotek->uploadDocument($document_name, $source_data, $this->getConfigSourceLocale($mapper), NULL, $this->lingotekConfiguration->getConfigProfile($mapper_id), $job_id, $process_id);
     }
     catch (LingotekPaymentRequiredException $exception) {
       $this->setConfigSourceStatus($mapper, Lingotek::STATUS_ERROR);
@@ -1115,6 +1185,9 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
       $this->setConfigTargetStatuses($mapper, Lingotek::STATUS_REQUEST);
       $this->setConfigJobId($mapper, $job_id);
       $this->setConfigLastUploaded($mapper, \Drupal::time()->getRequestTime());
+      if ($process_id !== NULL) {
+        $this->storeConfigUploadProcessId($mapper_id, $process_id);
+      }
       return $document_id;
     }
     if ($this->getConfigSourceStatus($mapper) == Lingotek::STATUS_DISABLED) {
@@ -1133,9 +1206,42 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
       return FALSE;
     }
     $document_id = $this->getConfigDocumentId($mapper);
-    if ($document_id && $this->lingotek->getDocumentStatus($document_id)) {
-      $this->setConfigSourceStatus($mapper, Lingotek::STATUS_CURRENT);
-      return TRUE;
+    if ($document_id) {
+      try {
+        $status = $this->lingotek->getDocumentStatus($document_id);
+      }
+      catch (LingotekDocumentLockedException $exception) {
+        $this->setConfigDocumentId($mapper, $exception->getNewDocumentId());
+        throw $exception;
+      }
+      catch (LingotekDocumentNotFoundException $exception) {
+        if ($this->checkConfigUploadProcessId($mapper_id)) {
+          // If the document was not found and the process completed means that
+          // the document might have been deleted afterwards.
+          // We check for timeout to set an error if needed.
+          $this->setConfigDocumentId($mapper, NULL);
+          $this->deleteConfigMetadata($mapper_id);
+          throw $exception;
+        }
+        else {
+          return FALSE;
+        }
+      }
+      catch (LingotekDocumentArchivedException $exception) {
+        $this->setConfigDocumentId($mapper, NULL);
+        $this->deleteConfigMetadata($mapper_id);
+        throw $exception;
+      }
+      catch (LingotekPaymentRequiredException $exception) {
+        throw $exception;
+      }
+      catch (LingotekApiException $exception) {
+        throw $exception;
+      }
+      if ($status) {
+        $this->setConfigSourceStatus($mapper, Lingotek::STATUS_CURRENT);
+        return TRUE;
+      }
     }
     if ($this->getConfigSourceStatus($mapper) == Lingotek::STATUS_DISABLED) {
       $this->setConfigTargetStatuses($mapper, Lingotek::STATUS_DISABLED);
@@ -1167,6 +1273,11 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
         }
         catch (LingotekDocumentLockedException $exception) {
           $this->setConfigDocumentId($mapper, $exception->getNewDocumentId());
+          throw $exception;
+        }
+        catch (LingotekDocumentNotFoundException $exception) {
+          $this->setConfigDocumentId($mapper, NULL);
+          $this->deleteConfigMetadata($mapper_id);
           throw $exception;
         }
         catch (LingotekDocumentArchivedException $exception) {
@@ -1220,6 +1331,11 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
             if ($current_status !== Lingotek::STATUS_PENDING && $current_status !== Lingotek::STATUS_CURRENT && $current_status !== Lingotek::STATUS_EDITED && $current_status !== Lingotek::STATUS_READY) {
               try {
                 $result = $this->lingotek->addTarget($document_id, $locale, $this->lingotekConfiguration->getConfigProfile($mapper->getPluginId()));
+              }
+              catch (LingotekDocumentNotFoundException $exception) {
+                $this->setConfigDocumentId($mapper, NULL);
+                $this->deleteConfigMetadata($mapper_id);
+                throw $exception;
               }
               catch (LingotekDocumentLockedException $exception) {
                 $this->setConfigDocumentId($mapper, $exception->getNewDocumentId());
@@ -1390,6 +1506,11 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
           return NULL;
         }
       }
+      catch (LingotekDocumentNotFoundException $exception) {
+        $this->setConfigDocumentId($mapper, NULL);
+        $this->deleteConfigMetadata($mapper_id);
+        throw $exception;
+      }
       catch (LingotekApiException $exception) {
         // TODO: log issue
         $this->setConfigTargetStatus($mapper, $langcode, Lingotek::STATUS_ERROR);
@@ -1438,7 +1559,13 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     $result = FALSE;
     $doc_id = $this->getConfigDocumentId($mapper);
     if ($doc_id) {
-      $result = $this->lingotek->cancelDocument($doc_id);
+      try {
+        $result = $this->lingotek->cancelDocument($doc_id);
+      }
+      catch (LingotekDocumentArchivedException $exception) {
+        $this->messenger()->addError($this->t('Document %label has been archived. Please upload again.',
+          ['%label' => $mapper->getTitle()]));
+      }
       $this->setConfigDocumentId($mapper, NULL);
     }
     $this->setConfigSourceStatus($mapper, Lingotek::STATUS_CANCELLED);
@@ -1534,8 +1661,14 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     }
 
     $newDocumentID = NULL;
+    $process_id = NULL;
     try {
-      $newDocumentID = $this->lingotek->updateDocument($document_id, $source_data, NULL, $document_name, $profile, $job_id, $this->getConfigSourceLocale($mapper));
+      $newDocumentID = $this->lingotek->updateDocument($document_id, $source_data, NULL, $document_name, $profile, $job_id, $this->getConfigSourceLocale($mapper), $process_id);
+    }
+    catch (LingotekDocumentNotFoundException $exception) {
+      $this->setConfigDocumentId($mapper, NULL);
+      $this->deleteConfigMetadata($mapper->getPluginId());
+      throw $exception;
     }
     catch (LingotekDocumentLockedException $exception) {
       $this->setConfigDocumentId($mapper, $exception->getNewDocumentId());
@@ -1564,6 +1697,9 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
       $this->setConfigTargetStatuses($mapper, Lingotek::STATUS_PENDING);
       $this->setConfigJobId($mapper, $job_id);
       $this->setConfigLastUpdated($mapper, \Drupal::time()->getRequestTime());
+      if ($process_id !== NULL) {
+        $this->storeConfigUploadProcessId($mapper_id, $process_id);
+      }
       return $document_id;
     }
     if ($this->getConfigSourceStatus($mapper) == Lingotek::STATUS_DISABLED) {
@@ -1704,6 +1840,14 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
       try {
         $newDocumentID = $this->lingotek->updateDocument($document_id, NULL, NULL, NULL, NULL, $job_id, $this->getSourceLocale($entity));
       }
+      catch (LingotekDocumentNotFoundException $exception) {
+        $metadata->setDocumentId(NULL);
+        $metadata->setSourceStatus([$entity->language()->getId() => Lingotek::STATUS_UNTRACKED]);
+        $metadata->setTargetStatus([]);
+        $metadata->setJobId($job_id);
+        $metadata->save();
+        throw $exception;
+      }
       catch (LingotekDocumentLockedException $exception) {
         $this->setDocumentId($entity, $exception->getNewDocumentId());
         throw $exception;
@@ -1832,6 +1976,146 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     $metadata->setLastUpdated($timestamp)->save();
 
     return $entity;
+  }
+
+  /**
+   * Stores the upload process id.
+   *
+   * In case of 404, we need to know if there was an error, or it's just still
+   * importing.
+   *
+   * @param \Drupal\Core\Config\Entity\ConfigEntityInterface $entity
+   *   The entity being imported.
+   * @param string $process_id
+   *   The process ID in the TMS.
+   */
+  protected function storeUploadProcessId(ConfigEntityInterface $entity, $process_id) {
+    $state = \Drupal::state();
+    $stored_process_ids = $state->get('lingotek_import_process_ids', []);
+    $parents = [
+      $entity->getEntityTypeId(),
+      $entity->id(),
+    ];
+    NestedArray::setValue($stored_process_ids, $parents, $process_id);
+    $state->set('lingotek_import_process_ids', $stored_process_ids);
+  }
+
+  /**
+   * Gets the upload process id.
+   *
+   * @param \Drupal\Core\Config\Entity\ConfigEntityInterface $entity
+   *   The entity being imported.
+   */
+  protected function getUploadProcessId(ConfigEntityInterface $entity) {
+    $state = \Drupal::state();
+    $stored_process_ids = $state->get('lingotek_import_process_ids', []);
+    $parents = [
+      $entity->getEntityTypeId(),
+      $entity->id(),
+    ];
+    return NestedArray::getValue($stored_process_ids, $parents);
+  }
+
+  /**
+   * Checks the upload process id.
+   *
+   * @param \Drupal\Core\Config\Entity\ConfigEntityInterface $entity
+   *   The entity being imported.
+   *
+   * @return bool
+   *   If the process is completed or in progress, returns TRUE. If it failed,
+   *   returns FALSE.
+   */
+  protected function checkUploadProcessId(ConfigEntityInterface $entity) {
+    $process_id = $this->getUploadProcessId($entity);
+    return ($this->lingotek->getProcessStatus($process_id) !== FALSE);
+  }
+
+  /**
+   * Clears the upload process id.
+   *
+   * @param \Drupal\Core\Config\Entity\ConfigEntityInterface $entity
+   *   The entity being imported.
+   */
+  protected function clearUploadProcessId(ConfigEntityInterface $entity) {
+    $state = \Drupal::state();
+    $stored_process_ids = $state->get('lingotek_import_process_ids', []);
+    $parents = [
+      $entity->getEntityTypeId(),
+      $entity->id(),
+    ];
+    NestedArray::unsetValue($stored_process_ids, $parents);
+    $state->set('lingotek_import_process_ids', $stored_process_ids);
+  }
+
+  /**
+   * Stores the upload process id.
+   *
+   * In case of 404, we need to know if there was an error, or it's just still
+   * importing.
+   *
+   * @param string $mapper_id
+   *   The mapper being imported.
+   * @param string $process_id
+   *   The process ID in the TMS.
+   */
+  protected function storeConfigUploadProcessId($mapper_id, $process_id) {
+    $state = \Drupal::state();
+    $stored_process_ids = $state->get('lingotek_import_process_ids', []);
+    $parents = [
+      'config_mapper',
+      $mapper_id,
+    ];
+    NestedArray::setValue($stored_process_ids, $parents, $process_id);
+    $state->set('lingotek_import_process_ids', $stored_process_ids);
+  }
+
+  /**
+   * Gets the upload process id.
+   *
+   * @param string $mapper_id
+   *   The mapper being imported.
+   */
+  protected function getConfigUploadProcessId($mapper_id) {
+    $state = \Drupal::state();
+    $stored_process_ids = $state->get('lingotek_import_process_ids', []);
+    $parents = [
+      'config_mapper',
+      $mapper_id,
+    ];
+    return NestedArray::getValue($stored_process_ids, $parents);
+  }
+
+  /**
+   * Checks the upload process id.
+   *
+   * @param string $mapper_id
+   *   The mapper being imported.
+   *
+   * @return bool
+   *   If the process is completed or in progress, returns TRUE. If it failed,
+   *   returns FALSE.
+   */
+  protected function checkConfigUploadProcessId($mapper_id) {
+    $process_id = $this->getConfigUploadProcessId($mapper_id);
+    return ($this->lingotek->getProcessStatus($process_id) !== FALSE);
+  }
+
+  /**
+   * Clears the upload process id.
+   *
+   * @param string $mapper_id
+   *   The mapper being imported.
+   */
+  protected function clearConfigUploadProcessId($mapper_id) {
+    $state = \Drupal::state();
+    $stored_process_ids = $state->get('lingotek_import_process_ids', []);
+    $parents = [
+      'config_mapper',
+      $mapper_id,
+    ];
+    NestedArray::unsetValue($stored_process_ids, $parents);
+    $state->set('lingotek_import_process_ids', $stored_process_ids);
   }
 
 }

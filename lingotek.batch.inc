@@ -7,6 +7,7 @@
 
 use Drupal\lingotek\Exception\LingotekDocumentArchivedException;
 use Drupal\lingotek\Exception\LingotekDocumentLockedException;
+use Drupal\lingotek\Exception\LingotekDocumentNotFoundException;
 use Drupal\lingotek\Exception\LingotekPaymentRequiredException;
 use Drupal\lingotek\Lingotek;
 use Drupal\lingotek\Exception\LingotekApiException;
@@ -48,6 +49,9 @@ function lingotek_operation_content_upload($entity_type_id, $entity_id, &$contex
     try {
       $document_id = $translation_service->uploadDocument($entity);
     }
+    catch (LingotekDocumentNotFoundException $exception) {
+      $context['results']['error'][] = t('Document @entity_type %title was not found. Please upload again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]);
+    }
     catch (LingotekPaymentRequiredException $exception) {
       $context['results']['error'][] = t('Community has been disabled. Please contact support@lingotek.com to re-enable your community.');
     }
@@ -73,6 +77,9 @@ function lingotek_operation_content_upload($entity_type_id, $entity_id, &$contex
       else {
         // ToDo: Log a problem happened updating the document.
       }
+    }
+    catch (LingotekDocumentNotFoundException $exception) {
+      $context['results']['error'][] = t('Document @entity_type %title was not found. Please upload again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]);
     }
     catch (LingotekDocumentLockedException $exception) {
       $context['results']['error'][] = t('Document @entity_type %title has a new version. The document id has been updated for all future interactions. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]);

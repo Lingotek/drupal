@@ -3,6 +3,7 @@
 namespace Drupal\lingotek;
 
 use Drupal\Component\Gettext\PoItem;
+use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Extension\ThemeHandlerInterface;
@@ -14,6 +15,7 @@ use Drupal\lingotek\Exception\LingotekApiException;
 use Drupal\lingotek\Exception\LingotekContentEntityStorageException;
 use Drupal\lingotek\Exception\LingotekDocumentArchivedException;
 use Drupal\lingotek\Exception\LingotekDocumentLockedException;
+use Drupal\lingotek\Exception\LingotekDocumentNotFoundException;
 use Drupal\lingotek\Exception\LingotekPaymentRequiredException;
 
 /**
@@ -138,7 +140,38 @@ class LingotekInterfaceTranslationService implements LingotekInterfaceTranslatio
     $document_id = $this->getDocumentId($component);
     if ($document_id) {
       // Document has successfully imported.
-      if ($this->lingotek->getDocumentStatus($document_id)) {
+      try {
+        $status = $this->lingotek->getDocumentStatus($document_id);
+      }
+      catch (LingotekDocumentLockedException $exception) {
+        $this->setDocumentId($component, $exception->getNewDocumentId());
+        throw $exception;
+      }
+      catch (LingotekDocumentNotFoundException $exception) {
+        if ($this->checkUploadProcessId($component)) {
+          // If the document was not found and the process completed means that
+          // the document might have been deleted afterwards.
+          // We check for timeout to set an error if needed.
+          $this->setDocumentId($component, NULL);
+          $this->deleteMetadata($component);
+          throw $exception;
+        }
+        else {
+          return FALSE;
+        }
+      }
+      catch (LingotekDocumentArchivedException $exception) {
+        $this->setDocumentId($component, NULL);
+        $this->deleteMetadata($component);
+        throw $exception;
+      }
+      catch (LingotekPaymentRequiredException $exception) {
+        throw $exception;
+      }
+      catch (LingotekApiException $exception) {
+        throw $exception;
+      }
+      if ($status) {
         $this->setSourceStatus($component, Lingotek::STATUS_CURRENT);
         return TRUE;
       }
@@ -161,6 +194,9 @@ class LingotekInterfaceTranslationService implements LingotekInterfaceTranslatio
    * {@inheritdoc}
    */
   public function setSourceStatus($component, $status) {
+    if (in_array($status, [Lingotek::STATUS_CURRENT, Lingotek::STATUS_ERROR])) {
+      $this->clearUploadProcessId($component);
+    }
     $source_language = 'en';
     return $this->setTargetStatus($component, $source_language, $status);
   }
@@ -470,6 +506,11 @@ class LingotekInterfaceTranslationService implements LingotekInterfaceTranslatio
         try {
           $result = $this->lingotek->addTarget($document_id, $locale, NULL);
         }
+        catch (LingotekDocumentNotFoundException $exception) {
+          $this->setDocumentId($component, NULL);
+          $this->deleteMetadata($component);
+          throw $exception;
+        }
         catch (LingotekDocumentLockedException $exception) {
           $this->setDocumentId($component, $exception->getNewDocumentId());
           throw $exception;
@@ -570,8 +611,9 @@ class LingotekInterfaceTranslationService implements LingotekInterfaceTranslatio
     // Allow other modules to alter the data before is uploaded.
     \Drupal::moduleHandler()->invokeAll('lingotek_interface_translation_document_upload', [&$source_data, &$component]);
 
+    $process_id = NULL;
     try {
-      $document_id = $this->lingotek->uploadDocument($document_name, $source_data, $this->getSourceLocale($component), NULL, NULL, $job_id);
+      $document_id = $this->lingotek->uploadDocument($document_name, $source_data, $this->getSourceLocale($component), NULL, NULL, $job_id, $process_id);
     }
     catch (LingotekPaymentRequiredException $exception) {
       $this->setSourceStatus($component, Lingotek::STATUS_ERROR);
@@ -587,6 +629,9 @@ class LingotekInterfaceTranslationService implements LingotekInterfaceTranslatio
       $this->setTargetStatuses($component, Lingotek::STATUS_REQUEST);
       $this->setJobId($component, $job_id);
       $this->setLastUploaded($component, \Drupal::time()->getRequestTime());
+      if ($process_id !== NULL) {
+        $this->storeUploadProcessId($component, $process_id);
+      }
       return $document_id;
     }
     return FALSE;
@@ -612,6 +657,11 @@ class LingotekInterfaceTranslationService implements LingotekInterfaceTranslatio
           ]);
           return NULL;
         }
+      }
+      catch (LingotekDocumentNotFoundException $exception) {
+        $this->setDocumentId($component, NULL);
+        $this->deleteMetadata($component);
+        throw $exception;
       }
       catch (LingotekApiException $exception) {
         \Drupal::logger('lingotek')->error('Error happened downloading %document_id %locale: %message', [
@@ -675,8 +725,9 @@ class LingotekInterfaceTranslationService implements LingotekInterfaceTranslatio
     // Allow other modules to alter the data before is uploaded.
     \Drupal::moduleHandler()->invokeAll('lingotek_interface_translation_document_upload', [&$source_data, &$component]);
 
+    $process_id = NULL;
     try {
-      $newDocumentID = $this->lingotek->updateDocument($document_id, $source_data, NULL, $document_name, NULL, $job_id, $this->getSourceLocale($component));
+      $newDocumentID = $this->lingotek->updateDocument($document_id, $source_data, NULL, $document_name, NULL, $job_id, $this->getSourceLocale($component), $process_id);
     }
     catch (LingotekDocumentLockedException $exception) {
       $this->setDocumentId($component, $exception->getNewDocumentId());
@@ -705,6 +756,9 @@ class LingotekInterfaceTranslationService implements LingotekInterfaceTranslatio
       $this->setTargetStatuses($component, Lingotek::STATUS_PENDING);
       $this->setJobId($component, $job_id);
       $this->setLastUpdated($component, \Drupal::time()->getRequestTime());
+      if ($process_id !== NULL) {
+        $this->storeUploadProcessId($component, $process_id);
+      }
       return $document_id;
     }
     return FALSE;
@@ -753,6 +807,11 @@ class LingotekInterfaceTranslationService implements LingotekInterfaceTranslatio
                     }
                   }
                 }
+                catch (LingotekDocumentNotFoundException $exception) {
+                  $this->setDocumentId($entity, NULL);
+                  $this->deleteMetadata($entity);
+                  throw $exception;
+                }
                 catch (LingotekApiException $exception) {
                   // TODO: log issue
                   $this->setTargetStatus($component, $langcode, Lingotek::STATUS_ERROR);
@@ -772,6 +831,11 @@ class LingotekInterfaceTranslationService implements LingotekInterfaceTranslatio
               }
             }
           }
+          catch (LingotekDocumentNotFoundException $exception) {
+            $this->setDocumentId($entity, NULL);
+            $this->deleteMetadata($entity);
+            throw $exception;
+          }
           catch (LingotekApiException $exception) {
             // TODO: log issue
             $this->setTargetStatus($component, $langcode, Lingotek::STATUS_ERROR);
@@ -790,8 +854,14 @@ class LingotekInterfaceTranslationService implements LingotekInterfaceTranslatio
     $result = FALSE;
     $doc_id = $this->getDocumentId($component);
     if ($doc_id) {
-      $result = $this->lingotek->cancelDocument($doc_id);
-      $this->setDocumentId($component, NULL);
+      try {
+        $result = $this->lingotek->cancelDocument($doc_id);
+        $this->setDocumentId($component, NULL);
+      }
+      catch (LingotekDocumentNotFoundException $exception) {
+        $this->setDocumentId($component, NULL);
+        throw $exception;
+      }
     }
     $this->setSourceStatus($component, Lingotek::STATUS_CANCELLED);
     $this->setTargetStatuses($component, Lingotek::STATUS_CANCELLED);
@@ -812,9 +882,16 @@ class LingotekInterfaceTranslationService implements LingotekInterfaceTranslatio
     if ($document_id = $this->getDocumentId($component)) {
       $drupal_language = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale);
 
-      if ($this->lingotek->cancelDocumentTarget($document_id, $locale)) {
-        $this->setTargetStatus($component, $drupal_language->id(), Lingotek::STATUS_CANCELLED);
-        return TRUE;
+      try {
+        if ($this->lingotek->cancelDocumentTarget($document_id, $locale)) {
+          $this->setTargetStatus($component, $drupal_language->id(), Lingotek::STATUS_CANCELLED);
+          return TRUE;
+        }
+      }
+      catch (LingotekDocumentNotFoundException $exception) {
+        $this->setDocumentId($component, NULL);
+        $this->deleteMetadata($component);
+        throw $exception;
       }
     }
 
@@ -1086,6 +1163,76 @@ class LingotekInterfaceTranslationService implements LingotekInterfaceTranslatio
   public function getUpdatedTime($component) {
     $metadata = $this->getMetadata($component);
     return isset($metadata['updated_timestamp']) ? $metadata['updated_timestamp'] : NULL;
+  }
+
+  /**
+   * Stores the upload process id.
+   *
+   * In case of 404, we need to know if there was an error, or it's just still
+   * importing.
+   *
+   * @param string $component
+   *   The entity being imported.
+   * @param string $process_id
+   *   The process ID in the TMS.
+   */
+  protected function storeUploadProcessId($component, $process_id) {
+    $state = \Drupal::state();
+    $stored_process_ids = $state->get('lingotek_import_process_ids', []);
+    $parents = [
+      'interface_translation',
+      $component,
+    ];
+    NestedArray::setValue($stored_process_ids, $parents, $process_id);
+    $state->set('lingotek_import_process_ids', $stored_process_ids);
+  }
+
+  /**
+   * Gets the upload process id.
+   *
+   * @param string $component
+   *   The entity being imported.
+   */
+  protected function getUploadProcessId($component) {
+    $state = \Drupal::state();
+    $stored_process_ids = $state->get('lingotek_import_process_ids', []);
+    $parents = [
+      'interface_translation',
+      $component,
+    ];
+    return NestedArray::getValue($stored_process_ids, $parents);
+  }
+
+  /**
+   * Checks the upload process id.
+   *
+   * @param string $component
+   *   The entity being imported.
+   *
+   * @return bool
+   *   If the process is completed or in progress, returns TRUE. If it failed,
+   *   returns FALSE.
+   */
+  protected function checkUploadProcessId($component) {
+    $process_id = $this->getUploadProcessId($component);
+    return ($this->lingotek->getProcessStatus($process_id) !== FALSE);
+  }
+
+  /**
+   * Clears the upload process id.
+   *
+   * @param string $component
+   *   The entity being imported.
+   */
+  protected function clearUploadProcessId($component) {
+    $state = \Drupal::state();
+    $stored_process_ids = $state->get('lingotek_import_process_ids', []);
+    $parents = [
+      'interface_translation',
+      $component,
+    ];
+    NestedArray::unsetValue($stored_process_ids, $parents);
+    $state->set('lingotek_import_process_ids', $stored_process_ids);
   }
 
 }

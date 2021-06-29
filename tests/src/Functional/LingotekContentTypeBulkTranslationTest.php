@@ -477,6 +477,106 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
   /**
    * Test that we handle errors in update.
    */
+  public function testCheckSourceStatusWithAnError() {
+    \Drupal::state()->set('lingotek.must_error_in_check_source_status', TRUE);
+
+    // Set upload as manual.
+    $this->saveLingotekConfigTranslationSettings([
+      'node_type' => 'manual',
+    ]);
+
+    $this->goToConfigBulkManagementForm('node_type');
+
+    // Upload the document, which must succeed.
+    $this->clickLink('EN');
+    $this->assertText('Article uploaded successfully');
+
+    // Check upload.
+    $this->assertLingotekCheckSourceStatusLink();
+    $this->clickLink('EN');
+
+    // We failed at checking status, but we don't know what happened.
+    // So we don't mark as error but keep it on importing.
+    $this->assertNoSourceStatus('EN', Lingotek::STATUS_REQUEST);
+    $this->assertSourceStatus('EN', Lingotek::STATUS_IMPORTING);
+    $this->assertText('Article status check failed. Please try again.');
+
+    $nodeType = NodeType::load('article');
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getSourceStatus($nodeType);
+    $this->assertEqual(Lingotek::STATUS_IMPORTING, $source_status);
+  }
+
+  /**
+   * Test that we handle errors in update.
+   */
+  public function testCheckSourceStatusNotCompletedAndStillImporting() {
+    // Set upload as manual.
+    $this->saveLingotekConfigTranslationSettings([
+      'node_type' => 'manual',
+    ]);
+
+    $this->goToConfigBulkManagementForm('node_type');
+
+    // Upload the document, which must succeed.
+    $this->clickLink('EN');
+    $this->assertText('Article uploaded successfully');
+
+    // The document has not been imported yet.
+    \Drupal::state()->set('lingotek.document_status_completion', FALSE);
+
+    // Check upload.
+    $this->assertLingotekCheckSourceStatusLink();
+    $this->clickLink('EN');
+
+    // We failed at checking status, but we don't know what happened.
+    // So we don't mark as error but keep it on importing.
+    $this->assertNoSourceStatus('EN', Lingotek::STATUS_REQUEST);
+    $this->assertSourceStatus('EN', Lingotek::STATUS_IMPORTING);
+    $this->assertText('The import for Article is still pending.');
+
+    $nodeType = NodeType::load('article');
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getSourceStatus($nodeType);
+    $this->assertEqual(Lingotek::STATUS_IMPORTING, $source_status);
+  }
+
+  /**
+   * Test that we handle errors in update.
+   */
+  public function testCheckSourceStatusCompletedAndContentMissing() {
+    \Drupal::state()->set('lingotek.must_document_not_found_error_in_check_source_status', TRUE);
+
+    // Set upload as manual.
+    $this->saveLingotekConfigTranslationSettings([
+      'node_type' => 'manual',
+    ]);
+
+    $this->goToConfigBulkManagementForm('node_type');
+
+    // Upload the document, which must succeed.
+    $this->clickLink('EN');
+    $this->assertText('Article uploaded successfully');
+
+    // Check upload.
+    $this->assertLingotekCheckSourceStatusLink();
+    $this->clickLink('EN');
+
+    $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
+    $this->assertText('Document Article was not found. Please upload again.');
+
+    $nodeType = NodeType::load('article');
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getSourceStatus($nodeType);
+    $this->assertEqual(Lingotek::STATUS_UNTRACKED, $source_status);
+  }
+
+  /**
+   * Test that we handle errors in update.
+   */
   public function testUpdatingWithAnError() {
     // Set upload as manual.
     $this->saveLingotekConfigTranslationSettings([
@@ -564,6 +664,51 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     \Drupal::state()->set('lingotek.must_payment_required_error_in_update', FALSE);
     $this->clickLink('EN');
     $this->assertText('Blogpost has been updated.');
+  }
+
+  /**
+   * Test that we handle errors in update.
+   */
+  public function testUpdatingWithADocumentNotFoundError() {
+    // Set upload as manual.
+    $this->saveLingotekConfigTranslationSettings([
+      'node_type' => 'manual',
+    ]);
+
+    $this->goToConfigBulkManagementForm('node_type');
+
+    // Upload the document, which must succeed.
+    $this->clickLink('EN');
+    $this->assertText('Article uploaded successfully');
+
+    // Check upload.
+    $this->clickLink('EN');
+
+    // Edit the node type.
+    $edit = ['name' => 'Blogpost'];
+    $this->drupalPostForm('/admin/structure/types/manage/article', $edit, t('Save content type'));
+
+    \Drupal::state()->set('lingotek.must_document_not_found_error_in_update', TRUE);
+
+    $this->goToConfigBulkManagementForm('node_type');
+
+    // Update the document, which must fail.
+    $this->clickLink('EN');
+
+    $nodeType = NodeType::load('article');
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getSourceStatus($nodeType);
+    $this->assertEqual(Lingotek::STATUS_UNTRACKED, $source_status);
+
+    $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
+    $this->assertNoLingotekRequestTranslationLink('es_MX');
+    $this->assertText('Document node_type Blogpost was not found. Please upload again.');
+
+    // I can still re-try the upload.
+    \Drupal::state()->set('lingotek.must_document_not_found_error_in_update', FALSE);
+    $this->clickLink('EN');
+    $this->assertText('Blogpost uploaded successfully');
   }
 
   /**
@@ -909,6 +1054,60 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
   /**
    * Test that we handle errors in update.
    */
+  public function testUpdatingWithADocumentNotFoundErrorUsingActions() {
+    $assert_session = $this->assertSession();
+    // Set upload as manual.
+    $this->saveLingotekConfigTranslationSettings([
+      'node_type' => 'manual',
+    ]);
+
+    $this->goToConfigBulkManagementForm('node_type');
+
+    // Upload the document, which must succeed.
+    $basepath = \Drupal::request()->getBasePath();
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $edit = [
+      'table[article]' => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node_type'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $this->assertText('Operations completed.');
+
+    // Check upload.
+    $this->clickLink('EN');
+
+    // Edit the node type.
+    $edit = ['name' => 'Blogpost'];
+    $this->drupalPostForm('/admin/structure/types/manage/article', $edit, t('Save content type'));
+
+    \Drupal::state()->set('lingotek.must_document_not_found_error_in_update', TRUE);
+
+    $this->goToConfigBulkManagementForm('node_type');
+    $edit = [
+      'table[article]' => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node_type'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    $nodeType = NodeType::load('article');
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getSourceStatus($nodeType);
+    $this->assertEqual(Lingotek::STATUS_UNTRACKED, $source_status);
+
+    $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
+    $this->assertNoLingotekRequestTranslationLink('es_MX');
+    $this->assertText('Document node_type Blogpost was not found. Please upload again.');
+
+    // I can still re-try the upload.
+    \Drupal::state()->set('lingotek.must_document_not_found_error_in_update', FALSE);
+    $this->clickLink('EN');
+    $this->assertText('Blogpost uploaded successfully');
+  }
+
+  /**
+   * Test that we handle errors in update.
+   */
   public function testUpdatingWithADocumentArchivedErrorUsingActions() {
     $assert_session = $this->assertSession();
     // Set upload as manual.
@@ -1033,6 +1232,42 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->assertSourceStatus('EN', Lingotek::STATUS_IMPORTING);
     $this->assertLingotekRequestTranslationLink('es_MX');
     $this->assertText('Document node_type Article has been archived. Uploading again.');
+  }
+
+  /**
+   * Tests that we manage errors when using the request all translations action.
+   */
+  public function testRequestAllTranslationsWithActionWithADocumentNotFoundError() {
+    \Drupal::state()->set('lingotek.must_document_not_found_error_in_request_translation', TRUE);
+
+    $this->goToConfigBulkManagementForm('node_type');
+
+    // I can init the upload of content.
+    $this->assertLingotekUploadLink();
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node_type'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $this->assertIdentical('en_US', \Drupal::state()
+      ->get('lingotek.uploaded_locale'));
+
+    // I can check current status.
+    $this->assertLingotekCheckSourceStatusLink();
+    // I can request a translation
+    $this->assertLingotekRequestTranslationLink('es_MX');
+    $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
+
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForRequestTranslations('node_type'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
+    $this->assertNoLingotekRequestTranslationLink('es_MX');
+    $this->assertText('Document node_type Article was not found. Please upload again.');
   }
 
   /**
@@ -1207,6 +1442,38 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
   /**
    * Tests that we manage errors when using the request translation link.
    */
+  public function testRequestTranslationWithADocumentNotFoundError() {
+    \Drupal::state()->set('lingotek.must_document_not_found_error_in_request_translation', TRUE);
+
+    $this->goToConfigBulkManagementForm('node_type');
+
+    // I can init the upload of content.
+    $this->assertLingotekUploadLink();
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node_type'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $this->assertIdentical('en_US', \Drupal::state()
+      ->get('lingotek.uploaded_locale'));
+
+    // I can check current status.
+    $this->assertLingotekCheckSourceStatusLink();
+    // I can request a translation
+    $this->assertLingotekRequestTranslationLink('es_MX');
+    $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
+
+    $this->clickLink('ES');
+
+    $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
+    $this->assertNoLingotekRequestTranslationLink('es_MX');
+    $this->assertText('Document node_type Article was not found. Please upload again.');
+  }
+
+  /**
+   * Tests that we manage errors when using the request translation link.
+   */
   public function testRequestTranslationWithADocumentLockedError() {
     \Drupal::state()->set('lingotek.must_document_locked_error_in_request_translation', TRUE);
 
@@ -1307,6 +1574,42 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->assertSourceStatus('EN', Lingotek::STATUS_IMPORTING);
     $this->assertLingotekRequestTranslationLink('es_MX');
     $this->assertText('Document node_type Article has been archived. Uploading again.');
+  }
+
+  /**
+   * Tests that we manage errors when using the request translation action.
+   */
+  public function testRequestTranslationWithActionWithADocumentNotFoundError() {
+    \Drupal::state()->set('lingotek.must_document_not_found_error_in_request_translation', TRUE);
+
+    $this->goToConfigBulkManagementForm('node_type');
+
+    // I can init the upload of content.
+    $this->assertLingotekUploadLink();
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node_type'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $this->assertIdentical('en_US', \Drupal::state()
+      ->get('lingotek.uploaded_locale'));
+
+    // I can check current status.
+    $this->assertLingotekCheckSourceStatusLink();
+    // I can request a translation
+    $this->assertLingotekRequestTranslationLink('es_MX');
+    $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
+
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForRequestTranslation('es', 'node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
+    $this->assertNoLingotekRequestTranslationLink('es_MX');
+    $this->assertText('Document node_type Article was not found. Please upload again.');
   }
 
   /**

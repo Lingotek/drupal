@@ -12,6 +12,7 @@ use Drupal\Core\Url;
 use Drupal\lingotek\Exception\LingotekApiException;
 use Drupal\lingotek\Exception\LingotekDocumentArchivedException;
 use Drupal\lingotek\Exception\LingotekDocumentLockedException;
+use Drupal\lingotek\Exception\LingotekDocumentNotFoundException;
 use Drupal\lingotek\Exception\LingotekPaymentRequiredException;
 use Drupal\lingotek\LingotekContentTranslationServiceInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -178,6 +179,13 @@ class LingotekJobAssignToMultipleEntitiesForm extends FormBase {
     foreach ($entities as $entity) {
       try {
         $this->translationService->setJobId($entity, $job_id, $updateTMS);
+      }
+      catch (LingotekDocumentNotFoundException $exception) {
+        $errors = TRUE;
+        $this->messenger->addError(t('Document @entity_type %title was not found. Please upload again.', [
+          '@entity_type' => $entity->getEntityTypeId(),
+          '%title' => $entity->label(),
+        ]));
       }
       catch (LingotekPaymentRequiredException $exception) {
         $errors = TRUE;

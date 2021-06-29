@@ -3,6 +3,8 @@
 namespace Drupal\lingotek\Remote;
 
 use Drupal\lingotek\Exception\LingotekApiException;
+use Drupal\lingotek\Exception\LingotekDocumentNotFoundException;
+use GuzzleHttp\Exception\ClientException;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Response;
@@ -119,6 +121,14 @@ class LingotekApi implements LingotekApiInterface {
       $this->logger->debug('Lingotek::patchDocument (PATCH /api/document) called with id %id and args %args', ['%id' => $id, '%args' => var_export($args, TRUE)]);
       $response = $this->lingotekClient->patch('/api/document/' . $id, $args, TRUE);
     }
+    catch (ClientException $e) {
+      if ($e->getCode() === Response::HTTP_NOT_FOUND) {
+        $responseBody = json_decode($e->getResponse()->getBody(), TRUE);
+        $message = $responseBody['messages'][0];
+        throw new LingotekDocumentNotFoundException($message, Response::HTTP_NOT_FOUND);
+      }
+      throw new LingotekApiException('Failed to patch (update) document: ' . $e->getMessage());
+    }
     catch (\Exception $e) {
       $this->logger->error('Error updating document: %message.', ['%message' => $e->getMessage()]);
       throw new LingotekApiException('Failed to patch (update) document: ' . $e->getMessage());
@@ -139,14 +149,17 @@ class LingotekApi implements LingotekApiInterface {
       ];
       $response = $this->lingotekClient->post('/api/document/' . $id . '/cancel', $args);
     }
-    catch (\Exception $e) {
-      $http_status_code = $e->getCode();
-      if ($http_status_code === Response::HTTP_NOT_FOUND) {
-        $this->logger->error('Error cancelling document: %message.', ['%message' => $e->getMessage()]);
-        return new Response($e->getMessage(), Response::HTTP_NOT_FOUND);
+    catch (ClientException $e) {
+      if ($e->getCode() === Response::HTTP_NOT_FOUND) {
+        $responseBody = json_decode($e->getResponse()->getBody(), TRUE);
+        $message = $responseBody['messages'][0];
+        throw new LingotekDocumentNotFoundException($message, Response::HTTP_NOT_FOUND);
       }
+      throw new LingotekApiException('Failed to cancel document: ' . $e->getMessage(), $e->getCode(), $e);
+    }
+    catch (\Exception $e) {
       $this->logger->error('Error cancelling document: %message.', ['%message' => $e->getMessage()]);
-      throw new LingotekApiException('Failed to cancel document: ' . $e->getMessage(), $http_status_code, $e);
+      throw new LingotekApiException('Failed to cancel document: ' . $e->getMessage(), $e->getCode(), $e);
     }
     $this->logger->debug('cancelDocument response received, code %code and body %body', ['%code' => $response->getStatusCode(), '%body' => (string) $response->getBody(TRUE)]);
     return $response;
@@ -166,14 +179,17 @@ class LingotekApi implements LingotekApiInterface {
       ];
       $response = $this->lingotekClient->post('/api/document/' . $document_id . '/translation/' . $locale . '/cancel', $args);
     }
-    catch (\Exception $e) {
-      $http_status_code = $e->getCode();
-      if ($http_status_code === Response::HTTP_NOT_FOUND) {
-        $this->logger->error('Error cancelling document target: %message.', ['%message' => $e->getMessage()]);
-        return new Response($e->getMessage(), Response::HTTP_NOT_FOUND);
+    catch (ClientException $e) {
+      if ($e->getCode() === Response::HTTP_NOT_FOUND) {
+        $responseBody = json_decode($e->getResponse()->getBody(), TRUE);
+        $message = $responseBody['messages'][0];
+        throw new LingotekDocumentNotFoundException($message, Response::HTTP_NOT_FOUND);
       }
+      throw new LingotekApiException('Failed to cancel document target: ' . $e->getMessage(), $e->getCode(), $e);
+    }
+    catch (\Exception $e) {
       $this->logger->error('Error cancelling document target: %message.', ['%message' => $e->getMessage()]);
-      throw new LingotekApiException('Failed to cancel document target: ' . $e->getMessage(), $http_status_code, $e);
+      throw new LingotekApiException('Failed to cancel document target: ' . $e->getMessage(), $e->getCode(), $e);
     }
     $this->logger->debug('cancelDocumentTarget response received, code %code and body %body', ['%code' => $response->getStatusCode(), '%body' => (string) $response->getBody(TRUE)]);
     return $response;
@@ -186,6 +202,14 @@ class LingotekApi implements LingotekApiInterface {
     try {
       $this->logger->debug('Lingotek::getDocumentContent called with id ' . $doc_id);
       $response = $this->lingotekClient->get('/api/document/' . $doc_id . '/content');
+    }
+    catch (ClientException $e) {
+      if ($e->getCode() === Response::HTTP_NOT_FOUND) {
+        $responseBody = json_decode($e->getResponse()->getBody(), TRUE);
+        $message = $responseBody['messages'][0];
+        throw new LingotekDocumentNotFoundException($message, Response::HTTP_NOT_FOUND);
+      }
+      throw new LingotekApiException('Failed to get document: ' . $e->getMessage(), $e->getCode(), $e);
     }
     catch (\Exception $e) {
       throw new LingotekApiException('Failed to get document: ' . $e->getMessage());
@@ -200,6 +224,15 @@ class LingotekApi implements LingotekApiInterface {
     try {
       $this->logger->debug('Lingotek::getDocumentInfo called with id ' . $id);
       $response = $this->lingotekClient->get('/api/document/' . $id);
+    }
+    catch (ClientException $e) {
+      if ($e->getCode() === Response::HTTP_NOT_FOUND) {
+        $responseBody = json_decode($e->getResponse()->getBody(), TRUE);
+        $message = $responseBody['messages'][0];
+        throw new LingotekDocumentNotFoundException($message, Response::HTTP_NOT_FOUND);
+      }
+      $this->logger->error('Error getting document info: %message.', ['%message' => $e->getMessage()]);
+      throw new LingotekApiException('Failed to get document: ' . $e->getMessage(), $e->getCode(), $e);
     }
     catch (\Exception $e) {
       $this->logger->error('Error getting document info: %message.', ['%message' => $e->getMessage()]);
@@ -217,6 +250,14 @@ class LingotekApi implements LingotekApiInterface {
       $this->logger->debug('Lingotek::getDocumentStatus called with id ' . $id);
       $response = $this->lingotekClient->get('/api/document/' . $id . '/status');
     }
+    catch (ClientException $e) {
+      if ($e->getCode() === Response::HTTP_NOT_FOUND) {
+        $responseBody = json_decode($e->getResponse()->getBody(), TRUE);
+        $message = $responseBody['messages'][0];
+        throw new LingotekDocumentNotFoundException($message, Response::HTTP_NOT_FOUND);
+      }
+      throw new LingotekApiException('Failed to get document status: ' . $e->getMessage(), $e->getCode(), $e);
+    }
     catch (\Exception $e) {
       $this->logger->error('Error getting document status: %message.', ['%message' => $e->getMessage()]);
       throw new LingotekApiException('Failed to get document status: ' . $e->getMessage());
@@ -232,6 +273,14 @@ class LingotekApi implements LingotekApiInterface {
     try {
       $this->logger->debug('Lingotek::getDocumentTranslationStatuses called with %id', ['%id' => $id]);
       $response = $this->lingotekClient->get('/api/document/' . $id . '/translation');
+    }
+    catch (ClientException $e) {
+      if ($e->getCode() === Response::HTTP_NOT_FOUND) {
+        $responseBody = json_decode($e->getResponse()->getBody(), TRUE);
+        $message = $responseBody['messages'][0];
+        throw new LingotekDocumentNotFoundException($message, Response::HTTP_NOT_FOUND);
+      }
+      throw new LingotekApiException('Failed to get document translation status: ' . $e->getMessage(), $e->getCode(), $e);
     }
     catch (\Exception $e) {
       $this->logger->error('Error getting document translation status (%id): %message.',
@@ -249,6 +298,14 @@ class LingotekApi implements LingotekApiInterface {
     try {
       $this->logger->debug('Lingotek::getDocumentTranslationStatus called with %id and %locale', ['%id' => $id, '%locale' => $locale]);
       $response = $this->lingotekClient->get('/api/document/' . $id . '/translation');
+    }
+    catch (ClientException $e) {
+      if ($e->getCode() === Response::HTTP_NOT_FOUND) {
+        $responseBody = json_decode($e->getResponse()->getBody(), TRUE);
+        $message = $responseBody['messages'][0];
+        throw new LingotekDocumentNotFoundException($message, Response::HTTP_NOT_FOUND);
+      }
+      throw new LingotekApiException('Failed to get document translation status: ' . $e->getMessage(), $e->getCode(), $e);
     }
     catch (\Exception $e) {
       $this->logger->error('Error getting document translation status (%id, %locale): %message.',
@@ -271,9 +328,14 @@ class LingotekApi implements LingotekApiInterface {
       }
       $response = $this->lingotekClient->post('/api/document/' . $id . '/translation', $args);
     }
-    catch (\Exception $e) {
+    catch (ClientException $e) {
+      if ($e->getCode() === Response::HTTP_NOT_FOUND) {
+        $responseBody = json_decode($e->getResponse()->getBody(), TRUE);
+        $message = $responseBody['messages'][0];
+        throw new LingotekDocumentNotFoundException($message, Response::HTTP_NOT_FOUND);
+      }
       // If the problem is that the translation already exist, don't fail.
-      if ($e->getCode() === Response::HTTP_BAD_REQUEST) {
+      elseif ($e->getCode() === Response::HTTP_BAD_REQUEST) {
         $responseBody = json_decode($e->getResponse()->getBody(), TRUE);
         if ($responseBody['messages'][0] === 'Translation (' . $locale . ') already exists.') {
           $this->logger->info('Added an existing target for %id with %args.',
@@ -281,6 +343,9 @@ class LingotekApi implements LingotekApiInterface {
         }
         return new Response('Was already requested. All is good.', Response::HTTP_CREATED);
       }
+      throw new LingotekApiException('Failed to add translation: ' . $e->getMessage(), $e->getCode(), $e);
+    }
+    catch (\Exception $e) {
       $this->logger->error('Error requesting translation (%id, %args): %message.',
         ['%id' => $id, '%args' => var_export($args, TRUE), '%message' => $e->getMessage()]);
       throw new LingotekApiException('Failed to add translation: ' . $e->getMessage());
@@ -296,6 +361,14 @@ class LingotekApi implements LingotekApiInterface {
     try {
       $this->logger->debug('Lingotek::getTranslation called with id ' . $id . ' and locale ' . $locale);
       $response = $this->lingotekClient->get('/api/document/' . $id . '/content', ['locale_code' => $locale, 'use_source' => $useSource ? 'true' : 'false']);
+    }
+    catch (ClientException $e) {
+      if ($e->getCode() === Response::HTTP_NOT_FOUND) {
+        $responseBody = json_decode($e->getResponse()->getBody(), TRUE);
+        $message = $responseBody['messages'][0];
+        throw new LingotekDocumentNotFoundException($message, Response::HTTP_NOT_FOUND);
+      }
+      throw new LingotekApiException('Failed to add translation: ' . $e->getMessage(), $e->getCode(), $e);
     }
     catch (\Exception $e) {
       $this->logger->error('Error getting translation (%id, %locale): %message.',
@@ -313,6 +386,14 @@ class LingotekApi implements LingotekApiInterface {
     try {
       $this->logger->debug('Lingotek::deleteTranslation called with id ' . $id . ' and locale ' . $locale);
       $response = $this->lingotekClient->delete('/api/document/' . $id . '/translation', ['locale_code' => $locale]);
+    }
+    catch (ClientException $e) {
+      if ($e->getCode() === Response::HTTP_NOT_FOUND) {
+        $responseBody = json_decode($e->getResponse()->getBody(), TRUE);
+        $message = $responseBody['messages'][0];
+        throw new LingotekDocumentNotFoundException($message, Response::HTTP_NOT_FOUND);
+      }
+      throw new LingotekApiException('Failed to cancel document: ' . $e->getMessage(), $e->getCode(), $e);
     }
     catch (\Exception $e) {
       $this->logger->error('Error getting translation (%id, %locale): %message.',
@@ -456,6 +537,28 @@ class LingotekApi implements LingotekApiInterface {
       }
     }
     return $formatted_response;
+  }
+
+  public function getProcess($process_id) {
+    try {
+      $this->logger->debug('Lingotek::getProcess called with id ' . $process_id);
+      $response = $this->lingotekClient->get('/api/process/' . $process_id);
+    }
+    catch (ClientException $e) {
+      if ($e->getCode() === Response::HTTP_NOT_FOUND) {
+        $responseBody = json_decode($e->getResponse()->getBody(), TRUE);
+        $message = $responseBody['messages'][0];
+        throw new LingotekApiException($message, Response::HTTP_NOT_FOUND);
+      }
+      throw new LingotekApiException('Failed to get process info: ' . $e->getMessage(), $e->getCode(), $e);
+    }
+    catch (\Exception $e) {
+      $this->logger->error('Error getting process info (%id): %message.',
+        ['%id' => $process_id, '%message' => $e->getMessage()]);
+      throw new LingotekApiException('Failed to get process info: ' . $e->getMessage());
+    }
+    $this->logger->debug('getProcess response received, code %code and body %body', ['%code' => $response->getStatusCode(), '%body' => (string) $response->getBody(TRUE)]);
+    return $response;
   }
 
 }

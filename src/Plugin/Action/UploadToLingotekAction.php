@@ -5,6 +5,7 @@ namespace Drupal\lingotek\Plugin\Action;
 use Drupal\lingotek\Exception\LingotekApiException;
 use Drupal\lingotek\Exception\LingotekDocumentArchivedException;
 use Drupal\lingotek\Exception\LingotekDocumentLockedException;
+use Drupal\lingotek\Exception\LingotekDocumentNotFoundException;
 use Drupal\lingotek\Exception\LingotekPaymentRequiredException;
 
 /**
@@ -47,6 +48,12 @@ class UploadToLingotekAction extends LingotekContentEntityActionBase {
     }
     catch (LingotekPaymentRequiredException $exception) {
       $this->messenger()->addError(t('Community has been disabled. Please contact support@lingotek.com to re-enable your community.'));
+    }
+    catch (LingotekDocumentNotFoundException $exception) {
+      $this->messenger()->addError(t('Document @entity_type %title was not found. Please upload again.', [
+        '@entity_type' => $entity->getEntityTypeId(),
+        '%title' => $entity->label(),
+      ]));
     }
     catch (LingotekDocumentArchivedException $exception) {
       $this->messenger()->addError(t('Document @entity_type %title has been archived. Uploading again.', [

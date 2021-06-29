@@ -998,6 +998,60 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
   /**
    * Test that we handle errors in update.
    */
+  public function testUpdatingWithADocumentNotFoundError() {
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    $this->goToContentBulkManagementForm();
+
+    // Upload the document, which must succeed.
+    $this->clickLink('EN');
+    $this->assertText('Node Llamas are cool has been uploaded.');
+
+    // Check upload.
+    $this->clickLink('EN');
+
+    // Edit the node.
+    $edit['title[0][value]'] = 'Llamas are cool EDITED';
+    $this->saveAndKeepPublishedNodeForm($edit, 1);
+
+    \Drupal::state()->set('lingotek.must_document_not_found_error_in_update', TRUE);
+
+    $this->goToContentBulkManagementForm();
+
+    // Update the document, which must fail.
+    $this->clickLink('EN');
+
+    // Check the right class is added.
+    $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
+
+    // The node has been marked with the error status.
+    $this->node = Node::load(1);
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.content_translation');
+    $source_status = $translation_service->getSourceStatus($this->node);
+    $this->assertEqual(Lingotek::STATUS_UNTRACKED, $source_status, 'The node has been marked as error.');
+
+    // We cannot click, as for views there won't be a link.
+    // $this->clickLink('EN');
+    \Drupal::state()->set('lingotek.must_document_not_found_error_in_update', FALSE);
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $this->assertSourceStatus('EN', Lingotek::STATUS_IMPORTING);
+  }
+
+  /**
+   * Test that we handle errors in update.
+   */
   public function testUpdatingWithADocumentArchivedError() {
     // Create a node.
     $edit = [];
@@ -1432,6 +1486,59 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
   }
 
   /**
+   * Test that we handle errors in update.
+   */
+  public function testUpdatingWithADocumentNotFoundErrorUsingActions() {
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    $this->goToContentBulkManagementForm();
+
+    // Upload the document, which must succeed.
+    $this->assertLingotekUploadLink();
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $this->assertSourceStatus('EN', Lingotek::STATUS_IMPORTING);
+
+    // Check upload.
+    $this->clickLink('EN');
+
+    // Edit the node.
+    $edit = ['title[0][value]' => 'Llamas are cool EDITED'];
+    $this->saveAndKeepPublishedNodeForm($edit, 1);
+
+    \Drupal::state()->set('lingotek.must_document_not_found_error_in_update', TRUE);
+
+    $this->goToContentBulkManagementForm();
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    // Check the right class is added.
+    $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
+    $this->assertNoLingotekRequestTranslationLink('es_MX');
+    $this->assertText('Document node Llamas are cool EDITED was not found. Please upload again.');
+
+    $this->node = Node::load(1);
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.content_translation');
+    $source_status = $translation_service->getSourceStatus($this->node);
+    $this->assertEqual(Lingotek::STATUS_UNTRACKED, $source_status, 'The node has been marked as error.');
+  }
+
+  /**
    * Tests that all the statuses are set when using the Check Translations action.
    */
   public function testCheckTranslationsAction() {
@@ -1660,6 +1767,91 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
   }
 
   /**
+   * Tests that all the statuses are set when using the Check Translations action.
+   */
+  public function testCheckSourceStatusNotCompletedAndStillImporting() {
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    $this->goToContentBulkManagementForm();
+
+    // I can init the upload of content.
+    $this->assertLingotekUploadLink();
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $this->assertIdentical('en_US', \Drupal::state()
+      ->get('lingotek.uploaded_locale'));
+
+    // I can check current status.
+    $this->assertLingotekCheckSourceStatusLink();
+
+    // The document has not been imported yet.
+    \Drupal::state()->set('lingotek.document_status_completion', FALSE);
+
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForCheckUpload('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    $this->assertSourceStatus('EN', Lingotek::STATUS_IMPORTING);
+
+    $this->assertLingotekCheckSourceStatusLink();
+    $this->assertText('The import for node Llamas are cool is still pending.');
+  }
+
+  /**
+   * Tests that all the statuses are set when using the Check Translations action.
+   */
+  public function testCheckSourceStatusCompletedAndContentMissing() {
+    \Drupal::state()->set('lingotek.must_document_not_found_error_in_check_source_status', TRUE);
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    $this->goToContentBulkManagementForm();
+
+    // I can init the upload of content.
+    $this->assertLingotekUploadLink();
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $this->assertIdentical('en_US', \Drupal::state()
+      ->get('lingotek.uploaded_locale'));
+
+    // I can check current status.
+    $this->assertLingotekCheckSourceStatusLink();
+
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForCheckUpload('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    // Check the right class is added.
+    $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
+    $this->assertText('Document node Llamas are cool was not found. Please upload again.');
+  }
+
+  /**
    * Tests that we manage errors when using the Check Source link.
    */
   public function testCheckSourceStatusWithAnError() {
@@ -1865,6 +2057,46 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
   /**
    * Tests that we manage errors when using the request translation link.
    */
+  public function testRequestTranslationWithADocumentNotFoundError() {
+    \Drupal::state()->set('lingotek.must_document_not_found_error_in_request_translation', TRUE);
+
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    $this->goToContentBulkManagementForm();
+
+    // I can init the upload of content.
+    $this->assertLingotekUploadLink();
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $this->assertIdentical('en_US', \Drupal::state()
+      ->get('lingotek.uploaded_locale'));
+
+    // I can check current status.
+    $this->assertLingotekCheckSourceStatusLink();
+    // I can request a translation
+    $this->assertLingotekRequestTranslationLink('es_MX');
+    $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
+
+    $this->clickLink('ES');
+
+    $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
+    $this->assertNoLingotekRequestTranslationLink('es_MX');
+    $this->assertText('Document node Llamas are cool was not found. Please upload again.');
+  }
+
+  /**
+   * Tests that we manage errors when using the request translation link.
+   */
   public function testRequestTranslationWithADocumentLockedError() {
     \Drupal::state()->set('lingotek.must_document_locked_error_in_request_translation', TRUE);
 
@@ -1994,6 +2226,50 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
   /**
    * Tests that we manage errors when using the request translation action.
    */
+  public function testRequestTranslationWithActionWithADocumentNotFoundError() {
+    \Drupal::state()->set('lingotek.must_document_not_found_error_in_request_translation', TRUE);
+
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    $this->goToContentBulkManagementForm();
+
+    // I can init the upload of content.
+    $this->assertLingotekUploadLink();
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $this->assertIdentical('en_US', \Drupal::state()
+      ->get('lingotek.uploaded_locale'));
+
+    // I can check current status.
+    $this->assertLingotekCheckSourceStatusLink();
+    // I can request a translation
+    $this->assertLingotekRequestTranslationLink('es_MX');
+    $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
+
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForRequestTranslation('es', 'node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
+    $this->assertNoLingotekRequestTranslationLink('es_MX');
+    $this->assertText('Document node Llamas are cool was not found. Please upload again.');
+  }
+
+  /**
+   * Tests that we manage errors when using the request translation action.
+   */
   public function testRequestTranslationWithActionWithADocumentLockedError() {
     \Drupal::state()->set('lingotek.must_document_locked_error_in_request_translation', TRUE);
 
@@ -2118,8 +2394,8 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
-    // We failed at requesting a translation, but we don't know what happened.
-    // So we don't mark as error but keep it on request.
+    $this->assertSourceStatus('EN', Lingotek::STATUS_IMPORTING);
+    $this->assertLingotekRequestTranslationLink('es_MX');
     $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
     $this->assertText('The request for node Llamas are cool translation failed. Please try again.');
   }
@@ -2166,6 +2442,50 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     $this->assertSourceStatus('EN', Lingotek::STATUS_IMPORTING);
     $this->assertLingotekRequestTranslationLink('es_MX', 'dummy-document-hash-id-1');
     $this->assertText('Document node Llamas are cool has been archived. Uploading again.');
+  }
+
+  /**
+   * Tests that we manage errors when using the request all translations action.
+   */
+  public function testRequestAllTranslationsWithActionWithADocumentNotFoundError() {
+    \Drupal::state()->set('lingotek.must_document_not_found_error_in_request_translation', TRUE);
+
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    $this->goToContentBulkManagementForm();
+
+    // I can init the upload of content.
+    $this->assertLingotekUploadLink();
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $this->assertIdentical('en_US', \Drupal::state()
+      ->get('lingotek.uploaded_locale'));
+
+    // I can check current status.
+    $this->assertLingotekCheckSourceStatusLink();
+    // I can request a translation
+    $this->assertLingotekRequestTranslationLink('es_MX');
+    $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
+
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForRequestTranslations('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
+    $this->assertNoLingotekRequestTranslationLink('es_MX');
+    $this->assertText('Document node Llamas are cool was not found. Please upload again.');
   }
 
   /**
@@ -2303,6 +2623,52 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
   }
 
   /**
+   * Tests that we manage errors when using the check translation status link.
+   */
+  public function testCheckTranslationStatusWithADocumentNotFoundError() {
+    \Drupal::state()->set('lingotek.must_document_not_found_error_in_check_target_status', TRUE);
+
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    $this->goToContentBulkManagementForm();
+
+    // I can init the upload of content.
+    $this->assertLingotekUploadLink();
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $this->assertIdentical('en_US', \Drupal::state()
+      ->get('lingotek.uploaded_locale'));
+
+    // I can check current status.
+    $this->assertLingotekCheckSourceStatusLink();
+    // I can request a translation
+    $this->assertLingotekRequestTranslationLink('es_MX');
+    $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
+
+    // Request the translation.
+    $this->clickLink('ES');
+    $this->assertTargetStatus('ES', Lingotek::STATUS_PENDING);
+
+    // Check the status of the translation.
+    $this->clickLink('ES');
+
+    // We failed at checking a translation, as it was missing.
+    $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
+    $this->assertNoTargetStatus('ES', Lingotek::STATUS_PENDING);
+    $this->assertText('Document node Llamas are cool was not found. Please upload again.');
+  }
+
+  /**
    * Tests that we manage errors when using the check translation status action.
    */
   public function testCheckTranslationStatusWithActionWithAnError() {
@@ -2348,6 +2714,51 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
   }
 
   /**
+   * Tests that we manage errors when using the check translation status action.
+   */
+  public function testCheckTranslationStatusWithActionWithADocumentNotFoundError() {
+    \Drupal::state()->set('lingotek.must_document_not_found_error_in_check_target_status', TRUE);
+
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    $this->goToContentBulkManagementForm();
+
+    // I can init the upload of content.
+    $this->assertLingotekUploadLink();
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $this->assertIdentical('en_US', \Drupal::state()
+      ->get('lingotek.uploaded_locale'));
+
+    // I can check current status.
+    $this->assertLingotekCheckSourceStatusLink();
+    // I can request a translation
+    $this->assertLingotekRequestTranslationLink('es_MX');
+    $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
+
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForCheckTranslation('es', 'node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    // We failed at checking a translation, as it was missing.
+    $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
+    $this->assertNoTargetStatus('ES', Lingotek::STATUS_PENDING);
+    $this->assertText('Document node Llamas are cool was not found. Please upload again.');
+  }
+
+  /**
    * Tests that we manage errors when using the check all translations statuses action.
    */
   public function testCheckAllTranslationsStatusesWithActionWithAnError() {
@@ -2390,6 +2801,51 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     // So we don't mark as error but keep it on request.
     $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
     $this->assertText('The request for node Llamas are cool translation status failed. Please try again.');
+  }
+
+  /**
+   * Tests that we manage errors when using the check all translations statuses action.
+   */
+  public function testCheckAllTranslationsStatusesWithActionWithADocumentNotFoundError() {
+    \Drupal::state()->set('lingotek.must_document_not_found_error_in_check_target_status', TRUE);
+
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    $this->goToContentBulkManagementForm();
+
+    // I can init the upload of content.
+    $this->assertLingotekUploadLink();
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $this->assertIdentical('en_US', \Drupal::state()
+      ->get('lingotek.uploaded_locale'));
+
+    // I can check current status.
+    $this->assertLingotekCheckSourceStatusLink();
+    // I can request a translation
+    $this->assertLingotekRequestTranslationLink('es_MX');
+    $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
+
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForCheckTranslations('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    // We failed at checking a translation, as it was missing.
+    $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
+    $this->assertNoTargetStatus('ES', Lingotek::STATUS_PENDING);
+    $this->assertText('Document node Llamas are cool was not found. Please upload again.');
   }
 
   /**
@@ -2439,6 +2895,55 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     // We failed at downloading a translation. Mark as error.
     $this->assertTargetStatus('ES', Lingotek::STATUS_ERROR);
     $this->assertText('The download for node Llamas are cool failed. Please try again.');
+  }
+
+  /**
+   * Tests that we manage errors when using the download translation link.
+   */
+  public function testDownloadTranslationWithADocumentNotFoundError() {
+    \Drupal::state()->set('lingotek.must_document_not_found_error_download', TRUE);
+
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    $this->goToContentBulkManagementForm();
+
+    // I can init the upload of content.
+    $this->assertLingotekUploadLink();
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $this->assertIdentical('en_US', \Drupal::state()
+      ->get('lingotek.uploaded_locale'));
+
+    // I can check current status.
+    $this->assertLingotekCheckSourceStatusLink();
+    // I can request a translation
+    $this->assertLingotekRequestTranslationLink('es_MX');
+    $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
+
+    // Request the translation.
+    $this->clickLink('ES');
+    $this->assertTargetStatus('ES', Lingotek::STATUS_PENDING);
+
+    // Check the status of the translation.
+    $this->clickLink('ES');
+    $this->assertTargetStatus('ES', Lingotek::STATUS_READY);
+
+    // Download translation.
+    $this->clickLink('ES');
+
+    $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
+    $this->assertNoLingotekRequestTranslationLink('es_MX');
+    $this->assertText('Document node Llamas are cool was not found. Please upload again.');
   }
 
   /**
@@ -2492,6 +2997,59 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     // We failed at downloading a translation. Mark as error.
     $this->assertTargetStatus('ES', Lingotek::STATUS_ERROR);
     $this->assertText('The download for node Llamas are cool translation failed. Please try again.');
+  }
+
+  /**
+   * Tests that we manage errors when using the download translation action.
+   */
+  public function testDownloadTranslationWithActionWithADocumentNotFoundError() {
+    \Drupal::state()->set('lingotek.must_document_not_found_error_download', TRUE);
+
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    $this->goToContentBulkManagementForm();
+
+    // I can init the upload of content.
+    $this->assertLingotekUploadLink();
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $this->assertIdentical('en_US', \Drupal::state()
+      ->get('lingotek.uploaded_locale'));
+
+    // I can check current status.
+    $this->assertLingotekCheckSourceStatusLink();
+    // I can request a translation
+    $this->assertLingotekRequestTranslationLink('es_MX');
+    $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
+
+    // Request the translation.
+    $this->clickLink('ES');
+    $this->assertTargetStatus('ES', Lingotek::STATUS_PENDING);
+
+    // Check the status of the translation.
+    $this->clickLink('ES');
+    $this->assertTargetStatus('ES', Lingotek::STATUS_READY);
+
+    // Download translation.
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForDownloadTranslation('es', 'node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
+    $this->assertNoLingotekRequestTranslationLink('es_MX');
+    $this->assertText('Document node Llamas are cool was not found. Please upload again.');
   }
 
   /**
@@ -2553,6 +3111,64 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
   }
 
   /**
+   * Tests that we manage errors when using the download all translations action.
+   */
+  public function testDownloadAllTranslationsWithActionWithADocumentNotFoundError() {
+    \Drupal::state()->set('lingotek.must_document_not_found_error_download', TRUE);
+
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    $this->goToContentBulkManagementForm();
+
+    // I can init the upload of content.
+    $this->assertLingotekUploadLink();
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $this->assertIdentical('en_US', \Drupal::state()
+      ->get('lingotek.uploaded_locale'));
+
+    // I can check current status.
+    $this->assertLingotekCheckSourceStatusLink();
+
+    // I can request a translation
+    $this->assertLingotekRequestTranslationLink('es_MX');
+    $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
+
+    // Request the translation.
+    $this->clickLink('ES');
+    $this->assertTargetStatus('ES', Lingotek::STATUS_PENDING);
+
+    // Check the status of the translation.
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForCheckTranslations('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $this->assertTargetStatus('ES', Lingotek::STATUS_READY);
+
+    // Download translation.
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForDownloadTranslations('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
+    $this->assertNoLingotekRequestTranslationLink('es_MX');
+    $this->assertText('Document node Llamas are cool was not found. Please upload again.');
+  }
+
+  /**
    * Tests that we manage errors when using the cancel action.
    */
   public function testCancelWithActionWithAnError() {
@@ -2600,6 +3216,52 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
   /**
    * Tests that we manage errors when using the cancel action.
    */
+  public function testCancelWithActionWithADocumentNotFoundError() {
+    \Drupal::state()->set('lingotek.must_document_not_found_error_in_cancel', TRUE);
+
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    $this->goToContentBulkManagementForm();
+
+    // I can init the upload of content.
+    $this->assertLingotekUploadLink();
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $this->assertIdentical('en_US', \Drupal::state()
+      ->get('lingotek.uploaded_locale'));
+
+    // I can check current status.
+    $this->assertLingotekCheckSourceStatusLink();
+    // I can request a translation
+    $this->assertLingotekRequestTranslationLink('es_MX');
+    $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
+
+    // Cancel translation.
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForCancel('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    // We failed at cancelling.
+    $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
+    $this->assertNoLingotekRequestTranslationLink('es_MX');
+    $this->assertText('Document node Llamas are cool was not found, so nothing to cancel.');
+  }
+
+  /**
+   * Tests that we manage errors when using the cancel action.
+   */
   public function testCancelTargetWithActionWithAnError() {
     \Drupal::state()->set('lingotek.must_error_in_cancel', TRUE);
 
@@ -2640,6 +3302,52 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     // We failed at cancelling.
     $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
     $this->assertText('The cancellation of node Llamas are cool translation to es failed. Please try again.');
+  }
+
+  /**
+   * Tests that we manage errors when using the cancel action.
+   */
+  public function testCancelTargetWithActionWithADocumentNotFoundError() {
+    \Drupal::state()->set('lingotek.must_document_not_found_error_in_cancel', TRUE);
+
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    $this->goToContentBulkManagementForm();
+
+    // I can init the upload of content.
+    $this->assertLingotekUploadLink();
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $this->assertIdentical('en_US', \Drupal::state()
+      ->get('lingotek.uploaded_locale'));
+
+    // I can check current status.
+    $this->assertLingotekCheckSourceStatusLink();
+    // I can request a translation
+    $this->assertLingotekRequestTranslationLink('es_MX');
+    $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
+
+    // Cancel translation.
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForCancelTarget('es', 'node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    // We failed at cancelling.
+    $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
+    $this->assertNoLingotekRequestTranslationLink('es_MX');
+    $this->assertText('Document node Llamas are cool was not found, so nothing to cancel.');
   }
 
   /**

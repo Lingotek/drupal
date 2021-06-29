@@ -7,6 +7,7 @@ use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\lingotek\Exception\LingotekApiException;
 use Drupal\lingotek\Exception\LingotekDocumentArchivedException;
 use Drupal\lingotek\Exception\LingotekDocumentLockedException;
+use Drupal\lingotek\Exception\LingotekDocumentNotFoundException;
 use Drupal\lingotek\Exception\LingotekPaymentRequiredException;
 use Drupal\lingotek\LanguageLocaleMapperInterface;
 use Drupal\lingotek\Lingotek;
@@ -137,6 +138,9 @@ class LingotekInterfaceTranslationController extends LingotekControllerBase {
           $this->messenger()->addStatus($this->t('The import for %label is still pending.', ['%label' => $component]));
         }
       }
+      catch (LingotekDocumentNotFoundException $exc) {
+        $this->messenger()->addError(t('Document %label was not found. Please upload again.', ['%label' => $component]));
+      }
       catch (LingotekApiException $e) {
         $this->messenger()->addError($this->t('%label status check failed. Please try again.',
           ['%label' => $component]));
@@ -156,6 +160,10 @@ class LingotekInterfaceTranslationController extends LingotekControllerBase {
         else {
           $this->messenger()->addWarning($this->t("There was a problem adding '@locale' as a translation target for %label.", ['@locale' => $locale, '%label' => $component]));
         }
+      }
+      catch (LingotekDocumentNotFoundException $exception) {
+        $this->messenger()->addError($this->t('Document %label was not found. Please upload again.',
+          ['%label' => $component]));
       }
       catch (LingotekDocumentArchivedException $exception) {
         $this->messenger()->addWarning($this->t('Document %label has been archived. Uploading again.',
@@ -190,6 +198,10 @@ class LingotekInterfaceTranslationController extends LingotekControllerBase {
           $this->messenger()->addStatus($this->t('The @locale translation for %label is still in progress.', ['@locale' => $locale, '%label' => $component]));
         }
       }
+      catch (LingotekDocumentNotFoundException $exception) {
+        $this->messenger()->addError($this->t('Document %label was not found. Please upload again.',
+          ['%label' => $component]));
+      }
       catch (LingotekDocumentArchivedException $exception) {
         $this->messenger()->addWarning($this->t('Document %label has been archived. Uploading again.',
           ['%label' => $component]));
@@ -221,6 +233,10 @@ class LingotekInterfaceTranslationController extends LingotekControllerBase {
         else {
           $this->messenger()->addStatus($this->t("The '@locale' translation download for %label failed. Please try again.", ['@locale' => $locale, '%label' => $component]));
         }
+      }
+      catch (LingotekDocumentNotFoundException $exception) {
+        $this->messenger()->addError($this->t('Document %label was not found. Please upload again.',
+          ['%label' => $component]));
       }
       catch (LingotekDocumentArchivedException $exception) {
         $this->messenger()->addWarning($this->t('Document %label has been archived. Uploading again.',

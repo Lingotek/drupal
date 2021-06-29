@@ -201,6 +201,7 @@ interface LingotekInterfaceTranslationServiceInterface {
    * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentArchivedException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentLockedException
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentNotFoundException
    * @throws \Drupal\lingotek\Exception\LingotekApiException
    */
   public function addTarget($component, $locale);
@@ -214,6 +215,7 @@ interface LingotekInterfaceTranslationServiceInterface {
    * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentArchivedException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentLockedException
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentNotFoundException
    * @throws \Drupal\lingotek\Exception\LingotekApiException
    */
   public function requestTranslations($component);
@@ -230,10 +232,10 @@ interface LingotekInterfaceTranslationServiceInterface {
    *   TRUE if the document was uploaded successfully, FALSE if not.
    *
    * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentArchivedException
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentLockedException
    * @throws \Drupal\lingotek\Exception\LingotekApiException
    *
-   * Propagated from @throws \Drupal\lingotek\Exception\LingotekDocumentArchivedException
-   * @throws \Drupal\lingotek\Exception\LingotekDocumentLockedException
    * @see ::updateDocument
    */
   public function uploadDocument($component, $job_id = NULL);
@@ -265,6 +267,7 @@ interface LingotekInterfaceTranslationServiceInterface {
    * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentArchivedException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentLockedException
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentNotFoundException
    * @throws \Drupal\lingotek\Exception\LingotekApiException
    */
   public function updateDocument($component, $job_id = NULL);
@@ -379,6 +382,7 @@ interface LingotekInterfaceTranslationServiceInterface {
    * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentArchivedException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentLockedException
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentNotFoundException
    * @throws \Drupal\lingotek\Exception\LingotekApiException
    */
   public function setJobId($component, $job_id, $update_tms = FALSE);

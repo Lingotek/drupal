@@ -699,6 +699,61 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
   /**
    * Test that we handle errors in update.
    */
+  public function testUpdatingWithADocumentNotFoundError() {
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    // Check that the translate tab is in the node.
+    $this->drupalGet('node/1');
+    $this->clickLink('Translate');
+
+    // Upload the document, which must succeed.
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Uploaded 1 document to Lingotek.');
+
+    // Check that the upload succeeded.
+    $this->clickLink('Check Upload Status');
+    $this->assertText('The import for node Llamas are cool is complete.');
+
+    // Edit the node.
+    $edit['title[0][value]'] = 'Llamas are cool EDITED';
+    $this->saveAndKeepPublishedNodeForm($edit, 1);
+
+    // Go back to the form.
+    $this->drupalGet('node/1');
+    $this->clickLink('Translate');
+
+    \Drupal::state()->set('lingotek.must_document_not_found_error_in_update', TRUE);
+
+    // Re-upload. Must fail now.
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+
+    $this->assertText('Document node Llamas are cool EDITED was not found. Please upload again.');
+
+    // The node has been marked with the error status.
+    $this->node = Node::load(1);
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.content_translation');
+    $source_status = $translation_service->getSourceStatus($this->node);
+    $this->assertEqual(Lingotek::STATUS_UNTRACKED, $source_status, 'The node has been marked as untracked, needs new upload.');
+
+    // I can still re-try the upload.
+    \Drupal::state()->set('lingotek.must_document_not_found_error_in_update', FALSE);
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Uploaded 1 document to Lingotek.');
+  }
+
+  /**
+   * Test that we handle errors in update.
+   */
   public function testUpdatingWithADocumentArchivedError() {
     // Create a node.
     $edit = [];
@@ -913,6 +968,119 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
   }
 
   /**
+   * Tests that all the statuses are set when using the Check Translations action.
+   */
+  public function testCheckSourceStatusWithAnError() {
+    \Drupal::state()->set('lingotek.must_error_in_check_source_status', TRUE);
+
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    // Check that the translate tab is in the node.
+    $this->drupalGet('node/1');
+    $this->clickLink('Translate');
+
+    // Upload the document.
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Uploaded 1 document to Lingotek.');
+
+    $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
+
+    // I can check current status.
+    $this->assertLink('Check Upload Status');
+
+    $this->clickLink('Check Upload Status');
+
+    $this->node = Node::load(1);
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.content_translation');
+    $source_status = $translation_service->getSourceStatus($this->node);
+    $this->assertEqual(Lingotek::STATUS_IMPORTING, $source_status);
+    $this->assertText('The check for node status failed. Please try again.');
+  }
+
+  /**
+   * Tests that all the statuses are set when using the Check Translations action.
+   */
+  public function testCheckSourceStatusNotCompletedAndStillImporting() {
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    // Check that the translate tab is in the node.
+    $this->drupalGet('node/1');
+    $this->clickLink('Translate');
+
+    // Upload the document.
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Uploaded 1 document to Lingotek.');
+
+    $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
+
+    // I can check current status.
+    $this->assertLink('Check Upload Status');
+
+    // The document has not been imported yet.
+    \Drupal::state()->set('lingotek.document_status_completion', FALSE);
+
+    $this->clickLink('Check Upload Status');
+
+    $this->node = Node::load(1);
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.content_translation');
+    $source_status = $translation_service->getSourceStatus($this->node);
+    $this->assertEqual(Lingotek::STATUS_IMPORTING, $source_status);
+    $this->assertText('The import for node Llamas are cool is still pending.');
+  }
+
+  /**
+   * Tests that all the statuses are set when using the Check Translations action.
+   */
+  public function testCheckSourceStatusCompletedAndContentMissing() {
+    \Drupal::state()->set('lingotek.must_document_not_found_error_in_check_source_status', TRUE);
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    // Check that the translate tab is in the node.
+    $this->drupalGet('node/1');
+    $this->clickLink('Translate');
+
+    // Upload the document.
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Uploaded 1 document to Lingotek.');
+
+    $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
+
+    // I can check current status.
+    $this->assertLink('Check Upload Status');
+    $this->clickLink('Check Upload Status');
+
+    $this->node = Node::load(1);
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.content_translation');
+    $source_status = $translation_service->getSourceStatus($this->node);
+    $this->assertEqual(Lingotek::STATUS_UNTRACKED, $source_status);
+    $this->assertText('Document node Llamas are cool was not found. Please upload again.');
+  }
+
+  /**
    * Test that we handle errors in upload.
    */
   public function testUpdatingWithAnErrorViaAutomaticUpload() {
@@ -968,6 +1136,34 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $translation_service = \Drupal::service('lingotek.content_translation');
     $source_status = $translation_service->getSourceStatus($this->node);
     $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The node has been marked as error.');
+  }
+
+  /**
+   * Test that we handle errors in upload.
+   */
+  public function testUpdatingWithADocumentNotFoundErrorViaAutomaticUpload() {
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
+    $this->saveAndPublishNodeForm($edit);
+
+    \Drupal::state()->set('lingotek.must_document_not_found_error_in_update', TRUE);
+
+    // Edit the node.
+    $edit['title[0][value]'] = 'Llamas are cool EDITED';
+    $this->saveAndKeepPublishedNodeForm($edit, 1);
+
+    // The document was updated automatically and failed.
+    $this->assertText('Document node Llamas are cool EDITED was not found. Please upload again.');
+
+    $this->node = Node::load(1);
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.content_translation');
+    $source_status = $translation_service->getSourceStatus($this->node);
+    $this->assertEqual(Lingotek::STATUS_UNTRACKED, $source_status);
   }
 
   /**
@@ -1093,6 +1289,47 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $source_status = $translation_service->getSourceStatus($this->node);
     $this->assertEquals($source_status, Lingotek::STATUS_IMPORTING);
     $this->assertEquals($translation_service->getTargetStatus($this->node, 'ES'), Lingotek::STATUS_UNTRACKED);
+  }
+
+  /**
+   * Test that we handle errors in request translation.
+   */
+  public function testRequestTranslationWithADocumentNotFoundError() {
+    \Drupal::state()->set('lingotek.must_document_not_found_error_in_request_translation', TRUE);
+
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    // Check that the translate tab is in the node.
+    $this->drupalGet('node/1');
+    $this->clickLink('Translate');
+
+    // Upload the document.
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Uploaded 1 document to Lingotek.');
+
+    // The document should have been automatically uploaded, so let's check
+    // the upload status.
+    $this->clickLink('Check Upload Status');
+    $this->assertText('The import for node Llamas are cool is complete.');
+
+    // Request translation.
+    $this->clickLink('Request translation');
+
+    $this->assertText('Document node Llamas are cool was not found. Please upload again.');
+
+    $this->node = Node::load(1);
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.content_translation');
+    $source_status = $translation_service->getSourceStatus($this->node);
+    $this->assertEqual($source_status, Lingotek::STATUS_UNTRACKED);
+    $this->assertEqual($translation_service->getTargetStatus($this->node, 'ES'), Lingotek::STATUS_UNTRACKED);
   }
 
   /**

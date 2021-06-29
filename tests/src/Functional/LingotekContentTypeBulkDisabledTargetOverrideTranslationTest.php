@@ -60,9 +60,9 @@ class LingotekContentTypeBulkDisabledTargetOverrideTranslationTest extends Lingo
   }
 
   /**
-   * Tests that a field can be translated using the links on the management page.
+   * Tests that a content type can be translated using the links on the management page.
    */
-  public function aaatestFieldBodyTranslationUsingLinks() {
+  public function testContentTypeTranslationUsingLinks() {
     $assert_session = $this->assertSession();
 
     $basepath = \Drupal::request()->getBasePath();
@@ -75,7 +75,7 @@ class LingotekContentTypeBulkDisabledTargetOverrideTranslationTest extends Lingo
     $assert_session->linkByHrefNotExists($basepath . '/admin/lingotek/config/request/node_type/article/ca_ES?destination=' . $basepath . '/admin/lingotek/config/manage');
 
     $this->clickLink('EN');
-    $this->assertText('Body uploaded successfully');
+    $this->assertText('Article uploaded successfully');
     $this->assertIdentical('en_US', \Drupal::state()
       ->get('lingotek.uploaded_locale'));
 
@@ -86,7 +86,7 @@ class LingotekContentTypeBulkDisabledTargetOverrideTranslationTest extends Lingo
     $assert_session->linkByHrefNotExists($basepath . '/admin/lingotek/config/request/node_type/article/ca_ES?destination=' . $basepath . '/admin/lingotek/config/manage');
 
     $this->clickLink('EN');
-    $this->assertText('Body status checked successfully');
+    $this->assertText('Article status checked successfully');
 
     $assert_session->linkByHrefNotExists($basepath . '/admin/lingotek/config/request/node_type/article/ca_ES?destination=' . $basepath . '/admin/lingotek/config/manage');
     $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/request/node_type/article/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
@@ -98,7 +98,7 @@ class LingotekContentTypeBulkDisabledTargetOverrideTranslationTest extends Lingo
   /**
    * Tests that a field can be translated using the actions on the management page.
    */
-  public function testFieldBodyTranslationUsingActions() {
+  public function testContentTypeTranslationUsingActions() {
     $assert_session = $this->assertSession();
     $basepath = \Drupal::request()->getBasePath();
 
@@ -173,7 +173,7 @@ class LingotekContentTypeBulkDisabledTargetOverrideTranslationTest extends Lingo
   /**
    * Tests that a field can be translated using the actions on the management page for multiple locales.
    */
-  public function testFieldBodyTranslationUsingActionsForMultipleLocales() {
+  public function testContentTypeTranslationUsingActionsForMultipleLocales() {
     $assert_session = $this->assertSession();
     $basepath = \Drupal::request()->getBasePath();
 

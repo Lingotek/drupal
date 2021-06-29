@@ -232,6 +232,97 @@ class LingotekFieldBodyTranslationTest extends LingotekTestBase {
   /**
    * Test that we handle errors in update.
    */
+  public function testCheckSourceStatusWithAnError() {
+    \Drupal::state()->set('lingotek.must_error_in_check_source_status', TRUE);
+
+    // Check that the translate tab is in the field.
+    $this->drupalGet('/admin/config/regional/config-translation/node_fields');
+    $this->clickLink(t('Translate'));
+
+    // Upload the document, which must succeed.
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Body uploaded successfully');
+
+    // Check that the upload succeeded.
+    $this->clickLink('Check upload status');
+
+    // We failed at checking status, but we don't know what happened.
+    // So we don't mark as error but keep it on importing.
+    $this->assertText('Body status check failed. Please try again.');
+
+    // The field has been marked with the error status.
+    $fieldConfig = FieldConfig::load('node.article.body');
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getSourceStatus($fieldConfig);
+    $this->assertEqual(Lingotek::STATUS_IMPORTING, $source_status);
+  }
+
+  /**
+   * Test that we handle errors in update.
+   */
+  public function testCheckSourceStatusNotCompletedAndStillImporting() {
+    // Check that the translate tab is in the field.
+    $this->drupalGet('/admin/config/regional/config-translation/node_fields');
+    $this->clickLink(t('Translate'));
+
+    // Upload the document, which must succeed.
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Body uploaded successfully');
+
+    // The document has not been imported yet.
+    \Drupal::state()->set('lingotek.document_status_completion', FALSE);
+
+    // Check that the upload succeeded.
+    $this->clickLink('Check upload status');
+
+    // We failed at checking status, but we don't know what happened.
+    // So we don't mark as error but keep it on importing.
+    $this->assertText('The import for Body is still pending.');
+
+    // The field has been marked with the error status.
+    $fieldConfig = FieldConfig::load('node.article.body');
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getSourceStatus($fieldConfig);
+    $this->assertEqual(Lingotek::STATUS_IMPORTING, $source_status);
+  }
+
+  /**
+   * Test that we handle errors in update.
+   */
+  public function testCheckSourceStatusCompletedAndContentMissing() {
+    \Drupal::state()->set('lingotek.must_document_not_found_error_in_check_source_status', TRUE);
+
+    // Check that the translate tab is in the field.
+    $this->drupalGet('/admin/config/regional/config-translation/node_fields');
+    $this->clickLink(t('Translate'));
+
+    // Upload the document, which must succeed.
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Body uploaded successfully');
+
+    // Check that the upload succeeded.
+    $this->clickLink('Check upload status');
+
+    // We failed at checking status, but we don't know what happened.
+    // So we don't mark as error but keep it on importing.
+    $this->assertText('Document Body was not found. Please upload again.');
+
+    // The field has been marked with the error status.
+    $fieldConfig = FieldConfig::load('node.article.body');
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getSourceStatus($fieldConfig);
+    $this->assertEqual(Lingotek::STATUS_UNTRACKED, $source_status);
+  }
+
+  /**
+   * Test that we handle errors in update.
+   */
   public function testUpdatingWithAnError() {
     // Check that the translate tab is in the field.
     $this->drupalGet('/admin/config/regional/config-translation/node_fields');
@@ -545,6 +636,52 @@ class LingotekFieldBodyTranslationTest extends LingotekTestBase {
   /**
    * Test that we handle errors in update.
    */
+  public function testUpdatingWithADocumentNotFoundError() {
+    // Check that the translate tab is in the field.
+    $this->drupalGet('/admin/config/regional/config-translation/node_fields');
+    $this->clickLink(t('Translate'));
+
+    // Upload the document, which must succeed.
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Body uploaded successfully');
+
+    // Check that the upload succeeded.
+    $this->clickLink('Check upload status');
+    $this->assertText('Body status checked successfully');
+
+    // Edit the field.
+    $edit = ['label' => 'Contents'];
+    $this->drupalPostForm('/admin/structure/types/manage/article/fields/node.article.body', $edit, t('Save settings'));
+    $this->assertText('Saved Contents configuration.');
+
+    // Go back to the form.
+    $this->drupalGet('/admin/config/regional/config-translation/node_fields');
+    $this->clickLink(t('Translate'));
+
+    \Drupal::state()->set('lingotek.must_document_not_found_error_in_update', TRUE);
+
+    // Re-upload. Must fail now.
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+
+    $fieldConfig = FieldConfig::load('node.article.body');
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getSourceStatus($fieldConfig);
+    $this->assertEqual(Lingotek::STATUS_UNTRACKED, $source_status);
+    $this->assertText('Document Contents was not found. Please upload again.');
+
+    // I can still re-try the upload.
+    \Drupal::state()->set('lingotek.must_document_not_found_error_in_update', FALSE);
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Contents uploaded successfully');
+  }
+
+  /**
+   * Test that we handle errors in update.
+   */
   public function testUpdatingWithAPaymentRequiredErrorViaAutomaticUpload() {
     // Check that the translate tab is in the field.
     $this->drupalGet('/admin/config/regional/config-translation/node_fields');
@@ -580,6 +717,45 @@ class LingotekFieldBodyTranslationTest extends LingotekTestBase {
     $this->clickLink('Upload');
     $this->checkForMetaRefresh();
     $this->assertText('Contents has been updated.');
+  }
+
+  /**
+   * Test that we handle errors in update.
+   */
+  public function testUpdatingWithADocumentNotFoundErrorViaAutomaticUpload() {
+    // Check that the translate tab is in the field.
+    $this->drupalGet('/admin/config/regional/config-translation/node_fields');
+    $this->clickLink(t('Translate'));
+
+    // Upload the document, which must succeed.
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Body uploaded successfully');
+
+    // Check that the upload succeeded.
+    $this->clickLink('Check upload status');
+    $this->assertText('Body status checked successfully');
+
+    \Drupal::state()->set('lingotek.must_document_not_found_error_in_update', TRUE);
+
+    // Edit the field.
+    $edit = ['label' => 'Contents'];
+    $this->drupalPostForm('/admin/structure/types/manage/article/fields/node.article.body', $edit, t('Save settings'));
+    $this->assertText('Saved Contents configuration.');
+
+    $fieldConfig = FieldConfig::load('node.article.body');
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getSourceStatus($fieldConfig);
+    $this->assertEqual(Lingotek::STATUS_UNTRACKED, $source_status);
+    $this->assertText('Document field_config Contents was not found. Please upload again.');
+
+    // I can still re-try the upload.
+    \Drupal::state()->set('lingotek.must_document_not_found_error_in_update', FALSE);
+    $this->clickLink(t('Translate'));
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Contents uploaded successfully');
   }
 
   /**

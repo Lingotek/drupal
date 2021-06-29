@@ -365,6 +365,103 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
   /**
    * Test that we handle errors in update.
    */
+  public function testCheckSourceStatusWithAnError() {
+    \Drupal::state()->set('lingotek.must_error_in_check_source_status', TRUE);
+
+    $this->goToConfigBulkManagementForm();
+
+    // Upload the document, which must succeed.
+    $this->clickLink('EN', 1);
+    $this->assertText(t('System information uploaded successfully'));
+
+    // Check upload.
+    $this->clickLink('EN', 1);
+
+    $this->assertText('System information status check failed. Please try again.');
+
+    // Check the right class is added.
+    $this->assertSourceStatus('EN', Lingotek::STATUS_IMPORTING);
+
+    // The config mapper has been marked with the error status.
+    /** @var \Drupal\config_translation\ConfigMapperManagerInterface $mapperManager */
+    $mapperManager = \Drupal::service('plugin.manager.config_translation.mapper');
+    $mapper = $mapperManager->getMappers()['system.site_information_settings'];
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getConfigSourceStatus($mapper);
+    $this->assertEqual(Lingotek::STATUS_IMPORTING, $source_status);
+  }
+
+  /**
+   * Test that we handle errors in update.
+   */
+  public function testCheckSourceStatusNotCompletedAndStillImporting() {
+    $this->goToConfigBulkManagementForm();
+
+    // Upload the document, which must succeed.
+    $this->clickLink('EN', 1);
+    $this->assertText(t('System information uploaded successfully'));
+
+    // The document has not been imported yet.
+    \Drupal::state()->set('lingotek.document_status_completion', FALSE);
+
+    // Check upload.
+    $this->clickLink('EN', 1);
+
+    $this->assertText('The import for System information is still pending.');
+
+    // Check the right class is added.
+    // We failed at checking status, but we don't know what happened.
+    // So we don't mark as error but keep it on importing.
+    $this->assertNoSourceStatus('EN', Lingotek::STATUS_REQUEST);
+    $this->assertSourceStatus('EN', Lingotek::STATUS_IMPORTING);
+
+    // The config mapper has been marked with the error status.
+    /** @var \Drupal\config_translation\ConfigMapperManagerInterface $mapperManager */
+    $mapperManager = \Drupal::service('plugin.manager.config_translation.mapper');
+    $mapper = $mapperManager->getMappers()['system.site_information_settings'];
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getConfigSourceStatus($mapper);
+    $this->assertEqual(Lingotek::STATUS_IMPORTING, $source_status);
+  }
+
+  /**
+   * Test that we handle errors in update.
+   */
+  public function testCheckSourceStatusCompletedAndContentMissing() {
+    \Drupal::state()->set('lingotek.must_document_not_found_error_in_check_source_status', TRUE);
+
+    $this->goToConfigBulkManagementForm();
+
+    // Upload the document, which must succeed.
+    $this->clickLink('EN', 1);
+    $this->assertText(t('System information uploaded successfully'));
+
+    // Check upload.
+    $this->clickLink('EN', 1);
+
+    $this->assertText('Document System information was not found. Please upload again.');
+
+    // Check the right class is added.
+    // We cannot use this as there are 4 elements by default with that status.
+    // $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
+    $source_error = $this->xpath("//span[contains(@class,'language-icon') and contains(@class,'source-untracked')  and ./a[contains(text(), 'EN')]]");
+    $this->assertEqual(count($source_error), 4, 'The system information has been marked as untracked.');
+
+    // The config mapper has been marked with the error status.
+    /** @var \Drupal\config_translation\ConfigMapperManagerInterface $mapperManager */
+    $mapperManager = \Drupal::service('plugin.manager.config_translation.mapper');
+    $mapper = $mapperManager->getMappers()['system.site_information_settings'];
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getConfigSourceStatus($mapper);
+    $this->assertEqual(Lingotek::STATUS_UNTRACKED, $source_status);
+  }
+
+  /**
+   * Test that we handle errors in update.
+   */
   public function testUpdatingWithAnError() {
     $this->goToConfigBulkManagementForm();
 
@@ -446,6 +543,52 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
     \Drupal::state()->set('lingotek.must_payment_required_error_in_update', FALSE);
     $this->clickLink('EN', 1);
     $this->assertText('System information has been updated.');
+  }
+
+  /**
+   * Test that we handle errors in update.
+   */
+  public function testUpdatingWithADocumentNotFoundError() {
+    $this->goToConfigBulkManagementForm();
+
+    // Upload the document, which must succeed.
+    $this->clickLink('EN', 1);
+    $this->assertText(t('System information uploaded successfully'));
+
+    // Check upload.
+    $this->clickLink('EN', 1);
+
+    // Edit the system site information.
+    $edit = ['site_name' => 'Llamas are cool'];
+    $this->drupalPostForm('/admin/config/system/site-information', $edit, t('Save configuration'));
+
+    \Drupal::state()->set('lingotek.must_document_not_found_error_in_update', TRUE);
+
+    $this->goToConfigBulkManagementForm();
+
+    // Update the document, which must fail.
+    $this->clickLink('EN', 1);
+    $this->assertText('Document System information was not found. Please upload again.');
+
+    // Check the right class is added.
+    // We cannot use this as there are 4 elements by default with that status.
+    // $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
+    $source_error = $this->xpath("//span[contains(@class,'language-icon') and contains(@class,'source-untracked')  and ./a[contains(text(), 'EN')]]");
+    $this->assertEqual(count($source_error), 4, 'The system information has been marked as untracked.');
+
+    // The config mapper has been marked with the error status.
+    /** @var \Drupal\config_translation\ConfigMapperManagerInterface $mapperManager */
+    $mapperManager = \Drupal::service('plugin.manager.config_translation.mapper');
+    $mapper = $mapperManager->getMappers()['system.site_information_settings'];
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getConfigSourceStatus($mapper);
+    $this->assertEqual(Lingotek::STATUS_UNTRACKED, $source_status, 'The system information has been marked as error.');
+
+    // I can still re-try the upload.
+    \Drupal::state()->set('lingotek.must_document_not_found_error_in_update', FALSE);
+    $this->clickLink('EN', 1);
+    $this->assertText(t('System information uploaded successfully'));
   }
 
   /**
@@ -722,6 +865,62 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
   /**
    * Test that we handle errors in update.
    */
+  public function testUpdatingWithADocumentNotFoundErrorUsingActions() {
+    $assert_session = $this->assertSession();
+    $this->goToConfigBulkManagementForm();
+
+    // Upload the document, which must succeed.
+    $basepath = \Drupal::request()->getBasePath();
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/upload/system.site_information_settings/system.site_information_settings?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $edit = [
+      'table[system.site_information_settings]' => TRUE,
+      $this->getBulkOperationFormName() => 'upload',
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $this->assertText('Operations completed.');
+
+    // Check upload.
+    $this->clickLink('EN', 1);
+
+    // Edit the system site information.
+    $edit = ['site_name' => 'Llamas are cool'];
+    $this->drupalPostForm('/admin/config/system/site-information', $edit, t('Save configuration'));
+
+    \Drupal::state()->set('lingotek.must_document_not_found_error_in_update', TRUE);
+
+    $this->goToConfigBulkManagementForm();
+    $edit = [
+      'table[system.site_information_settings]' => TRUE,
+      $this->getBulkOperationFormName() => 'upload',
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    $this->assertText('Document System information was not found. Please upload again.');
+
+    // Check the right class is added.
+    // We cannot use this as there are 4 elements by default with that status.
+    // $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
+    $source_error = $this->xpath("//span[contains(@class,'language-icon') and contains(@class,'source-untracked')  and ./a[contains(text(), 'EN')]]");
+    $this->assertEqual(count($source_error), 4, 'The system information has been marked as untracked.');
+
+    // The config mapper has been marked with the error status.
+    /** @var \Drupal\config_translation\ConfigMapperManagerInterface $mapperManager */
+    $mapperManager = \Drupal::service('plugin.manager.config_translation.mapper');
+    $mapper = $mapperManager->getMappers()['system.site_information_settings'];
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getConfigSourceStatus($mapper);
+    $this->assertEqual(Lingotek::STATUS_UNTRACKED, $source_status, 'The system information has been marked as error.');
+
+    // I can still re-try the upload.
+    \Drupal::state()->set('lingotek.must_document_not_found_error_in_update', FALSE);
+    $this->clickLink('EN', 1);
+    $this->assertText(t('System information uploaded successfully'));
+  }
+
+  /**
+   * Test that we handle errors in update.
+   */
   public function testUpdatingWithADocumentLockedErrorUsingActions() {
     $assert_session = $this->assertSession();
     $this->goToConfigBulkManagementForm();
@@ -890,6 +1089,70 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
     $this->clickLink('ES');
     $this->assertText('Translation to es_MX downloaded successfully');
     $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.downloaded_locale'));
+  }
+
+  /**
+   * Test that we handle errors in download for configs.
+   */
+  public function testDownloadingWithADocumentNotFoundError() {
+    $assert_session = $this->assertSession();
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
+    // Go to the bulk config management page.
+    $this->goToConfigBulkManagementForm();
+
+    $basepath = \Drupal::request()->getBasePath();
+
+    // Clicking English must init the upload of content.
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/upload/system.site_information_settings/system.site_information_settings?destination=' . $basepath . '/admin/lingotek/config/manage');
+    // And we cannot request yet a translation.
+    $assert_session->linkByHrefNotExists($basepath . '/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $this->clickLink('EN', 1);
+    $this->assertText(t('System information uploaded successfully'));
+    $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
+
+    // There is a link for checking status.
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/check_upload/system.site_information_settings/system.site_information_settings?destination=' . $basepath . '/admin/lingotek/config/manage');
+    // And we can already request a translation.
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $this->clickLink('EN', 1);
+    $this->assertText('System information status checked successfully');
+
+    // Request the Spanish translation.
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $this->clickLink('ES');
+    $this->assertText("Translation to es_MX requested successfully");
+    $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.added_target_locale'));
+
+    // Check status of the Spanish translation.
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/check_download/system.site_information_settings/system.site_information_settings/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $this->clickLink('ES');
+    $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.checked_target_locale'));
+    $this->assertText("Translation to es_MX checked successfully");
+
+    \Drupal::state()->set('lingotek.must_document_not_found_error_download', TRUE);
+    // Download the Spanish translation.
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/download/system.site_information_settings/system.site_information_settings/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $this->clickLink('ES');
+
+    // The config mapper has been marked with the error status.
+    /** @var \Drupal\config_translation\ConfigMapperManagerInterface $mapperManager */
+    $mapperManager = \Drupal::service('plugin.manager.config_translation.mapper');
+    $mapper = $mapperManager->getMappers()['system.site_information_settings'];
+
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $target_status = $translation_service->getConfigTargetStatus($mapper, 'es');
+    $this->assertSame(Lingotek::STATUS_UNTRACKED, $target_status);
+
+    // Check the right class is added.
+    // We cannot use this as there are 4 elements by default with that status.
+    // $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
+    $source_error = $this->xpath("//span[contains(@class,'language-icon') and contains(@class,'source-untracked')  and ./a[contains(text(), 'EN')]]");
+    $this->assertEquals(4, count($source_error), 'The system information has been marked as untracked.');
+    $this->assertNoLingotekRequestTranslationLink('es_MX');
+    $this->assertText('Document System information was not found. Please upload again.');
   }
 
   /**
@@ -1273,6 +1536,47 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
   /**
    * Tests that we manage errors when using the request all translations action.
    */
+  public function testRequestAllTranslationsWithActionWithADocumentNotFoundError() {
+    \Drupal::state()->set('lingotek.must_document_not_found_error_in_request_translation', TRUE);
+
+    $this->goToConfigBulkManagementForm();
+
+    // I can init the upload of content.
+    $this->assertLingotekUploadLink();
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('config'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $this->assertIdentical('en_US', \Drupal::state()
+      ->get('lingotek.uploaded_locale'));
+
+    // I can check current status.
+    $this->assertLingotekCheckSourceStatusLink();
+    // I can request a translation
+    $this->assertLingotekRequestTranslationLink('es_MX');
+    $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
+
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForRequestTranslations('config'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    // Check the right class is added.
+    // We cannot use this as there are 4 elements by default with that status.
+    // $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
+    $source_error = $this->xpath("//span[contains(@class,'language-icon') and contains(@class,'source-untracked')  and ./a[contains(text(), 'EN')]]");
+    $this->assertEqual(count($source_error), 4, 'The system information has been marked as untracked.');
+
+    $this->assertNoLingotekRequestTranslationLink('es_MX');
+    $this->assertText('Document System information was not found. Please upload again.');
+  }
+
+  /**
+   * Tests that we manage errors when using the request all translations action.
+   */
   public function testRequestAllTranslationsWithActionWithADocumentLockedError() {
     \Drupal::state()->set('lingotek.must_document_locked_error_in_request_translation', TRUE);
 
@@ -1445,6 +1749,43 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
   /**
    * Tests that we manage errors when using the request translation link.
    */
+  public function testRequestTranslationWithADocumentNotFoundError() {
+    \Drupal::state()->set('lingotek.must_document_not_found_error_in_request_translation', TRUE);
+
+    $this->goToConfigBulkManagementForm();
+
+    // I can init the upload of content.
+    $this->assertLingotekUploadLink();
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('config'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $this->assertIdentical('en_US', \Drupal::state()
+      ->get('lingotek.uploaded_locale'));
+
+    // I can check current status.
+    $this->assertLingotekCheckSourceStatusLink();
+    // I can request a translation
+    $this->assertLingotekRequestTranslationLink('es_MX');
+    $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
+
+    $this->clickLink('ES');
+
+    // Check the right class is added.
+    // We cannot use this as there are 4 elements by default with that status.
+    // $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
+    $source_error = $this->xpath("//span[contains(@class,'language-icon') and contains(@class,'source-untracked')  and ./a[contains(text(), 'EN')]]");
+    $this->assertEqual(count($source_error), 4, 'The system information has been marked as untracked.');
+
+    $this->assertNoLingotekRequestTranslationLink('es_MX');
+    $this->assertText('Document System information was not found. Please upload again.');
+  }
+
+  /**
+   * Tests that we manage errors when using the request translation link.
+   */
   public function testRequestTranslationWithADocumentLockedError() {
     \Drupal::state()->set('lingotek.must_document_locked_error_in_request_translation', TRUE);
 
@@ -1548,6 +1889,47 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
 
     $this->assertNoLingotekRequestTranslationLink('es_MX');
     $this->assertText('Document System information has been archived. Uploading again.');
+  }
+
+  /**
+   * Tests that we manage errors when using the request translation action.
+   */
+  public function testRequestTranslationWithActionWithADocumentNotFoundError() {
+    \Drupal::state()->set('lingotek.must_document_not_found_error_in_request_translation', TRUE);
+
+    $this->goToConfigBulkManagementForm();
+
+    // I can init the upload of content.
+    $this->assertLingotekUploadLink();
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('config'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $this->assertIdentical('en_US', \Drupal::state()
+      ->get('lingotek.uploaded_locale'));
+
+    // I can check current status.
+    $this->assertLingotekCheckSourceStatusLink();
+    // I can request a translation
+    $this->assertLingotekRequestTranslationLink('es_MX');
+    $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
+
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForRequestTranslation('es', 'node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    // Check the right class is added.
+    // We cannot use this as there are 4 elements by default with that status.
+    // $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
+    $source_error = $this->xpath("//span[contains(@class,'language-icon') and contains(@class,'source-untracked')  and ./a[contains(text(), 'EN')]]");
+    $this->assertEqual(count($source_error), 4, 'The system information has been marked as untracked.');
+
+    $this->assertNoLingotekRequestTranslationLink('es_MX');
+    $this->assertText('Document System information was not found. Please upload again.');
   }
 
   /**

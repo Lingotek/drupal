@@ -241,7 +241,7 @@ class Lingotek implements LingotekInterface {
   /**
    * {@inheritdoc}
    */
-  public function uploadDocument($title, $content, $locale, $url = NULL, LingotekProfileInterface $profile = NULL, $job_id = NULL) {
+  public function uploadDocument($title, $content, $locale, $url = NULL, LingotekProfileInterface $profile = NULL, $job_id = NULL, &$process_id = NULL) {
     if (!is_array($content)) {
       $data = json_decode($content, TRUE);
       // This is the quickest way if $content is not a valid json object.
@@ -342,6 +342,7 @@ class Lingotek implements LingotekInterface {
     if ($statusCode == Response::HTTP_ACCEPTED) {
       $responseBody = Json::decode($response->getBody(), TRUE);
       if (!empty($responseBody) && !empty($responseBody['properties']['id'])) {
+        $process_id = $responseBody['properties']['process_id'];
         return $responseBody['properties']['id'];
       }
       else {
@@ -369,7 +370,7 @@ class Lingotek implements LingotekInterface {
   /**
    * {@inheritdoc}
    */
-  public function updateDocument($doc_id, $content, $url = NULL, $title = NULL, LingotekProfileInterface $profile = NULL, $job_id = NULL, $locale = NULL) {
+  public function updateDocument($doc_id, $content, $url = NULL, $title = NULL, LingotekProfileInterface $profile = NULL, $job_id = NULL, $locale = NULL, &$process_id = NULL) {
     // TODO: Fix the order of the arguments to be consistent with uploadDocument. We can't do this right now without breaking backwards compatibility
     if (!is_array($content)) {
       if ($content !== NULL) {
@@ -459,6 +460,7 @@ class Lingotek implements LingotekInterface {
       }
       else {
         $nextDocId = $responseBody['next_document_id'];
+        $process_id = $responseBody['process_id'];
         return $nextDocId;
       }
     }
@@ -806,6 +808,29 @@ class Lingotek implements LingotekInterface {
       // may vary depending on connector. Essentially, the content’s status
       // indicator should show that the source content needs to be re-uploaded
       // to Lingotek.
+      return FALSE;
+    }
+    return FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getProcessStatus($process_id) {
+    try {
+      $response = $this->api->getProcess($process_id);
+      if ($response->getStatusCode() == Response::HTTP_OK) {
+        // If an exception didn't happen, the document is succesfully imported.
+        // The status value there is related with translation status, so we must
+        // ignore it.
+        $bodyResponse = Json::decode($response->getBody(), TRUE);
+        $progress = $bodyResponse['properties']['progress'];
+        $completed = ($progress === self::PROGRESS_COMPLETE) &&
+          ($bodyResponse['properties']['status'] === 'COMPLETED');
+        return $completed ? TRUE : $progress;
+      }
+    }
+    catch (LingotekApiException $exception) {
       return FALSE;
     }
     return FALSE;

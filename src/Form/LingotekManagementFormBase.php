@@ -22,6 +22,7 @@ use Drupal\lingotek\Exception\LingotekApiException;
 use Drupal\lingotek\Exception\LingotekContentEntityStorageException;
 use Drupal\lingotek\Exception\LingotekDocumentArchivedException;
 use Drupal\lingotek\Exception\LingotekDocumentLockedException;
+use Drupal\lingotek\Exception\LingotekDocumentNotFoundException;
 use Drupal\lingotek\Exception\LingotekPaymentRequiredException;
 use Drupal\lingotek\Helpers\LingotekManagementFormHelperTrait;
 use Drupal\lingotek\LanguageLocaleMapperInterface;
@@ -1095,6 +1096,9 @@ abstract class LingotekManagementFormBase extends FormBase {
       try {
         $this->translationService->uploadDocument($entity, $job_id);
       }
+      catch (LingotekDocumentNotFoundException $exc) {
+        $this->messenger()->addError(t('Document @entity_type %title was not found. Please upload again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
+      }
       catch (LingotekPaymentRequiredException $exception) {
         $this->messenger()->addError(t('Community has been disabled. Please contact support@lingotek.com to re-enable your community.'));
       }
@@ -1146,7 +1150,15 @@ abstract class LingotekManagementFormBase extends FormBase {
     }
     if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE)) {
       try {
-        $this->translationService->checkSourceStatus($entity);
+        if (!$this->translationService->checkSourceStatus($entity)) {
+          $this->messenger()->addStatus($this->t('The import for @entity_type %label is still pending.', [
+            '@entity_type' => $entity->getEntityTypeId(),
+            '%label' => $entity->label(),
+          ]));
+        }
+      }
+      catch (LingotekDocumentNotFoundException $exc) {
+        $this->messenger()->addError(t('Document @entity_type %title was not found. Please upload again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
       }
       catch (LingotekApiException $exception) {
         $this->messenger()->addError(t('The upload status check for @entity_type %title translation failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
@@ -1183,6 +1195,9 @@ abstract class LingotekManagementFormBase extends FormBase {
     if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE)) {
       try {
         $result = $this->translationService->requestTranslations($entity);
+      }
+      catch (LingotekDocumentNotFoundException $exc) {
+        $this->messenger()->addError(t('Document @entity_type %title was not found. Please upload again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
       }
       catch (LingotekPaymentRequiredException $exception) {
         $this->messenger()->addError(t('Community has been disabled. Please contact support@lingotek.com to re-enable your community.'));
@@ -1233,6 +1248,9 @@ abstract class LingotekManagementFormBase extends FormBase {
       try {
         $this->translationService->checkTargetStatuses($entity);
       }
+      catch (LingotekDocumentNotFoundException $exc) {
+        $this->messenger()->addError(t('Document @entity_type %title was not found. Please upload again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
+      }
       catch (LingotekApiException $exception) {
         $this->messenger()->addError(t('The request for @entity_type %title translation status failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
       }
@@ -1269,6 +1287,9 @@ abstract class LingotekManagementFormBase extends FormBase {
     if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE)) {
       try {
         $this->translationService->checkTargetStatus($entity, $language);
+      }
+      catch (LingotekDocumentNotFoundException $exc) {
+        $this->messenger()->addError(t('Document @entity_type %title was not found. Please upload again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
       }
       catch (LingotekApiException $exception) {
         $this->messenger()->addError(t('The request for @entity_type %title translation status failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
@@ -1308,6 +1329,9 @@ abstract class LingotekManagementFormBase extends FormBase {
       try {
         $this->translationService->addTarget($entity, $locale);
       }
+      catch (LingotekDocumentNotFoundException $exc) {
+        $this->messenger()->addError(t('Document @entity_type %title was not found. Please upload again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
+      }
       catch (LingotekPaymentRequiredException $exception) {
         $this->messenger()->addError(t('Community has been disabled. Please contact support@lingotek.com to re-enable your community.'));
       }
@@ -1317,6 +1341,9 @@ abstract class LingotekManagementFormBase extends FormBase {
           '%title' => $entity->label(),
         ]));
         return $this->uploadDocument($entity, $langcode, $job_id, $context);
+      }
+      catch (LingotekDocumentNotFoundException $exc) {
+        $this->messenger()->addError(t('Document @entity_type %title was not found. Please upload again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
       }
       catch (LingotekDocumentLockedException $exception) {
         $this->messenger()->addError(t('Document @entity_type %title has a new version. The document id has been updated for all future interactions. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
@@ -1361,6 +1388,9 @@ abstract class LingotekManagementFormBase extends FormBase {
     if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE)) {
       try {
         $this->translationService->downloadDocument($entity, $locale);
+      }
+      catch (LingotekDocumentNotFoundException $exc) {
+        $this->messenger()->addError(t('Document @entity_type %title was not found. Please upload again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
       }
       catch (LingotekApiException $exception) {
         $this->messenger()->addError(t('The download for @entity_type %title translation failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
@@ -1408,6 +1438,9 @@ abstract class LingotekManagementFormBase extends FormBase {
             try {
               $this->translationService->downloadDocument($entity, $locale);
             }
+            catch (LingotekDocumentNotFoundException $exc) {
+              $this->messenger()->addError(t('Document @entity_type %title was not found. Please upload again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
+            }
             catch (LingotekApiException $exception) {
               $this->messenger()->addError(t('The download for @entity_type %title translation failed. Please try again.', [
                 '@entity_type' => $entity->getEntityTypeId(),
@@ -1449,10 +1482,12 @@ abstract class LingotekManagementFormBase extends FormBase {
       try {
         $this->translationService->cancelDocument($entity);
       }
+      catch (LingotekDocumentNotFoundException $exc) {
+        $this->messenger()->addWarning(t('Document @entity_type %title was not found, so nothing to cancel.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
+      }
       catch (LingotekApiException $exception) {
         $this->messenger()->addError(t('The cancellation of @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
       }
-
     }
     else {
       $bundleInfos = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
@@ -1486,10 +1521,12 @@ abstract class LingotekManagementFormBase extends FormBase {
       try {
         $this->translationService->cancelDocumentTarget($entity, $locale);
       }
+      catch (LingotekDocumentNotFoundException $exc) {
+        $this->messenger()->addWarning(t('Document @entity_type %title was not found, so nothing to cancel.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
+      }
       catch (LingotekApiException $exception) {
         $this->messenger()->addError(t('The cancellation of @entity_type %title translation to @language failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label(), '@language' => $langcode]));
       }
-
     }
     else {
       $bundleInfos = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());

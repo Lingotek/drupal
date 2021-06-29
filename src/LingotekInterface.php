@@ -214,6 +214,8 @@ interface LingotekInterface extends ContainerInjectionInterface {
    *   (optional) The profile being used.
    * @param string $job_id
    *   (optional) The job ID that will be associated.
+   * @param string &$process_id
+   *   (optional) It will be filled with the process id on the TMS.
    *
    * @return string
    *   The document ID assigned to the uploaded document.
@@ -221,7 +223,7 @@ interface LingotekInterface extends ContainerInjectionInterface {
    * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
    * @throws \Drupal\lingotek\Exception\LingotekApiException
    */
-  public function uploadDocument($title, $content, $locale, $url = NULL, LingotekProfileInterface $profile = NULL, $job_id = NULL);
+  public function uploadDocument($title, $content, $locale, $url = NULL, LingotekProfileInterface $profile = NULL, $job_id = NULL, &$process_id = NULL);
 
   /**
    * Updates a document in the Lingotek service.
@@ -241,6 +243,8 @@ interface LingotekInterface extends ContainerInjectionInterface {
    *   (optional) The job ID that will be associated.
    * @param string $locale
    *   (optional) The Lingotek locale.
+   * @param string &$process_id
+   *   (optional) It will be filled with the process id on the TMS.
    *
    * @return bool|string
    *   TRUE if the document was successfully updated. FALSE if not (v5.1).
@@ -249,9 +253,10 @@ interface LingotekInterface extends ContainerInjectionInterface {
    * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentArchivedException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentLockedException
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentNotFoundException
    * @throws \Drupal\lingotek\Exception\LingotekApiException
    */
-  public function updateDocument($doc_id, $content, $url = NULL, $title = NULL, LingotekProfileInterface $profile = NULL, $job_id = NULL, $locale = NULL);
+  public function updateDocument($doc_id, $content, $url = NULL, $title = NULL, LingotekProfileInterface $profile = NULL, $job_id = NULL, $locale = NULL, &$process_id = NULL);
 
   /**
    * Requests a translation to the Lingotek service.
@@ -269,6 +274,7 @@ interface LingotekInterface extends ContainerInjectionInterface {
    * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentArchivedException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentLockedException
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentNotFoundException
    * @throws \Drupal\lingotek\Exception\LingotekApiException
    */
   public function addTarget($doc_id, $locale, LingotekProfileInterface $profile = NULL);
@@ -306,6 +312,8 @@ interface LingotekInterface extends ContainerInjectionInterface {
    * @return bool|int
    *   Returns TRUE if the document translation is completed. FALSE if it was not
    *   requested. The percentage if it's still in progress.
+   *
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentNotFoundException
    */
   public function getDocumentTranslationStatus($doc_id, $locale);
 
@@ -317,6 +325,8 @@ interface LingotekInterface extends ContainerInjectionInterface {
    *
    * @return array
    *   Returns array keyed by the locale with the percentage of completion.
+   *
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentNotFoundException
    */
   public function getDocumentTranslationStatuses($doc_id);
 
@@ -330,6 +340,8 @@ interface LingotekInterface extends ContainerInjectionInterface {
    *
    * @return array
    *   Returns array with the content of the document.
+   *
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentNotFoundException
    */
   public function downloadDocument($doc_id, $locale);
 
@@ -341,6 +353,8 @@ interface LingotekInterface extends ContainerInjectionInterface {
    *
    * @return bool
    *   TRUE if the document was successfully cancelled. FALSE if not.
+   *
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentNotFoundException
    */
   public function cancelDocument($doc_id);
 
@@ -356,5 +370,17 @@ interface LingotekInterface extends ContainerInjectionInterface {
    *   TRUE if the document target was successfully cancelled. FALSE if not.
    */
   public function cancelDocumentTarget($doc_id, $locale);
+
+  /**
+   * Gets the status of the process.
+   *
+   * @param string $process_id
+   *   The process ID in Lingotek.
+   *
+   * @return bool|int
+   *   Returns TRUE if the import process is completed. FALSE if it was not
+   *   existing or failed. The percentage if it's still in progress.
+   */
+  public function getProcessStatus($process_id);
 
 }

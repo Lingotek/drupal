@@ -17,6 +17,7 @@ use Drupal\field\Entity\FieldConfig;
 use Drupal\lingotek\Exception\LingotekApiException;
 use Drupal\lingotek\Exception\LingotekDocumentArchivedException;
 use Drupal\lingotek\Exception\LingotekDocumentLockedException;
+use Drupal\lingotek\Exception\LingotekDocumentNotFoundException;
 use Drupal\lingotek\Exception\LingotekPaymentRequiredException;
 use Drupal\lingotek\LingotekConfigTranslationServiceInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -198,6 +199,13 @@ class LingotekJobAssignToMultipleConfigForm extends FormBase {
         try {
           $entity = $mapper->getEntity();
           $this->translationService->setJobId($entity, $job_id, $updateTMS);
+        }
+        catch (LingotekDocumentNotFoundException $exception) {
+          $errors = TRUE;
+          $this->messenger->addError(t('Document @entity_type %title was not found. Please upload again.', [
+            '@entity_type' => $entity->getEntityTypeId(),
+            '%title' => $entity->label(),
+          ]));
         }
         catch (LingotekPaymentRequiredException $exception) {
           $errors = TRUE;

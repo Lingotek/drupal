@@ -8,7 +8,7 @@ use Drupal\lingotek\LingotekProfileInterface;
 
 class LingotekFakeBC extends LingotekFake implements LingotekInterface {
 
-  public function updateDocument($doc_id, $content, $url = NULL, $title = NULL, LingotekProfileInterface $profile = NULL, $job_id = NULL, $locale = NULL) {
+  public function updateDocument($doc_id, $content, $url = NULL, $title = NULL, LingotekProfileInterface $profile = NULL, $job_id = NULL, $locale = NULL, &$process_id = NULL) {
     if (\Drupal::state()->get('lingotek.must_error_in_upload', FALSE)) {
       throw new LingotekApiException('Error was forced.');
     }
@@ -26,6 +26,7 @@ class LingotekFakeBC extends LingotekFake implements LingotekInterface {
     $timestamps[$doc_id] = \Drupal::time()->getRequestTime();
     \Drupal::state()->set('lingotek.upload_timestamps', $timestamps);
 
+    $process_id = 'my-document-id';
     // Our document is always imported correctly.
     return TRUE;
   }

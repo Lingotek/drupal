@@ -435,6 +435,7 @@ class LingotekUnitTest extends UnitTestCase {
           'properties' =>
             [
               'id' => 'my-document-id',
+              'process_id' => 'my-process-id',
             ],
         ]
       ));
@@ -1490,6 +1491,7 @@ class LingotekUnitTest extends UnitTestCase {
       ->willReturn(json_encode(
         [
           'next_document_id' => 'my_new_document_id',
+          'process_id' => 'my-process-id',
           'messages' => [
             'Document my_doc_id has been updated with a new version. Use document my_new_document_id for all future interactions.',
           ],
@@ -1885,6 +1887,46 @@ class LingotekUnitTest extends UnitTestCase {
       ->will($this->returnValue($response));
 
     $this->assertFalse($this->lingotek->downloadDocument('my_doc_id', 'es_ES'));
+  }
+
+  /**
+   * @covers ::getProcessStatus
+   * @dataProvider dataProviderGetProcessStatus
+   */
+  public function testGetProcessStatus($httpCode, $status, $progress, $expected) {
+    $response = $this->getMockBuilder(ResponseInterface::class)
+      ->disableOriginalConstructor()
+      ->getMock();
+    $response->expects($this->any())
+      ->method('getStatusCode')
+      ->willReturn($httpCode);
+    $response->expects($this->any())
+      ->method('getBody')
+      ->willReturn(json_encode(
+        [
+          'properties' =>
+            [
+              'id' => 'my-process-id',
+              'progress' => $progress,
+              'status' => $status,
+            ],
+        ]
+      ));
+
+    $this->api->expects($this->once())
+      ->method('getProcess')
+      ->with('my-process-id')
+      ->willReturn($response);
+
+    $result = $this->lingotek->getProcessStatus('my-process-id');
+    $this->assertEquals($expected, $result);
+  }
+
+  public function dataProviderGetProcessStatus() {
+    yield 'completed' => [Response::HTTP_OK, 'COMPLETED' , 100, TRUE];
+    yield 'requires validation' => [Response::HTTP_OK, 'IN_PROGRESS' , 100, 100];
+    yield 'in progress' => [Response::HTTP_OK, 'IN_PROGRESS' , 12, 12];
+    yield 'missing' => [Response::HTTP_NOT_FOUND, 0 , 0, FALSE];
   }
 
 }

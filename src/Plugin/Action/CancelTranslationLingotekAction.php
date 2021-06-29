@@ -3,6 +3,7 @@
 namespace Drupal\lingotek\Plugin\Action;
 
 use Drupal\lingotek\Exception\LingotekApiException;
+use Drupal\lingotek\Exception\LingotekDocumentNotFoundException;
 
 /**
  * Request Lingotek translation of a content entity for one language.
@@ -40,6 +41,13 @@ class CancelTranslationLingotekAction extends LingotekContentEntityConfigurableA
     try {
       $locale = $this->languageLocaleMapper->getLocaleForLangcode($langcode);
       $result = $this->translationService->cancelDocumentTarget($entity, $locale);
+    }
+    catch (LingotekDocumentNotFoundException $exc) {
+      $this->messenger()
+        ->addWarning(t('Document @entity_type %title was not found, so nothing to cancel.', [
+          '@entity_type' => $entity->getEntityTypeId(),
+          '%title' => $entity->label(),
+        ]));
     }
     catch (LingotekApiException $exception) {
       $this->messenger()

@@ -3,6 +3,7 @@
 namespace Drupal\lingotek\Plugin\Action;
 
 use Drupal\lingotek\Exception\LingotekApiException;
+use Drupal\lingotek\Exception\LingotekDocumentNotFoundException;
 
 /**
  * Check Lingotek translation status of a content entity for one language.
@@ -39,6 +40,13 @@ class CheckTranslationStatusLingotekAction extends LingotekContentEntityConfigur
     $langcode = $configuration['language'];
     try {
       $result = $this->translationService->checkTargetStatus($entity, $langcode);
+    }
+    catch (LingotekDocumentNotFoundException $exc) {
+      $this->messenger()
+        ->addError(t('Document @entity_type %title was not found. Please upload again.', [
+          '@entity_type' => $entity->getEntityTypeId(),
+          '%title' => $entity->label(),
+        ]));
     }
     catch (LingotekApiException $exception) {
       $this->messenger()->addError(t('The request for @entity_type %title translation status failed. Please try again.', [

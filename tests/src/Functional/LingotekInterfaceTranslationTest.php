@@ -530,6 +530,49 @@ class LingotekInterfaceTranslationTest extends LingotekTestBase {
   /**
    * Tests that we manage errors when using the request translation link.
    */
+  public function testRequestTranslationWithADocumentNotFoundError() {
+    \Drupal::state()->set('lingotek.must_document_not_found_error_in_request_translation', TRUE);
+
+    // In Drupal.org CI the module will be at modules/contrib/lingotek.
+    // In my local that's modules/lingotek. We need to generate the path and not
+    // hardcode it.
+    $path = drupal_get_path('module', 'lingotek_interface_translation_test');
+    $component = $path;
+    $indexOfModuleLink = 2;
+    $assert_session = $this->assertSession();
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
+    $this->goToInterfaceTranslationManagementForm();
+    $assert_session->responseContains('lingotek_interface_translation_test');
+
+    // Clicking English must init the upload of content.
+    $this->assertLingotekInterfaceTranslationUploadLink($component);
+
+    $this->clickLink('EN', $indexOfModuleLink);
+    $assert_session->responseContains('<em class="placeholder">' . $component . '</em> uploaded successfully');
+
+    // I can check current status.
+    $this->assertLingotekInterfaceTranslationCheckSourceStatusLink($component);
+
+    $this->clickLink('EN', $indexOfModuleLink);
+    $assert_session->responseContains('The import for <em class="placeholder">' . $component . '</em> is complete.');
+
+    // Request the Spanish translation.
+    $this->assertLingotekInterfaceTranslationRequestTranslationLink($component, 'es_MX');
+    $this->clickLink('ES');
+
+    // We cannot use ::assertSourceStatus, there are lots of untracked docs, but
+    // checking the upload link should suffice.
+    // $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
+    $this->assertLingotekInterfaceTranslationUploadLink($component);
+    $this->assertNoLingotekInterfaceTranslationRequestTranslationLink($component, 'es_MX');
+    $assert_session->responseContains('Document <em class="placeholder">' . $component . '</em> was not found. Please upload again.');
+  }
+
+  /**
+   * Tests that we manage errors when using the request translation link.
+   */
   public function testRequestTranslationWithADocumentLockedError() {
     \Drupal::state()->set('lingotek.must_document_locked_error_in_request_translation', TRUE);
 
@@ -640,6 +683,167 @@ class LingotekInterfaceTranslationTest extends LingotekTestBase {
     // We failed at downloading a translation. Mark as error.
     $this->assertTargetStatus('ES', Lingotek::STATUS_ERROR);
     $assert_session->responseContains('The \'es_MX\' translation download for <em class="placeholder">' . $component . '</em> failed. Please try again.');
+  }
+
+  /**
+   * Tests that we manage errors when using the download translation link.
+   */
+  public function testDownloadTranslationWithADocumentNotFoundError() {
+    \Drupal::state()->set('lingotek.must_document_not_found_error_download', TRUE);
+
+    // In Drupal.org CI the module will be at modules/contrib/lingotek.
+    // In my local that's modules/lingotek. We need to generate the path and not
+    // hardcode it.
+    $path = drupal_get_path('module', 'lingotek_interface_translation_test');
+    $component = $path;
+    $indexOfModuleLink = 2;
+    $assert_session = $this->assertSession();
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
+    $this->goToInterfaceTranslationManagementForm();
+    $assert_session->responseContains('lingotek_interface_translation_test');
+
+    // Clicking English must init the upload of content.
+    $this->assertLingotekInterfaceTranslationUploadLink($component);
+
+    $this->clickLink('EN', $indexOfModuleLink);
+    $assert_session->responseContains('<em class="placeholder">' . $component . '</em> uploaded successfully');
+
+    // Request the Spanish translation.
+    $this->assertLingotekInterfaceTranslationRequestTranslationLink($component, 'es_MX');
+    $this->clickLink('ES');
+    $this->assertTargetStatus('ES', Lingotek::STATUS_PENDING);
+
+    // Check the status of the translation.
+    $this->clickLink('ES');
+    $this->assertTargetStatus('ES', Lingotek::STATUS_READY);
+
+    // Download translation.
+    $this->clickLink('ES');
+
+    // We cannot use ::assertSourceStatus, there are lots of untracked docs, but
+    // checking the upload link should suffice.
+    // $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
+    $this->assertLingotekInterfaceTranslationUploadLink($component);
+    $this->assertNoLingotekInterfaceTranslationRequestTranslationLink($component, 'es_MX');
+    $assert_session->responseContains('Document <em class="placeholder">' . $component . '</em> was not found. Please upload again.');
+  }
+
+  /**
+   * Tests that all the statuses are set when using the Check Translations action.
+   */
+  public function testCheckSourceStatusWithAnError() {
+    \Drupal::state()->set('lingotek.must_error_in_check_source_status', TRUE);
+
+    // In Drupal.org CI the module will be at modules/contrib/lingotek.
+    // In my local that's modules/lingotek. We need to generate the path and not
+    // hardcode it.
+    $path = drupal_get_path('module', 'lingotek_interface_translation_test');
+    $component = $path;
+    $indexOfModuleLink = 2;
+    $assert_session = $this->assertSession();
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
+    $this->goToInterfaceTranslationManagementForm();
+    $assert_session->responseContains('lingotek_interface_translation_test');
+
+    // Clicking English must init the upload of content.
+    $this->assertLingotekInterfaceTranslationUploadLink($component);
+
+    $this->clickLink('EN', $indexOfModuleLink);
+    $assert_session->responseContains('<em class="placeholder">' . $component . '</em> uploaded successfully');
+    $this->assertIdentical('en_US', \Drupal::state()
+      ->get('lingotek.uploaded_locale'));
+
+    // I can check current status.
+    $this->assertLingotekInterfaceTranslationCheckSourceStatusLink($component);
+
+    $this->clickLink('EN', $indexOfModuleLink);
+
+    $this->assertSourceStatus('EN', Lingotek::STATUS_IMPORTING);
+
+    $this->assertLingotekInterfaceTranslationCheckSourceStatusLink($component);
+    $assert_session->responseContains('<em class="placeholder">' . $component . '</em> status check failed. Please try again.');
+  }
+
+  /**
+   * Tests that all the statuses are set when using the Check Translations action.
+   */
+  public function testCheckSourceStatusNotCompletedAndStillImporting() {
+    // In Drupal.org CI the module will be at modules/contrib/lingotek.
+    // In my local that's modules/lingotek. We need to generate the path and not
+    // hardcode it.
+    $path = drupal_get_path('module', 'lingotek_interface_translation_test');
+    $component = $path;
+    $indexOfModuleLink = 2;
+    $assert_session = $this->assertSession();
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
+    $this->goToInterfaceTranslationManagementForm();
+    $assert_session->responseContains('lingotek_interface_translation_test');
+
+    // Clicking English must init the upload of content.
+    $this->assertLingotekInterfaceTranslationUploadLink($component);
+
+    $this->clickLink('EN', $indexOfModuleLink);
+    $assert_session->responseContains('<em class="placeholder">' . $component . '</em> uploaded successfully');
+    $this->assertIdentical('en_US', \Drupal::state()
+      ->get('lingotek.uploaded_locale'));
+
+    // I can check current status.
+    $this->assertLingotekInterfaceTranslationCheckSourceStatusLink($component);
+
+    // The document has not been imported yet.
+    \Drupal::state()->set('lingotek.document_status_completion', FALSE);
+
+    $this->clickLink('EN', $indexOfModuleLink);
+
+    $this->assertSourceStatus('EN', Lingotek::STATUS_IMPORTING);
+
+    $this->assertLingotekInterfaceTranslationCheckSourceStatusLink($component);
+    $assert_session->responseContains('The import for <em class="placeholder">' . $component . '</em> is still pending.');
+  }
+
+  /**
+   * Tests that all the statuses are set when using the Check Translations action.
+   */
+  public function testCheckSourceStatusCompletedAndContentMissing() {
+    \Drupal::state()->set('lingotek.must_document_not_found_error_in_check_source_status', TRUE);
+
+    // In Drupal.org CI the module will be at modules/contrib/lingotek.
+    // In my local that's modules/lingotek. We need to generate the path and not
+    // hardcode it.
+    $path = drupal_get_path('module', 'lingotek_interface_translation_test');
+    $component = $path;
+    $indexOfModuleLink = 2;
+    $assert_session = $this->assertSession();
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
+    $this->goToInterfaceTranslationManagementForm();
+    $assert_session->responseContains('lingotek_interface_translation_test');
+
+    // Clicking English must init the upload of content.
+    $this->assertLingotekInterfaceTranslationUploadLink($component);
+
+    $this->clickLink('EN', $indexOfModuleLink);
+    $assert_session->responseContains('<em class="placeholder">' . $component . '</em> uploaded successfully');
+    $this->assertIdentical('en_US', \Drupal::state()
+      ->get('lingotek.uploaded_locale'));
+
+    // I can check current status.
+    $this->assertLingotekInterfaceTranslationCheckSourceStatusLink($component);
+
+    $this->clickLink('EN', $indexOfModuleLink);
+
+    // Check the right class is added.
+    // $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
+    $this->assertLingotekInterfaceTranslationUploadLink($component);
+    $this->assertNoLingotekInterfaceTranslationRequestTranslationLink($component, 'es_MX');
+    $assert_session->responseContains('Document <em class="placeholder">' . $component . '</em> was not found. Please upload again.');
   }
 
   /**

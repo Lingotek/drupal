@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\lingotek\Unit\Remote;
 
+use Drupal\lingotek\Exception\LingotekDocumentNotFoundException;
 use Drupal\lingotek\Remote\LingotekApi;
 use Drupal\lingotek\Remote\LingotekHttpInterface;
 use Drupal\Tests\UnitTestCase;
@@ -126,16 +127,26 @@ class LingotekApiUnitTest extends UnitTestCase {
    * @covers ::cancelDocument
    */
   public function testCancelDocumentThatDoesntExist() {
+    $this->expectException(LingotekDocumentNotFoundException::class);
+
+    $request = $this->createMock(RequestInterface::class);
+    $response = $this->createMock(ResponseInterface::class);
+    $response->expects($this->any())
+      ->method('getStatusCode')
+      ->willReturn(Response::HTTP_NOT_FOUND);
+    $response->expects($this->any())
+      ->method('getBody')
+      ->willReturn('{"messages":["Document not found."]}');
+
     $this->client->expects($this->at(0))
       ->method('post')
       ->with('/api/document/fancy-document-id/cancel', [
         'id' => 'fancy-document-id',
         'cancelled_reason' => 'CANCELLED_BY_AUTHOR',
       ])
-      ->will($this->throwException(new \Exception('', Response::HTTP_NOT_FOUND)));
+      ->will($this->throwException(new ClientException('', $request, $response)));
 
     $response = $this->lingotek_api->cancelDocument('fancy-document-id');
-    $this->assertEquals($response->getStatusCode(), Response::HTTP_NOT_FOUND);
   }
 
   /**
@@ -186,6 +197,17 @@ class LingotekApiUnitTest extends UnitTestCase {
    * @covers ::cancelDocumentTarget
    */
   public function testCancelDocumentTargetThatDoesntExist() {
+    $this->expectException(LingotekDocumentNotFoundException::class);
+
+    $request = $this->createMock(RequestInterface::class);
+    $response = $this->createMock(ResponseInterface::class);
+    $response->expects($this->any())
+      ->method('getStatusCode')
+      ->willReturn(Response::HTTP_NOT_FOUND);
+    $response->expects($this->any())
+      ->method('getBody')
+      ->willReturn('{"messages":["Document not found."]}');
+
     $this->client->expects($this->at(0))
       ->method('post')
       ->with('/api/document/fancy-document-id/translation/es_ES/cancel', [
@@ -194,10 +216,9 @@ class LingotekApiUnitTest extends UnitTestCase {
         'cancelled_reason' => 'CANCELLED_BY_AUTHOR',
         'mark_invoiceable' => 'true',
       ])
-      ->will($this->throwException(new \Exception('', Response::HTTP_NOT_FOUND)));
+      ->will($this->throwException(new ClientException('', $request, $response)));
 
     $response = $this->lingotek_api->cancelDocumentTarget('fancy-document-id', 'es_ES');
-    $this->assertEquals($response->getStatusCode(), Response::HTTP_NOT_FOUND);
   }
 
   /**
@@ -310,6 +331,23 @@ class LingotekApiUnitTest extends UnitTestCase {
     $this->lingotek_api->getTranslation('fancy-document-id', 'es_ES');
     $this->lingotek_api->getTranslation('fancy-document-id', 'es_ES', FALSE);
     $this->lingotek_api->getTranslation('fancy-document-id', 'es_ES', TRUE);
+  }
+
+  /**
+   * @covers ::getProcess
+   */
+  public function testGetProcess() {
+    $process_id = 'my-process-id';
+    // Ensure that the limit is set.
+    $response = $this->getMockBuilder(ResponseInterface::class)
+      ->disableOriginalConstructor()
+      ->getMock();
+    $this->client->expects($this->once())
+      ->method('get')
+      ->with('/api/process/my-process-id')
+      ->will($this->returnValue($response));
+
+    $this->lingotek_api->getProcess($process_id);
   }
 
 }

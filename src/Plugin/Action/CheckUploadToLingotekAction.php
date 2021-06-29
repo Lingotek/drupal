@@ -3,6 +3,7 @@
 namespace Drupal\lingotek\Plugin\Action;
 
 use Drupal\lingotek\Exception\LingotekApiException;
+use Drupal\lingotek\Exception\LingotekDocumentNotFoundException;
 
 /**
  * Assigns ownership of a node to a user.
@@ -20,7 +21,6 @@ class CheckUploadToLingotekAction extends LingotekContentEntityActionBase {
    * {@inheritdoc}
    */
   public function execute($entity = NULL) {
-    $result = FALSE;
     $entityTypeBundleInfo = \Drupal::service('entity_type.bundle.info');
     $bundleInfos = $entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
     if (!$entity->getEntityType()->isTranslatable() || !$bundleInfos[$entity->bundle()]['translatable']) {
@@ -37,12 +37,21 @@ class CheckUploadToLingotekAction extends LingotekContentEntityActionBase {
     }
     try {
       /** @var \Drupal\node\NodeInterface $entity */
-      $result = $this->translationService->checkSourceStatus($entity);
+      if (!$this->translationService->checkSourceStatus($entity)) {
+        $this->messenger()->addStatus($this->t('The import for @entity_type %label is still pending.', [
+          '@entity_type' => $entity->getEntityTypeId(),
+          '%label' => $entity->label(),
+        ]));
+      }
+      return TRUE;
+    }
+    catch (LingotekDocumentNotFoundException $exc) {
+      $this->messenger()->addError(t('Document @entity_type %title was not found. Please upload again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
     }
     catch (LingotekApiException $exception) {
       $this->messenger()->addError(t('The upload status check for @entity_type %title translation failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
     }
-    return $result;
+    return TRUE;
   }
 
 }

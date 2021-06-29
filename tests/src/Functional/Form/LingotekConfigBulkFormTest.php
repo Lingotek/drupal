@@ -352,6 +352,77 @@ class LingotekConfigBulkFormTest extends LingotekTestBase {
   /**
    * Tests that can we assign job ids with the bulk operation with TMS update.
    */
+  public function testAssignJobIdsWithTMSUpdateWithADocumentNotFoundError() {
+    $assert_session = $this->assertSession();
+
+    $this->goToConfigBulkManagementForm('node_type');
+
+    $basepath = \Drupal::request()->getBasePath();
+
+    // I can init the upload of content.
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/upload/node_type/page?destination=' . $basepath . '/admin/lingotek/config/manage');
+
+    $edit = [
+      'table[article]' => TRUE,
+      'table[page]' => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForAssignJobId('node_type'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $edit = [
+      'job_id' => 'my_custom_job_id',
+      'update_tms' => 1,
+    ];
+    $this->drupalPostForm(NULL, $edit, 'Assign Job ID');
+    $this->assertText('Job ID was assigned successfully.');
+
+    // There is no update, because there are no document ids.
+    \Drupal::state()->resetCache();
+    $this->assertNull(\Drupal::state()->get('lingotek.uploaded_title'));
+    $this->assertNull(\Drupal::state()->get('lingotek.uploaded_content'));
+    $this->assertNull(\Drupal::state()->get('lingotek.uploaded_job_id'));
+
+    // The job id is displayed.
+    $this->assertText('my_custom_job_id');
+
+    // And the job id is used on upload.
+    $this->clickLink('EN');
+
+    $this->assertText('Article uploaded successfully');
+    // Check that the job id used was the right one.
+    \Drupal::state()->resetCache();
+    $this->assertIdentical(\Drupal::state()->get('lingotek.uploaded_job_id'), 'my_custom_job_id');
+
+    // If we update the job ID with notification to the TMS, an update happens.
+    \Drupal::state()->set('lingotek.must_document_not_found_error_in_update', TRUE);
+
+    // If we update the job ID with notification to the TMS, an update happens.
+    $edit = [
+      'table[article]' => TRUE,
+      'table[page]' => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForAssignJobId('node_type'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $edit = [
+      'job_id' => 'other_job_id',
+      'update_tms' => 1,
+    ];
+    $this->drupalPostForm(NULL, $edit, 'Assign Job ID');
+    $this->assertText('Document node_type Article was not found. Please upload again.');
+    $this->assertText('Job ID for some config failed to sync to the TMS.');
+
+    // There is no update.
+    \Drupal::state()->resetCache();
+    $this->assertEquals('my_custom_job_id', \Drupal::state()->get('lingotek.uploaded_job_id'));
+
+    // But it was saved for future uploads.
+    $this->assertNoText('my_custom_job_id');
+    $this->assertText('other_job_id');
+  }
+
+  /**
+   * Tests that can we assign job ids with the bulk operation with TMS update.
+   */
   public function testAssignJobIdsWithTMSUpdateWithADocumentArchivedError() {
     $assert_session = $this->assertSession();
 

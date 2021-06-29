@@ -28,6 +28,7 @@ interface LingotekApiInterface extends ContainerInjectionInterface {
    *
    * @param array $args
    *   The document data.
+   *
    * @see http://devzone.lingotek.com
    *
    * @return \Psr\Http\Message\ResponseInterface
@@ -57,6 +58,7 @@ interface LingotekApiInterface extends ContainerInjectionInterface {
    *   The document id.
    * @param array $args
    *   The document data.
+   *
    * @see http://devzone.lingotek.com
    *
    * @return \Psr\Http\Message\ResponseInterface
@@ -243,5 +245,16 @@ interface LingotekApiInterface extends ContainerInjectionInterface {
    *   Array of filters as in (id, label). FALSE if there is an error.
    */
   public function getFilters();
+
+  /**
+   * Gets the status of a process.
+   *
+   * @param string $process_id
+   *   The process id.
+   *
+   * @return \Psr\Http\Message\ResponseInterface
+   *   A response.
+   */
+  public function getProcess($process_id);
 
 }

@@ -3,6 +3,7 @@
 namespace Drupal\lingotek\Plugin\Action;
 
 use Drupal\lingotek\Exception\LingotekApiException;
+use Drupal\lingotek\Exception\LingotekDocumentNotFoundException;
 
 /**
  * Download Lingotek translation of a content entity for one language.
@@ -43,8 +44,16 @@ class DownloadTranslationLingotekAction extends LingotekContentEntityConfigurabl
       $locale = $this->languageLocaleMapper->getLocaleForLangcode($langcode);
       $result = $this->translationService->downloadDocument($entity, $locale);
     }
+    catch (LingotekDocumentNotFoundException $exc) {
+      $this->messenger()
+        ->addError(t('Document @entity_type %title was not found. Please upload again.', [
+          '@entity_type' => $entity->getEntityTypeId(),
+          '%title' => $entity->label(),
+        ]));
+    }
     catch (LingotekApiException $exception) {
-      $this->messenger()->addError(t('The download for @entity_type %title translation failed. Please try again.', [
+      $this->messenger()
+        ->addError(t('The download for @entity_type %title translation failed. Please try again.', [
           '@entity_type' => $entity->getEntityTypeId(),
           '@langcode' => $langcode,
           '%title' => $entity->label(),

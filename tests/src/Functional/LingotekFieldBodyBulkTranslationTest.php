@@ -423,6 +423,108 @@ class LingotekFieldBodyBulkTranslationTest extends LingotekTestBase {
   /**
    * Test that we handle errors in update.
    */
+  public function testCheckSourceStatusWithAnError() {
+    \Drupal::state()->set('lingotek.must_error_in_check_source_status', TRUE);
+
+    // Set upload as manual.
+    $this->saveLingotekConfigTranslationSettings([
+      'node_fields' => 'manual',
+    ]);
+
+    $this->goToConfigBulkManagementForm('node_fields');
+
+    // Upload the document, which must succeed.
+    $this->clickLink('EN');
+    $this->assertText('Body uploaded successfully');
+
+    // Check upload.
+    $this->assertLingotekCheckSourceStatusLink();
+    $this->clickLink('EN');
+
+    // We failed at checking status, but we don't know what happened.
+    // So we don't mark as error but keep it on importing.
+    $this->assertNoSourceStatus('EN', Lingotek::STATUS_REQUEST);
+    $this->assertSourceStatus('EN', Lingotek::STATUS_IMPORTING);
+    $this->assertText('Body status check failed. Please try again.');
+
+    $fieldConfig = FieldConfig::load('node.article.body');
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getSourceStatus($fieldConfig);
+    $this->assertEqual(Lingotek::STATUS_IMPORTING, $source_status);
+  }
+
+  /**
+   * Test that we handle errors in update.
+   */
+  public function testCheckSourceStatusNotCompletedAndStillImporting() {
+    // Set upload as manual.
+    $this->saveLingotekConfigTranslationSettings([
+      'node_fields' => 'manual',
+    ]);
+
+    $this->goToConfigBulkManagementForm('node_fields');
+
+    // Upload the document, which must succeed.
+    $this->clickLink('EN');
+    $this->assertText('Body uploaded successfully');
+
+    // The document has not been imported yet.
+    \Drupal::state()->set('lingotek.document_status_completion', FALSE);
+
+    // Check upload.
+    $this->assertLingotekCheckSourceStatusLink();
+    $this->clickLink('EN');
+
+    // We failed at checking status, but we don't know what happened.
+    // So we don't mark as error but keep it on importing.
+    $this->assertNoSourceStatus('EN', Lingotek::STATUS_REQUEST);
+    $this->assertSourceStatus('EN', Lingotek::STATUS_IMPORTING);
+    $this->assertText('The import for Body is still pending.');
+
+    $fieldConfig = FieldConfig::load('node.article.body');
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getSourceStatus($fieldConfig);
+    $this->assertEqual(Lingotek::STATUS_IMPORTING, $source_status);
+  }
+
+  /**
+   * Test that we handle errors in update.
+   */
+  public function testCheckSourceStatusCompletedAndContentMissing() {
+    \Drupal::state()->set('lingotek.must_document_not_found_error_in_check_source_status', TRUE);
+
+    // Set upload as manual.
+    $this->saveLingotekConfigTranslationSettings([
+      'node_fields' => 'manual',
+    ]);
+
+    $this->goToConfigBulkManagementForm('node_fields');
+
+    // Upload the document, which must succeed.
+    $this->clickLink('EN');
+    $this->assertText('Body uploaded successfully');
+
+    // Check upload.
+    $this->assertLingotekCheckSourceStatusLink();
+    $this->clickLink('EN');
+
+    // We failed at checking status, but we don't know what happened.
+    // So we don't mark as error but keep it on importing.
+    $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
+    $this->assertText('Document Body was not found. Please upload again.');
+
+    $fieldConfig = FieldConfig::load('node.article.body');
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getSourceStatus($fieldConfig);
+    $this->assertEqual(Lingotek::STATUS_UNTRACKED, $source_status);
+  }
+
+  /**
+   * Test that we handle errors in update.
+   */
   public function testUpdatingWithAnError() {
     // Set upload as manual.
     $this->saveLingotekConfigTranslationSettings([
@@ -512,6 +614,52 @@ class LingotekFieldBodyBulkTranslationTest extends LingotekTestBase {
     \Drupal::state()->set('lingotek.must_payment_required_error_in_update', FALSE);
     $this->clickLink('EN');
     $this->assertText('Contents has been updated.');
+  }
+
+  /**
+   * Test that we handle errors in update.
+   */
+  public function testUpdatingWithADocumentNotFoundError() {
+    // Set upload as manual.
+    $this->saveLingotekConfigTranslationSettings([
+      'node_fields' => 'manual',
+    ]);
+
+    $this->goToConfigBulkManagementForm('node_fields');
+
+    // Upload the document, which must succeed.
+    $this->clickLink('EN');
+    $this->assertText('Body uploaded successfully');
+
+    // Check upload.
+    $this->clickLink('EN');
+
+    // Edit the field.
+    $edit = ['label' => 'Contents'];
+    $this->drupalPostForm('/admin/structure/types/manage/article/fields/node.article.body', $edit, t('Save settings'));
+    $this->assertText('Saved Contents configuration.');
+
+    \Drupal::state()->set('lingotek.must_document_not_found_error_in_update', TRUE);
+
+    $this->goToConfigBulkManagementForm('node_fields');
+
+    // Update the document, which must fail.
+    $this->clickLink('EN');
+
+    $fieldConfig = FieldConfig::load('node.article.body');
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getSourceStatus($fieldConfig);
+    $this->assertEqual(Lingotek::STATUS_UNTRACKED, $source_status);
+
+    $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
+    $this->assertNoLingotekRequestTranslationLink('es_MX');
+    $this->assertText('Document field_config Contents was not found. Please upload again.');
+
+    // I can still re-try the upload.
+    \Drupal::state()->set('lingotek.must_document_not_found_error_in_update', FALSE);
+    $this->clickLink('EN');
+    $this->assertText('Contents uploaded successfully');
   }
 
   /**
@@ -748,6 +896,56 @@ class LingotekFieldBodyBulkTranslationTest extends LingotekTestBase {
     \Drupal::state()->set('lingotek.must_payment_required_error_in_update', FALSE);
     $this->clickLink('EN');
     $this->assertText('Contents has been updated.');
+  }
+
+  /**
+   * Test that we handle errors in update.
+   */
+  public function testUpdatingWithADocumentNotFoundErrorUsingActions() {
+    // Set upload as manual.
+    $this->saveLingotekConfigTranslationSettings([
+      'node_fields' => 'manual',
+    ]);
+
+    $this->goToConfigBulkManagementForm('node_fields');
+
+    // Upload the document, which must succeed.
+    $this->clickLink('EN');
+    $this->assertText('Body uploaded successfully');
+
+    // Check upload.
+    $this->clickLink('EN');
+
+    // Edit the field.
+    $edit = ['label' => 'Contents'];
+    $this->drupalPostForm('/admin/structure/types/manage/article/fields/node.article.body', $edit, t('Save settings'));
+    $this->assertText('Saved Contents configuration.');
+
+    \Drupal::state()->set('lingotek.must_document_not_found_error_in_update', TRUE);
+
+    $this->goToConfigBulkManagementForm('node_fields');
+
+    // Update the document, which must fail.
+    $edit = [
+      'table[node.article.body]' => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    $fieldConfig = FieldConfig::load('node.article.body');
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getSourceStatus($fieldConfig);
+    $this->assertEqual(Lingotek::STATUS_UNTRACKED, $source_status);
+
+    $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
+    $this->assertNoLingotekRequestTranslationLink('es_MX');
+    $this->assertText('Document field_config Contents was not found. Please upload again.');
+
+    // I can still re-try the upload.
+    \Drupal::state()->set('lingotek.must_document_not_found_error_in_update', FALSE);
+    $this->clickLink('EN');
+    $this->assertText('Contents uploaded successfully');
   }
 
   /**
@@ -1038,6 +1236,67 @@ class LingotekFieldBodyBulkTranslationTest extends LingotekTestBase {
   }
 
   /**
+   * Test that we handle errors in download for configs.
+   */
+  public function testDownloadingConfigFieldWithADocumentNotFoundError() {
+    $assert_session = $this->assertSession();
+
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
+    // Go to the bulk config management page.
+    $this->goToConfigBulkManagementForm('node_fields');
+
+    $basepath = \Drupal::request()->getBasePath();
+
+    // Clicking English must init the upload of content.
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/upload/field_config/node.article.body?destination=' . $basepath . '/admin/lingotek/config/manage');
+    // And we cannot request yet a translation.
+    $assert_session->linkByHrefNotExists($basepath . '/admin/lingotek/config/request/field_config/node.article.body/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $this->clickLink('EN');
+    $this->assertText(t('Body uploaded successfully'));
+    $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
+
+    // There is a link for checking status.
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/check_upload/field_config/node.article.body?destination=' . $basepath . '/admin/lingotek/config/manage');
+    // And we can already request a translation.
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/request/field_config/node.article.body/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $this->clickLink('EN');
+    $this->assertText('Body status checked successfully');
+
+    // Request the Spanish translation.
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/request/field_config/node.article.body/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $this->clickLink('ES');
+    $this->assertText("Translation to es_MX requested successfully");
+    $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.added_target_locale'));
+
+    // Check status of the Spanish translation.
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/check_download/field_config/node.article.body/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $this->clickLink('ES');
+    $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.checked_target_locale'));
+    $this->assertText("Translation to es_MX status checked successfully");
+
+    \Drupal::state()->set('lingotek.must_document_not_found_error_download', TRUE);
+    // Download the Spanish translation.
+    $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/download/field_config/node.article.body/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $this->clickLink('ES');
+    $this->assertText('Document Body was not found. Please upload again.');
+    $this->assertIdentical(NULL, \Drupal::state()->get('lingotek.downloaded_locale'));
+
+    $this->goToConfigBulkManagementForm('node_fields');
+    // Check the right class is added.
+    $this->assertSourceStatus('EN', NULL);
+    $this->assertNoLingotekRequestTranslationLink('es_MX');
+
+    // The field has been marked with the error status.
+    $fieldConfig = FieldConfig::load('node.article.body');
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $target_status = $translation_service->getTargetStatus($fieldConfig, 'es');
+    $this->assertSame(Lingotek::STATUS_UNTRACKED, $target_status);
+  }
+
+  /**
    * Tests that unrequested locales are not marked as error when downloading all.
    */
   public function testTranslationDownloadWithUnrequestedLocales() {
@@ -1285,6 +1544,44 @@ class LingotekFieldBodyBulkTranslationTest extends LingotekTestBase {
   /**
    * Tests that we manage errors when using the request all translations action.
    */
+  public function testRequestAllTranslationsWithActionWithADocumentNotFoundError() {
+    $assert_session = $this->assertSession();
+
+    \Drupal::state()->set('lingotek.must_document_not_found_error_in_request_translation', TRUE);
+
+    $this->goToConfigBulkManagementForm('node_fields');
+
+    // I can init the upload of content.
+    $this->assertLingotekUploadLink();
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node_fields'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $this->assertIdentical('en_US', \Drupal::state()
+      ->get('lingotek.uploaded_locale'));
+
+    // I can check current status.
+    $this->assertLingotekCheckSourceStatusLink();
+    // I can request a translation
+    $this->assertLingotekRequestTranslationLink('es_MX');
+    $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
+
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForRequestTranslations('node_fields'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
+    $this->assertNoLingotekRequestTranslationLink('es_MX');
+    $this->assertText('Document field_config Body was not found. Please upload again.');
+  }
+
+  /**
+   * Tests that we manage errors when using the request all translations action.
+   */
   public function testRequestAllTranslationsWithActionWithADocumentLockedError() {
     \Drupal::state()->set('lingotek.must_document_locked_error_in_request_translation', TRUE);
 
@@ -1454,6 +1751,38 @@ class LingotekFieldBodyBulkTranslationTest extends LingotekTestBase {
   /**
    * Tests that we manage errors when using the request translation link.
    */
+  public function testRequestTranslationWithADocumentNotFoundError() {
+    \Drupal::state()->set('lingotek.must_document_not_found_error_in_request_translation', TRUE);
+
+    $this->goToConfigBulkManagementForm('node_fields');
+
+    // I can init the upload of content.
+    $this->assertLingotekUploadLink();
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node_fields'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $this->assertIdentical('en_US', \Drupal::state()
+      ->get('lingotek.uploaded_locale'));
+
+    // I can check current status.
+    $this->assertLingotekCheckSourceStatusLink();
+    // I can request a translation
+    $this->assertLingotekRequestTranslationLink('es_MX');
+    $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
+
+    $this->clickLink('ES');
+
+    $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
+    $this->assertNoLingotekRequestTranslationLink('es_MX');
+    $this->assertText('Document field_config Body was not found. Please upload again.');
+  }
+
+  /**
+   * Tests that we manage errors when using the request translation link.
+   */
   public function testRequestTranslationWithADocumentLockedError() {
     \Drupal::state()->set('lingotek.must_document_locked_error_in_request_translation', TRUE);
 
@@ -1554,6 +1883,42 @@ class LingotekFieldBodyBulkTranslationTest extends LingotekTestBase {
     $this->assertSourceStatus('EN', Lingotek::STATUS_IMPORTING);
     $this->assertLingotekRequestTranslationLink('es_MX');
     $this->assertText('Document field_config Body has been archived. Uploading again.');
+  }
+
+  /**
+   * Tests that we manage errors when using the request translation action.
+   */
+  public function testRequestTranslationWithActionWithADocumentNotFoundError() {
+    \Drupal::state()->set('lingotek.must_document_not_found_error_in_request_translation', TRUE);
+
+    $this->goToConfigBulkManagementForm('node_fields');
+
+    // I can init the upload of content.
+    $this->assertLingotekUploadLink();
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node_fields'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $this->assertIdentical('en_US', \Drupal::state()
+      ->get('lingotek.uploaded_locale'));
+
+    // I can check current status.
+    $this->assertLingotekCheckSourceStatusLink();
+    // I can request a translation
+    $this->assertLingotekRequestTranslationLink('es_MX');
+    $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
+
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForRequestTranslation('es', 'node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
+    $this->assertNoLingotekRequestTranslationLink('es_MX');
+    $this->assertText('Document field_config Body was not found. Please upload again.');
   }
 
   /**
