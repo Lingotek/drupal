@@ -14,6 +14,7 @@ use Drupal\Core\TypedData\TraversableTypedDataInterface;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\lingotek\Entity\LingotekConfigMetadata;
 use Drupal\lingotek\Exception\LingotekApiException;
+use Drupal\lingotek\Exception\LingotekDocumentAlreadyCompletedException;
 use Drupal\lingotek\Exception\LingotekDocumentArchivedException;
 use Drupal\lingotek\Exception\LingotekDocumentLockedException;
 use Drupal\lingotek\Exception\LingotekDocumentNotFoundException;
@@ -873,9 +874,29 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     $result = FALSE;
     $doc_id = $this->getDocumentId($entity);
     if ($doc_id) {
-      $result = $this->lingotek->cancelDocument($doc_id);
-      $this->lingotekConfiguration->setConfigEntityProfile($entity, NULL);
-      $this->setDocumentId($entity, NULL);
+      try {
+        $result = $this->lingotek->cancelDocument($doc_id);
+        $this->lingotekConfiguration->setConfigEntityProfile($entity, NULL);
+        $this->setDocumentId($entity, NULL);
+      }
+      catch (LingotekDocumentAlreadyCompletedException $exception) {
+        \Drupal::logger('lingotek')
+          ->warning('The document %label (%doc_id) was not cancelled on the TMS side as it was already completed.', [
+            '%label' => $entity->label(),
+            '%doc_id' => $doc_id,
+          ]);
+        $this->lingotekConfiguration->setConfigEntityProfile($entity, NULL);
+        $this->setDocumentId($entity, NULL);
+      }
+      catch (LingotekDocumentArchivedException $exception) {
+        $this->messenger()->addError($this->t('Document %label has been archived. Please upload again.',
+          ['%label' => $entity->label()]));
+      }
+      catch (LingotekDocumentNotFoundException $exception) {
+        $this->setDocumentId($entity, NULL);
+        $this->deleteMetadata($entity);
+        throw $exception;
+      }
     }
     $this->setSourceStatus($entity, Lingotek::STATUS_CANCELLED);
     $this->setTargetStatuses($entity, Lingotek::STATUS_CANCELLED);
@@ -1561,6 +1582,18 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     if ($doc_id) {
       try {
         $result = $this->lingotek->cancelDocument($doc_id);
+      }
+      catch (LingotekDocumentAlreadyCompletedException $exception) {
+        \Drupal::logger('lingotek')
+          ->warning('The document %label (%doc_id) was not cancelled on the TMS side as it was already completed.', [
+            '%label' => $mapper->getTitle(),
+            '%doc_id' => $doc_id,
+          ]);
+      }
+      catch (LingotekDocumentNotFoundException $exception) {
+        $this->setConfigDocumentId($mapper, NULL);
+        $this->deleteConfigMetadata($mapper_id);
+        throw $exception;
       }
       catch (LingotekDocumentArchivedException $exception) {
         $this->messenger()->addError($this->t('Document %label has been archived. Please upload again.',

@@ -320,6 +320,9 @@ interface LingotekConfigTranslationServiceInterface {
    *   The entity which target we want to cancel.
    * @param string $locale
    *   Lingotek translation language which we want to modify.
+   *
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentTargetAlreadyCompletedException
+   *   If the target was already completed.
    */
   public function cancelDocumentTarget(ConfigEntityInterface &$entity, $locale);
 

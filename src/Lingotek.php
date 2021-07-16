@@ -4,8 +4,10 @@ namespace Drupal\lingotek;
 
 use Drupal\Component\Serialization\Json;
 use Drupal\lingotek\Exception\LingotekApiException;
+use Drupal\lingotek\Exception\LingotekDocumentAlreadyCompletedException;
 use Drupal\lingotek\Exception\LingotekDocumentArchivedException;
 use Drupal\lingotek\Exception\LingotekDocumentLockedException;
+use Drupal\lingotek\Exception\LingotekDocumentTargetAlreadyCompletedException;
 use Drupal\lingotek\Exception\LingotekPaymentRequiredException;
 use Drupal\lingotek\Remote\LingotekApiInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
@@ -528,10 +530,9 @@ class Lingotek implements LingotekInterface {
       }
     }
     catch (LingotekApiException $ltkException) {
-      if ($ltkException->getCode() === 400) {
-        if (strpos($ltkException->getMessage(), '"Unable to cancel documents which are already in a completed state. Current status: COMPLETE"') > 0) {
-          // We ignore errors for complete documents.
-          $result = TRUE;
+      if ($ltkException->getCode() === Response::HTTP_BAD_REQUEST) {
+        if (strpos($ltkException->getMessage(), '"Unable to cancel documents which are already in a completed state.') >= 0) {
+          throw new LingotekDocumentAlreadyCompletedException($ltkException->getMessage(), $ltkException->getCode());
         }
       }
     }
@@ -551,12 +552,12 @@ class Lingotek implements LingotekInterface {
       }
     }
     catch (LingotekApiException $ltkException) {
-      if ($ltkException->getCode() === 400) {
-        if (strpos($ltkException->getMessage(), '"Unable to cancel translations which are already in a completed state. Current status: COMPLETE"') > 0) {
-          // We ignore errors for complete documents.
-          $result = TRUE;
+      if ($ltkException->getCode() === Response::HTTP_BAD_REQUEST) {
+        if (strpos($ltkException->getMessage(), '"Unable to cancel translations which are already in a completed state.') >= 0) {
+          throw new LingotekDocumentTargetAlreadyCompletedException($ltkException->getMessage(), $ltkException->getCode());
         }
       }
+      throw $ltkException;
     }
     return $result;
   }

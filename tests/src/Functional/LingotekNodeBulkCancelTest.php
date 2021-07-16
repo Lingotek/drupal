@@ -150,6 +150,54 @@ class LingotekNodeBulkCancelTest extends LingotekTestBase {
     $this->assertNoLingotekRequestTranslationLink('es_ES');
   }
 
+  /**
+   * Tests that a node target can be cancelled using the actions on the management page.
+   */
+  public function testNodeCancelTargetAlreadyCompleted() {
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+    \Drupal::state()->set('lingotek.cancel_target_already_completed', TRUE);
+
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    $this->createAndTranslateNodeWithLinks();
+
+    $this->goToContentBulkManagementForm();
+
+    // Mark the first for cancelling.
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForCancelTarget('es', 'node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $content_translation_service */
+    $content_translation_service = \Drupal::service('lingotek.content_translation');
+
+    // Assert that the document target has been cancelled remotely.
+    $cancelled_locales = \Drupal::state()->get('lingotek.cancelled_locales', []);
+    $this->assertFalse(isset($cancelled_locales['dummy-document-hash-id']) && in_array('es_ES', $cancelled_locales['dummy-document-hash-id']),
+      'The document target has been cancelled remotely.');
+
+    $entity = Node::load(1);
+    $this->assertEquals('dummy-document-hash-id', $content_translation_service->getDocumentId($entity));
+
+    $this->assertSourceStatus('EN', Lingotek::STATUS_CURRENT);
+    $this->assertTargetStatus('ES', Lingotek::STATUS_CURRENT);
+
+    $this->assertIdentical(Lingotek::STATUS_CURRENT, $content_translation_service->getSourceStatus($entity));
+
+    $this->assertText('Target es for node Llamas are cool was already completed in the TMS and cannot be cancelled unless the entire document is cancelled.');
+    $this->assertIdentical(Lingotek::STATUS_CURRENT, $content_translation_service->getTargetStatus($entity, 'es'));
+  }
+
   protected function createAndTranslateNodeWithLinks() {
     $this->goToContentBulkManagementForm();
 

@@ -28,6 +28,7 @@ use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Drupal\lingotek\Entity\LingotekContentMetadata;
 use Drupal\lingotek\Exception\LingotekApiException;
 use Drupal\lingotek\Exception\LingotekContentEntityStorageException;
+use Drupal\lingotek\Exception\LingotekDocumentAlreadyCompletedException;
 use Drupal\lingotek\Exception\LingotekDocumentArchivedException;
 use Drupal\lingotek\Exception\LingotekDocumentLockedException;
 use Drupal\lingotek\Exception\LingotekDocumentNotFoundException;
@@ -1577,6 +1578,15 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     if ($doc_id) {
       try {
         $result = $this->lingotek->cancelDocument($doc_id);
+        $this->lingotekConfiguration->setProfile($entity, NULL);
+        $this->setDocumentId($entity, NULL);
+      }
+      catch (LingotekDocumentAlreadyCompletedException $exception) {
+        \Drupal::logger('lingotek')
+          ->warning('The document %label (%doc_id) was not cancelled on the TMS side as it was already completed.', [
+            '%label' => $entity->label(),
+            '%doc_id' => $doc_id,
+          ]);
         $this->lingotekConfiguration->setProfile($entity, NULL);
         $this->setDocumentId($entity, NULL);
       }

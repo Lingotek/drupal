@@ -20,6 +20,7 @@ use Drupal\lingotek\Exception\LingotekApiException;
 use Drupal\lingotek\Exception\LingotekDocumentArchivedException;
 use Drupal\lingotek\Exception\LingotekDocumentLockedException;
 use Drupal\lingotek\Exception\LingotekDocumentNotFoundException;
+use Drupal\lingotek\Exception\LingotekDocumentTargetAlreadyCompletedException;
 use Drupal\lingotek\Exception\LingotekPaymentRequiredException;
 use Drupal\lingotek\LanguageLocaleMapperInterface;
 use Drupal\lingotek\Lingotek;
@@ -1301,6 +1302,11 @@ class LingotekConfigManagementForm extends FormBase {
         try {
           $this->translationService->cancelDocumentTarget($entity, $locale);
         }
+        catch (LingotekDocumentTargetAlreadyCompletedException $e) {
+          $this->translationService->checkTargetStatus($entity, $locale);
+          $this->messenger()->addError($this->t('Target %language for %label was already completed in the TMS and cannot be cancelled unless the entire document is cancelled.',
+            ['%label' => $entity->label(), '%language' => $langcode]));
+        }
         catch (LingotekApiException $e) {
           $this->messenger()->addError($this->t('Cancelling translation for %label to language @language failed. Please try again.',
             ['%label' => $entity->label(), '@language' => $langcode]));
@@ -1309,6 +1315,11 @@ class LingotekConfigManagementForm extends FormBase {
       else {
         try {
           $this->translationService->cancelConfigDocumentTarget($mapper->getPluginId(), $locale);
+        }
+        catch (LingotekDocumentTargetAlreadyCompletedException $e) {
+          $this->translationService->checkConfigTargetStatus($mapper, $locale);
+          $this->messenger()->addError($this->t('Target %language for %label was already completed in the TMS and cannot be cancelled unless the entire document is cancelled.',
+            ['%label' => $mapper->getTitle(), '%language' => $langcode]));
         }
         catch (LingotekApiException $e) {
           $this->messenger()->addError($this->t('Cancelling translation for %label to language @language failed. Please try again.',
@@ -1319,6 +1330,11 @@ class LingotekConfigManagementForm extends FormBase {
     elseif ($profile = $this->lingotekConfiguration->getConfigProfile($mapper->getPluginId(), FALSE) or TRUE) {
       try {
         $this->translationService->cancelConfigDocumentTarget($mapper->getPluginId());
+      }
+      catch (LingotekDocumentTargetAlreadyCompletedException $e) {
+        $this->translationService->checkConfigTargetStatus($mapper, $locale);
+        $this->messenger()->addError($this->t('Target %language for %label was already completed in the TMS and cannot be cancelled unless the entire document is cancelled.',
+          ['%label' => $mapper->getTitle(), '%language' => $langcode]));
       }
       catch (LingotekApiException $e) {
         $this->messenger()->addError($this->t('Cancelling translation for %label to language @language. Please try again.',

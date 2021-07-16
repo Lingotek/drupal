@@ -6,8 +6,11 @@ use Drupal\Core\Config\Config;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\language\ConfigurableLanguageInterface;
 use Drupal\lingotek\Entity\LingotekProfile;
+use Drupal\lingotek\Exception\LingotekApiException;
+use Drupal\lingotek\Exception\LingotekDocumentAlreadyCompletedException;
 use Drupal\lingotek\Exception\LingotekDocumentArchivedException;
 use Drupal\lingotek\Exception\LingotekDocumentLockedException;
+use Drupal\lingotek\Exception\LingotekDocumentTargetAlreadyCompletedException;
 use Drupal\lingotek\Exception\LingotekPaymentRequiredException;
 use Drupal\lingotek\LanguageLocaleMapperInterface;
 use Drupal\lingotek\Lingotek;
@@ -1225,6 +1228,29 @@ class LingotekUnitTest extends UnitTestCase {
   }
 
   /**
+   * @covers ::cancelDocument
+   * @dataProvider validCompletedCurrentStatuses
+   */
+  public function testCancelDocumentAlreadyCompleted($current_status) {
+    $msg = sprintf('Error: "Unable to cancel translations which are already in a completed state. Current status: %s"', $current_status);
+    $exception = new LingotekApiException($msg, Response::HTTP_BAD_REQUEST);
+
+    $this->api->expects($this->any())
+      ->method('cancelDocument')
+      ->with('my_doc_id')
+      ->willThrowException($exception);
+
+    $this->expectException(LingotekDocumentAlreadyCompletedException::class);
+    $this->lingotek->cancelDocument('my_doc_id');
+  }
+
+  public function validCompletedCurrentStatuses() {
+    yield 'status is complete' => ['COMPLETE'];
+    yield 'status is late' => ['LATE'];
+    yield 'status is cancelled' => ['CANCELLED'];
+  }
+
+  /**
    * @covers ::cancelDocumentTarget
    */
   public function testCancelDocumentTarget() {
@@ -1252,6 +1278,23 @@ class LingotekUnitTest extends UnitTestCase {
     $this->assertTrue($this->lingotek->cancelDocumentTarget('my_doc_id', 'es_ES'));
     $this->assertFalse($this->lingotek->cancelDocumentTarget('my_doc_id', 'es_ES'));
     $this->assertFalse($this->lingotek->cancelDocumentTarget('my_doc_id', 'es_ES'));
+  }
+
+  /**
+   * @covers ::cancelDocumentTarget
+   * @dataProvider validCompletedCurrentStatuses
+   */
+  public function testCancelDocumentTargetAlreadyCompleted($current_status) {
+    $msg = sprintf('Error: "Unable to cancel translations which are already in a completed state. Current status: %s"', $current_status);
+    $exception = new LingotekApiException($msg, Response::HTTP_BAD_REQUEST);
+
+    $this->api->expects($this->any())
+      ->method('cancelDocumentTarget')
+      ->with('my_doc_id', 'es_ES')
+      ->willThrowException($exception);
+
+    $this->expectException(LingotekDocumentTargetAlreadyCompletedException::class);
+    $this->lingotek->cancelDocumentTarget('my_doc_id', 'es_ES');
   }
 
   /**

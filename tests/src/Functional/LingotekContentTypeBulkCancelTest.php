@@ -133,6 +133,50 @@ class LingotekContentTypeBulkCancelTest extends LingotekTestBase {
     $assert_session->linkByHrefNotExists($basepath . '/admin/lingotek/config/request/node_type/article/es_ES?destination=' . $basepath . '/admin/lingotek/config/manage');
   }
 
+  /**
+   * Tests that a config entity target can be cancelled using the bulk operations on the management page.
+   */
+  public function testContentTypeCancelTargetAlreadyCompleted() {
+    $assert_session = $this->assertSession();
+
+    // This is a hack for avoiding writing different lingotek endpoint mocks.
+    \Drupal::state()->set('lingotek.uploaded_content_type', 'content_type');
+    \Drupal::state()->set('lingotek.cancel_target_already_completed', TRUE);
+
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
+    $this->createAndTranslateContentTypeWithLinks();
+
+    // Mark the first for cancelling.
+    $edit = [
+      'table[article]' => 'article',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForCancelTarget('es', 'node_type'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $config_translation_service */
+    $config_translation_service = \Drupal::service('lingotek.config_translation');
+    \Drupal::entityTypeManager()->getStorage('node_type')->resetCache();
+
+    // Assert that the document target has been cancelled remotely.
+    $cancelled_locales = \Drupal::state()->get('lingotek.cancelled_locales', []);
+    $this->assertFalse(isset($cancelled_locales['dummy-document-hash-id']) && in_array('es_ES', $cancelled_locales['dummy-document-hash-id']),
+      'The document target has been cancelled remotely.');
+
+    \Drupal::entityTypeManager()->getStorage('node_type')->resetCache();
+    $entity = \Drupal::entityTypeManager()->getStorage('node_type')->load('article');
+    $this->assertEquals('dummy-document-hash-id', $config_translation_service->getDocumentId($entity));
+
+    $this->assertSourceStatus('EN', Lingotek::STATUS_CURRENT);
+    $this->assertTargetStatus('ES', Lingotek::STATUS_CURRENT);
+
+    $this->assertIdentical(Lingotek::STATUS_CURRENT, $config_translation_service->getSourceStatus($entity));
+
+    $this->assertText('Target es for Article was already completed in the TMS and cannot be cancelled unless the entire document is cancelled.');
+    $this->assertIdentical(Lingotek::STATUS_CURRENT, $config_translation_service->getTargetStatus($entity, 'es'));
+  }
+
   protected function createAndTranslateContentTypeWithLinks() {
     $assert_session = $this->assertSession();
 

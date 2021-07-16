@@ -13,6 +13,7 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\lingotek\Exception\LingotekApiException;
 use Drupal\lingotek\Exception\LingotekContentEntityStorageException;
+use Drupal\lingotek\Exception\LingotekDocumentAlreadyCompletedException;
 use Drupal\lingotek\Exception\LingotekDocumentArchivedException;
 use Drupal\lingotek\Exception\LingotekDocumentLockedException;
 use Drupal\lingotek\Exception\LingotekDocumentNotFoundException;
@@ -857,6 +858,19 @@ class LingotekInterfaceTranslationService implements LingotekInterfaceTranslatio
       try {
         $result = $this->lingotek->cancelDocument($doc_id);
         $this->setDocumentId($component, NULL);
+      }
+      catch (LingotekDocumentAlreadyCompletedException $exception) {
+        \Drupal::logger('lingotek')
+          ->warning('The document %label (%doc_id) was not cancelled on the TMS side as it was already completed.', [
+            '%label' => $component,
+            '%doc_id' => $doc_id,
+          ]);
+        $this->setDocumentId($component, NULL);
+      }
+      catch (LingotekDocumentNotFoundException $exception) {
+        $this->setDocumentId($component, NULL);
+        $this->deleteMetadata($component);
+        throw $exception;
       }
       catch (LingotekDocumentNotFoundException $exception) {
         $this->setDocumentId($component, NULL);

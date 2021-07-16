@@ -23,6 +23,7 @@ use Drupal\lingotek\Exception\LingotekContentEntityStorageException;
 use Drupal\lingotek\Exception\LingotekDocumentArchivedException;
 use Drupal\lingotek\Exception\LingotekDocumentLockedException;
 use Drupal\lingotek\Exception\LingotekDocumentNotFoundException;
+use Drupal\lingotek\Exception\LingotekDocumentTargetAlreadyCompletedException;
 use Drupal\lingotek\Exception\LingotekPaymentRequiredException;
 use Drupal\lingotek\Helpers\LingotekManagementFormHelperTrait;
 use Drupal\lingotek\LanguageLocaleMapperInterface;
@@ -1434,7 +1435,7 @@ abstract class LingotekManagementFormBase extends FormBase {
       foreach ($languages as $langcode => $language) {
         if ($langcode !== $entity->language()->getId()) {
           $locale = $this->languageLocaleMapper->getLocaleForLangcode($langcode);
-          if ($this->translationService->checkTargetStatus($entity, $locale)) {
+          if ($this->translationService->checkTargetStatus($entity, $langcode)) {
             try {
               $this->translationService->downloadDocument($entity, $locale);
             }
@@ -1520,6 +1521,11 @@ abstract class LingotekManagementFormBase extends FormBase {
     if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE)) {
       try {
         $this->translationService->cancelDocumentTarget($entity, $locale);
+      }
+      catch (LingotekDocumentTargetAlreadyCompletedException $e) {
+        $this->translationService->checkTargetStatus($entity, $langcode);
+        $this->messenger()->addError($this->t('Target %language for @entity_type %title was already completed in the TMS and cannot be cancelled unless the entire document is cancelled.',
+          ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label(), '%language' => $langcode]));
       }
       catch (LingotekDocumentNotFoundException $exc) {
         $this->messenger()->addWarning(t('Document @entity_type %title was not found, so nothing to cancel.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));

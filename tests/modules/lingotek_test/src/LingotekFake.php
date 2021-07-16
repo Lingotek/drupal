@@ -7,6 +7,7 @@ use Drupal\lingotek\Exception\LingotekApiException;
 use Drupal\lingotek\Exception\LingotekDocumentArchivedException;
 use Drupal\lingotek\Exception\LingotekDocumentLockedException;
 use Drupal\lingotek\Exception\LingotekDocumentNotFoundException;
+use Drupal\lingotek\Exception\LingotekDocumentTargetAlreadyCompletedException;
 use Drupal\lingotek\Exception\LingotekPaymentRequiredException;
 use Drupal\lingotek\LanguageLocaleMapperInterface;
 use Drupal\lingotek\LingotekInterface;
@@ -394,6 +395,10 @@ class LingotekFake implements LingotekInterface {
     if (\Drupal::state()->get('lingotek.must_error_in_cancel', FALSE)) {
       \Drupal::state()->set('lingotek.must_error_in_cancel', FALSE);
       throw new LingotekApiException('Error was forced.');
+    }
+    if (\Drupal::state()->get('lingotek.cancel_target_already_completed', FALSE)) {
+      $msg = 'Error: "Unable to cancel translations which are already in a completed state. Current status: LATE"';
+      throw new LingotekDocumentTargetAlreadyCompletedException($msg, 400);
     }
     if (\Drupal::state()->get('lingotek.must_document_not_found_error_in_cancel', FALSE)) {
       throw new LingotekDocumentNotFoundException($doc_id . ' not found. Error was forced.');

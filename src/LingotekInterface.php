@@ -355,6 +355,8 @@ interface LingotekInterface extends ContainerInjectionInterface {
    *   TRUE if the document was successfully cancelled. FALSE if not.
    *
    * @throws \Drupal\lingotek\Exception\LingotekDocumentNotFoundException
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentAlreadyCompletedException
+   *   If the document was already completed.
    */
   public function cancelDocument($doc_id);
 
@@ -368,6 +370,9 @@ interface LingotekInterface extends ContainerInjectionInterface {
    *
    * @return bool
    *   TRUE if the document target was successfully cancelled. FALSE if not.
+   *
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentTargetAlreadyCompletedException
+   *   If the target was already completed.
    */
   public function cancelDocumentTarget($doc_id, $locale);
 

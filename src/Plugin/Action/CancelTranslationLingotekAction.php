@@ -4,6 +4,7 @@ namespace Drupal\lingotek\Plugin\Action;
 
 use Drupal\lingotek\Exception\LingotekApiException;
 use Drupal\lingotek\Exception\LingotekDocumentNotFoundException;
+use Drupal\lingotek\Exception\LingotekDocumentTargetAlreadyCompletedException;
 
 /**
  * Request Lingotek translation of a content entity for one language.
@@ -41,6 +42,11 @@ class CancelTranslationLingotekAction extends LingotekContentEntityConfigurableA
     try {
       $locale = $this->languageLocaleMapper->getLocaleForLangcode($langcode);
       $result = $this->translationService->cancelDocumentTarget($entity, $locale);
+    }
+    catch (LingotekDocumentTargetAlreadyCompletedException $e) {
+      $this->translationService->checkTargetStatus($entity, $langcode);
+      $this->messenger()->addError($this->t('Target %language for @entity_type %title was already completed in the TMS and cannot be cancelled unless the entire document is cancelled.',
+        ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label(), '%language' => $langcode]));
     }
     catch (LingotekDocumentNotFoundException $exc) {
       $this->messenger()

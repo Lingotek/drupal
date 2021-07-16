@@ -322,6 +322,7 @@ interface LingotekContentTranslationServiceInterface {
    *
    * @throws \Drupal\lingotek\Exception\LingotekDocumentNotFoundException
    * @throws \Drupal\lingotek\Exception\LingotekApiException
+   * @throws \Drupal\lingotek\Exception\LingotekDocumentTargetAlreadyCompletedException
    */
   public function cancelDocumentTarget(ContentEntityInterface &$entity, $locale);
 
