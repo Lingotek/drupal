@@ -368,10 +368,10 @@ class RenderElementTypesTest extends LingotekTestBase {
     $this->drupalGet('/lingotek_form_test/lingotek_translation_status/node/1');
 
     $this->assertTargetAction("Request translation",
-      "$basepath/admin/lingotek/entity/add_target/test-document-id/es_ES?destination=$basepath/lingotek_form_test/lingotek_translation_status/node/1",
+      "$basepath/admin/lingotek/entity/add_target/test-document-id/es_ES?destination=$basepath/lingotek_form_test/lingotek_translation_status/node/1"
     );
     $this->assertTargetAction("Request translation",
-      "$basepath/admin/lingotek/entity/add_target/test-document-id/de_DE?destination=$basepath/lingotek_form_test/lingotek_translation_status/node/1",
+      "$basepath/admin/lingotek/entity/add_target/test-document-id/de_DE?destination=$basepath/lingotek_form_test/lingotek_translation_status/node/1"
     );
 
     $link = $this->xpath("//a[@href='$basepath/admin/lingotek/entity/add_target/test-document-id/es_ES?destination=" . $basepath . "/lingotek_form_test/lingotek_translation_status/node/1' and @class='language-icon target-deleted' and @title='Spanish - Deleted in Lingotek' and text()='ES']");
