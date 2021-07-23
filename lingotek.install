@@ -141,7 +141,7 @@ function lingotek_update_8222() {
 }
 
 /**
- * Adds enable_download_interim preference to lingotek.settings.
+ * Adds append_type_to_title preference to lingotek.settings.
  */
 function lingotek_update_9000() {
   // We converted this to a boolean.
@@ -170,4 +170,13 @@ function lingotek_update_9401() {
   foreach ($fields as $name => $storage_definition) {
     $entity_definition_update_manager->installFieldStorageDefinition($name, 'lingotek_content_metadata', 'lingotek', $storage_definition);
   }
+}
+
+/**
+ * Remove enable_download_interim preference from lingotek.settings.
+ */
+function lingotek_update_9402() {
+  $lingotekSettings = \Drupal::configFactory()->getEditable('lingotek.settings');
+  $lingotekSettings->clear('preference.enable_download_interim');
+  $lingotekSettings->save();
 }

@@ -51,6 +51,7 @@ lingotek.settings:
         enable_download_interim:
           label: 'Allow to download interim translations (translations that are pending some phases)'
           type: boolean
+          deprecated: "This option is unused since lingotek:3.8.0. Will be removed in lingotek:4.0.0"
         content_cloud_import_format:
           type: string
           deprecated: "This option is unused since lingotek:8.x-2.21. Will be removed in lingotek:4.0.0"

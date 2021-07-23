@@ -474,15 +474,14 @@ class LingotekNotificationController extends LingotekControllerBase {
             elseif (is_string($entity)) {
               $translation_service = $this->lingotekInterfaceTranslation;
             }
-            $allowInterimDownloads = $this->lingotekConfiguration->getPreference('enable_download_interim');
             $progressCompleted = ($request->query->get('progress') == '100');
             if ($progressCompleted && $type === 'target') {
               $translation_service->setTargetStatus($entity, $langcode, Lingotek::STATUS_READY);
             }
-            elseif ($type === 'phase' && $allowInterimDownloads || $type === 'download_interim_translation' && $allowInterimDownloads) {
+            elseif ($type === 'download_interim_translation') {
               $translation_service->setTargetStatus($entity, $langcode, Lingotek::STATUS_INTERMEDIATE);
             }
-            if ($profile !== NULL && $profile->hasAutomaticDownloadForTarget($langcode) && $profile->hasAutomaticDownloadWorker() && ($progressCompleted || $allowInterimDownloads)) {
+            if ($profile !== NULL && $profile->hasAutomaticDownloadForTarget($langcode) && $profile->hasAutomaticDownloadWorker() && ($progressCompleted || $type === 'download_interim_translation')) {
               $queue = \Drupal::queue('lingotek_downloader_queue_worker');
               $item = [
                 'entity_type_id' => $entity->getEntityTypeId(),
@@ -492,7 +491,7 @@ class LingotekNotificationController extends LingotekControllerBase {
               ];
               $result['download_queued'] = $queue->createItem($item);
             }
-            elseif ($profile !== NULL && $profile->hasAutomaticDownloadForTarget($langcode) && !$profile->hasAutomaticDownloadWorker() && ($progressCompleted || $allowInterimDownloads)) {
+            elseif ($profile !== NULL && $profile->hasAutomaticDownloadForTarget($langcode) && !$profile->hasAutomaticDownloadWorker() && ($progressCompleted || $type === 'download_interim_translation')) {
               $result['download'] = $translation_service->downloadDocument($entity, $locale);
             }
             else {
@@ -508,13 +507,6 @@ class LingotekNotificationController extends LingotekControllerBase {
                 '@document' => $document_id,
               ]);
               $result['download_queued'] = TRUE;
-              $http_status_code = Response::HTTP_OK;
-            }
-            elseif (!$allowInterimDownloads && !$progressCompleted) {
-              $messages[] = new FormattableMarkup('Interim downloads are disabled, so no download for target @locale happened in document @document.', [
-                '@locale' => $locale,
-                '@document' => $document_id,
-              ]);
               $http_status_code = Response::HTTP_OK;
             }
             else {

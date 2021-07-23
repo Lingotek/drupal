@@ -145,13 +145,6 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
       '#default_value' => $lingotek_config->getPreference('enable_download_source') ?: FALSE,
     ];
 
-    $form['prefs']['enable_download_interim'] = [
-      '#type' => 'checkbox',
-      '#title' => t('Download interim translations if available'),
-      '#description' => t('Translations that have still phases pending in the TMS will be downloaded.'),
-      '#default_value' => $lingotek_config->getPreference('enable_download_interim') ?: FALSE,
-    ];
-
     $form['prefs']['append_type_to_title'] = [
       '#type' => 'checkbox',
       '#title' => t('Append Entity Type to TMS Document Name'),
@@ -195,7 +188,6 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
     $lingotek_config->setPreference('append_type_to_title', $form_values['append_type_to_title'] ? TRUE : FALSE);
     $lingotek_config->setPreference('target_download_status', $form_values['target_download_status']);
     $lingotek_config->setPreference('enable_download_source', $form_values['enable_download_source'] ? TRUE : FALSE);
-    $lingotek_config->setPreference('enable_download_interim', $form_values['enable_download_interim'] ? TRUE : FALSE);
     $lingotek_config->setPreference('split_download_all', $form_values['split_download_all'] ? TRUE : FALSE);
     parent::submitForm($form, $form_state);
   }

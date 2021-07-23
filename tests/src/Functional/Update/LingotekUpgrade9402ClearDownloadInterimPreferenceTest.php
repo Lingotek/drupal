@@ -10,7 +10,7 @@ use Drupal\FunctionalTests\Update\UpdatePathTestBase;
  * @group lingotek
  * @group legacy
  */
-class LingotekUpgrade8222EnableDownloadInterimPreferenceTest extends UpdatePathTestBase {
+class LingotekUpgrade9402ClearDownloadInterimPreferenceTest extends UpdatePathTestBase {
 
   /**
    * The Lingotek configuration service.
@@ -33,6 +33,7 @@ class LingotekUpgrade8222EnableDownloadInterimPreferenceTest extends UpdatePathT
   protected function setDatabaseDumpFiles() {
     $this->databaseDumpFiles = [
       __DIR__ . '/../../../fixtures/update/drupal-88x.lingotek-2x20.standard.php.gz',
+      __DIR__ . '/../../../fixtures/update/9402-set-preference-enable-download-interim.php',
     ];
   }
 
@@ -41,11 +42,11 @@ class LingotekUpgrade8222EnableDownloadInterimPreferenceTest extends UpdatePathT
    * preference.
    */
   public function testUpgrade() {
-    $this->assertNull($this->lingotekConfiguration->getPreference('enable_download_interim'));
+    $this->assertTrue($this->lingotekConfiguration->getPreference('enable_download_interim'));
 
     $this->runUpdates();
 
-    $this->assertTrue($this->lingotekConfiguration->getPreference('enable_download_interim'));
+    $this->assertNull($this->lingotekConfiguration->getPreference('enable_download_interim'));
   }
 
 }
