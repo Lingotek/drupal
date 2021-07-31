@@ -430,8 +430,7 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->assertText('Article upload failed. Please try again.');
 
     // Check the right class is added.
-    $source_error = $this->xpath("//span[contains(@class,'language-icon') and contains(@class,'source-error')  and ./a[contains(text(), 'EN')]]");
-    $this->assertEqual(count($source_error), 1, 'The node type has been marked as error.');
+    $this->assertSourceStatus('EN', Lingotek::STATUS_ERROR);
 
     // The node type has been marked with the error status.
     $nodeType = NodeType::load('article');

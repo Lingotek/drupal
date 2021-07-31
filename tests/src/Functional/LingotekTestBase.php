@@ -246,9 +246,9 @@ abstract class LingotekTestBase extends BrowserTestBase {
       $statusCount = $this->xpath("//span[contains(@class,'language-icon') and contains(@class, '$statusCssClass') and contains(text(), '$languageLabel')]");
     }
     else {
-      $statusCount = $this->xpath("//span[contains(@class,'language-icon') and contains(@class, '$statusCssClass')]/a[contains(text(), '$languageLabel')]");
+      $statusCount = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, '$statusCssClass') and contains(text(), '$languageLabel')]");
     }
-    $this->assertEqual(count($statusCount), $count, $message);
+    $this->assertEquals(count($statusCount), $count, $message);
   }
 
   /**
@@ -476,7 +476,7 @@ abstract class LingotekTestBase extends BrowserTestBase {
    *   The status.
    */
   protected function assertSourceStatus($language, $status) {
-    $status_target = $this->xpath("//span[contains(@class,'language-icon') and contains(@class,'source-" . strtolower($status) . "')  and ./a[contains(text(), '" . strtoupper($language) . "')]]");
+    $status_target = $this->xpath("//a[contains(@class,'language-icon') and contains(@class,'source-" . strtolower($status) . "')  and contains(text(), '" . strtoupper($language) . "')]");
     // If not found, maybe it didn't have a link.
     if (count($status_target) === 1) {
       $this->assertEqual(count($status_target), 1, 'The source ' . strtoupper($language) . ' has been marked with status ' . strtolower($status) . '.');

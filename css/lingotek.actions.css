@@ -1,3 +1,4 @@
+.lingotek-source-dropdown-toggle,
 .lingotek-target-dropdown-toggle {
   display: inline-block;
   height: 30px;
@@ -12,23 +13,28 @@
   opacity: .8;
 }
 
+.lingotek-source-dropdown-toggle:focus,
 .lingotek-target-dropdown-toggle:focus {
   outline: none;
 }
 
+.lingotek-source-dropdown.open .lingotek-source-dropdown-toggle ,
 .lingotek-target-dropdown.open .lingotek-target-dropdown-toggle {
   transform: rotateZ(0);
 }
 
+.lingotek-source-dropdown.open .lingotek-source-actions,
 .lingotek-target-dropdown.open .lingotek-target-actions {
   display: block;
 }
 
+.lingotek-source-dropdown,
 .lingotek-target-dropdown {
   position: relative;
   display: inline-block;
 }
 
+.lingotek-source-actions,
 .lingotek-target-actions {
   display: none;
   position: absolute;
@@ -42,6 +48,7 @@
   font-size: 90%;
 }
 
+.lingotek-source-actions a,
 .lingotek-target-actions a {
   color: black;
   padding: 12px 16px;
@@ -49,6 +56,7 @@
   display: block;
 }
 
+.lingotek-source-actions a:hover,
 .lingotek-target-actions a:hover {
   background-color: #f1f1f1
 }

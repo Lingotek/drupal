@@ -1439,14 +1439,11 @@ class LingotekConfigManagementForm extends FormBase {
 
     $data = [
       'data' => [
-        '#type' => 'inline_template',
-        '#template' => '<span class="language-icon source-{{status}}" title="{{status_title}}">{% if url %}<a href="{{url}}">{%endif%}{{language}}{%if url %}</a>{%endif%}</span>',
-        '#context' => [
-          'language' => empty($language_source) ? 'N/A' : strtoupper($language_source->id()),
-          'status' => strtolower($source_status),
-          'status_title' => $this->getSourceStatusText($mapper, $source_status),
-          'url' => $this->getSourceActionUrl($mapper, $source_status),
-        ],
+        '#type' => 'lingotek_source_status',
+        '#language' => $language_source,
+        '#status' => strtolower($source_status),
+        '#status_title' => $this->getSourceStatusText($mapper, $source_status),
+        '#url' => $this->getSourceActionUrl($mapper, $source_status),
       ],
     ];
     return $data;

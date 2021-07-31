@@ -743,6 +743,7 @@ function lingotek_theme() {
         'status_title' => '',
         'language' => NULL,
         'url' => NULL,
+        'actions' => [],
       ],
     ],
     'lingotek_target_status' => [

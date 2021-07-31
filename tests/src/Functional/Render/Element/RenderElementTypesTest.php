@@ -71,45 +71,90 @@ class RenderElementTypesTest extends LingotekTestBase {
     $translation_service->setSourceStatus($entity, Lingotek::STATUS_UNTRACKED);
     $this->drupalGet('/lingotek_form_test/lingotek_source_status/node/1');
     $this->assertSession()->responseContains('lingotek/css/base.css');
-    $this->assertSession()->responseContains('<span class="language-icon source-untracked" title="Upload"><a href="' . $basepath . '/admin/lingotek/entity/upload/node/1?destination=' . $basepath . '/lingotek_form_test/lingotek_source_status/node/1">EN</a></span>');
+    $this->assertSession()->responseContains('<a href="' . $basepath . '/admin/lingotek/entity/upload/node/1?destination=' . $basepath . '/lingotek_form_test/lingotek_source_status/node/1" title="Upload" class="language-icon source-untracked">EN</a>');
+
+    $this->assertSourceAction("View", "$basepath/node/1");
+    $this->assertSourceAction("Upload document",
+      "$basepath/admin/lingotek/entity/upload/node/1?destination=$basepath/lingotek_form_test/lingotek_source_status/node/1"
+    );
 
     $translation_service->setSourceStatus($entity, Lingotek::STATUS_IMPORTING);
     $translation_service->setDocumentId($entity, 'test-document-id');
     $this->drupalGet('/lingotek_form_test/lingotek_source_status/node/1');
     $this->assertSession()->responseContains('lingotek/css/base.css');
-    $this->assertSession()->responseContains('<span class="language-icon source-importing" title="Source importing"><a href="' . $basepath . '/admin/lingotek/entity/check_upload/test-document-id?destination=' . $basepath . '/lingotek_form_test/lingotek_source_status/node/1">EN</a></span>');
+    $this->assertSession()->responseContains('<a href="' . $basepath . '/admin/lingotek/entity/check_upload/test-document-id?destination=' . $basepath . '/lingotek_form_test/lingotek_source_status/node/1" title="Source importing" class="language-icon source-importing">EN</a>');
+    $this->assertSourceAction("View", "$basepath/node/1");
+    $this->assertNoSourceAction("Upload document",
+      "$basepath/admin/lingotek/entity/upload/node/1?destination=$basepath/lingotek_form_test/lingotek_source_status/node/1"
+    );
+    $this->assertSourceAction("Check upload status",
+      "$basepath/admin/lingotek/entity/check_upload/test-document-id?destination=$basepath/lingotek_form_test/lingotek_source_status/node/1"
+    );
 
     $translation_service->setSourceStatus($entity, Lingotek::STATUS_CURRENT);
     $this->drupalGet('/lingotek_form_test/lingotek_source_status/node/1');
     $this->assertSession()->responseContains('lingotek/css/base.css');
-    $this->assertSession()->responseContains('<span class="language-icon source-current" title="Source uploaded">EN</span>');
+    $this->assertSession()->responseContains('<span title="Source uploaded" class="language-icon source-current">EN</span>');
+    $this->assertSourceAction("View", "$basepath/node/1");
+    $this->assertNoSourceAction("Upload document",
+      "$basepath/admin/lingotek/entity/upload/node/1?destination=$basepath/lingotek_form_test/lingotek_source_status/node/1"
+    );
+    $this->assertNoSourceAction("Check upload status",
+      "$basepath/admin/lingotek/entity/check_upload/test-document-id?destination=$basepath/lingotek_form_test/lingotek_source_status/node/1"
+    );
 
     $translation_service->setSourceStatus($entity, Lingotek::STATUS_DISABLED);
     $this->drupalGet('/lingotek_form_test/lingotek_source_status/node/1');
     $this->assertSession()->responseContains('lingotek/css/base.css');
-    $this->assertSession()->responseContains('<span class="language-icon source-disabled" title="Disabled, cannot request translation">EN</span>');
+    $this->assertSession()->responseContains('<span title="Disabled, cannot request translation" class="language-icon source-disabled">EN</span>');
+    $this->assertSourceAction("View", "$basepath/node/1");
+    $this->assertNoSourceAction("Upload document",
+      "$basepath/admin/lingotek/entity/upload/node/1?destination=$basepath/lingotek_form_test/lingotek_source_status/node/1"
+    );
 
     $translation_service->setSourceStatus($entity, Lingotek::STATUS_EDITED);
     $this->drupalGet('/lingotek_form_test/lingotek_source_status/node/1');
     $this->assertSession()->responseContains('lingotek/css/base.css');
-    $this->assertSession()->responseContains('<span class="language-icon source-edited" title="Re-upload (content has changed since last upload)"><a href="' . $basepath . '/admin/lingotek/entity/update/test-document-id?destination=' . $basepath . '/lingotek_form_test/lingotek_source_status/node/1">EN</a></span>');
+    $this->assertSession()->responseContains('<a href="' . $basepath . '/admin/lingotek/entity/update/test-document-id?destination=' . $basepath . '/lingotek_form_test/lingotek_source_status/node/1" title="Re-upload (content has changed since last upload)" class="language-icon source-edited">EN</a>');
+    $this->assertSourceAction("View", "$basepath/node/1");
+    $this->assertNoSourceAction("Upload document",
+      "$basepath/admin/lingotek/entity/upload/node/1?destination=$basepath/lingotek_form_test/lingotek_source_status/node/1"
+    );
+    $this->assertSourceAction("Update document",
+      "$basepath/admin/lingotek/entity/update/test-document-id?destination=$basepath/lingotek_form_test/lingotek_source_status/node/1"
+    );
 
     $translation_service->setSourceStatus($entity, Lingotek::STATUS_ERROR);
     $this->drupalGet('/lingotek_form_test/lingotek_source_status/node/1');
     $this->assertSession()->responseContains('lingotek/css/base.css');
-    $this->assertSession()->responseContains('<span class="language-icon source-error" title="Error"><a href="' . $basepath . '/admin/lingotek/entity/update/test-document-id?destination=' . $basepath . '/lingotek_form_test/lingotek_source_status/node/1">EN</a></span>');
+    $this->assertSession()->responseContains('<a href="' . $basepath . '/admin/lingotek/entity/update/test-document-id?destination=' . $basepath . '/lingotek_form_test/lingotek_source_status/node/1" title="Error" class="language-icon source-error">EN</a>');
+    $this->assertSourceAction("View", "$basepath/node/1");
+    $this->assertNoSourceAction("Upload document",
+      "$basepath/admin/lingotek/entity/upload/node/1?destination=$basepath/lingotek_form_test/lingotek_source_status/node/1"
+    );
+    $this->assertSourceAction("Update document",
+      "$basepath/admin/lingotek/entity/update/test-document-id?destination=$basepath/lingotek_form_test/lingotek_source_status/node/1"
+    );
 
     $translation_service->setDocumentId($entity, NULL);
     $translation_service->setSourceStatus($entity, Lingotek::STATUS_DELETED);
     $this->drupalGet('/lingotek_form_test/lingotek_source_status/node/1');
     $this->assertSession()->responseContains('lingotek/css/base.css');
-    $this->assertSession()->responseContains('<span class="language-icon source-deleted" title="This document was deleted in Lingotek. Re-upload to translate."><a href="' . $basepath . '/admin/lingotek/entity/upload/node/1?destination=' . $basepath . '/lingotek_form_test/lingotek_source_status/node/1">EN</a></span>');
+    $this->assertSession()->responseContains('<a href="' . $basepath . '/admin/lingotek/entity/upload/node/1?destination=' . $basepath . '/lingotek_form_test/lingotek_source_status/node/1" title="This document was deleted in Lingotek. Re-upload to translate." class="language-icon source-deleted">EN</a>');
+    $this->assertSourceAction("View", "$basepath/node/1");
+    $this->assertSourceAction("Upload document",
+      "$basepath/admin/lingotek/entity/upload/node/1?destination=$basepath/lingotek_form_test/lingotek_source_status/node/1"
+    );
 
     $translation_service->setDocumentId($entity, NULL);
     $translation_service->setSourceStatus($entity, Lingotek::STATUS_ARCHIVED);
     $this->drupalGet('/lingotek_form_test/lingotek_source_status/node/1');
     $this->assertSession()->responseContains('lingotek/css/base.css');
-    $this->assertSession()->responseContains('<span class="language-icon source-archived" title="This document was archived in Lingotek. Re-upload to translate."><a href="' . $basepath . '/admin/lingotek/entity/upload/node/1?destination=' . $basepath . '/lingotek_form_test/lingotek_source_status/node/1">EN</a></span>');
+    $this->assertSession()->responseContains('<a href="' . $basepath . '/admin/lingotek/entity/upload/node/1?destination=' . $basepath . '/lingotek_form_test/lingotek_source_status/node/1" title="This document was archived in Lingotek. Re-upload to translate." class="language-icon source-archived">EN</a>');
+    $this->assertSourceAction("View", "$basepath/node/1");
+    $this->assertSourceAction("Upload document",
+      "$basepath/admin/lingotek/entity/upload/node/1?destination=$basepath/lingotek_form_test/lingotek_source_status/node/1"
+    );
   }
 
   /**
@@ -381,14 +426,22 @@ class RenderElementTypesTest extends LingotekTestBase {
   }
 
   protected function assertTargetAction($text, $url) {
-    // Should be better with ul[@class="lingotek-target-actions"], but somehow doesn't work.
-    $link = $this->xpath('//ul//li//a[@href="' . $url . '" and text()="' . $text . '"]');
+    $link = $this->xpath('//ul[contains(@class,lingotek-target-actions)]//li//a[@href="' . $url . '" and text()="' . $text . '"]');
     $this->assertCount(1, $link, 'Action exists.');
   }
 
   protected function assertNoTargetAction($text, $url) {
-    // Should be better with ul[@class="lingotek-target-actions"], but somehow doesn't work.
-    $link = $this->xpath('//ul//li//a[@href="' . $url . '" and text()="' . $text . '"]');
+    $link = $this->xpath('//ul[contains(@class,lingotek-target-actions)]//li//a[@href="' . $url . '" and text()="' . $text . '"]');
+    $this->assertCount(0, $link, 'Action exists.');
+  }
+
+  protected function assertSourceAction($text, $url) {
+    $link = $this->xpath('//ul[contains(@class,lingotek-source-actions)]//li//a[@href="' . $url . '" and text()="' . $text . '"]');
+    $this->assertCount(1, $link, 'Action exists.');
+  }
+
+  protected function assertNoSourceAction($text, $url) {
+    $link = $this->xpath('//ul[contains(@class,lingotek-source-actions)]//li//a[@href="' . $url . '" and text()="' . $text . '"]');
     $this->assertCount(0, $link, 'Action exists.');
   }
 

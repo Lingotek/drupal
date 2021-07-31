@@ -191,8 +191,7 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
     $this->assertText('System information has been updated.');
 
     // Korean should be marked as requested, so we can check target.
-    $status = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-pending')  and contains(text(), 'KO')]");
-    $this->assertEqual(count($status), 1, 'Korean is requested, so we can still check the progress status of the translation');
+    $this->assertTargetStatus('KO', Lingotek::STATUS_PENDING);
 
     // Recheck status.
     $this->clickLink('EN', 1);
@@ -444,10 +443,8 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
     $this->assertText('Document System information was not found. Please upload again.');
 
     // Check the right class is added.
-    // We cannot use this as there are 4 elements by default with that status.
-    // $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
-    $source_error = $this->xpath("//span[contains(@class,'language-icon') and contains(@class,'source-untracked')  and ./a[contains(text(), 'EN')]]");
-    $this->assertEqual(count($source_error), 4, 'The system information has been marked as untracked.');
+    // We cannot use assertSourceStatus() as there are 4 elements by default with that status.
+    $this->assertSourceStatusStateCount(Lingotek::STATUS_UNTRACKED, 'EN', 4);
 
     // The config mapper has been marked with the error status.
     /** @var \Drupal\config_translation\ConfigMapperManagerInterface $mapperManager */
@@ -571,10 +568,8 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
     $this->assertText('Document System information was not found. Please upload again.');
 
     // Check the right class is added.
-    // We cannot use this as there are 4 elements by default with that status.
-    // $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
-    $source_error = $this->xpath("//span[contains(@class,'language-icon') and contains(@class,'source-untracked')  and ./a[contains(text(), 'EN')]]");
-    $this->assertEqual(count($source_error), 4, 'The system information has been marked as untracked.');
+    // We cannot use assertSourceStatus() as there are 4 elements by default with that status.
+    $this->assertSourceStatusStateCount(Lingotek::STATUS_UNTRACKED, 'EN', 4);
 
     // The config mapper has been marked with the error status.
     /** @var \Drupal\config_translation\ConfigMapperManagerInterface $mapperManager */
@@ -617,10 +612,7 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
     $this->assertText('Document System information has been archived. Uploading again.');
 
     // Check the right class is added.
-    // We cannot use this as there are 4 elements by default with that status.
-    // $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
-    $source_error = $this->xpath("//span[contains(@class,'language-icon') and contains(@class,'source-importing')  and ./a[contains(text(), 'EN')]]");
-    $this->assertEqual(count($source_error), 1, 'The system information has been marked as importing.');
+    $this->assertSourceStatus('EN', Lingotek::STATUS_IMPORTING);
 
     // The config mapper has been marked with the error status.
     /** @var \Drupal\config_translation\ConfigMapperManagerInterface $mapperManager */
@@ -791,8 +783,7 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
     $this->assertText('System information update failed. Please try again.');
 
     // Check the right class is added.
-    $source_error = $this->xpath("//span[contains(@class,'language-icon') and contains(@class,'source-error')  and ./a[contains(text(), 'EN')]]");
-    $this->assertEqual(count($source_error), 1, 'The system information has been marked as error.');
+    $this->assertSourceStatus('EN', Lingotek::STATUS_ERROR);
 
     // The config mapper has been marked with the error status.
     /** @var \Drupal\config_translation\ConfigMapperManagerInterface $mapperManager */
@@ -898,10 +889,8 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
     $this->assertText('Document System information was not found. Please upload again.');
 
     // Check the right class is added.
-    // We cannot use this as there are 4 elements by default with that status.
-    // $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
-    $source_error = $this->xpath("//span[contains(@class,'language-icon') and contains(@class,'source-untracked')  and ./a[contains(text(), 'EN')]]");
-    $this->assertEqual(count($source_error), 4, 'The system information has been marked as untracked.');
+    // We cannot use assertSourceStatus() as there are 4 elements by default with that status.
+    $this->assertSourceStatusStateCount(Lingotek::STATUS_UNTRACKED, 'EN', 4);
 
     // The config mapper has been marked with the error status.
     /** @var \Drupal\config_translation\ConfigMapperManagerInterface $mapperManager */
@@ -1007,8 +996,7 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
     $this->assertText('Document System information has been archived. Uploading again.');
 
     // Check the right class is added.
-    $source_error = $this->xpath("//span[contains(@class,'language-icon') and contains(@class,'source-importing')  and ./a[contains(text(), 'EN')]]");
-    $this->assertEquals(count($source_error), 1);
+    $this->assertSourceStatus('EN', Lingotek::STATUS_IMPORTING);
 
     /** @var \Drupal\config_translation\ConfigMapperManagerInterface $mapperManager */
     $mapperManager = \Drupal::service('plugin.manager.config_translation.mapper');
@@ -1147,10 +1135,9 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
     $this->assertSame(Lingotek::STATUS_UNTRACKED, $target_status);
 
     // Check the right class is added.
-    // We cannot use this as there are 4 elements by default with that status.
-    // $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
-    $source_error = $this->xpath("//span[contains(@class,'language-icon') and contains(@class,'source-untracked')  and ./a[contains(text(), 'EN')]]");
-    $this->assertEquals(4, count($source_error), 'The system information has been marked as untracked.');
+    // We cannot use assertSourceStatus() as there are 4 elements by default with that status.
+    $this->assertSourceStatusStateCount(Lingotek::STATUS_UNTRACKED, 'EN', 4);
+
     $this->assertNoLingotekRequestTranslationLink('es_MX');
     $this->assertText('Document System information was not found. Please upload again.');
   }
@@ -1526,8 +1513,7 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     // Check the right class is added.
-    $source_error = $this->xpath("//span[contains(@class,'language-icon') and contains(@class,'source-importing')  and ./a[contains(text(), 'EN')]]");
-    $this->assertEquals(count($source_error), 1);
+    $this->assertSourceStatus('EN', Lingotek::STATUS_IMPORTING);
 
     $this->assertNoLingotekRequestTranslationLink('es_MX');
     $this->assertText('Document System information has been archived. Uploading again.');
@@ -1565,10 +1551,8 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     // Check the right class is added.
-    // We cannot use this as there are 4 elements by default with that status.
-    // $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
-    $source_error = $this->xpath("//span[contains(@class,'language-icon') and contains(@class,'source-untracked')  and ./a[contains(text(), 'EN')]]");
-    $this->assertEqual(count($source_error), 4, 'The system information has been marked as untracked.');
+    // We cannot use assertSourceStatus() as there are 4 elements by default with that status.
+    $this->assertSourceStatusStateCount(Lingotek::STATUS_UNTRACKED, 'EN', 4);
 
     $this->assertNoLingotekRequestTranslationLink('es_MX');
     $this->assertText('Document System information was not found. Please upload again.');
@@ -1739,8 +1723,7 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
     $this->clickLink('ES');
 
     // Check the right class is added.
-    $source_error = $this->xpath("//span[contains(@class,'language-icon') and contains(@class,'source-importing')  and ./a[contains(text(), 'EN')]]");
-    $this->assertEqual(count($source_error), 1);
+    $this->assertSourceStatus('EN', Lingotek::STATUS_IMPORTING);
 
     $this->assertLingotekRequestTranslationLink('es_MX');
     $this->assertText('Document System information has been archived. Uploading again.');
@@ -1774,10 +1757,8 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
     $this->clickLink('ES');
 
     // Check the right class is added.
-    // We cannot use this as there are 4 elements by default with that status.
-    // $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
-    $source_error = $this->xpath("//span[contains(@class,'language-icon') and contains(@class,'source-untracked')  and ./a[contains(text(), 'EN')]]");
-    $this->assertEqual(count($source_error), 4, 'The system information has been marked as untracked.');
+    // We cannot use assertSourceStatus() as there are 4 elements by default with that status.
+    $this->assertSourceStatusStateCount(Lingotek::STATUS_UNTRACKED, 'EN', 4);
 
     $this->assertNoLingotekRequestTranslationLink('es_MX');
     $this->assertText('Document System information was not found. Please upload again.');
@@ -1884,8 +1865,7 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     // Check the right class is added.
-    $source_error = $this->xpath("//span[contains(@class,'language-icon') and contains(@class,'source-importing')  and ./a[contains(text(), 'EN')]]");
-    $this->assertEqual(count($source_error), 1);
+    $this->assertSourceStatus('EN', Lingotek::STATUS_IMPORTING);
 
     $this->assertNoLingotekRequestTranslationLink('es_MX');
     $this->assertText('Document System information has been archived. Uploading again.');
@@ -1923,10 +1903,8 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     // Check the right class is added.
-    // We cannot use this as there are 4 elements by default with that status.
-    // $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
-    $source_error = $this->xpath("//span[contains(@class,'language-icon') and contains(@class,'source-untracked')  and ./a[contains(text(), 'EN')]]");
-    $this->assertEqual(count($source_error), 4, 'The system information has been marked as untracked.');
+    // We cannot use assertSourceStatus() as there are 4 elements by default with that status.
+    $this->assertSourceStatusStateCount(Lingotek::STATUS_UNTRACKED, 'EN', 4);
 
     $this->assertNoLingotekRequestTranslationLink('es_MX');
     $this->assertText('Document System information was not found. Please upload again.');

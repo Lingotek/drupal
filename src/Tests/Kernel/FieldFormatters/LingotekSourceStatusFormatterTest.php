@@ -57,6 +57,7 @@ class LingotekSourceStatusFormatterTest extends KernelTestBase {
 
     $this->entityTypeManager = \Drupal::service('entity_type.manager');
 
+    $this->installSchema('locale', ['locales_location', 'locales_source', 'locales_target']);
     $this->installConfig(['system']);
     $this->installConfig(['field']);
     $this->installConfig(['language']);
@@ -112,7 +113,7 @@ class LingotekSourceStatusFormatterTest extends KernelTestBase {
    * Tests LingotekSourceStatusFormatter.
    */
   public function testLingotekSourceStatusFormatter() {
-    $expected = '<span class="language-icon source-untracked" title="Upload"><a href="/admin/lingotek/entity/upload/entity_test/1?destination=/">EN</a></span>';
+    $expected = '<a href="/admin/lingotek/entity/upload/entity_test/1?destination=/" title="Upload" class="language-icon source-untracked">EN</a>';
 
     $english = ConfigurableLanguage::load('en');
 

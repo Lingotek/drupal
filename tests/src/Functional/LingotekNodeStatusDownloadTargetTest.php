@@ -124,7 +124,7 @@ class LingotekNodeStatusDownloadTargetTest extends LingotekTestBase {
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     // Check the status is not Current for source.
-    $source_edited = $this->xpath("//span[contains(@class,'language-icon') and contains(@class, 'source-edited')  and contains(@title, 'Re-upload (content has changed since last upload)')]");
+    $source_edited = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'source-edited') and contains(@title, 'Re-upload (content has changed since last upload)')]");
     $this->assertEqual(count($source_edited), 1, 'Source is marked as edited.');
     $this->assertTargetStatus('ES', Lingotek::STATUS_EDITED);
 

@@ -63,7 +63,7 @@ class LingotekNodeBulkViewsTranslationTest extends LingotekNodeBulkTranslationTe
    */
   protected function assertSourceStatus($language, $status) {
     if ($status === Lingotek::STATUS_UNTRACKED) {
-      $status_target = $this->xpath("//span[contains(@class,'language-icon') and contains(@class,'source-" . strtolower($status) . "')  and ./a[contains(text(), '" . strtoupper($language) . "')]]");
+      $status_target = $this->xpath("//a[contains(@class,'language-icon') and contains(@class,'source-" . strtolower($status) . "')  and contains(text(), '" . strtoupper($language) . "')]");
       // If not found, maybe it didn't have a link.
       if (count($status_target) === 1) {
         $this->assertEqual(count($status_target), 1, 'The source ' . strtoupper($language) . ' has been marked with status ' . strtolower($status) . '.');
@@ -80,7 +80,7 @@ class LingotekNodeBulkViewsTranslationTest extends LingotekNodeBulkTranslationTe
       }
     }
     else {
-      $status_target = $this->xpath("//span[contains(@class,'language-icon') and contains(@class,'source-" . strtolower($status) . "')  and ./a[contains(text(), '" . strtoupper($language) . "')]]");
+      $status_target = $this->xpath("//a[contains(@class,'language-icon') and contains(@class,'source-" . strtolower($status) . "')  and contains(text(), '" . strtoupper($language) . "')]");
       // If not found, maybe it didn't have a link.
       if (count($status_target) === 1) {
         $this->assertEqual(count($status_target), 1, 'The source ' . strtoupper($language) . ' has been marked with status ' . strtolower($status) . '.');

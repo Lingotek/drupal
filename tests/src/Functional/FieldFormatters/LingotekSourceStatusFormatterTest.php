@@ -62,7 +62,7 @@ class LingotekSourceStatusFormatterTest extends LingotekTestBase {
     $assert_session->addressEquals('/node/1');
 
     $this->drupalGet('/metadata/1');
-    $assert_session->responseContains('<span class="language-icon source-importing" title="Source importing"><a href="' . $basepath . '/admin/lingotek/entity/check_upload/dummy-document-hash-id?destination=' . $basepath . '/metadata/1">EN</a></span>');
+    $assert_session->responseContains('<a href="' . $basepath . '/admin/lingotek/entity/check_upload/dummy-document-hash-id?destination=' . $basepath . '/metadata/1" title="Source importing" class="language-icon source-importing">EN</a>');
   }
 
 }

@@ -17,11 +17,11 @@
    */
   Drupal.behaviors.lingotekTargetActions = {
     attach: function (context, settings) {
-      var $actionsElement = $(context).find('.lingotek-target-dropdown').once('lingotek-target-dropdown');
+      var $actionsElement = $(context).find('.lingotek-target-dropdown,.lingotek-source-dropdown').once('lingotek-target-dropdown');
       // Attach event handlers to toggle button.
       $actionsElement.each(function () {
         var $this = $(this);
-        var $toggle = $this.find('.lingotek-target-dropdown-toggle');
+        var $toggle = $this.find('.lingotek-target-dropdown-toggle,.lingotek-source-dropdown-toggle');
 
         $toggle.on('click', function (e) {
           e.preventDefault();

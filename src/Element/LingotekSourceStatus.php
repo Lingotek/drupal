@@ -26,6 +26,7 @@ class LingotekSourceStatus extends RenderElement {
       '#attached' => [
         'library' => [
           'lingotek/lingotek',
+          'lingotek/lingotek.target_actions',
         ],
       ],
       '#cache' => [
@@ -47,6 +48,7 @@ class LingotekSourceStatus extends RenderElement {
     if (isset($element['#entity'])) {
       $element['#url'] = $this->getSourceActionUrl($element['#entity'], $element['#status']);
       $element['#status_title'] = $this->getSourceStatusText($element['#entity'], $element['#status']);
+      $element['#actions'] = $this->getSecondarySourceActionUrls($element['#entity'], $element['#status'], $element['#language']);
     }
     elseif (isset($element['#ui_component'])) {
       $element['#url'] = $this->getSourceActionUrlForUI($element['#ui_component'], $element['#status']);
@@ -89,6 +91,61 @@ class LingotekSourceStatus extends RenderElement {
       }
     }
     return $url;
+  }
+
+  protected function getSecondarySourceActionUrls(ContentEntityInterface &$entity, $source_status, $language) {
+    $actions = [];
+    $langcode = $language->getId();
+    if ($entity->hasLinkTemplate('canonical') && $entity->hasTranslation($langcode)) {
+      $actions[] = [
+        'title' => $this->t('View'),
+        'url' => $entity->getTranslation($langcode)->toUrl(),
+        'new_window' => FALSE,
+      ];
+    }
+    $content_translation_service = \Drupal::service('lingotek.content_translation');
+    if ($source_status == Lingotek::STATUS_IMPORTING) {
+      $actions[] = [
+        'title' => $this->t('Check upload status'),
+        'url' => Url::fromRoute('lingotek.entity.check_upload',
+          [
+            'doc_id' => $content_translation_service->getDocumentId($entity),
+          ],
+          ['query' => $this->getDestinationWithQueryArray()]),
+        'new_window' => FALSE,
+      ];
+    }
+    if (in_array($source_status, [
+      Lingotek::STATUS_EDITED,
+      Lingotek::STATUS_UNTRACKED,
+      Lingotek::STATUS_ERROR,
+      Lingotek::STATUS_CANCELLED,
+      Lingotek::STATUS_ARCHIVED,
+      Lingotek::STATUS_DELETED,
+    ])) {
+      if ($doc_id = $content_translation_service->getDocumentId($entity)) {
+        $actions[] = [
+          'title' => $this->t('Update document'),
+          'url' => Url::fromRoute('lingotek.entity.update',
+            ['doc_id' => $doc_id],
+            ['query' => $this->getDestinationWithQueryArray()]),
+          'new_window' => FALSE,
+        ];
+      }
+      else {
+        $actions[] = [
+          'title' => $this->t('Upload document'),
+          'url' => Url::fromRoute('lingotek.entity.upload',
+            [
+              'entity_type' => $entity->getEntityTypeId(),
+              'entity_id' => $entity->id(),
+            ],
+            ['query' => $this->getDestinationWithQueryArray()]),
+          'new_window' => FALSE,
+        ];
+      }
+    }
+    return $actions;
   }
 
   protected function getSourceActionUrlForUI($component, $source_status) {
