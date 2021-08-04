@@ -1684,7 +1684,13 @@ class LingotekConfigManagementForm extends FormBase {
     $operations[(string) $this->t('Check translation progress')]['check_translations'] = $this->t('Check progress of all translations');
     $operations[(string) $this->t('Download')]['download'] = $this->t('Download all translations');
     $operations[(string) $this->t('Cancel document')]['cancel'] = $this->t('Cancel document');
-    foreach ($this->languageManager->getLanguages() as $langcode => $language) {
+
+    $target_languages = $this->languageManager->getLanguages();
+    $target_languages = array_filter($target_languages, function (LanguageInterface $language) {
+      $configLanguage = ConfigurableLanguage::load($language->getId());
+      return $this->lingotekConfiguration->isLanguageEnabled($configLanguage);
+    });
+    foreach ($target_languages as $langcode => $language) {
       $operations[(string) $this->t('Cancel document')]['cancel:' . $langcode] = $this->t('Cancel @language translation', ['@language' => $language->getName() . ' (' . $language->getId() . ')']);
       $operations[(string) $this->t('Request translations')]['request_translation:' . $langcode] = $this->t('Request @language translation', ['@language' => $language->getName() . ' (' . $language->getId() . ')']);
       $operations[(string) $this->t('Check translation progress')]['check_translation:' . $langcode] = $this->t('Check progress of @language translation', ['@language' => $language->getName() . ' (' . $language->getId() . ')']);

@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\lingotek\Functional\Views;
 
+use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\lingotek\Lingotek;
 use Drupal\Tests\lingotek\Functional\LingotekNodeBulkTranslationTest;
 
@@ -42,6 +43,57 @@ class LingotekNodeBulkViewsTranslationTest extends LingotekNodeBulkTranslationTe
    */
   public function testNodeTranslationMessageWhenBundleNotConfiguredWithLinks() {
     $this->markTestSkipped('This doesn\'t apply if we replace the management pages with views.');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function testRequestTranslationWithActionWhenLanguageDisabled() {
+    // Add a language.
+    $italian = ConfigurableLanguage::createFromLangcode('it');
+    $italian->save();
+
+    /** @var \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_config */
+    $lingotek_config = \Drupal::service('lingotek.configuration');
+    $lingotek_config->disableLanguage($italian);
+
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    $this->goToContentBulkManagementForm();
+
+    // I can init the upload of content.
+    $this->assertLingotekUploadLink();
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $this->assertIdentical('en_US', \Drupal::state()
+      ->get('lingotek.uploaded_locale'));
+
+    // I can check current status.
+    $this->assertLingotekCheckSourceStatusLink();
+    // I can request a translation
+    $this->assertLingotekRequestTranslationLink('es_MX');
+    $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
+
+    // There is an option for requesting a disabled language.
+    $this->assertSession()->optionExists('edit-action', 'Request content item translation to Lingotek for Italian');
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForRequestTranslation('it', 'node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    // But the disabled language won't be requested.
+    $this->assertText('Cannot request language Italian (it). That language is not enabled for Lingotek translation.');
   }
 
   /**

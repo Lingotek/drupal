@@ -6,6 +6,7 @@ namespace Drupal\Tests\lingotek\Unit\Form {
   use Drupal\Core\Database\Connection;
   use Drupal\Core\Database\Query\PagerSelectExtender;
   use Drupal\Core\Database\StatementInterface;
+  use Drupal\Core\DependencyInjection\ContainerBuilder;
   use Drupal\Core\Entity\EntityFieldManagerInterface;
   use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
   use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -185,19 +186,22 @@ namespace Drupal\Tests\lingotek\Unit\Form {
         ]
       ));
       $this->form->setStringTranslation($this->getStringTranslationStub());
+
+      $container = new ContainerBuilder();
+      \Drupal::setContainer($container);
     }
 
     /**
-   * @covers ::getFormId
-   */
+     * @covers ::getFormId
+     */
     public function testGetFormId() {
       $form_id = $this->form->getFormID();
       $this->assertSame('lingotek_management', $form_id);
     }
 
     /**
-   * @covers ::buildForm
-   */
+     * @covers ::buildForm
+     */
     public function testQueryExcludesUndefinedLanguageContent() {
       $select = $this->getMockBuilder(PagerSelectExtender::class)->disableOriginalConstructor()->getMock();
       $select->expects(($this->any()))
@@ -300,6 +304,10 @@ namespace Drupal\Tests\lingotek\Unit\Form {
         ->method('get')
         ->with('bundle_entity_type')
         ->willReturn('node');
+      $entityType->expects($this->any())
+        ->method('hasLinkTemplate')
+        ->with('delete-multiple-form')
+        ->willReturn(FALSE);
       $this->entityTypeManager->expects($this->any())
         ->method('getDefinition')
         ->with('node')
@@ -309,13 +317,27 @@ namespace Drupal\Tests\lingotek\Unit\Form {
         ->method('getKey')
         ->will($this->returnArgument(0));
 
-      $storage = $this->createMock(EntityStorageInterface::class);
+      $language = $this->createMock(ConfigurableLanguageInterface::class);
+      $language->expects($this->any())
+        ->method('getId')
+        ->willReturn('en');
+      $this->languageManager->expects($this->any())
+        ->method('getLanguages')
+        ->willReturn(['en' => $language]);
 
-      $this->entityTypeManager->expects($this->once())
+      $languageStorage = $this->createMock(EntityStorageInterface::class);
+      $languageStorage->expects($this->once())
+        ->method('load')
+        ->with('en')
+        ->willReturn($language);
+
+      $nodeStorage = $this->createMock(EntityStorageInterface::class);
+
+      $this->entityTypeManager->expects($this->exactly(2))
         ->method('getStorage')
-        ->with('node')
-        ->willReturn($storage);
-      $storage->expects($this->once())
+        ->withConsecutive(['configurable_language'], ['node'])
+        ->willReturnOnConsecutiveCalls($languageStorage, $nodeStorage);
+      $nodeStorage->expects($this->once())
         ->method('loadMultiple')
         ->willReturn([]);
 
@@ -323,10 +345,9 @@ namespace Drupal\Tests\lingotek\Unit\Form {
         ->method('getBundleInfo')
         ->willReturn([]);
 
-      $language = $this->createMock(ConfigurableLanguageInterface::class);
-      $this->languageManager->expects($this->any())
-        ->method('getLanguages')
-        ->willReturn(['en' => $language]);
+      $this->lingotekConfiguration->expects($this->any())
+        ->method('isLanguageEnabled')
+        ->willReturn(TRUE);
 
       $this->lingotekConfiguration->expects($this->any())
         ->method('getProfileOptions')
@@ -343,6 +364,60 @@ namespace Drupal\Tests\lingotek\Unit\Form {
         ->willReturn(FALSE);
 
       $this->form->buildForm([], new FormState());
+    }
+
+    /**
+     * @covers ::generateBulkOptions
+     */
+    public function testGenerateBulkOptions() {
+      $entityType = $this->createMock(EntityTypeInterface::class);
+      $entityType->expects($this->any())
+        ->method('hasLinkTemplate')
+        ->with('delete-multiple-form')
+        ->willReturn(FALSE);
+
+      $this->entityTypeManager->expects($this->any())
+        ->method('getDefinition')
+        ->with('node')
+        ->willReturn($entityType);
+
+      $this->lingotekConfiguration->expects($this->any())
+        ->method('getProfileOptions')
+        ->willReturn(['manual']);
+
+      $languageEnabled = $this->createMock(ConfigurableLanguageInterface::class);
+      $languageDisabled = $this->createMock(ConfigurableLanguageInterface::class);
+      $languageEnabled->expects($this->any())
+        ->method('getId')
+        ->willReturn('en');
+      $languageDisabled->expects($this->any())
+        ->method('getId')
+        ->willReturn('di');
+
+      $this->languageManager->expects($this->any())
+        ->method('getLanguages')
+        ->willReturn(['en' => $languageEnabled, 'di' => $languageDisabled]);
+
+      $this->lingotekConfiguration->expects($this->any())
+        ->method('isLanguageEnabled')
+        ->withConsecutive([$languageEnabled], [$languageDisabled])
+        ->willReturnOnConsecutiveCalls(TRUE, FALSE);
+
+      $languageStorage = $this->createMock(EntityStorageInterface::class);
+      $languageStorage->expects($this->exactly(2))
+        ->method('load')
+        ->withConsecutive(['en'], ['di'])
+        ->willReturnOnConsecutiveCalls($languageEnabled, $languageDisabled);
+
+      $this->entityTypeManager->expects($this->any())
+        ->method('getStorage')
+        ->with('configurable_language')
+        ->willReturn($languageStorage);
+
+      $options = $this->form->generateBulkOptions();
+      $this->assertArrayHasKey('request_translations', $options['Request translations']);
+      $this->assertArrayHasKey('request_translation:en', $options['Request translations']);
+      $this->assertArrayNotHasKey('request_translation:di', $options['Request translations']);
     }
 
   }

@@ -2,6 +2,7 @@
 
 namespace Drupal\lingotek\Plugin\Action;
 
+use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\lingotek\Exception\LingotekApiException;
 use Drupal\lingotek\Exception\LingotekDocumentNotFoundException;
 
@@ -38,6 +39,14 @@ class CheckTranslationStatusLingotekAction extends LingotekContentEntityConfigur
     }
     $configuration = $this->getConfiguration();
     $langcode = $configuration['language'];
+
+    $language = ConfigurableLanguage::load($langcode);
+    if (!$lingotek_configuration->isLanguageEnabled($language)) {
+      $this->messenger()->addWarning(t('Cannot check status for language @language (%langcode). That language is not enabled for Lingotek translation.',
+        ['@language' => $language->getName(), '%langcode' => $langcode]));
+      return FALSE;
+    }
+
     try {
       $result = $this->translationService->checkTargetStatus($entity, $langcode);
     }

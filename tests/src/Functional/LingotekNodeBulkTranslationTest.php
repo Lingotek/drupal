@@ -3728,6 +3728,49 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     $this->assertLingotekDownloadTargetLink('de_AT');
   }
 
+  /**
+   * Tests that we manage errors when using the request translation action.
+   */
+  public function testRequestTranslationWithActionWhenLanguageDisabled() {
+    // Add a language.
+    $italian = ConfigurableLanguage::createFromLangcode('it');
+    $italian->save();
+
+    /** @var \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_config */
+    $lingotek_config = \Drupal::service('lingotek.configuration');
+    $lingotek_config->disableLanguage($italian);
+
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    $this->goToContentBulkManagementForm();
+
+    // I can init the upload of content.
+    $this->assertLingotekUploadLink();
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $this->assertIdentical('en_US', \Drupal::state()
+      ->get('lingotek.uploaded_locale'));
+
+    // I can check current status.
+    $this->assertLingotekCheckSourceStatusLink();
+    // I can request a translation
+    $this->assertLingotekRequestTranslationLink('es_MX');
+    $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
+
+    // There is no option for requesting a disabled language.
+    $this->assertSession()->optionNotExists('edit-operation', 'Request Italian (it) translation');
+  }
+
   protected function confirmBulkDeleteTranslation($nodeCount, $translationCount) {
     $this->drupalPostForm(NULL, [], t('Delete'));
     $this->assertText("Deleted $translationCount content item.");

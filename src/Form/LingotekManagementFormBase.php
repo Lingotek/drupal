@@ -11,6 +11,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Routing\LocalRedirectResponse;
 use Drupal\Core\State\StateInterface;
@@ -18,6 +19,7 @@ use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Drupal\Core\Url;
 use Drupal\Core\Utility\LinkGeneratorInterface;
 use Drupal\file\Entity\File;
+use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\lingotek\Exception\LingotekApiException;
 use Drupal\lingotek\Exception\LingotekContentEntityStorageException;
 use Drupal\lingotek\Exception\LingotekDocumentArchivedException;
@@ -1711,7 +1713,12 @@ abstract class LingotekManagementFormBase extends FormBase {
       $operations[(string) $this->t('Change Translation Profile')]['change_profile:' . $profile_id] = $this->t('Change to @profile Profile', ['@profile' => $profile]);
     }
     $operations[(string) $this->t('Cancel document')]['cancel'] = $this->t('Cancel document');
-    foreach ($this->languageManager->getLanguages() as $langcode => $language) {
+    $target_languages = $this->languageManager->getLanguages();
+    $target_languages = array_filter($target_languages, function (LanguageInterface $language) {
+      $configLanguage = $this->entityTypeManager->getStorage('configurable_language')->load($language->getId());
+      return $this->lingotekConfiguration->isLanguageEnabled($configLanguage);
+    });
+    foreach ($target_languages as $langcode => $language) {
       $operations[(string) $this->t('Cancel document')]['cancel:' . $langcode] = $this->t('Cancel @language translation', ['@language' => $language->getName() . ' (' . $language->getId() . ')']);
       $operations[(string) $this->t('Request translations')]['request_translation:' . $langcode] = $this->t('Request @language translation', ['@language' => $language->getName() . ' (' . $language->getId() . ')']);
       $operations[(string) $this->t('Check translation progress')]['check_translation:' . $langcode] = $this->t('Check progress of @language translation', ['@language' => $language->getName() . ' (' . $language->getId() . ')']);

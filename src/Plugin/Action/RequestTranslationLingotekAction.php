@@ -2,6 +2,8 @@
 
 namespace Drupal\lingotek\Plugin\Action;
 
+use Drupal\Core\Executable\ExecutableException;
+use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\lingotek\Exception\LingotekApiException;
 use Drupal\lingotek\Exception\LingotekDocumentArchivedException;
 use Drupal\lingotek\Exception\LingotekDocumentLockedException;
@@ -43,6 +45,14 @@ class RequestTranslationLingotekAction extends LingotekContentEntityConfigurable
 
     $configuration = $this->getConfiguration();
     $langcode = $configuration['language'];
+
+    $language = ConfigurableLanguage::load($langcode);
+    if (!$lingotek_configuration->isLanguageEnabled($language)) {
+      $this->messenger()->addWarning(t('Cannot request language @language (%langcode). That language is not enabled for Lingotek translation.',
+        ['@language' => $language->getName(), '%langcode' => $langcode]));
+      return FALSE;
+    }
+
     try {
       $locale = $this->languageLocaleMapper->getLocaleForLangcode($langcode);
       $result = $this->translationService->addTarget($entity, $locale);
