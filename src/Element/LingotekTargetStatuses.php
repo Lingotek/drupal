@@ -132,7 +132,7 @@ class LingotekTargetStatuses extends RenderElement {
     }
     ksort($translations);
     foreach ($translations as $langcode => &$translation) {
-      $translation['status_text'] = $this->getTargetStatusText($translation['status'], $langcode);
+      $translation['status_text'] = $this->getTargetStatusText($translation['status'], $langcode, $entity->hasTranslation($langcode));
       $translation['language'] = $langcode;
     }
     return $translations;
@@ -200,7 +200,8 @@ class LingotekTargetStatuses extends RenderElement {
     }
     ksort($translations);
     foreach ($translations as $langcode => &$translation) {
-      $translation['status_text'] = $this->getTargetStatusText($translation['status'], $langcode);
+      $hasTranslation = $mapper instanceof ConfigEntityMapper ? $mapper->getEntity()->hasTranslation($langcode) : FALSE;
+      $translation['status_text'] = $this->getTargetStatusText($translation['status'], $langcode, $hasTranslation);
       $translation['language'] = $langcode;
     }
     return $translations;

@@ -1040,6 +1040,105 @@ class LingotekInterfaceTranslationTest extends LingotekTestBase {
     $this->goToInterfaceTranslationManagementForm();
     $this->assertIdentical(Lingotek::STATUS_ARCHIVED, $translation_service->getSourceStatus($component));
     $this->assertIdentical(Lingotek::STATUS_ARCHIVED, $translation_service->getTargetStatus($component, 'es'));
+
+    $link = $this->xpath("//span[@class='language-icon target-archived' and @title='Spanish - This target was archived in Lingotek.' and text()='ES']");
+    $this->assertEquals(1, count($link), 'Span exists.');
+  }
+
+  /**
+   * Tests that a node can be translated using the links on the management page.
+   */
+  public function testAutomatedDeleteNotificationInterfaceTranslation() {
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
+    // In Drupal.org CI the module will be at modules/conrtib/lingotek.
+    // We need to generate the path and not hardcode it.
+    $path = drupal_get_path('module', 'lingotek_interface_translation_test');
+    $component = $path;
+    $indexOfModuleLink = 2;
+    $assert_session = $this->assertSession();
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
+    $this->goToInterfaceTranslationManagementForm();
+    $assert_session->responseContains('lingotek_interface_translation_test');
+
+    // Clicking English must init the upload of content.
+    $this->assertLingotekInterfaceTranslationUploadLink($component);
+    $this->clickLink('EN', $indexOfModuleLink);
+
+    /** @var \Drupal\lingotek\LingotekInterfaceTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.interface_translation');
+    // Assert the content is importing.
+    $this->assertIdentical(Lingotek::STATUS_IMPORTING, $translation_service->getSourceStatus($component));
+
+    $this->goToInterfaceTranslationManagementForm();
+
+    // Simulate the notification of content successfully uploaded.
+    $url = Url::fromRoute('lingotek.notify', [], [
+      'query' => [
+        'project_id' => 'test_project',
+        'document_id' => 'dummy-document-hash-id',
+        'complete' => 'false',
+        'type' => 'document_uploaded',
+        'progress' => '0',
+      ],
+    ])->setAbsolute()->toString();
+    $request = $this->client->post($url, [
+      'cookies' => $this->cookies,
+      'headers' => [
+        'Accept' => 'application/json',
+        'Content-Type' => 'application/json',
+      ],
+      'http_errors' => FALSE,
+    ]);
+    $response = json_decode($request->getBody(), TRUE);
+    $this->verbose($request);
+    $this->assertIdentical([], $response['result']['request_translations'], 'No translations have been requested after notification automatically.');
+
+    $this->goToInterfaceTranslationManagementForm();
+
+    // Assert the content is imported.
+    $this->assertIdentical(Lingotek::STATUS_CURRENT, $translation_service->getSourceStatus($component));
+    // Assert the target is ready for requesting.
+    $this->assertIdentical(Lingotek::STATUS_REQUEST, $translation_service->getTargetStatus($component, 'es'));
+
+    // Request Spanish manually.
+    $this->clickLink('ES');
+    // Assert the target is pending.
+    $this->goToInterfaceTranslationManagementForm();
+    $this->assertIdentical(Lingotek::STATUS_PENDING, $translation_service->getTargetStatus($component, 'es'));
+
+    // Simulate the notification of document deleted.
+    $url = Url::fromRoute('lingotek.notify', [], [
+      'query' => [
+        'project_id' => 'test_project',
+        'document_id' => 'dummy-document-hash-id',
+        'complete' => 'true',
+        'deleted_by_user_login' => 'user@example.com',
+        'type' => 'document_deleted',
+        'progress' => '100',
+      ],
+    ])->setAbsolute()->toString();
+    $request = $this->client->post($url, [
+      'cookies' => $this->cookies,
+      'headers' => [
+        'Accept' => 'application/json',
+        'Content-Type' => 'application/json',
+      ],
+      'http_errors' => FALSE,
+    ]);
+    $response = json_decode($request->getBody(), TRUE);
+    $this->verbose($request);
+    $this->assertEquals($response['messages'][0], "Document for entity $path deleted by user@example.com in the TMS.");
+
+    $this->goToInterfaceTranslationManagementForm();
+    $this->assertIdentical(Lingotek::STATUS_DELETED, $translation_service->getSourceStatus($component));
+    $this->assertIdentical(Lingotek::STATUS_DELETED, $translation_service->getTargetStatus($component, 'es'));
+
+    $link = $this->xpath("//span[@class='language-icon target-deleted' and @title='Spanish - This target was deleted in Lingotek.' and text()='ES']");
+    $this->assertEquals(1, count($link), 'Span exists.');
   }
 
   /**

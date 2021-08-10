@@ -264,13 +264,14 @@ trait LingotekTargetTrait {
    *   The target status.
    * @param string $langcode
    *   The language code.
+   * @param bool|null $translation_exists
+   *   TRUE if translation exists.
    *
    * @return string
    *   The source status human-friendly label.
    */
-  protected function getTargetStatusText($status, $langcode) {
+  protected function getTargetStatusText($status, $langcode, $translation_exists = NULL) {
     $language = ConfigurableLanguage::load($langcode);
-
     switch ($status) {
       case Lingotek::STATUS_UNTRACKED:
         return $language->label() . ' - ' . $this->t('Translation exists, but it is not being tracked by Lingotek');
@@ -300,10 +301,20 @@ trait LingotekTargetTrait {
         return $language->label() . ' - ' . $this->t('Cancelled by user');
 
       case Lingotek::STATUS_DELETED:
-        return $language->label() . ' - ' . $this->t('Deleted in Lingotek');
+        if (!isset($translation_exists)) {
+          return $language->label() . ' - ' . $this->t('This target was deleted in Lingotek.');
+        } if ($translation_exists) {
+          return $language->label() . ' - ' . $this->t('This target was deleted in Lingotek and the translation exists.');
+        }
+        return $language->label() . ' - ' . $this->t('This target was deleted in Lingotek and the translation does not exist.');
 
       case Lingotek::STATUS_ARCHIVED:
-        return $language->label() . ' - ' . $this->t('Archived in Lingotek');
+        if (!isset($translation_exists)) {
+          return $language->label() . ' - ' . $this->t('This target was archived in Lingotek.');
+        } if ($translation_exists) {
+          return $language->label() . ' - ' . $this->t('This target was archived in Lingotek and the translation exists.');
+        }
+        return $language->label() . ' - ' . $this->t('This target was archived in Lingotek and the translation does not exist.');
 
       default:
         return $language->label() . ' - ' . ucfirst(strtolower($status));

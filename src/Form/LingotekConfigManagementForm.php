@@ -1520,10 +1520,16 @@ class LingotekConfigManagementForm extends FormBase {
           return $language->label() . ' - ' . $this->t('Cancelled by user');
 
         case Lingotek::STATUS_DELETED:
-          return $language->label() . ' - ' . $this->t('Deleted in Lingotek');
+          if ($mapper->hasTranslation($language)) {
+            return $language->label() . ' - ' . $this->t('This target was deleted in Lingotek and the translation exists.');
+          }
+          return $language->label() . ' - ' . $this->t('This target was deleted in Lingotek and the translation does not exist.');
 
         case Lingotek::STATUS_ARCHIVED:
-          return $language->label() . ' - ' . $this->t('Archived in Lingotek');
+          if ($mapper->hasTranslation($language)) {
+            return $language->label() . ' - ' . $this->t('This target was archived in Lingotek and the translation exists.');
+          }
+          return $language->label() . ' - ' . $this->t('This target was archived in Lingotek and the translation does not exist.');
 
         default:
           return $language->label() . ' - ' . ucfirst(strtolower($status));
