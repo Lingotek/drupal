@@ -27,6 +27,7 @@ use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
 use Drupal\lingotek\Entity\LingotekContentMetadata;
 use Drupal\lingotek\Exception\LingotekApiException;
+use Drupal\lingotek\Exception\LingotekContentEntityFieldTooLongStorageException;
 use Drupal\lingotek\Exception\LingotekContentEntityStorageException;
 use Drupal\lingotek\Exception\LingotekDocumentAlreadyCompletedException;
 use Drupal\lingotek\Exception\LingotekDocumentArchivedException;
@@ -2176,6 +2177,11 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
                       ['%field' => $name, '%type' => $entity->getEntityTypeId(), '%label' => $entity->label(), '%langcode' => $langcode, '%uri' => $property_data]);
                     // Let's default to the original value given that there was a problem.
                     $property_data = $revision->get($name)->offsetGet($delta)->{$property};
+                  }
+                }
+                if ($data_type === 'string' && $maxLength = $field_definition->getSetting('max_length')) {
+                  if (mb_strlen($property_data) > $maxLength) {
+                    throw new LingotekContentEntityFieldTooLongStorageException($entity, $field_definition->getName());
                   }
                 }
                 if ($translation->get($name)->offsetExists($delta) && method_exists($translation->get($name)->offsetGet($delta), "set")) {

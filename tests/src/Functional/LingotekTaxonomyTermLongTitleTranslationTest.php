@@ -486,4 +486,68 @@ class LingotekTaxonomyTermLongTitleTranslationTest extends LingotekTestBase {
     $this->assert($status, 'A watchdog message was logged for the length of the field.');
   }
 
+  /**
+   * Tests that multibyte chars are counted properly.
+   */
+  public function testTermTranslationWithUTF8MultiByteChars() {
+    // This is a hack for avoiding writing different lingotek endpoint mocks.
+    \Drupal::state()->set('lingotek.uploaded_content_type', 'taxonomy_term_long_title_he');
+
+    // Add a language.
+    ConfigurableLanguage::createFromLangcode('he')->setThirdPartySetting('lingotek', 'locale', 'he_IL')->save();
+    ConfigurableLanguage::load('es')->delete();
+
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+    $bundle = $this->vocabulary->id();
+
+    // Create a term.
+    $edit = [];
+    $edit['name[0][value]'] = 'Llamas are cool';
+    $edit['description[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+
+    $this->drupalPostForm("admin/structure/taxonomy/manage/$bundle/add", $edit, t('Save'));
+
+    $this->term = Term::load(1);
+
+    // Check that only the configured fields have been uploaded.
+    $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), TRUE);
+    $this->assertUploadedDataFieldCount($data, 2);
+    $this->assertTrue(isset($data['name'][0]['value']));
+    $this->assertEqual(1, count($data['description'][0]));
+    $this->assertTrue(isset($data['description'][0]['value']));
+
+    // Check that the translate tab is in the taxonomy term.
+    $this->drupalGet('taxonomy/term/1');
+    $this->clickLink('Translate');
+
+    // The document should have been automatically uploaded, so let's check
+    // the upload status.
+    $this->clickLink('Check Upload Status');
+    $this->assertText('The import for taxonomy_term Llamas are cool is complete.');
+
+    // Request translation.
+    $this->clickLink('Request translation');
+    $this->assertText("Locale 'he_IL' was added as a translation target for taxonomy_term Llamas are cool.");
+
+    // Check translation status.
+    $this->clickLink('Check translation status');
+    $this->assertText('The he_IL translation for taxonomy_term Llamas are cool is ready for download.');
+
+    // Download translation. It must fail with a useful error message.
+    $this->clickLink('Download completed translation');
+    // Translation succeeds, even if utf-8 hebrew chars are 2-bytes.
+    $this->assertText('The translation of taxonomy_term Llamas are cool into he_IL has been downloaded.');
+
+    // Check the right class is added.
+    $this->goToContentBulkManagementForm('taxonomy_term');
+    $this->assertTargetStatus('HE', 'current');
+
+    // Check that the Target Status is Error
+    $this->term = Term::load(1);
+    $content_translation_service = \Drupal::service('lingotek.content_translation');
+    $this->assertIdentical(Lingotek::STATUS_CURRENT, $content_translation_service->getTargetStatus($this->term, 'he'));
+  }
+
 }

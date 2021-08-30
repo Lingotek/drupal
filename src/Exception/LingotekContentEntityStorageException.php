@@ -27,7 +27,7 @@ class LingotekContentEntityStorageException extends LingotekException {
     parent::__construct($message, $code, $previous);
     $this->entity = $entity;
     $this->table = $this->extractTableFromPreviousExceptionMessage($previous);
-    $this->code = $previous->getCode();
+    $this->code = $previous !== NULL ? $previous->getCode() : $code;
   }
 
   /**

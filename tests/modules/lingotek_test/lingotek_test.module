@@ -7,6 +7,7 @@
 
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Serialization\Yaml;
 use Drupal\lingotek\LingotekProfileInterface;
 
@@ -114,4 +115,11 @@ function lingotek_test_lingotek_config_object_translation_presave(array &$data, 
     $data['lingotek_test_config_object.settings']['property_3'] = str_replace('Gatos', 'Perros', $data['lingotek_test_config_object.settings']['property_3']);
     $data['lingotek_test_config_object.settings']['property_5'] = str_replace('Gatos', 'Perros', $data['lingotek_test_config_object.settings']['property_5']);
   }
+}
+
+function lingotek_test_entity_base_field_info_alter(&$fields, EntityTypeInterface $entity_type) {
+  if ($entity_type->id() == 'taxonomy_term' && !empty($fields['name'])) {
+    $fields['name']->setSetting('max_length', 21);
+  }
+
 }
