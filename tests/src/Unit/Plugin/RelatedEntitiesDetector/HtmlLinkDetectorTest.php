@@ -10,8 +10,6 @@ use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Path\PathValidatorInterface;
-use Drupal\Core\StreamWrapper\PublicStream;
-use Drupal\Core\StreamWrapper\StreamWrapperInterface;
 use Drupal\Core\Url;
 use Drupal\lingotek\LingotekConfigurationServiceInterface;
 use Drupal\lingotek\Plugin\RelatedEntitiesDetector\HtmlLinkDetector;
@@ -86,20 +84,6 @@ class HtmlLinkDetectorTest extends UnitTestCase {
   protected $pathValidator;
 
   /**
-   * The public:// stream wrapper.
-   *
-   * @var \Drupal\Core\StreamWrapper\PublicStream|\PHPUnit\Framework\MockObject\MockObject
-   */
-  protected $publicStream;
-
-  /**
-   * The public file directory.
-   *
-   * @var string
-   */
-  protected $publicFileDirectory;
-
-  /**
    * @var \Drupal\Core\Entity\ContentEntityTypeInterface|\PHPUnit\Framework\MockObject\MockObject
    */
   protected $entityType;
@@ -115,12 +99,8 @@ class HtmlLinkDetectorTest extends UnitTestCase {
     $this->request = $this->createMock(Request::class);
     $this->entityTypeManager = $this->createMock(EntityTypeManagerInterface::class);
     $this->pathValidator = $this->createMock(PathValidatorInterface::class);
-    $this->publicStream = $this->createMock(PublicStream::class);
-    $this->publicStream->expects($this->any())
-      ->method('getDirectoryPath')
-      ->willReturn('sites/default/files');
 
-    $this->detector = new HtmlLinkDetector([], 'html_link_detector', [], $this->entityRepository, $this->entityFieldManager, $this->lingotekConfiguration, $this->request, $this->entityTypeManager, $this->pathValidator, $this->publicStream);
+    $this->detector = new HtmlLinkDetector([], 'html_link_detector', [], $this->entityRepository, $this->entityFieldManager, $this->lingotekConfiguration, $this->request, $this->entityTypeManager, $this->pathValidator);
     $this->entityType = $this->createMock(ContentEntityTypeInterface::class);
     $this->entityType->expects($this->any())
       ->method('hasKey')
@@ -147,7 +127,7 @@ class HtmlLinkDetectorTest extends UnitTestCase {
    * @covers ::__construct
    */
   public function testConstruct() {
-    $detector = new HtmlLinkDetector([], 'html_link_detector', [], $this->entityRepository, $this->entityFieldManager, $this->lingotekConfiguration, $this->request, $this->entityTypeManager, $this->pathValidator, $this->publicStream);
+    $detector = new HtmlLinkDetector([], 'html_link_detector', [], $this->entityRepository, $this->entityFieldManager, $this->lingotekConfiguration, $this->request, $this->entityTypeManager, $this->pathValidator);
     $this->assertNotNull($detector);
   }
 
@@ -160,10 +140,10 @@ class HtmlLinkDetectorTest extends UnitTestCase {
       ->method('getCurrentRequest')
       ->willReturn($this->request);
     $container = $this->createMock(ContainerInterface::class);
-    $container->expects($this->exactly(7))
+    $container->expects($this->exactly(6))
       ->method('get')
-      ->withConsecutive(['entity.repository'], ['entity_field.manager'], ['lingotek.configuration'], ['request_stack'], ['entity_type.manager'], ['path.validator'], ['stream_wrapper.public'])
-      ->willReturnOnConsecutiveCalls($this->entityRepository, $this->entityFieldManager, $this->lingotekConfiguration, $requestStack, $this->entityTypeManager, $this->pathValidator, $this->publicStream);
+      ->withConsecutive(['entity.repository'], ['entity_field.manager'], ['lingotek.configuration'], ['request_stack'], ['entity_type.manager'], ['path.validator'])
+      ->willReturnOnConsecutiveCalls($this->entityRepository, $this->entityFieldManager, $this->lingotekConfiguration, $requestStack, $this->entityTypeManager, $this->pathValidator);
     $detector = HtmlLinkDetector::create($container, [], 'html_link_detector', []);
     $this->assertNotNull($detector);
   }
@@ -309,48 +289,29 @@ class HtmlLinkDetectorTest extends UnitTestCase {
       ->method('getUntranslated')
       ->willReturnSelf();
 
-    $file = $this->createMock(ContentEntityInterface::class);
-    $file->expects($this->any())
-      ->method('getEntityTypeId')
-      ->willReturn('file');
-    $file->expects($this->any())
-      ->method('id')
-      ->willReturn(13);
-    $file->expects($this->any())
-      ->method('uuid')
-      ->willReturn('the-file-entity-uuid');
-    $file->expects($this->any())
-      ->method('bundle')
-      ->willReturn('file');
-
-    $this->pathValidator->expects($this->exactly(4))
+    $this->pathValidator->expects($this->exactly(3))
       ->method('getUrlIfValidWithoutAccessCheck')
-      ->withConsecutive(['/the_first_type/8'], ['/entity_id/2'], ['/entity_id/5'], ['/sites/default/files/example.png'])
+      ->withConsecutive(['/the_first_type/8'], ['/entity_id/2'], ['/entity_id/5'])
       ->willReturnOnConsecutiveCalls(
         Url::fromRoute("entity.the_first_type.canonical", ["the_first_type" => 8]),
         Url::fromRoute("entity.entity_id.canonical", ["entity_id" => 2]),
-        Url::fromRoute("entity.entity_id.canonical", ["entity_id" => 5]),
-        FALSE
+        Url::fromRoute("entity.entity_id.canonical", ["entity_id" => 5])
       );
 
     $entityStorage = $this->createMock(EntityStorageInterface::class);
-    $entityStorage->expects($this->once())
-      ->method('loadByProperties')
-      ->with(['uri' => 'public://example.png'])
-      ->willReturn([13 => $file]);
-    $entityStorage->expects($this->exactly(4))
+    $entityStorage->expects($this->exactly(3))
       ->method('load')
-      ->withConsecutive([8], [2], [5], [13])
-      ->willReturnOnConsecutiveCalls($firstEntity, $secondEntity, $thirdEntity, $file);
+      ->withConsecutive([8], [2], [5])
+      ->willReturnOnConsecutiveCalls($firstEntity, $secondEntity, $thirdEntity);
 
     $this->entityTypeManager->expects($this->any())
       ->method('getStorage')
       ->willReturn($entityStorage);
 
-    $this->entityRepository->expects($this->exactly(4))
+    $this->entityRepository->expects($this->exactly(3))
       ->method('loadEntityByUuid')
-      ->withConsecutive(['the_first_type', 'the-first-entity-uuid'], ['entity_id', 'the-second-entity-uuid'], ['entity_id', 'the-third-entity-uuid'], ['file', 'the-file-entity-uuid'])
-      ->willReturnOnConsecutiveCalls($firstEntity, $secondEntity, $thirdEntity, $file);
+      ->withConsecutive(['the_first_type', 'the-first-entity-uuid'], ['entity_id', 'the-second-entity-uuid'], ['entity_id', 'the-third-entity-uuid'])
+      ->willReturnOnConsecutiveCalls($firstEntity, $secondEntity, $thirdEntity);
 
     $data = [
       (object) [
@@ -358,7 +319,7 @@ class HtmlLinkDetectorTest extends UnitTestCase {
       ],
       (object) [
         'value' => '<p>This is a text with an absolute link <a href="http://example.com/entity_id/2">to a different content</a> </p>' .
-        '<a href="/entity_id/5">another link</a> and an image <a href="http://example.com/sites/default/files/example.png">here</a> ',
+        '<a href="/entity_id/5">another link</a>',
       ],
     ];
     if ($hasSummary) {
@@ -369,7 +330,7 @@ class HtmlLinkDetectorTest extends UnitTestCase {
         ],
         (object) [
           'value' => '<p>This is a text with a link an absolute link <a href="http://example.com/entity_id/2">to a different content</a> </p>',
-          'summary' => '<a href="/entity_id/5">another link</a> and an image <a href="http://example.com/sites/default/files/example.png">here</a> ',
+          'summary' => '<a href="/entity_id/5">another link</a>',
         ],
       ];
     }

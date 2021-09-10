@@ -7,7 +7,6 @@ use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Path\PathValidatorInterface;
-use Drupal\Core\StreamWrapper\PublicStream;
 use Drupal\lingotek\LingotekConfigurationServiceInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -44,13 +43,6 @@ class HtmlLinkDetector extends EditorDetectorBase {
   protected $pathValidator;
 
   /**
-   * The public file directory.
-   *
-   * @var string
-   */
-  protected $publicFileDirectory;
-
-  /**
    * {@inheritdoc}
    */
   protected $fieldTypes = ["text", "text_long", "text_with_summary"];
@@ -76,15 +68,12 @@ class HtmlLinkDetector extends EditorDetectorBase {
    *   The entity type manager.
    * @param \Drupal\Core\Path\PathValidatorInterface $path_validator
    *   The Drupal Path Validator service.
-   * @param \Drupal\Core\StreamWrapper\PublicStream $public_stream
-   *   The Public Stream service.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityRepositoryInterface $entity_repository, EntityFieldManagerInterface $entity_field_manager, LingotekConfigurationServiceInterface $lingotek_configuration, Request $request, EntityTypeManagerInterface $entity_type_manager, PathValidatorInterface $path_validator, PublicStream $public_stream) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityRepositoryInterface $entity_repository, EntityFieldManagerInterface $entity_field_manager, LingotekConfigurationServiceInterface $lingotek_configuration, Request $request, EntityTypeManagerInterface $entity_type_manager, PathValidatorInterface $path_validator) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $entity_repository, $entity_field_manager, $lingotek_configuration);
     $this->request = $request;
     $this->entityTypeManager = $entity_type_manager;
     $this->pathValidator = $path_validator;
-    $this->publicFileDirectory = $public_stream->getDirectoryPath();
   }
 
   /**
@@ -100,8 +89,7 @@ class HtmlLinkDetector extends EditorDetectorBase {
       $container->get('lingotek.configuration'),
       $container->get('request_stack')->getCurrentRequest(),
       $container->get('entity_type.manager'),
-      $container->get('path.validator'),
-      $container->get('stream_wrapper.public')
+      $container->get('path.validator')
     );
   }
 
