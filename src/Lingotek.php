@@ -742,6 +742,7 @@ class Lingotek implements LingotekInterface {
     // need to include that class.
     $response = $this->api->getDocumentTranslationStatus($doc_id, $locale);
     $progress = FALSE;
+    $readyToDownload = FALSE;
     if ($response->getStatusCode() == Response::HTTP_OK) {
       $progress_json = json_decode($response->getBody(), TRUE);
       $lingotek_locale = str_replace("_", "-", $locale);
@@ -750,14 +751,23 @@ class Lingotek implements LingotekInterface {
         foreach ($progress_json['entities'] as $index => $data) {
           if ($data['properties']['locale_code'] === $lingotek_locale) {
             $progress = $data['properties']['percent_complete'];
+            if (isset($data['properties']['ready_to_download'])) {
+              $readyToDownload = $data['properties']['ready_to_download'];
+            }
+            // We need this for compatibility before this flag existed.
+            // TODO: Remove the else after 4.0.0 is released.
+            else {
+              $readyToDownload = $progress === self::PROGRESS_COMPLETE;
+            }
             if ($data['properties']['status'] === Lingotek::STATUS_CANCELLED) {
               $progress = $data['properties']['status'];
+              $readyToDownload = FALSE;
             }
             break;
           }
         }
       }
-      if ($progress === self::PROGRESS_COMPLETE) {
+      if ($readyToDownload) {
         return TRUE;
       }
     }

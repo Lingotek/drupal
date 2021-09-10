@@ -646,15 +646,18 @@ class LingotekInterfaceTranslationService implements LingotekInterfaceTranslatio
       $source_status = $this->getSourceStatus($component);
       $drupal_language = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale);
       $langcode = $drupal_language->id();
+      $target_status = $this->getTargetStatus($component, $langcode);
       $data = [];
       try {
-        if ($this->lingotek->getDocumentTranslationStatus($document_id, $locale) !== FALSE) {
+        if ($this->lingotek->getDocumentTranslationStatus($document_id, $locale) !== FALSE || $target_status === Lingotek::STATUS_INTERMEDIATE) {
           $data = $this->lingotek->downloadDocument($document_id, $locale);
         }
         else {
-          \Drupal::logger('lingotek')->warning('Avoided download for (%component): Source status is %source_status.', [
-              '%component' => $component,
-              '%source_status' => $this->getSourceStatus($component),
+          \Drupal::logger('lingotek')->warning('Avoided download for interface translation component %component: Source status is %source_status, target %target_langcode is %target_status.', [
+            '%component' => $component,
+            '%source_status' => $this->getSourceStatus($component),
+            '%target_langcode' => $langcode,
+            '%target_status' => $target_status,
           ]);
           return NULL;
         }
