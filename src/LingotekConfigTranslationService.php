@@ -817,13 +817,21 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
       return FALSE;
     }
     if ($document_id = $this->getDocumentId($entity)) {
+      $source_status = $this->getSourceStatus($entity);
       $langcode = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale)->getId();
+      $target_status = $this->getTargetStatus($entity, $langcode);
       $data = [];
       try {
-        if ($this->lingotek->getDocumentTranslationStatus($document_id, $locale) !== FALSE) {
+        if ($this->lingotek->getDocumentTranslationStatus($document_id, $locale) !== FALSE || $target_status === Lingotek::STATUS_INTERMEDIATE) {
           $data = $this->lingotek->downloadDocument($document_id, $locale);
         }
         else {
+          \Drupal::logger('lingotek')->warning('Avoided download for config entity %entity_id: Source status is %source_status, target %target_langcode is %target_status.', [
+            '%entity_id' => $entity->id(),
+            '%source_status' => $source_status,
+            '%target_langcode' => $langcode,
+            '%target_status' => $target_status,
+          ]);
           return NULL;
         }
       }
@@ -1517,13 +1525,21 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
       return FALSE;
     }
     if ($document_id = $this->getConfigDocumentId($mapper)) {
+      $source_status = $this->getConfigSourceStatus($mapper);
       $langcode = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale)->getId();
+      $target_status = $this->getConfigTargetStatus($mapper, $langcode);
       $data = [];
       try {
-        if ($this->lingotek->getDocumentTranslationStatus($document_id, $locale) === TRUE) {
+        if ($this->lingotek->getDocumentTranslationStatus($document_id, $locale) !== FALSE || $target_status === Lingotek::STATUS_INTERMEDIATE) {
           $data = $this->lingotek->downloadDocument($document_id, $locale);
         }
         else {
+          \Drupal::logger('lingotek')->warning('Avoided download for config mapper %mapper_id: Source status is %source_status, target %target_langcode is %target_status.', [
+            '%mapper_id' => $mapper_id,
+            '%source_status' => $source_status,
+            '%target_langcode' => $langcode,
+            '%target_status' => $target_status,
+          ]);
           return NULL;
         }
       }

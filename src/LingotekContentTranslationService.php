@@ -1330,13 +1330,20 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       $source_status = $this->getSourceStatus($entity);
       $drupal_language = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale);
       $langcode = $drupal_language->id();
+      $target_status = $this->getTargetStatus($entity, $langcode);
       $data = [];
       try {
-        if ($this->lingotek->getDocumentTranslationStatus($document_id, $locale) !== FALSE) {
+        if ($this->lingotek->getDocumentTranslationStatus($document_id, $locale) !== FALSE || $target_status === Lingotek::STATUS_INTERMEDIATE) {
           $data = $this->lingotek->downloadDocument($document_id, $locale);
         }
         else {
-          \Drupal::logger('lingotek')->warning('Avoided download for (%entity_id,%revision_id): Source status is %source_status.', ['%entity_id' => $entity->id(), '%revision_id' => $entity->getRevisionId(), '%source_status' => $this->getSourceStatus($entity)]);
+          \Drupal::logger('lingotek')->warning('Avoided download for (%entity_id,%revision_id): Source status is %source_status, target %target_langcode is %target_status.', [
+            '%entity_id' => $entity->id(),
+            '%revision_id' => $entity->getRevisionId(),
+            '%source_status' => $source_status,
+            '%target_langcode' => $langcode,
+            '%target_status' => $target_status,
+          ]);
           return NULL;
         }
       }
