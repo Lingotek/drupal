@@ -384,13 +384,9 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
   }
 
   /**
-   * Tests that a content type reacts to incomplete target and not phase notifications, and does download interim translations.
+   * Tests that a content type reacts to incomplete target and phase notifications and does not download interim translations.
    */
   public function testIncompletePhaseNotificationWithNoInterimContentTypeTranslation() {
-    // Originally we only downloaded the interim translation if the doc was
-    // reported complete. Now we assume that if the target notification was
-    // configured, Drupal needs to take that as word of truth and react to that
-    // no matter what.
     $assert_session = $this->assertSession();
 
     // Login as admin.
@@ -483,8 +479,8 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
       'http_errors' => FALSE,
     ]);
     $response = json_decode($request->getBody(), TRUE);
-    $this->assertTrue($response['result']['download'], 'Document downloaded.');
-    $this->assertSame('Document downloaded.', $response['messages'][0]);
+    $this->assertFalse($response['result']['download'], 'No translation downloaded for Spanish language after notification automatically with incomplete target.');
+    $this->assertEquals('No download for target es_ES happened in document dummy-document-hash-id.', $response['messages'][0]);
 
     // Go to the bulk config management page.
     $this->goToConfigBulkManagementForm();
@@ -496,17 +492,13 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
     $entity = $node_storage->load('article');
 
     // Assert the target is pending.
-    $this->assertSame(Lingotek::STATUS_INTERMEDIATE, $config_translation_service->getTargetStatus($entity, 'es'));
+    $this->assertIdentical(Lingotek::STATUS_PENDING, $config_translation_service->getTargetStatus($entity, 'es'));
   }
 
   /**
    * Tests that a content type reacts to download_interim_translation notification and downloads interim translations.
    */
   public function testDownloadInterimTranslationNotificationWithNoInterimContentTypeTranslation() {
-    // Originally we only downloaded the interim translation if the doc was
-    // reported complete. Now we assume that if the target notification was
-    // configured, Drupal needs to take that as word of truth and react to that
-    // no matter what.
     $assert_session = $this->assertSession();
 
     // Login as admin.
@@ -598,8 +590,7 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
       'http_errors' => FALSE,
     ]);
     $response = json_decode($request->getBody(), TRUE);
-    $this->assertTrue($response['result']['download'], 'Document downloaded.');
-    $this->assertSame('Document downloaded.', $response['messages'][0]);
+    $this->assertFalse($response['result']['download'], 'No translation downloaded for Spanish language after notification automatically with incomplete target.');
 
     // Go to the bulk config management page.
     $this->goToConfigBulkManagementForm();
@@ -611,17 +602,13 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
     $entity = $node_storage->load('article');
 
     // Assert the target is intermediate.
-    $this->assertSame(Lingotek::STATUS_INTERMEDIATE, $config_translation_service->getTargetStatus($entity, 'es'));
+    $this->assertEquals(Lingotek::STATUS_INTERMEDIATE, $config_translation_service->getTargetStatus($entity, 'es'));
   }
 
   /**
-   * Tests that a content type does react to incomplete target but no phase notifications.
+   * Tests that a content type does not react to incomplete target and phase notifications.
    */
   public function testIncompletePhaseNotificationWithInterimContentTypeTranslation() {
-    // Originally we only downloaded the interim translation if the doc was
-    // reported complete. Now we assume that if the target notification was
-    // configured, Drupal needs to take that as word of truth and react to that
-    // no matter what.
     $assert_session = $this->assertSession();
 
     // Login as admin.
@@ -722,7 +709,7 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
       'http_errors' => FALSE,
     ]);
     $response = json_decode($request->getBody(), TRUE);
-    $this->assertTrue($response['result']['download'], 'Document downloaded.');
+    $this->assertFalse($response['result']['download'], 'No translation downloaded for Spanish language after notification automatically with incomplete target.');
 
     // Go to the bulk config management page.
     $this->goToConfigBulkManagementForm();
@@ -734,17 +721,13 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
     $entity = $node_storage->load('article');
 
     // Assert the target is pending.
-    $this->assertSame(Lingotek::STATUS_CURRENT, $config_translation_service->getTargetStatus($entity, 'es'));
+    $this->assertEquals(Lingotek::STATUS_PENDING, $config_translation_service->getTargetStatus($entity, 'es'));
   }
 
   /**
    * Tests that a content type reacts to download_interim_translation notification and downloads interim translations.
    */
   public function testDownloadInterimTranslationNotificationWithInterimContentTypeTranslation() {
-    // Originally we only downloaded the interim translation if the doc was
-    // reported complete. Now we assume that if the target notification was
-    // configured, Drupal needs to take that as word of truth and react to that
-    // no matter what.
     $assert_session = $this->assertSession();
 
     // Login as admin.
@@ -819,7 +802,8 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
     // Go to the bulk config management page.
     $this->goToConfigBulkManagementForm();
 
-    \Drupal::state()->set('lingotek.document_completion_status', 50);
+    // There are no phases pending anymore.
+    \Drupal::state()->set('lingotek.document_completion', TRUE);
 
     // Simulate the notification of content successfully translated.
     $url = Url::fromRoute('lingotek.notify', [], [
@@ -842,7 +826,7 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
       'http_errors' => FALSE,
     ]);
     $response = json_decode($request->getBody(), TRUE);
-    $this->assertTrue($response['result']['download'], 'Document downloaded.');
+    $this->assertFalse($response['result']['download'], 'No translation downloaded for Spanish language after notification automatically with incomplete target.');
 
     // Go to the bulk config management page.
     $this->goToConfigBulkManagementForm();

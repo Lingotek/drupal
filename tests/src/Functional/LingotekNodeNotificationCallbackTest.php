@@ -283,13 +283,10 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
   }
 
   /**
-   * Tests that a node reacts to incomplete target and not phase notifications, and does download interim translations.
+   * Tests that a node reacts to incomplete target and phase notifications and does not download interim translations.
    */
   public function testIncompletePhaseNotificationWithNoInterimNodeTranslation() {
-    // Originally we only downloaded the interim translation if the doc was
-    // reported complete. Now we assume that if the target notification was
-    // configured, Drupal needs to take that as word of truth and react to that
-    // no matter what.
+    // Login as admin.
     $this->drupalLogin($this->rootUser);
 
     // Create a node.
@@ -368,22 +365,20 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
       'http_errors' => FALSE,
     ]);
     $response = json_decode($request->getBody(), TRUE);
-    $this->assertTrue($response['result']['download'], 'Document downloaded.');
-    $this->assertSame('Document downloaded.', $response['messages'][0]);
+    $this->assertFalse($response['result']['download'], 'No translation downloaded for Spanish language after notification automatically with incomplete target.');
+    $this->assertEquals('No download for target es_ES happened in document dummy-document-hash-id.', $response['messages'][0]);
 
     $node = $this->resetStorageCachesAndReloadNode();
 
-    $this->assertSame(Lingotek::STATUS_INTERMEDIATE, $content_translation_service->getTargetStatus($node, 'es'));
+    // Assert the target is pending.
+    $this->assertIdentical(Lingotek::STATUS_PENDING, $content_translation_service->getTargetStatus($node, 'es'));
   }
 
   /**
    * Tests that a node reacts to download_interim_translation notification and downloads interim translations.
    */
   public function testDownloadInterimTranslationNotificationWithNoInterimNodeTranslation() {
-    // Originally we only downloaded the interim translation if the doc was
-    // reported complete. Now we assume that if the target notification was
-    // configured, Drupal needs to take that as word of truth and react to that
-    // no matter what.
+    // Login as admin.
     $this->drupalLogin($this->rootUser);
 
     // Create a node.
@@ -462,22 +457,19 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
       'http_errors' => FALSE,
     ]);
     $response = json_decode($request->getBody(), TRUE);
-    $this->assertTrue($response['result']['download'], 'Document downloaded.');
-    $this->assertSame('Document downloaded.', $response['messages'][0]);
+    $this->assertFalse($response['result']['download'], 'No translation downloaded for Spanish language after notification automatically with incomplete target.');
+    $this->assertEquals('No download for target es_ES happened in document dummy-document-hash-id.', $response['messages'][0]);
 
     $node = $this->resetStorageCachesAndReloadNode();
 
-    $this->assertSame(Lingotek::STATUS_INTERMEDIATE, $content_translation_service->getTargetStatus($node, 'es'));
+    // Assert the target is pending.
+    $this->assertIdentical(Lingotek::STATUS_PENDING, $content_translation_service->getTargetStatus($node, 'es'));
   }
 
   /**
-   * Tests that a node does react to incomplete target but no phase notifications.
+   * Tests that a node does not react to incomplete target and phase notifications.
    */
   public function testIncompletePhaseNotificationWithInterimNodeTranslation() {
-    // Originally we only downloaded the interim translation if the doc was
-    // reported complete. Now we assume that if the target notification was
-    // configured, Drupal needs to take that as word of truth and react to that
-    // no matter what.
     $assert_session = $this->assertSession();
 
     // Login as admin.
@@ -568,24 +560,20 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
       'http_errors' => FALSE,
     ]);
     $response = json_decode($request->getBody(), TRUE);
-    $this->assertTrue($response['result']['download'], 'Document downloaded.');
+    $this->assertFalse($response['result']['download'], 'No translation downloaded for Spanish language after notification automatically with incomplete target.');
 
     $this->goToContentBulkManagementForm();
 
     $node = $this->resetStorageCachesAndReloadNode();
 
-    $this->assertSame(Lingotek::STATUS_CURRENT, $content_translation_service->getTargetStatus($node, 'es'));
+    // Assert the target is pending.
+    $this->assertEquals(Lingotek::STATUS_PENDING, $content_translation_service->getTargetStatus($node, 'es'));
   }
 
   /**
    * Tests that a node reacts to download_interim_translation notification and downloads interim translations.
    */
   public function testDownloadInterimTranslationNotificationWithInterimNodeTranslation() {
-    // Originally we only downloaded the interim translation if the doc was
-    // reported complete. Now we assume that if the target notification was
-    // configured, Drupal needs to take that as word of truth and react to that
-    // no matter what.
-
     $assert_session = $this->assertSession();
 
     // Login as admin.
@@ -649,7 +637,8 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     $this->drupalGet('node/1/translations');
     $assert_session->linkExists('Las llamas son chulas');
 
-    \Drupal::state()->set('lingotek.document_completion_status', 50);
+    // There are no phases pending anymore.
+    \Drupal::state()->set('lingotek.document_completion', TRUE);
 
     $this->goToContentBulkManagementForm();
 
@@ -674,7 +663,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
       'http_errors' => FALSE,
     ]);
     $response = json_decode($request->getBody(), TRUE);
-    $this->assertTrue($response['result']['download'], 'Document downloaded.');
+    $this->assertFalse($response['result']['download'], 'No translation downloaded for Spanish language after notification automatically with incomplete target.');
 
     $this->goToContentBulkManagementForm();
 

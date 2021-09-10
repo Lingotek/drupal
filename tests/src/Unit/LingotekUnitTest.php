@@ -656,51 +656,51 @@ class LingotekUnitTest extends UnitTestCase {
     // We upload with a profile that has a vault and a project.
     $profile = new LingotekProfile(['id' => 'profile1', 'project' => 'my_test_project', 'vault' => 'my_test_vault'], 'lingotek_profile');
     $doc_id = $this->lingotek->uploadDocument('title', 'content', 'es', NULL, $profile);
-    $this->assertSame('my-document-id', $doc_id);
+    $this->assertEquals('my-document-id', $doc_id);
 
     // We upload with a profile that has another vault and another project.
     $profile = new LingotekProfile(['id' => 'profile2', 'project' => 'another_test_project', 'vault' => 'another_test_vault'], 'lingotek_profile');
     $doc_id = $this->lingotek->uploadDocument('title', 'content', 'es', NULL, $profile);
-    $this->assertSame('my-document-id', $doc_id);
+    $this->assertEquals('my-document-id', $doc_id);
 
     // We upload with a profile that has marked to use the default vault and project,
     // so must be replaced.
     $profile = new LingotekProfile(['id' => 'profile2', 'project' => 'default', 'vault' => 'default', 'filter' => 'drupal_default'], 'lingotek_profile');
     $doc_id = $this->lingotek->uploadDocument('title', 'content', 'es', NULL, $profile);
-    $this->assertSame('my-document-id', $doc_id);
+    $this->assertEquals('my-document-id', $doc_id);
 
     // We upload without a profile.
     $doc_id = $this->lingotek->uploadDocument('title', 'content', 'es', NULL, NULL);
-    $this->assertSame('my-document-id', $doc_id);
+    $this->assertEquals('my-document-id', $doc_id);
 
     // We upload without a profile, but with url.
     $doc_id = $this->lingotek->uploadDocument('title', 'content', 'es', 'http://example.com/node/1', NULL);
-    $this->assertSame('my-document-id', $doc_id);
+    $this->assertEquals('my-document-id', $doc_id);
 
     // We upload with a profile that has marked to use the project default
     // workflow template vault, so must be omitted.
     $profile = new LingotekProfile(['id' => 'profile2', 'project' => 'default', 'vault' => 'project_default', 'filter' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265'], 'lingotek_profile');
     $doc_id = $this->lingotek->uploadDocument('title', 'content', 'es', NULL, $profile);
-    $this->assertSame('my-document-id', $doc_id);
+    $this->assertEquals('my-document-id', $doc_id);
 
     // We upload with content as an array.
     $profile = new LingotekProfile(['id' => 'profile0', 'project' => 'test_project', 'vault' => 'test_vault'], 'lingotek_profile');
     $doc_id = $this->lingotek->uploadDocument('title', ['content' => 'wedgiePlatypus'], 'es', NULL, $profile);
-    $this->assertSame('my-document-id', $doc_id);
+    $this->assertEquals('my-document-id', $doc_id);
 
     // We upload with a job ID.
     $doc_id = $this->lingotek->uploadDocument('title', ['content' => 'wedgiePlatypus'], 'es', NULL, $profile, 'my_job_id');
-    $this->assertSame('my-document-id', $doc_id);
+    $this->assertEquals('my-document-id', $doc_id);
 
     // We upload with the default workflow
     $profile = new LingotekProfile(['id' => 'profile1', 'project' => 'default', 'vault' => 'default', 'workflow' => 'default'], 'lingotek_profile');
     $doc_id = $this->lingotek->uploadDocument('title', 'content', 'es', NULL, $profile);
-    $this->assertSame('my-document-id', $doc_id);
+    $this->assertEquals('my-document-id', $doc_id);
 
     // We upload with the project default workflow
     $profile = new LingotekProfile(['id' => 'profile1', 'project' => 'default', 'vault' => 'default', 'workflow' => 'project_default'], 'lingotek_profile');
     $doc_id = $this->lingotek->uploadDocument('title', 'content', 'es', NULL, $profile);
-    $this->assertSame('my-document-id', $doc_id);
+    $this->assertEquals('my-document-id', $doc_id);
 
     // We upload with a profile that specifies auto request of targets on upload.
     $english = $this->createMock(ConfigurableLanguageInterface::class);
@@ -732,7 +732,7 @@ class LingotekUnitTest extends UnitTestCase {
     $profile->setAutomaticUpload(TRUE);
     $profile->setAutomaticRequest(TRUE);
     $doc_id = $this->lingotek->uploadDocument('title', ['content' => 'wedgiePlatypus'], 'en_US', NULL, $profile, 'my_job_id');
-    $this->assertSame('my-document-id', $doc_id);
+    $this->assertEquals('my-document-id', $doc_id);
 
     $profile = new LingotekProfile([
       'id' => 'profile_with_disabled_targets',
@@ -748,7 +748,7 @@ class LingotekUnitTest extends UnitTestCase {
     $profile->setAutomaticUpload(TRUE);
     $profile->setAutomaticRequest(TRUE);
     $doc_id = $this->lingotek->uploadDocument('title', ['content' => 'wedgiePlatypus'], 'en_US', NULL, $profile, 'my_job_id');
-    $this->assertSame('my-document-id', $doc_id);
+    $this->assertEquals('my-document-id', $doc_id);
 
   }
 
@@ -1317,7 +1317,6 @@ class LingotekUnitTest extends UnitTestCase {
               'properties' =>
                 [
                   'locale_code' => 'es-ES',
-                  'ready_to_download' => TRUE,
                   'percent_complete' => 100,
                   'status' => 'READY',
                 ],
@@ -1326,7 +1325,6 @@ class LingotekUnitTest extends UnitTestCase {
               'properties' =>
                 [
                   'locale_code' => 'de-DE',
-                  'ready_to_download' => FALSE,
                   'percent_complete' => 50,
                   'status' => 'READY',
                 ],
@@ -1350,15 +1348,15 @@ class LingotekUnitTest extends UnitTestCase {
 
     // Assert that a complete translation is reported as completed.
     $result = $this->lingotek->getDocumentTranslationStatus('my_doc_id', 'es_ES');
-    $this->assertSame(TRUE, $result);
+    $this->assertEquals(TRUE, $result);
 
     // Assert that an incomplete translation is reported as not completed.
     $result = $this->lingotek->getDocumentTranslationStatus('my_doc_id', 'de_DE');
-    $this->assertSame(50, $result);
+    $this->assertEquals(50, $result);
 
     // Assert that an unrequested translation is reported as not completed.
     $result = $this->lingotek->getDocumentTranslationStatus('my_doc_id', 'ca_ES');
-    $this->assertSame(FALSE, $result);
+    $this->assertEquals(FALSE, $result);
   }
 
   /**
@@ -1381,7 +1379,6 @@ class LingotekUnitTest extends UnitTestCase {
                 'properties' =>
                   [
                     'locale_code' => 'es-ES',
-                    'ready_to_download' => TRUE,
                     'percent_complete' => 100,
                     'status' => 'READY',
                   ],
@@ -1390,7 +1387,6 @@ class LingotekUnitTest extends UnitTestCase {
                 'properties' =>
                   [
                     'locale_code' => 'de-DE',
-                    'ready_to_download' => FALSE,
                     'percent_complete' => 50,
                     'status' => 'CANCELLED',
                   ],
@@ -1414,15 +1410,15 @@ class LingotekUnitTest extends UnitTestCase {
 
     // Assert that a complete translation is reported as completed.
     $result = $this->lingotek->getDocumentTranslationStatus('my_doc_id', 'es_ES');
-    $this->assertSame(TRUE, $result);
+    $this->assertEquals(TRUE, $result);
 
     // Assert that an incomplete translation is reported as not completed.
     $result = $this->lingotek->getDocumentTranslationStatus('my_doc_id', 'de_DE');
-    $this->assertSame('CANCELLED', $result);
+    $this->assertEquals('CANCELLED', $result);
 
     // Assert that an unrequested translation is reported as not completed.
     $result = $this->lingotek->getDocumentTranslationStatus('my_doc_id', 'ca_ES');
-    $this->assertSame(FALSE, $result);
+    $this->assertEquals(FALSE, $result);
   }
 
   /**
@@ -1565,7 +1561,7 @@ class LingotekUnitTest extends UnitTestCase {
     ];
 
     $result = $this->lingotek->updateDocument('my_doc_id', $data);
-    $this->assertSame($result, 'my_new_document_id');
+    $this->assertEquals($result, 'my_new_document_id');
   }
 
   /**
@@ -1966,7 +1962,7 @@ class LingotekUnitTest extends UnitTestCase {
       ->willReturn($response);
 
     $result = $this->lingotek->getProcessStatus('my-process-id');
-    $this->assertSame($expected, $result);
+    $this->assertEquals($expected, $result);
   }
 
   public function dataProviderGetProcessStatus() {
