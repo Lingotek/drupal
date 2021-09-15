@@ -273,8 +273,16 @@ class LingotekNodeWorkbenchModerationTranslationTest extends LingotekTestBase {
     // Open the node.
     $this->clickLink('Llamas are cool');
 
-    // There is a revisions tab as the translation creates a new revision.
-    $assert_session->linkNotExists('Revisions');
+    if (floatval(\Drupal::VERSION) > 9.2) {
+      // There is a revisions tab even if the translation doesn't create a new revision.
+      // In https://www.drupal.org/node/3226487 (Drupal 9.3) the Revisions tab was added again
+      // even if there is only one revision.
+      $assert_session->linkExists('Revisions');
+    }
+    else {
+      // There is not a revisions tab as the translation doesn't create a new revision.
+      $assert_session->linkNotExists('Revisions');
+    }
 
     // Only one revision stored.
     /** @var \Drupal\node\NodeStorageInterface $node_storage */
