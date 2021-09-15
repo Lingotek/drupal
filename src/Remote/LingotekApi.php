@@ -2,7 +2,6 @@
 
 namespace Drupal\lingotek\Remote;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\lingotek\Exception\LingotekApiException;
 use Drupal\lingotek\Exception\LingotekDocumentNotFoundException;
 use GuzzleHttp\Exception\ClientException;
@@ -96,7 +95,7 @@ class LingotekApi implements LingotekApiInterface {
    */
   public function addDocument($args) {
     try {
-      $this->logger->debug('Lingotek::addDocument (POST /api/document) called with %args', ['%args' => var_export($args, TRUE)]);
+      $this->logger->debug('Lingotek::addDocument (POST /api/document) called with ' . var_export($args, TRUE));
       $response = $this->lingotekClient->post('/api/document', $args, TRUE);
     }
     catch (\Exception $e) {
@@ -143,7 +142,7 @@ class LingotekApi implements LingotekApiInterface {
    */
   public function cancelDocument($id) {
     try {
-      $this->logger->debug('Lingotek::cancelDocument called with id %id', ['%id' =>  $id]);
+      $this->logger->debug('Lingotek::cancelDocument called with id ' . $id);
       $args = [
         'id' => $id,
         'cancelled_reason' => 'CANCELLED_BY_AUTHOR',
@@ -156,11 +155,11 @@ class LingotekApi implements LingotekApiInterface {
         $message = $responseBody['messages'][0];
         throw new LingotekDocumentNotFoundException($message, Response::HTTP_NOT_FOUND);
       }
-      throw new LingotekApiException(new FormattableMarkup('Failed to cancel document: %message', ['%message' => $e->getMessage()]), $e->getCode(), $e);
+      throw new LingotekApiException('Failed to cancel document: ' . $e->getMessage(), $e->getCode(), $e);
     }
     catch (\Exception $e) {
       $this->logger->error('Error cancelling document: %message.', ['%message' => $e->getMessage()]);
-      throw new LingotekApiException(new FormattableMarkup('Failed to cancel document: %message', ['%message' => $e->getMessage()]), $e->getCode(), $e);
+      throw new LingotekApiException('Failed to cancel document: ' . $e->getMessage(), $e->getCode(), $e);
     }
     $this->logger->debug('cancelDocument response received, code %code and body %body', ['%code' => $response->getStatusCode(), '%body' => (string) $response->getBody(TRUE)]);
     return $response;
@@ -171,7 +170,7 @@ class LingotekApi implements LingotekApiInterface {
    */
   public function cancelDocumentTarget($document_id, $locale) {
     try {
-      $this->logger->debug('Lingotek::cancelDocumentTarget called with id %id and locale %locale', ['%id' => $document_id, '%locale' => $locale]);
+      $this->logger->debug('Lingotek::cancelDocumentTarget called with id ' . $document_id . ' and locale ' . $locale);
       $args = [
         'id' => $document_id,
         'locale' => $locale,
@@ -186,11 +185,11 @@ class LingotekApi implements LingotekApiInterface {
         $message = $responseBody['messages'][0];
         throw new LingotekDocumentNotFoundException($message, Response::HTTP_NOT_FOUND);
       }
-      throw new LingotekApiException(new FormattableMarkup('Failed to cancel document target: %message', ['%message' => $e->getMessage()]), $e->getCode(), $e);
+      throw new LingotekApiException('Failed to cancel document target: ' . $e->getMessage(), $e->getCode(), $e);
     }
     catch (\Exception $e) {
       $this->logger->error('Error cancelling document target: %message.', ['%message' => $e->getMessage()]);
-      throw new LingotekApiException(new FormattableMarkup('Failed to cancel document target: %message', ['%message' => $e->getMessage()]), $e->getCode(), $e);
+      throw new LingotekApiException('Failed to cancel document target: ' . $e->getMessage(), $e->getCode(), $e);
     }
     $this->logger->debug('cancelDocumentTarget response received, code %code and body %body', ['%code' => $response->getStatusCode(), '%body' => (string) $response->getBody(TRUE)]);
     return $response;
@@ -201,7 +200,7 @@ class LingotekApi implements LingotekApiInterface {
    */
   public function getDocumentContent($doc_id) {
     try {
-      $this->logger->debug('Lingotek::getDocumentContent called with id %id', ['%id' => $doc_id]);
+      $this->logger->debug('Lingotek::getDocumentContent called with id ' . $doc_id);
       $response = $this->lingotekClient->get('/api/document/' . $doc_id . '/content');
     }
     catch (ClientException $e) {
@@ -210,10 +209,10 @@ class LingotekApi implements LingotekApiInterface {
         $message = $responseBody['messages'][0];
         throw new LingotekDocumentNotFoundException($message, Response::HTTP_NOT_FOUND);
       }
-      throw new LingotekApiException(new FormattableMarkup('Failed to get document: %message', ['%message' => $e->getMessage()]), $e->getCode(), $e);
+      throw new LingotekApiException('Failed to get document: ' . $e->getMessage(), $e->getCode(), $e);
     }
     catch (\Exception $e) {
-      throw new LingotekApiException(new FormattableMarkup('Failed to get document: %message', ['%message' => $e->getMessage()]));
+      throw new LingotekApiException('Failed to get document: ' . $e->getMessage());
     }
     return $response->getBody()->getContents();
   }
@@ -223,7 +222,7 @@ class LingotekApi implements LingotekApiInterface {
    */
   public function getDocumentInfo($id) {
     try {
-      $this->logger->debug('Lingotek::getDocumentInfo called with id %id', ['%id' => $id]);
+      $this->logger->debug('Lingotek::getDocumentInfo called with id ' . $id);
       $response = $this->lingotekClient->get('/api/document/' . $id);
     }
     catch (ClientException $e) {
@@ -233,11 +232,11 @@ class LingotekApi implements LingotekApiInterface {
         throw new LingotekDocumentNotFoundException($message, Response::HTTP_NOT_FOUND);
       }
       $this->logger->error('Error getting document info: %message.', ['%message' => $e->getMessage()]);
-      throw new LingotekApiException(new FormattableMarkup('Failed to get document: %message', ['%message' => $e->getMessage()]), $e->getCode(), $e);
+      throw new LingotekApiException('Failed to get document: ' . $e->getMessage(), $e->getCode(), $e);
     }
     catch (\Exception $e) {
       $this->logger->error('Error getting document info: %message.', ['%message' => $e->getMessage()]);
-      throw new LingotekApiException(new FormattableMarkup('Failed to get document: %message', ['%message' => $e->getMessage()]));
+      throw new LingotekApiException('Failed to get document: ' . $e->getMessage());
     }
     $this->logger->debug('getDocumentInfo response received, code %code and body %body', ['%code' => $response->getStatusCode(), '%body' => (string) $response->getBody(TRUE)]);
     return $response;
@@ -248,7 +247,7 @@ class LingotekApi implements LingotekApiInterface {
    */
   public function getDocumentStatus($id) {
     try {
-      $this->logger->debug('Lingotek::getDocumentStatus called with id %id', ['%id' => $id]);
+      $this->logger->debug('Lingotek::getDocumentStatus called with id ' . $id);
       $response = $this->lingotekClient->get('/api/document/' . $id . '/status');
     }
     catch (ClientException $e) {
@@ -319,7 +318,7 @@ class LingotekApi implements LingotekApiInterface {
 
   public function addTranslation($id, $locale, $workflow_id = NULL, $vault_id = NULL) {
     try {
-      $this->logger->debug('Lingotek::addTranslation called with %id and %locale', ['%id' => $id, '%locale' => $locale]);
+      $this->logger->debug('Lingotek::addTranslation called with id ' . $id . ' and locale ' . $locale);
       $args = ['locale_code' => $locale];
       if ($workflow_id) {
         $args['workflow_id'] = $workflow_id;
@@ -360,7 +359,7 @@ class LingotekApi implements LingotekApiInterface {
    */
   public function getTranslation($id, $locale, $useSource = FALSE) {
     try {
-      $this->logger->debug('Lingotek::getTranslation called with %id and %locale', ['%id' => $id, '%locale' => $locale]);
+      $this->logger->debug('Lingotek::getTranslation called with id ' . $id . ' and locale ' . $locale);
       $response = $this->lingotekClient->get('/api/document/' . $id . '/content', ['locale_code' => $locale, 'use_source' => $useSource ? 'true' : 'false']);
     }
     catch (ClientException $e) {
@@ -385,7 +384,7 @@ class LingotekApi implements LingotekApiInterface {
    */
   public function deleteTranslation($id, $locale) {
     try {
-      $this->logger->debug('Lingotek::deleteTranslation called with %id and %locale', ['%id' => $id, '%locale' => $locale]);
+      $this->logger->debug('Lingotek::deleteTranslation called with id ' . $id . ' and locale ' . $locale);
       $response = $this->lingotekClient->delete('/api/document/' . $id . '/translation', ['locale_code' => $locale]);
     }
     catch (ClientException $e) {
@@ -426,7 +425,7 @@ class LingotekApi implements LingotekApiInterface {
    */
   public function getProject($project_id) {
     try {
-      $this->logger->debug('Lingotek::getProject called with id %id', ['%id' => $project_id]);
+      $this->logger->debug('Lingotek::getProject called with id ' . $project_id);
       $response = $this->lingotekClient->get('/api/project/' . $project_id);
     }
     catch (\Exception $e) {
@@ -442,7 +441,7 @@ class LingotekApi implements LingotekApiInterface {
    */
   public function getProjects($community_id) {
     try {
-      $this->logger->debug('Lingotek::getProjects called with id %id', ['%id' => $community_id]);
+      $this->logger->debug('Lingotek::getProjects called with id ' . $community_id);
       $response = $this->lingotekClient->get('/api/project', ['community_id' => $community_id, 'limit' => 1000]);
     }
     catch (\Exception $e) {
@@ -455,16 +454,16 @@ class LingotekApi implements LingotekApiInterface {
 
   public function setProjectCallBackUrl($project_id, $args) {
     try {
-      $this->logger->debug('Lingotek::setProjectCallBackUrl called with id %id and args %args', ['%id' => $project_id, '%args' => var_export($args, TRUE)]);
+      $this->logger->debug('Lingotek::setProjectCallBackUrl called with id ' . $project_id . ' and ' . var_export($args, TRUE));
       $response = $this->lingotekClient->patch('/api/project/' . $project_id, $args);
     }
     catch (\Exception $e) {
       $this->logger->error('Error patching project %project_id with %args: %message.', [
-        '%project_id' => $project_id,
+      '%project_id' => $project_id,
         '%args' => var_export($args, TRUE),
-        '%message' => $e->getMessage(),
-      ]);
-      throw new LingotekApiException(new FormattableMarkup('Failed to patch project: %message', ['%message' => $e->getMessage()]));
+      '%message' => $e->getMessage(),
+]);
+      throw new LingotekApiException('Failed to patch project: ' . $e->getMessage());
     }
     $this->logger->debug('setProjectCallBackUrl response received, code %code and body %body', ['%code' => $response->getStatusCode(), '%body' => (string) $response->getBody(TRUE)]);
     return $response;
@@ -475,7 +474,7 @@ class LingotekApi implements LingotekApiInterface {
    */
   public function getVaults($community_id) {
     try {
-      $this->logger->debug('Lingotek::getVaults called with id %id', ['%id' => $community_id]);
+      $this->logger->debug('Lingotek::getVaults called with id ' . $community_id);
       // We ignore $community_id, as it is not needed for getting the TM vaults.
       $response = $this->lingotekClient->get('/api/vault', ['limit' => 100, 'is_owned' => 'TRUE']);
     }
@@ -492,7 +491,7 @@ class LingotekApi implements LingotekApiInterface {
    */
   public function getWorkflows($community_id) {
     try {
-      $this->logger->debug('Lingotek::getWorkflows called with id %id', ['%id' => $community_id]);
+      $this->logger->debug('Lingotek::getWorkflows called with id ' . $community_id);
       $response = $this->lingotekClient->get('/api/workflow', ['community_id' => $community_id, 'limit' => 1000]);
     }
     catch (\Exception $e) {
@@ -542,7 +541,7 @@ class LingotekApi implements LingotekApiInterface {
 
   public function getProcess($process_id) {
     try {
-      $this->logger->debug('Lingotek::getProcess called with id %id', ['%id' => $process_id]);
+      $this->logger->debug('Lingotek::getProcess called with id ' . $process_id);
       $response = $this->lingotekClient->get('/api/process/' . $process_id);
     }
     catch (ClientException $e) {

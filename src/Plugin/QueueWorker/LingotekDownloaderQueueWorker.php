@@ -28,9 +28,7 @@ class LingotekDownloaderQueueWorker extends QueueWorkerBase {
     $entity_id = $data['entity_id'];
     $document_id = $data['document_id'];
 
-    $entity = \Drupal::entityTypeManager()
-      ->getStorage($entity_type_id)
-      ->load($entity_id);
+    $entity = \Drupal::entityTypeManager()->getStorage($entity_type_id)->load($entity_id);
     if ($entity instanceof ConfigEntityInterface) {
       /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
       $translation_service = \Drupal::service('lingotek.config_translation');
@@ -40,35 +38,27 @@ class LingotekDownloaderQueueWorker extends QueueWorkerBase {
       $translation_service = \Drupal::service('lingotek.content_translation');
     }
     if (empty($translation_service)) {
-      \Drupal::logger('lingotek')
-        ->error('Can not download - entity (@instance) is not supported instance of a class', [
-            '@instance' => gettype($entity),
-          ]
-        );
-      throw new \Exception(new FormattableMarkup('Can not download - entity (@instance) is not supported instance of a class', [
-          '@instance' => gettype($entity),
-        ])
-      );
+      $message = new FormattableMarkup('Can not download - entity (@instance) is not supported instance of a class', [
+        '@instance' => gettype($entity),
+      ]);
+
+      \Drupal::logger('lingotek')->error($message);
+      throw new \Exception($message);
     }
     $translation_service->setTargetStatus($entity, $locale, Lingotek::STATUS_READY);
     $download = $translation_service->downloadDocument($entity, $locale);
 
     if ($download === FALSE || $download === NULL) {
-      \Drupal::logger('lingotek')
-        ->error('No download for target @locale happened in document @document on @entity @bundle @id.', [
-          '@locale' => $locale,
-          '@document' => $document_id,
-          '@entity' => $entity->label(),
-          '@id' => $entity->id(),
-          '@bundle' => $entity->bundle(),
-        ]);
-      throw new \Exception(new FormattableMarkup('No download for target @locale happened in document @document on @entity @bundle @id.', [
+      $message = new FormattableMarkup('No download for target @locale happened in document @document on @entity @bundle @id.', [
         '@locale' => $locale,
         '@document' => $document_id,
         '@entity' => $entity->label(),
         '@id' => $entity->id(),
         '@bundle' => $entity->bundle(),
-      ]));
+      ]);
+
+      \Drupal::logger('lingotek')->error($message);
+      throw new \Exception($message);
     }
   }
 
