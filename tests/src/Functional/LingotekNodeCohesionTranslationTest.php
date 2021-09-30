@@ -234,6 +234,23 @@ JSON;
     $this->assertText('Llamas are very cool');
   }
 
+  /**
+   * Tests that disabling content translation doesn't change lingotek translation settings for cohesion layout.
+   */
+  public function testDisablingContentTranslationDoesntDisableLingotekTranslationForCohesionLayout() {
+    $this->drupalGet('admin/lingotek/settings');
+    $this->assertFieldByName('node[article][fields][layout_canvas]', TRUE);
+
+    $edit = [];
+    $edit['settings[node][article][fields][layout_canvas]'] = FALSE;
+    $this->drupalPostForm('/admin/config/regional/content-language', $edit, 'Save configuration');
+    $this->assertSession()->responseContains('Settings successfully updated.');
+
+    $this->drupalGet('admin/lingotek/settings');
+    // The canvas layout is still enabled.
+    $this->assertFieldByName('node[article][fields][layout_canvas]', TRUE);
+  }
+
   protected function createCohesionField($entity_type_id, $bundle, $field_name = 'layout_canvas', $field_label = 'Layout canvas', $target_entity_type = 'cohesion_layout', $selection_handler = 'default', $selection_handler_settings = [], $cardinality = 1) {
     // Look for or add the specified field to the requested entity bundle.
     if (!FieldStorageConfig::loadByName($entity_type_id, $field_name)) {

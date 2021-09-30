@@ -158,15 +158,11 @@ class LingotekConfigSubscriber implements EventSubscriberInterface {
           // We need to make an exception for hosted entities. The field
           // reference may not be translatable, but we want to translate the
           // hosted entity. See https://www.drupal.org/node/2735121.
-          if (isset($field_definition[$field_name]) && $field_definition[$field_name]->getType() !== 'entity_reference_revisions' &&
+          $exceptionsThanCanBeTranslatedWithoutBeingEnabled = ['cohesion_entity_reference_revisions', 'entity_reference_revisions'];
+          if (isset($field_definition[$field_name]) && !in_array($field_definition[$field_name]->getType(), $exceptionsThanCanBeTranslatedWithoutBeingEnabled) &&
               $lingotek_config->isFieldLingotekEnabled($entity_type_id, $bundle, $field_name)) {
             $lingotek_config->setFieldLingotekEnabled($entity_type_id, $bundle, $field_name, FALSE);
           }
-          if (isset($field_definition[$field_name]) && $field_definition[$field_name]->getType() !== 'cohesion_entity_reference_revisions' &&
-            $lingotek_config->isFieldLingotekEnabled($entity_type_id, $bundle, $field_name)) {
-            $lingotek_config->setFieldLingotekEnabled($entity_type_id, $bundle, $field_name, FALSE);
-          }
-
         }
       }
     }
