@@ -37,6 +37,11 @@ class LingotekHttpUnitTest extends UnitTestCase {
   protected $config;
 
   /**
+   * @var \Drupal\Core\Config\Config|\PHPUnit_Framework_MockObject_MockObject
+   */
+  protected $accountConfig;
+
+  /**
    * @var \Drupal\Core\Config\ConfigFactoryInterface|\PHPUnit_Framework_MockObject_MockObject
    */
   protected $configFactory;
@@ -53,15 +58,19 @@ class LingotekHttpUnitTest extends UnitTestCase {
     $this->config = $this->getMockBuilder(Config::class)
       ->disableOriginalConstructor()
       ->getMock();
-    $this->config->expects($this->any())
+    $this->accountConfig = $this->getMockBuilder(Config::class)
+      ->disableOriginalConstructor()
+      ->getMock();
+
+    $this->accountConfig->expects($this->any())
       ->method('get')
-      ->will($this->returnValueMap([['account.host', 'http://example.com'], ['account.access_token', 'the_token']]));
+      ->will($this->returnValueMap([['host', 'http://example.com'], ['access_token', 'the_token']]));
 
     $this->configFactory = $this->createMock(ConfigFactoryInterface::class);
     $this->configFactory->expects($this->any())
       ->method('get')
-      ->with('lingotek.settings')
-      ->will($this->returnValue($this->config));
+      ->withConsecutive(['lingotek.settings'], ['lingotek.account'])
+      ->willReturnOnConsecutiveCalls($this->config, $this->accountConfig);
 
     $this->lingotekHttp = new LingotekHttp($this->httpClient, $this->configFactory);
   }

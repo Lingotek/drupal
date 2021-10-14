@@ -13,7 +13,7 @@ class LingotekSettingsDefaultsForm extends LingotekConfigFormBase {
   protected $resources;
 
   public function init() {
-    $config = \Drupal::configFactory()->getEditable('lingotek.settings');
+    $config = \Drupal::configFactory()->getEditable('lingotek.account');
 
     $this->defaults = $config->get('default');
     $this->resources = $this->lingotek->getResources();
@@ -110,7 +110,7 @@ class LingotekSettingsDefaultsForm extends LingotekConfigFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $config = $this->configFactory()->getEditable('lingotek.settings');
+    $config = $this->configFactory()->getEditable('lingotek.account');
     $form_values = $form_state->getValues();
     foreach ($this->defaults_labels as $key => $label) {
       $config->set('default.' . $key, $form_values[$key]);
@@ -128,11 +128,12 @@ class LingotekSettingsDefaultsForm extends LingotekConfigFormBase {
    * @param $config
    */
   protected function setCallbackUrl($config) {
+    $accountConfig = \Drupal::configFactory()->getEditable('lingotek.account');
     $new_callback_url = \Drupal::urlGenerator()
       ->generateFromRoute('lingotek.notify', [], ['absolute' => TRUE]);
-    $config->set('account.callback_url', $new_callback_url);
+    $accountConfig->set('callback_url', $new_callback_url);
     $new_response = $this->lingotek->setProjectCallBackUrl($config->get('default.project'), $new_callback_url);
-    $config->save();
+    $accountConfig->save();
   }
 
 }

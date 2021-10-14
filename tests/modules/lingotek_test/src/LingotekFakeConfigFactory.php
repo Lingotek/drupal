@@ -10,15 +10,15 @@ class LingotekFakeConfigFactory extends ConfigFactory implements ConfigFactoryIn
 
   public function get($name) {
     $config = parent::get($name);
-    if ($name === 'lingotek.settings') {
-      if ($config instanceof LingotekFakeConfigWrapper && !$config->config instanceof ImmutableConfig) {
+    if ($name === 'lingotek.account') {
+      if ($config instanceof LingotekFakeAccountConfigWrapper && !$config->config instanceof ImmutableConfig) {
         unset($this->cache[$name]);
         $config = parent::get($name);
-        $config = new LingotekFakeConfigWrapper($name, $this->storage, $this->eventDispatcher, $this->typedConfigManager, $config);
+        $config = new LingotekFakeAccountConfigWrapper($name, $this->storage, $this->eventDispatcher, $this->typedConfigManager, $config);
         $this->cache[$name] = $config;
       }
-      elseif (!$config instanceof LingotekFakeConfigWrapper) {
-        $config = new LingotekFakeConfigWrapper($name, $this->storage, $this->eventDispatcher, $this->typedConfigManager, $config);
+      elseif (!$config instanceof LingotekFakeAccountConfigWrapper) {
+        $config = new LingotekFakeAccountConfigWrapper($name, $this->storage, $this->eventDispatcher, $this->typedConfigManager, $config);
         $this->cache[$name] = $config;
       }
     }
@@ -27,15 +27,15 @@ class LingotekFakeConfigFactory extends ConfigFactory implements ConfigFactoryIn
 
   public function getEditable($name) {
     $config = parent::getEditable($name);
-    if ($name === 'lingotek.settings') {
-      if ($config instanceof LingotekFakeConfigWrapper && $config->config instanceof ImmutableConfig) {
+    if ($name === 'lingotek.account') {
+      if ($config instanceof LingotekFakeAccountConfigWrapper && $config->config instanceof ImmutableConfig) {
         unset($this->cache[$name]);
         $config = parent::getEditable($name);
-        $config = new LingotekFakeConfigWrapper($name, $this->storage, $this->eventDispatcher, $this->typedConfigManager, $config);
+        $config = new LingotekFakeAccountConfigWrapper($name, $this->storage, $this->eventDispatcher, $this->typedConfigManager, $config);
         $this->cache[$name] = $config;
       }
-      elseif (!$config instanceof LingotekFakeConfigWrapper) {
-        $config = new LingotekFakeConfigWrapper($name, $this->storage, $this->eventDispatcher, $this->typedConfigManager, $config);
+      elseif (!$config instanceof LingotekFakeAccountConfigWrapper) {
+        $config = new LingotekFakeAccountConfigWrapper($name, $this->storage, $this->eventDispatcher, $this->typedConfigManager, $config);
         $this->cache[$name] = $config;
       }
     }

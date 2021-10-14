@@ -27,6 +27,8 @@ class LingotekAccountTest extends BrowserTestBase {
    * Tests that the dashboard cannot be accessed without a valid user.
    */
   public function testAccountCanConnect() {
+    \Drupal::state()->set('must_remain_disconnected', TRUE);
+
     $assert_session = $this->assertSession();
 
     // Login as admin.
@@ -56,6 +58,8 @@ class LingotekAccountTest extends BrowserTestBase {
    * Tests that the dashboard cannot be accessed without a valid user.
    */
   public function testDashboardIsNotAvailableBeforeConnecting() {
+    \Drupal::state()->set('must_remain_disconnected', TRUE);
+
     $assert_session = $this->assertSession();
 
     // Login as admin.
@@ -68,6 +72,8 @@ class LingotekAccountTest extends BrowserTestBase {
   }
 
   public function testHandshakePage() {
+    \Drupal::state()->set('must_remain_disconnected', TRUE);
+
     $assert_session = $this->assertSession();
 
     // We avoid the redirect so we can see where the user will land for some
@@ -83,23 +89,7 @@ class LingotekAccountTest extends BrowserTestBase {
     $this->clickLink('Connect Lingotek Account');
     // Our fake backend generates a token, returns to the site and waits for the
     // redirect.
-    // $this->assertText('Connecting... Please wait to be redirected');
-    $assert_session->addressEquals('admin/lingotek/setup/account');
-  }
-
-  public function testAccountCreationCancelled() {
-    $assert_session = $this->assertSession();
-
-    // Login as admin.
-    $this->drupalLogin($this->rootUser);
-    // Try to navigate to the Dashboard page, and assert we are redirected.
-    $this->drupalGet('admin/lingotek/setup/account');
-    // Fake the connection to an account in Lingotek.
-    $this->clickLink('Get started');
-    // This will simulate a "cancel" click, so we need to ensure we are back
-    // at the same page. We cannot test that we will be redirected, as it's done
-    // via js. There is no way on the server to know the hash part of the url.
-    $this->assertUrl('/admin/lingotek/setup/account');
+    $assert_session->addressEquals('admin/lingotek/setup/account/handshake#access_token=test_token');
   }
 
 }

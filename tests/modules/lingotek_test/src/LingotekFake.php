@@ -136,7 +136,7 @@ class LingotekFake implements LingotekInterface {
   }
 
   public function getDefaults() {
-    return $this->config->get(static::SETTINGS)->get('default');
+    return $this->config->get('lingotek.account')->get('default');
   }
 
   public function uploadDocument($title, $content, $locale, $url = NULL, LingotekProfileInterface $profile = NULL, $job_id = NULL, &$process_id = NULL) {

@@ -97,14 +97,14 @@ class LingotekSettingsConnectFormTest extends UnitTestCase {
     $config->expects($this->any())
       ->method('get')
       ->willReturnMap([
-        ['account.login_id', 'test@example.com'],
-        ['account.access_token', 'ef4b4d69-5be2-4513-b4f1-7e0f6f9511a0'],
-        ['account.default_client_id', 'my-client-id'],
-        ['account.host', 'http://example.com'],
+        ['login_id', 'test@example.com'],
+        ['access_token', 'ef4b4d69-5be2-4513-b4f1-7e0f6f9511a0'],
+        ['default_client_id', 'my-client-id'],
+        ['host', 'http://example.com'],
       ]);
     $this->configFactory->expects($this->once())
       ->method('get')
-      ->with('lingotek.settings')
+      ->with('lingotek.account')
       ->willReturn($config);
 
     $this->urlGenerator->expects($this->once())

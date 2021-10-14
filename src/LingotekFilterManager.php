@@ -32,7 +32,7 @@ class LingotekFilterManager implements LingotekFilterManagerInterface {
    * {@inheritdoc}
    */
   public function getLocallyAvailableFilters() {
-    $filters = $this->configFactory->get('lingotek.settings')->get('account.resources.filter');
+    $filters = $this->configFactory->get('lingotek.account')->get('resources.filter');
     $filters['project_default'] = 'Project Default';
     $filters['drupal_default'] = 'Drupal Default';
     return $filters;
@@ -42,7 +42,7 @@ class LingotekFilterManager implements LingotekFilterManagerInterface {
    * {@inheritdoc}
    */
   public function getDefaultFilter() {
-    $filter = $this->configFactory->get('lingotek.settings')->get('default.filter');
+    $filter = $this->configFactory->get('lingotek.account')->get('default.filter');
     $filters = $this->getLocallyAvailableFilters();
     if (!isset($filters[$filter])) {
       $filter = NULL;
@@ -54,7 +54,7 @@ class LingotekFilterManager implements LingotekFilterManagerInterface {
    * {@inheritdoc}
    */
   public function getDefaultSubfilter() {
-    $filter = $this->configFactory->get('lingotek.settings')->get('default.subfilter');
+    $filter = $this->configFactory->get('lingotek.account')->get('default.subfilter');
     $filters = $this->getLocallyAvailableFilters();
     if (!isset($filters[$filter])) {
       $filter = NULL;

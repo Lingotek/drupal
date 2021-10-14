@@ -35,10 +35,9 @@ class LingotekSetupController extends LingotekControllerBase {
     if (Request::METHOD_POST === $request->getMethod()) {
       $body = Json::decode($request->getContent());
       if (isset($body['access_token'])) {
-        $config = \Drupal::configFactory()->getEditable('lingotek.settings');
-        $config->set('account.access_token', $body['access_token']);
-        $config->set('account.use_production', TRUE);
-        $config->save();
+        $accountConfig = \Drupal::configFactory()->getEditable('lingotek.account');
+        $accountConfig->set('access_token', $body['access_token']);
+        $accountConfig->save();
 
         $account_info = $this->fetchAccountInfo();
         $this->saveAccountInfo($account_info);
@@ -59,8 +58,8 @@ class LingotekSetupController extends LingotekControllerBase {
     }
     elseif (Request::METHOD_GET === $request->getMethod()) {
       // Is a GET.
-      $config = \Drupal::config('lingotek.settings');
-      if ($config->get('account.access_token')) {
+      $accountConfig = \Drupal::config('lingotek.account');
+      if ($accountConfig->get('access_token')) {
         // No need to show the username and token if everything worked correctly
         // Just go to the community page
         return $this->redirect('lingotek.setup_community');
@@ -83,13 +82,13 @@ class LingotekSetupController extends LingotekControllerBase {
       // TODO: Log an error that no communities exist.
       return $this->redirect('lingotek.setup_account');
     }
-    $config = \Drupal::configFactory()->getEditable('lingotek.settings');
-    $config->set('account.resources.community', $communities);
-    $config->save();
+    $accountConfig = \Drupal::configFactory()->getEditable('lingotek.account');
+    $accountConfig->set('resources.community', $communities);
+    $accountConfig->save();
     if (count($communities) == 1) {
       // No choice necessary. Save and advance to next page.
-      $config->set('default.community', current(array_keys($communities)));
-      $config->save();
+      $accountConfig->set('default.community', current(array_keys($communities)));
+      $accountConfig->save();
       // update resources based on newly selected community
       $this->lingotek->getResources(TRUE);
       return $this->redirect('lingotek.setup_defaults');
@@ -107,20 +106,20 @@ class LingotekSetupController extends LingotekControllerBase {
     $resources = $this->lingotek->getResources();
     // No choice necessary. Save and advance to the next page.
     if (count($resources['project']) == 1 && count($resources['vault']) == 1) {
-      $config = \Drupal::configFactory()->getEditable('lingotek.settings');
+      $accountConfig = \Drupal::configFactory()->getEditable('lingotek.account');
 
-      $config->set('default.project', current(array_keys($resources['project'])));
-      $config->set('default.vault', current(array_keys($resources['vault'])));
+      $accountConfig->set('default.project', current(array_keys($resources['project'])));
+      $accountConfig->set('default.vault', current(array_keys($resources['vault'])));
       $default_workflow = array_search('Machine Translation', $resources['workflow']);
       if ($default_workflow === FALSE) {
         $default_workflow = current(array_keys($resources['workflow']));
       }
-      $config->set('default.workflow', $default_workflow);
+      $accountConfig->set('default.workflow', $default_workflow);
       // Assign the project callback
       $new_callback_url = \Drupal::urlGenerator()->generateFromRoute('lingotek.notify', [], ['absolute' => TRUE]);
-      $config->set('account.callback_url', $new_callback_url);
-      $config->save();
-      $new_response = $this->lingotek->setProjectCallBackUrl($config->get('default.project'), $new_callback_url);
+      $accountConfig->set('callback_url', $new_callback_url);
+      $accountConfig->save();
+      $new_response = $this->lingotek->setProjectCallBackUrl($accountConfig->get('default.project'), $new_callback_url);
       return $this->redirect('lingotek.dashboard');
     }
     return [
@@ -131,15 +130,15 @@ class LingotekSetupController extends LingotekControllerBase {
 
   protected function saveToken($token) {
     if (!empty($token)) {
-      \Drupal::configFactory()->getEditable('lingotek.settings')->set('account.access_token', $token)->save();
+      \Drupal::configFactory()->getEditable('lingotek.account')->set('access_token', $token)->save();
     }
   }
 
   protected function saveAccountInfo($account_info) {
     if (!empty($account_info)) {
-      $config = \Drupal::configFactory()->getEditable('lingotek.settings');
-      $config->set('account.login_id', $account_info['login_id']);
-      $config->save();
+      $accountConfig = \Drupal::configFactory()->getEditable('lingotek.account');
+      $accountConfig->set('login_id', $account_info['login_id']);
+      $accountConfig->save();
     }
   }
 

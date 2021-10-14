@@ -1,10 +1,3 @@
-default:
-    community:
-    project:
-    workflow:
-    vault:
-    filter: drupal_default
-    subfilter: drupal_default
 preference:
   advanced_parsing: true
   advanced_taxonomy_terms: true
@@ -45,17 +38,6 @@ intelligence:
   use_region: true
   use_base_domain: true
   use_reference_url: true
-account:
-  host: 'https://myaccount.lingotek.com'
-  authorize_path: 'auth/authorize.html'
-  default_client_id: 'e39e24c7-6c69-4126-946d-cf8fbff38ef0'
-  plan_type: 'basic'
-  resources:
-    community: []
-    project: []
-    workflow: []
-    vault: []
-    filter: []
 translate:
   entity: []
   config: []

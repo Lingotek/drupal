@@ -28,20 +28,20 @@ class LingotekAccountDisconnectFormTest extends LingotekTestBase {
     $this->assertUrl('/admin/lingotek/setup/account');
 
     // We don't have an account anymore.
-    $lingotek_config = \Drupal::config('lingotek.settings');
-    $this->assertNull($lingotek_config->get('account.access_token'));
-    $this->assertNull($lingotek_config->get('account.login_id'));
-    $this->assertNull($lingotek_config->get('account.callback_url'));
+    $lingotek_config = \Drupal::config('lingotek.account');
+    $this->assertNull($lingotek_config->get('access_token'));
+    $this->assertNull($lingotek_config->get('login_id'));
+    $this->assertNull($lingotek_config->get('callback_url'));
 
     // We connect to Lingotek again and it should work. We should not need to
     // set the defaults, as they are already set.
     $this->connectToLingotek();
 
     // We have an account again.
-    $lingotek_config = \Drupal::config('lingotek.settings');
-    $this->assertNotNull($lingotek_config->get('account.access_token'));
-    $this->assertNotNull($lingotek_config->get('account.login_id'));
-    $this->assertNotNull($lingotek_config->get('account.callback_url'));
+    $lingotek_config = \Drupal::config('lingotek.account');
+    $this->assertNotNull($lingotek_config->get('access_token'));
+    $this->assertNotNull($lingotek_config->get('login_id'));
+    $this->assertNotNull($lingotek_config->get('callback_url'));
   }
 
 }

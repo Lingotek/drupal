@@ -97,16 +97,17 @@ class LingotekSettingsTabAccountFormTest extends UnitTestCase {
    */
   public function testBuildForm() {
     $config = $this->createMock(Config::class);
-    $config->expects($this->any())
+    $accountConfig = $this->createMock(Config::class);
+    $accountConfig->expects($this->any())
       ->method('get')
       ->willReturnMap([
-        ['account.login_id', 'test@example.com'],
-        ['account.access_token', 'ef4b4d69-5be2-4513-b4f1-7e0f6f9511a0'],
+        ['login_id', 'test@example.com'],
+        ['access_token', 'ef4b4d69-5be2-4513-b4f1-7e0f6f9511a0'],
       ]);
-    $this->configFactory->expects($this->once())
+    $this->configFactory->expects($this->exactly(1))
       ->method('get')
-      ->with('lingotek.settings')
-      ->willReturn($config);
+      ->with('lingotek.account')
+      ->willReturn($accountConfig);
 
     $this->lingotekFilterManager->expects($this->once())
       ->method('getLocallyAvailableFilters')

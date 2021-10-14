@@ -20,7 +20,7 @@ class LingotekSettingsEditDefaultsForm extends LingotekSettingsDefaultsForm {
     $this->defaults_labels['filter'] = t('Default Filter');
     $this->defaults_labels['subfilter'] = t('Default Subfilter');
 
-    $config = \Drupal::configFactory()->getEditable('lingotek.settings');
+    $config = \Drupal::configFactory()->getEditable('lingotek.account');
     $this->defaults = $config->get('default');
     $this->resources = $this->lingotek->getResources();
   }
@@ -31,7 +31,7 @@ class LingotekSettingsEditDefaultsForm extends LingotekSettingsDefaultsForm {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     // When editing, we redirect to the account form, and we don't notify
     // about callback url.
-    $config = $this->configFactory()->getEditable('lingotek.settings');
+    $config = $this->configFactory()->getEditable('lingotek.account');
     $form_values = $form_state->getValues();
     foreach ($this->defaults_labels as $key => $label) {
       $config->set('default.' . $key, $form_values[$key]);

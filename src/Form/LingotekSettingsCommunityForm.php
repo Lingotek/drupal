@@ -21,7 +21,7 @@ class LingotekSettingsCommunityForm extends LingotekConfigFormBase {
      */
   public function buildForm(array $form, FormStateInterface $form_state) {
     $form = parent::buildForm($form, $form_state);
-    $config = $this->configFactory->get('lingotek.settings');
+    $config = $this->configFactory->get('lingotek.account');
 
     $community_id = $config->get('default.community');
     $communities = $this->lingotek->getCommunities();
@@ -59,7 +59,7 @@ class LingotekSettingsCommunityForm extends LingotekConfigFormBase {
      */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $form_values = $form_state->getValues();
-    $config = \Drupal::configFactory()->getEditable('lingotek.settings');
+    $config = \Drupal::configFactory()->getEditable('lingotek.account');
     $config->set('default.community', $form_values['community'])->save();
     // update resources based on newly selected community
     $this->lingotek->getResources(TRUE);

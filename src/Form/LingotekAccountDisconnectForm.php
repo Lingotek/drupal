@@ -75,10 +75,10 @@ class LingotekAccountDisconnectForm extends ConfirmFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $config = $this->configFactory()->getEditable('lingotek.settings');
-    $config->set('account.access_token', NULL);
-    $config->set('account.login_id', NULL);
-    $config->set('account.callback_url', NULL);
+    $config = $this->configFactory()->getEditable('lingotek.account');
+    $config->set('access_token', NULL);
+    $config->set('login_id', NULL);
+    $config->set('callback_url', NULL);
     $config->save();
 
     $this->logger('lingotek')->notice('Account disconnected from Lingotek.');

@@ -177,11 +177,9 @@ namespace Drupal\Tests\lingotek\Unit\Form {
       );
       $this->form->setConfigFactory($this->getConfigFactoryStub(
         [
-          'lingotek.settings' => [
-            'account' => [
-              'access_token' => 'token',
-              'login_id' => 'test@example.com',
-            ],
+          'lingotek.account' => [
+            'access_token' => 'token',
+            'login_id' => 'test@example.com',
           ],
         ]
       ));

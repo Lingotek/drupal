@@ -102,11 +102,11 @@ namespace Drupal\Tests\lingotek\Unit\Form {
       $config = $this->createMock(Config::class);
       $config->expects($this->once())
         ->method('get')
-        ->with('account.callback_url')
+        ->with('callback_url')
         ->willReturn('http://example.com/lingotek/notify');
       $this->configFactory->expects($this->once())
         ->method('get')
-        ->with('lingotek.settings')
+        ->with('lingotek.account')
         ->willReturn($config);
       $this->state->expects($this->any())
         ->method('get')
@@ -125,11 +125,11 @@ namespace Drupal\Tests\lingotek\Unit\Form {
       $config = $this->createMock(Config::class);
       $config->expects($this->once())
         ->method('get')
-        ->with('account.callback_url')
+        ->with('callback_url')
         ->willReturn('http://example.com/lingotek/notify');
       $this->configFactory->expects($this->once())
         ->method('get')
-        ->with('lingotek.settings')
+        ->with('lingotek.account')
         ->willReturn($config);
       $this->state->expects($this->any())
         ->method('get')

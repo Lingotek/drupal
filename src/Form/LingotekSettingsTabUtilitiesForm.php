@@ -75,7 +75,7 @@ class LingotekSettingsTabUtilitiesForm extends LingotekConfigFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-
+    $accountConfig = $this->configFactory()->get('lingotek.account');
     $form['utilities'] = [
       '#type' => 'details',
       '#title' => $this->t('Utilities'),
@@ -99,7 +99,7 @@ class LingotekSettingsTabUtilitiesForm extends LingotekConfigFormBase {
     ];
 
     // Update Callback URL row
-    $callback_url = $this->configFactory()->get('lingotek.settings')->get('account.callback_url');
+    $callback_url = $accountConfig->get('callback_url');
     $update_callback_url_row = [];
     $update_callback_url_row['update_description'] = [
       '#markup' => '<h5>' . $this->t('Update Notification Callback URL') . '</h5>' . '<p>' . $this->t('Update the notification callback URL. This can be run whenever your site is moved (e.g., domain name change or sub-directory re-location) or whenever you would like your security token re-generated.') . '</p>' . $this->t('<b>Current notification callback URL:</b> %callback_url', ['%callback_url' => $callback_url]),
@@ -171,12 +171,12 @@ class LingotekSettingsTabUtilitiesForm extends LingotekConfigFormBase {
 
   public function updateCallbackUrl() {
     $new_callback_url = \Drupal::urlGenerator()->generateFromRoute('lingotek.notify', [], ['absolute' => TRUE]);
-    $config = $this->configFactory()->get('lingotek.settings');
-    $configEditable = $this->configFactory()->getEditable('lingotek.settings');
-    $configEditable->set('account.callback_url', $new_callback_url);
+    $accountConfig = $this->configFactory()->get('lingotek.account');
+    $configEditable = $this->configFactory()->getEditable('lingotek.account');
+    $configEditable->set('callback_url', $new_callback_url);
     $configEditable->save();
 
-    $defaultProject = $config->get('default.project');
+    $defaultProject = $accountConfig->get('default.project');
     $new_response = $this->lingotek->setProjectCallBackUrl($defaultProject, $new_callback_url);
 
     if ($new_response) {

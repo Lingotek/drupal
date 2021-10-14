@@ -70,7 +70,7 @@ class LingotekWorkbenchRedirectController extends LingotekControllerBase {
    */
   public function redirectToWorkbench($doc_id, $locale) {
     // Get account settings to build workbench link.
-    $account = $this->config('lingotek.settings')->get('account');
+    $account = $this->config('lingotek.account');
     // Generate the uri to the Lingotek Workbench.
     $uri = $this->generateWorkbenchUri($doc_id, $locale, $account);
     return new TrustedRedirectResponse(Url::fromUri($uri)->toString());
@@ -83,14 +83,14 @@ class LingotekWorkbenchRedirectController extends LingotekControllerBase {
    *   The document id.
    * @param string $locale
    *   Lingotek translation language.
-   * @param array $account
-   *   Array describing the account.
+   * @param \Drupal\Core\Config\Config $account
+   *   Config with the account settings.
    *
    * @return string
    *   The uri of the workbench for this account for editing this translation.
    */
   protected function generateWorkbenchUri($document_id, $locale, $account) {
-    $base_url = $account['host'];
+    $base_url = $account->get('host');
     // https://{environment}/workbench/document/{uuid}/locale/{es-MX}
     $workbench_uri = $base_url . '/workbench/document/' . $document_id . '/locale/' . $locale;
     return $workbench_uri;

@@ -53,6 +53,11 @@ class LingotekUnitTest extends UnitTestCase {
   /**
    * @var \Drupal\Core\Config\Config|\PHPUnit_Framework_MockObject_MockObject
    */
+  protected $accountConfig;
+
+  /**
+   * @var \Drupal\Core\Config\Config|\PHPUnit_Framework_MockObject_MockObject
+   */
   protected $configEditable;
 
   /**
@@ -83,6 +88,9 @@ class LingotekUnitTest extends UnitTestCase {
     $this->config = $this->getMockBuilder(Config::class)
       ->disableOriginalConstructor()
       ->getMock();
+    $this->accountConfig = $this->getMockBuilder(Config::class)
+      ->disableOriginalConstructor()
+      ->getMock();
     $this->configEditable = $this->getMockBuilder(Config::class)
       ->disableOriginalConstructor()
       ->getMock();
@@ -91,11 +99,13 @@ class LingotekUnitTest extends UnitTestCase {
     $this->configFactory = $this->createMock(ConfigFactoryInterface::class);
     $this->configFactory->expects($this->any())
       ->method('get')
-      ->with('lingotek.settings')
-      ->will($this->returnValue($this->config));
+      ->willReturnMap([
+        ['lingotek.account', $this->accountConfig],
+        ['lingotek.settings', $this->config],
+      ]);
     $this->configFactory->expects($this->any())
       ->method('getEditable')
-      ->with('lingotek.settings')
+      ->with('lingotek.account')
       ->will($this->returnValue($this->configEditable));
 
     $this->lingotekConfiguration = $this->createMock(LingotekConfigurationServiceInterface::class);
@@ -108,9 +118,9 @@ class LingotekUnitTest extends UnitTestCase {
    */
   public function testGetVaultsWithData() {
     // No call is performed when getting vaults without forcing.
-    $this->config->expects($this->once())
+    $this->accountConfig->expects($this->once())
       ->method('get')
-      ->with('account.resources.vault')
+      ->with('resources.vault')
       ->will($this->returnValue(['a_vault' => 'A vault']));
     $this->api->expects($this->never())
       ->method('getVaults');
@@ -124,16 +134,16 @@ class LingotekUnitTest extends UnitTestCase {
    */
   public function testGetVaultsWithNoData() {
     // A call is performed when getting vaults and there are none locally.
-    $this->config->expects($this->at(0))
+    $this->accountConfig->expects($this->at(0))
       ->method('get')
-      ->with('account.resources.vault')
+      ->with('resources.vault')
       ->will($this->returnValue([]));
-    $this->config->expects($this->at(1))
+    $this->accountConfig->expects($this->at(1))
       ->method('get')
       ->with('default.community')
       ->will($this->returnValue(['my_community']));
 
-    $this->config->expects($this->at(2))
+    $this->accountConfig->expects($this->at(2))
       ->method('get')
       ->with('default.vault')
       ->will($this->returnValue(NULL));
@@ -146,7 +156,7 @@ class LingotekUnitTest extends UnitTestCase {
     // And the results will be stored.
     $this->configEditable->expects($this->at(0))
       ->method('set')
-      ->with('account.resources.vault', ['a_vault' => 'A vault'])
+      ->with('resources.vault', ['a_vault' => 'A vault'])
       ->will($this->returnSelf());
 
     $this->configEditable->expects($this->at(1))
@@ -169,17 +179,17 @@ class LingotekUnitTest extends UnitTestCase {
    */
   public function testGetVaultsWithDataButForcing() {
     // A call is performed when forced even if there are vaults locally.
-    $this->config->expects($this->at(0))
+    $this->accountConfig->expects($this->at(0))
       ->method('get')
-      ->with('account.resources.vault')
+      ->with('resources.vault')
       ->will($this->returnValue(['a_vault' => 'A vault']));
 
-    $this->config->expects($this->at(1))
+    $this->accountConfig->expects($this->at(1))
       ->method('get')
       ->with('default.community')
       ->will($this->returnValue(['my_community']));
 
-    $this->config->expects($this->at(2))
+    $this->accountConfig->expects($this->at(2))
       ->method('get')
       ->with('default.vault')
       ->will($this->returnValue(NULL));
@@ -192,7 +202,7 @@ class LingotekUnitTest extends UnitTestCase {
     // And the results will be stored.
     $this->configEditable->expects($this->at(0))
       ->method('set')
-      ->with('account.resources.vault', ['a_vault' => 'A vault'])
+      ->with('resources.vault', ['a_vault' => 'A vault'])
       ->will($this->returnSelf());
 
     $this->configEditable->expects($this->at(1))
@@ -215,9 +225,9 @@ class LingotekUnitTest extends UnitTestCase {
    */
   public function testGetFiltersWithData() {
     // No call is performed when getting vaults without forcing.
-    $this->config->expects($this->once())
+    $this->accountConfig->expects($this->once())
       ->method('get')
-      ->with('account.resources.filter')
+      ->with('resources.filter')
       ->will($this->returnValue(['a_filter' => 'A filter']));
     $this->api->expects($this->never())
       ->method('getFilters');
@@ -229,16 +239,16 @@ class LingotekUnitTest extends UnitTestCase {
    */
   public function testGetFiltersWithNoData() {
     // A call is performed when getting filters and there are none locally.
-    $this->config->expects($this->at(0))
+    $this->accountConfig->expects($this->at(0))
       ->method('get')
-      ->with('account.resources.filter')
+      ->with('resources.filter')
       ->will($this->returnValue([]));
-    $this->config->expects($this->at(1))
+    $this->accountConfig->expects($this->at(1))
       ->method('get')
       ->with('default.community')
       ->will($this->returnValue(['my_community']));
 
-    $this->config->expects($this->at(2))
+    $this->accountConfig->expects($this->at(2))
       ->method('get')
       ->with('default.filter')
       ->will($this->returnValue(NULL));
@@ -251,7 +261,7 @@ class LingotekUnitTest extends UnitTestCase {
     // And the results will be stored.
     $this->configEditable->expects($this->at(0))
       ->method('set')
-      ->with('account.resources.filter', ['a_filter' => 'A filter'])
+      ->with('resources.filter', ['a_filter' => 'A filter'])
       ->will($this->returnSelf());
 
     $this->configEditable->expects($this->at(1))
@@ -274,17 +284,17 @@ class LingotekUnitTest extends UnitTestCase {
    */
   public function testGetFiltersWithDataButForcing() {
     // A call is performed when forced even if there are filters locally.
-    $this->config->expects($this->at(0))
+    $this->accountConfig->expects($this->at(0))
       ->method('get')
-      ->with('account.resources.filter')
+      ->with('resources.filter')
       ->will($this->returnValue(['a_filter' => 'A filter']));
 
-    $this->config->expects($this->at(1))
+    $this->accountConfig->expects($this->at(1))
       ->method('get')
       ->with('default.community')
       ->will($this->returnValue(['my_community']));
 
-    $this->config->expects($this->at(2))
+    $this->accountConfig->expects($this->at(2))
       ->method('get')
       ->with('default.filter')
       ->will($this->returnValue(NULL));
@@ -297,7 +307,7 @@ class LingotekUnitTest extends UnitTestCase {
     // And the results will be stored.
     $this->configEditable->expects($this->at(0))
       ->method('set')
-      ->with('account.resources.filter', ['a_filter' => 'A filter'])
+      ->with('resources.filter', ['a_filter' => 'A filter'])
       ->will($this->returnSelf());
 
     $this->configEditable->expects($this->at(1))
@@ -320,9 +330,9 @@ class LingotekUnitTest extends UnitTestCase {
    */
   public function testGetProjectsWithData() {
     // No call is performed when getting projects without forcing.
-    $this->config->expects($this->once())
+    $this->accountConfig->expects($this->once())
       ->method('get')
-      ->with('account.resources.project')
+      ->with('resources.project')
       ->will($this->returnValue(['a_project' => 'A project']));
     $this->api->expects($this->never())
       ->method('getProjects');
@@ -335,16 +345,16 @@ class LingotekUnitTest extends UnitTestCase {
    */
   public function testGetProjectsWithNoData() {
     // A call is performed when getting projects and there are none locally.
-    $this->config->expects($this->at(0))
+    $this->accountConfig->expects($this->at(0))
       ->method('get')
-      ->with('account.resources.project')
+      ->with('resources.project')
       ->will($this->returnValue([]));
-    $this->config->expects($this->at(1))
+    $this->accountConfig->expects($this->at(1))
       ->method('get')
       ->with('default.community')
       ->will($this->returnValue(['my_community']));
 
-    $this->config->expects($this->at(2))
+    $this->accountConfig->expects($this->at(2))
       ->method('get')
       ->with('default.project')
       ->will($this->returnValue(NULL));
@@ -357,7 +367,7 @@ class LingotekUnitTest extends UnitTestCase {
     // And the results will be stored.
     $this->configEditable->expects($this->at(0))
       ->method('set')
-      ->with('account.resources.project', ['a_project' => 'A project'])
+      ->with('resources.project', ['a_project' => 'A project'])
       ->will($this->returnSelf());
 
     $this->configEditable->expects($this->at(1))
@@ -380,17 +390,17 @@ class LingotekUnitTest extends UnitTestCase {
    */
   public function testGetProjectsWithDataButForcing() {
     // A call is performed when forced even if there are projects locally.
-    $this->config->expects($this->at(0))
+    $this->accountConfig->expects($this->at(0))
       ->method('get')
-      ->with('account.resources.project')
+      ->with('resources.project')
       ->will($this->returnValue(['a_project' => 'A project']));
 
-    $this->config->expects($this->at(1))
+    $this->accountConfig->expects($this->at(1))
       ->method('get')
       ->with('default.community')
       ->will($this->returnValue(['my_community']));
 
-    $this->config->expects($this->at(2))
+    $this->accountConfig->expects($this->at(2))
       ->method('get')
       ->with('default.project')
       ->will($this->returnValue(NULL));
@@ -403,7 +413,7 @@ class LingotekUnitTest extends UnitTestCase {
     // And the results will be stored.
     $this->configEditable->expects($this->at(0))
       ->method('set')
-      ->with('account.resources.project', ['a_project' => 'A project'])
+      ->with('resources.project', ['a_project' => 'A project'])
       ->will($this->returnSelf());
 
     $this->configEditable->expects($this->at(1))
@@ -451,7 +461,7 @@ class LingotekUnitTest extends UnitTestCase {
       ->method('getSubfilterId')
       ->willReturn('0e79f34d-f27b-4a0c-880e-cd9181a5d265');
 
-    $this->config->expects($this->any())
+    $this->accountConfig->expects($this->any())
       ->method('get')
       ->will($this->returnValueMap([['default.project', 'default_project'], ['default.vault', 'default_vault'], ['default.workflow', 'default_workflow']]));
 
@@ -775,7 +785,7 @@ class LingotekUnitTest extends UnitTestCase {
       ->method('getSubfilterId')
       ->willReturn('0e79f34d-f27b-4a0c-880e-cd9181a5d265');
 
-    $this->config->expects($this->any())
+    $this->accountConfig->expects($this->any())
       ->method('get')
       ->will($this->returnValueMap([['default.project', 'default_project'], ['default.vault', 'default_vault'], ['default.workflow', 'default_workflow']]));
 
@@ -994,7 +1004,7 @@ class LingotekUnitTest extends UnitTestCase {
       ->method('getId')
       ->will($this->returnValue('es'));
 
-    $this->config->expects($this->any())
+    $this->accountConfig->expects($this->any())
       ->method('get')
       ->will($this->returnValueMap([['default.workflow', 'default_workflow']]));
     $this->languageLocaleMapper->expects($this->any())
@@ -1098,7 +1108,7 @@ class LingotekUnitTest extends UnitTestCase {
       ->method('getId')
       ->will($this->returnValue('es'));
 
-    $this->config->expects($this->any())
+    $this->accountConfig->expects($this->any())
       ->method('get')
       ->will($this->returnValueMap([['default.workflow', 'default_workflow']]));
     $this->languageLocaleMapper->expects($this->any())
@@ -1140,7 +1150,7 @@ class LingotekUnitTest extends UnitTestCase {
       ->method('getId')
       ->will($this->returnValue('es'));
 
-    $this->config->expects($this->any())
+    $this->accountConfig->expects($this->any())
       ->method('get')
       ->will($this->returnValueMap([['default.workflow', 'default_workflow']]));
     $this->languageLocaleMapper->expects($this->any())
@@ -1181,7 +1191,7 @@ class LingotekUnitTest extends UnitTestCase {
       ->method('getId')
       ->will($this->returnValue('es'));
 
-    $this->config->expects($this->any())
+    $this->accountConfig->expects($this->any())
       ->method('get')
       ->will($this->returnValueMap([['default.workflow', 'default_workflow']]));
     $this->languageLocaleMapper->expects($this->any())
@@ -1444,7 +1454,7 @@ class LingotekUnitTest extends UnitTestCase {
       ->method('getSubfilterId')
       ->willReturn('0e79f34d-f27b-4a0c-880e-cd9181a5d265');
 
-    $this->config->expects($this->any())
+    $this->accountConfig->expects($this->any())
       ->method('get')
       ->will($this->returnValueMap([['default.project', 'default_project'], ['default.vault', 'default_vault']]));
 
@@ -1487,7 +1497,7 @@ class LingotekUnitTest extends UnitTestCase {
       ->method('getSubfilterId')
       ->willReturn('0e79f34d-f27b-4a0c-880e-cd9181a5d265');
 
-    $this->config->expects($this->any())
+    $this->accountConfig->expects($this->any())
       ->method('get')
       ->will($this->returnValueMap([['default.project', 'default_project'], ['default.vault', 'default_vault']]));
 
@@ -1587,7 +1597,7 @@ class LingotekUnitTest extends UnitTestCase {
       ->method('getSubfilterId')
       ->willReturn('0e79f34d-f27b-4a0c-880e-cd9181a5d265');
 
-    $this->config->expects($this->any())
+    $this->accountConfig->expects($this->any())
       ->method('get')
       ->will($this->returnValueMap([['default.project', 'default_project'], ['default.vault', 'default_vault'], ['default.workflow', 'default_workflow']]));
 
@@ -1877,7 +1887,7 @@ class LingotekUnitTest extends UnitTestCase {
       ->method('getId')
       ->will($this->returnValue('es'));
 
-    $this->config->expects($this->any())
+    $this->accountConfig->expects($this->any())
       ->method('get')
       ->will($this->returnValueMap([['default.workflow', 'default_workflow']]));
     $this->languageLocaleMapper->expects($this->any())
@@ -1919,7 +1929,7 @@ class LingotekUnitTest extends UnitTestCase {
       ->method('getId')
       ->will($this->returnValue('es'));
 
-    $this->config->expects($this->any())
+    $this->accountConfig->expects($this->any())
       ->method('get')
       ->will($this->returnValueMap([['default.workflow', 'default_workflow']]));
     $this->languageLocaleMapper->expects($this->any())

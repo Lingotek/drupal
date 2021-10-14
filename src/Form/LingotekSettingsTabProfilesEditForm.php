@@ -142,9 +142,9 @@ class LingotekSettingsTabProfilesEditForm extends LingotekConfigFormBase {
     elseif ($this->is_custom_id) {
       $this->updateCustomProfile(strtolower($form_values['name']), $form_values['auto_upload'], $form_values['auto_download'], $form_values['auto_upload_worker']);
     }
-    $config = \Drupal::configFactory()->getEditable('lingotek.settings');
-    $config->set('default.vault', $form_values['vault']);
-    $config->save();
+    $accountConfig = \Drupal::configFactory()->getEditable('lingotek.account');
+    $accountConfig->set('default.vault', $form_values['vault']);
+    $accountConfig->save();
 
     $form_state->setRedirect('lingotek.settings');
     parent::submitForm($form, $form_state);
@@ -173,9 +173,10 @@ class LingotekSettingsTabProfilesEditForm extends LingotekConfigFormBase {
   }
 
   protected function retrieveProfileVaults() {
+    $accountConfig = $this->config('lingotek.account');
     $personal_vault = [];
-    $personal_vault_key = $this->config('lingotek.settings')->get('default.vault');
-    $community_vault = $this->config('lingotek.settings')->get('account.resources.vault');
+    $personal_vault_key = $accountConfig->get('default.vault');
+    $community_vault = $accountConfig->get('resources.vault');
     if (isset($community_vault[$personal_vault_key])) {
       $personal_vault = [
         $personal_vault_key => $community_vault[$personal_vault_key],

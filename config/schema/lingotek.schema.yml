@@ -1,3 +1,63 @@
+lingotek.account:
+  type: config_object
+  label: 'Lingotek Account Settings'
+  mapping:
+    host:
+      type: string
+      label: 'Lingotek Host'
+    authorize_path:
+      type: string
+    default_client_id:
+      type: string
+    plan_type:
+      type: string
+    resources:
+      type: mapping
+      label: 'Resources'
+      mapping:
+        community:
+          type: sequence
+          sequence:
+            type: string
+        project:
+          type: sequence
+          sequence:
+            type: string
+        workflow:
+          type: sequence
+          sequence:
+            type: string
+        vault:
+          type: sequence
+          sequence:
+            type: string
+        filter:
+          type: sequence
+          sequence:
+            type: string
+    default:
+      type: mapping
+      label: 'Default'
+      mapping:
+        community:
+          type: string
+        project:
+          type: string
+        workflow:
+          type: string
+        vault:
+          type: string
+        filter:
+          type: string
+        subfilter:
+          type: string
+    access_token:
+      type: string
+    login_id:
+      type: string
+    callback_url:
+      type: string
+
 lingotek.settings:
   type: config_object
   label: 'Lingotek settings'
@@ -5,6 +65,7 @@ lingotek.settings:
     default:
       type: mapping
       label: 'Default'
+      deprecated: "Defaults are stored in lingotek.account config object since lingotek:4.0.0. Will be removed from schema in lingotek:5.0.0"
       mapping:
         community:
           type: string
@@ -163,6 +224,7 @@ lingotek.settings:
     account:
       type: mapping
       label: 'Account'
+      deprecated: "Account settings are stored in lingotek.account config object since lingotek:4.0.0. Will be removed from schema in lingotek:5.0.0"
       mapping:
         use_production:
           type: boolean

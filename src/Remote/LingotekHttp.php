@@ -20,6 +20,20 @@ class LingotekHttp implements LingotekHttpInterface {
   protected $httpClient;
 
   /**
+   * The Lingotek account settings.
+   *
+   * @var \Drupal\Core\Config\Config
+   */
+  protected $accountConfig;
+
+  /**
+   * The Lingotek settings.
+   *
+   * @var \Drupal\Core\Config\Config
+   */
+  protected $config;
+
+  /**
    * @param \GuzzleHttp\ClientInterface $http_client
    *   The Guzzle HTTP client.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
@@ -28,6 +42,7 @@ class LingotekHttp implements LingotekHttpInterface {
   public function __construct(ClientInterface $http_client, ConfigFactoryInterface $config_factory) {
     $this->httpClient = $http_client;
     $this->config = $config_factory->get('lingotek.settings');
+    $this->accountConfig = $config_factory->get('lingotek.account');
   }
 
   /**
@@ -136,7 +151,7 @@ class LingotekHttp implements LingotekHttpInterface {
    * {@inheritdoc}
    */
   public function getCurrentToken() {
-    return $this->config->get('account.access_token');
+    return $this->accountConfig->get('access_token');
   }
 
   /**
@@ -159,7 +174,7 @@ class LingotekHttp implements LingotekHttpInterface {
    *   The API base url.
    */
   protected function getBaseUrl() {
-    $base_url = $this->config->get('account.host');
+    $base_url = $this->accountConfig->get('host');
     return $base_url;
   }
 

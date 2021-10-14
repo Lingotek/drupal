@@ -23,6 +23,13 @@ class LingotekFilterManagerUnitTest extends UnitTestCase {
   protected $filterManager;
 
   /**
+   * The Lingotek account settings.
+   *
+   * @var \Drupal\Core\Config\Config
+   */
+  protected $accountConfig;
+
+  /**
    * The config object.
    *
    * @var \Drupal\Core\Config\Config|\PHPUnit_Framework_MockObject_MockObject
@@ -33,15 +40,19 @@ class LingotekFilterManagerUnitTest extends UnitTestCase {
    * {@inheritdoc}
    */
   protected function setUp(): void {
+    $this->accountConfig = $this->getMockBuilder(Config::class)
+      ->disableOriginalConstructor()
+      ->getMock();
     $this->config = $this->getMockBuilder(Config::class)
       ->disableOriginalConstructor()
       ->getMock();
     $configFactory = $this->createMock(ConfigFactoryInterface::class);
     $configFactory->expects($this->any())
       ->method('get')
-      ->with('lingotek.settings')
-      ->will($this->returnValue($this->config));
-
+      ->will($this->returnCallback(function ($config_name) {
+        return $config_name === 'lingotek.account' ? $this->accountConfig : $this->config;
+      }
+      ));
     $this->filterManager = new LingotekFilterManager($configFactory);
   }
 
@@ -50,9 +61,9 @@ class LingotekFilterManagerUnitTest extends UnitTestCase {
    */
   public function testGetLocallyAvailableFilters() {
     // Test with no local filters.
-    $this->config->expects($this->at(0))
+    $this->accountConfig->expects($this->at(0))
       ->method('get')
-      ->with('account.resources.filter')
+      ->with('resources.filter')
       ->will($this->returnValue([]));
 
     $filters = $this->filterManager->getLocallyAvailableFilters();
@@ -60,9 +71,9 @@ class LingotekFilterManagerUnitTest extends UnitTestCase {
     $this->assertArrayEquals($filters, ['project_default' => 'Project Default', 'drupal_default' => 'Drupal Default']);
 
     // Test with some filters.
-    $this->config->expects($this->at(0))
+    $this->accountConfig->expects($this->at(0))
       ->method('get')
-      ->with('account.resources.filter')
+      ->with('resources.filter')
       ->will($this->returnValue(['aaa' => 'Test filter']));
 
     $filters = $this->filterManager->getLocallyAvailableFilters();
@@ -84,13 +95,13 @@ class LingotekFilterManagerUnitTest extends UnitTestCase {
    * @dataProvider getDefaultFilterProvider
    */
   public function testGetDefaultFilter($id, $filters, $expectedFilter) {
-    $this->config->expects($this->at(0))
+    $this->accountConfig->expects($this->at(0))
       ->method('get')
       ->with('default.filter')
       ->will($this->returnValue($id));
-    $this->config->expects($this->at(1))
+    $this->accountConfig->expects($this->at(1))
       ->method('get')
-      ->with('account.resources.filter')
+      ->with('resources.filter')
       ->will($this->returnValue($filters));
 
     $filter = $this->filterManager->getDefaultFilter();
@@ -102,13 +113,13 @@ class LingotekFilterManagerUnitTest extends UnitTestCase {
    * @dataProvider getDefaultFilterProvider
    */
   public function testGetDefaultSubfilter($id, $filters, $expectedFilter) {
-    $this->config->expects($this->at(0))
+    $this->accountConfig->expects($this->at(0))
       ->method('get')
       ->with('default.subfilter')
       ->will($this->returnValue($id));
-    $this->config->expects($this->at(1))
+    $this->accountConfig->expects($this->at(1))
       ->method('get')
-      ->with('account.resources.filter')
+      ->with('resources.filter')
       ->will($this->returnValue($filters));
 
     $filter = $this->filterManager->getDefaultSubfilter();
@@ -129,17 +140,17 @@ class LingotekFilterManagerUnitTest extends UnitTestCase {
    * @dataProvider getDefaultFilterLabelProvider
    */
   public function testGetDefaultFilterLabel($id, $filters, $expectedLabel) {
-    $this->config->expects($this->at(0))
+    $this->accountConfig->expects($this->at(0))
       ->method('get')
       ->with('default.filter')
       ->will($this->returnValue($id));
-    $this->config->expects($this->at(1))
+    $this->accountConfig->expects($this->at(1))
       ->method('get')
-      ->with('account.resources.filter')
+      ->with('resources.filter')
       ->will($this->returnValue($filters));
-    $this->config->expects($this->at(2))
+    $this->accountConfig->expects($this->at(2))
       ->method('get')
-      ->with('account.resources.filter')
+      ->with('resources.filter')
       ->will($this->returnValue($filters));
 
     $label = $this->filterManager->getDefaultFilterLabel();
@@ -151,17 +162,17 @@ class LingotekFilterManagerUnitTest extends UnitTestCase {
    * @dataProvider getDefaultFilterLabelProvider
    */
   public function testGetDefaultSubfilterLabel($id, $filters, $expectedLabel) {
-    $this->config->expects($this->at(0))
+    $this->accountConfig->expects($this->at(0))
       ->method('get')
       ->with('default.subfilter')
       ->will($this->returnValue($id));
-    $this->config->expects($this->at(1))
+    $this->accountConfig->expects($this->at(1))
       ->method('get')
-      ->with('account.resources.filter')
+      ->with('resources.filter')
       ->will($this->returnValue($filters));
-    $this->config->expects($this->at(2))
+    $this->accountConfig->expects($this->at(2))
       ->method('get')
-      ->with('account.resources.filter')
+      ->with('resources.filter')
       ->will($this->returnValue($filters));
 
     $label = $this->filterManager->getDefaultSubfilterLabel();
@@ -188,13 +199,13 @@ class LingotekFilterManagerUnitTest extends UnitTestCase {
     $this->assertEquals('4f91482b-5aa1-4a4a-a43f-712af7b39625', $filter);
 
     // Filter is replaced with the default.
-    $this->config->expects($this->at(0))
+    $this->accountConfig->expects($this->at(0))
       ->method('get')
       ->with('default.filter')
       ->will($this->returnValue('another_different_filter'));
-    $this->config->expects($this->at(1))
+    $this->accountConfig->expects($this->at(1))
       ->method('get')
-      ->with('account.resources.filter')
+      ->with('resources.filter')
       ->will($this->returnValue(['another_different_filter' => 'Another different filter']));
 
     $profile = new LingotekProfile(['id' => 'profile1', 'project' => 'my_test_project', 'vault' => 'my_test_vault', 'filter' => 'default'], 'lingotek_profile');
@@ -222,13 +233,13 @@ class LingotekFilterManagerUnitTest extends UnitTestCase {
     $this->assertEquals('0e79f34d-f27b-4a0c-880e-cd9181a5d265', $filter);
 
     // Filter is replaced with the default.
-    $this->config->expects($this->at(0))
+    $this->accountConfig->expects($this->at(0))
       ->method('get')
       ->with('default.subfilter')
       ->will($this->returnValue('another_different_filter'));
-    $this->config->expects($this->at(1))
+    $this->accountConfig->expects($this->at(1))
       ->method('get')
-      ->with('account.resources.filter')
+      ->with('resources.filter')
       ->will($this->returnValue(['another_different_filter' => 'Another different filter']));
 
     $profile = new LingotekProfile(['id' => 'profile1', 'project' => 'my_test_project', 'vault' => 'my_test_vault', 'subfilter' => 'default'], 'lingotek_profile');

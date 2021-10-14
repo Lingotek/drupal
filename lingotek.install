@@ -180,3 +180,29 @@ function lingotek_update_9402() {
   $lingotekSettings->clear('preference.enable_download_interim');
   $lingotekSettings->save();
 }
+
+/**
+ * Move account and defaults data from lingotek.settings to lingotek.account.
+ */
+function lingotek_update_9500() {
+  $lingotekSettings = \Drupal::configFactory()->getEditable('lingotek.settings');
+  $lingotekAccount = \Drupal::configFactory()->getEditable('lingotek.account');
+  $accountData = $lingotekSettings->get('account');
+
+  // Remove deprecated data that might be there, and is invalid now.
+  if (isset($accountData['use_production'])) {
+    unset($accountData['use_production']);
+  }
+  if (isset($accountData['sandbox_host'])) {
+    unset($accountData['sandbox_host']);
+  }
+
+  $lingotekAccount->setData($accountData);
+  $lingotekAccount->set('default', $lingotekSettings->get('default'));
+
+  $lingotekSettings->clear('account');
+  $lingotekSettings->clear('default');
+
+  $lingotekSettings->save();
+  $lingotekAccount->save();
+}

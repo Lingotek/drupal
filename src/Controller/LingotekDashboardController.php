@@ -287,16 +287,16 @@ class LingotekDashboardController extends LingotekControllerBase {
 
   protected function getDashboardInfo() {
     global $base_url, $base_root;
-    $config = $this->configFactory->get('lingotek.settings');
+    $accountConfig = $this->configFactory->get('lingotek.account');
     return [
-      "community_id" => $config->get('default.community'),
-      "external_id" => $config->get('account.login_id'),
-      "vault_id" => $config->get('default.vault'),
-      "workflow_id" => $config->get('default.workflow'),
-      "project_id" => $config->get('default.project'),
+      "community_id" => $accountConfig->get('default.community'),
+      "external_id" => $accountConfig->get('login_id'),
+      "vault_id" => $accountConfig->get('default.vault'),
+      "workflow_id" => $accountConfig->get('default.workflow'),
+      "project_id" => $accountConfig->get('default.project'),
       "first_name" => 'Drupal User',
       "last_name" => '',
-      "email" => $config->get('account.login_id'),
+      "email" => $accountConfig->get('login_id'),
       // CMS data that will be used for building the dashboard with JS.
       "cms_site_id" => $base_url,
       "cms_site_key" => $base_url,

@@ -212,7 +212,7 @@ class LingotekProfile extends ConfigEntityBase implements LingotekProfileInterfa
    */
   public function preSave(EntityStorageInterface $storage) {
     // getWorkflow() could return 'default', but we need to check if the default itself is 'project_default' as well
-    $default_workflow = \Drupal::config('lingotek.settings')->get('default.workflow');
+    $default_workflow = \Drupal::config('lingotek.account')->get('default.workflow');
     if ($this->getWorkflow() === 'project_default' || $default_workflow === 'project_default') {
       foreach ($this->language_overrides as $langcode => $v) {
         if (isset($this->language_overrides[$langcode]['custom']['workflow'])) {

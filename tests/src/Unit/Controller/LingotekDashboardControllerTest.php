@@ -125,7 +125,17 @@ class LingotekDashboardControllerTest extends UnitTestCase {
     parent::setUp();
 
     $this->request = $this->createMock(Request::class);
-    $this->configFactory = $this->getConfigFactoryStub(['lingotek.settings' => ['account' => ['access_token' => 'at', 'login_id' => 'login']]]);
+    $this->configFactory = $this->getConfigFactoryStub([
+      'lingotek.account' => [
+        'access_token' => 'at',
+        'login_id' => 'login',
+      ],
+      'lingotek.settings' => [
+        'default' => [
+          'community' => 'at',
+        ],
+      ],
+    ]);
     $this->entityTypeManager = $this->createMock(EntityTypeManagerInterface::class);
     $this->languageManager = $this->createMock(LanguageManagerInterface::class);
     $this->lingotek = $this->createMock(LingotekInterface::class);

@@ -57,7 +57,7 @@ abstract class LingotekTestBase extends BrowserTestBase {
 
     // Login as admin.
     $this->drupalLogin($this->rootUser);
-    $this->connectToLingotek();
+    // $this->connectToLingotek();
 
     $this->client = $this->getHttpClient();
 

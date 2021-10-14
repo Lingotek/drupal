@@ -22,10 +22,10 @@ class LingotekSettingsConnectForm extends LingotekConfigFormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     // build the redirecting link for authentication to Lingotek
-    $config = $this->configFactory->get('lingotek.settings');
-    $host = $config->get('account.host');
-    $auth_path = $config->get('account.authorize_path');
-    $id = $config->get('account.default_client_id');
+    $accountConfig = $this->configFactory->get('lingotek.account');
+    $host = $accountConfig->get('host');
+    $auth_path = $accountConfig->get('authorize_path');
+    $id = $accountConfig->get('default_client_id');
     $return_uri = $this->urlGenerator->generateFromRoute('lingotek.setup_account_handshake', ['success' => 'true', 'prod' => 'prod'], ['absolute' => TRUE]);
 
     $lingotek_register_link = $host . '/' . 'lingopoint/portal/requestAccount.action?client_id=' . $id . '&response_type=token&app=' . urlencode($return_uri);

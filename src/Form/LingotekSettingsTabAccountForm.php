@@ -68,11 +68,11 @@ class LingotekSettingsTabAccountForm extends LingotekConfigFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    $config = $this->config('lingotek.settings');
+    $accountConfig = $this->config('lingotek.account');
     $isEnterprise = $this->t('Yes');
     $connectionStatus = $this->t('Inactive');
 
-    if ($config->get('account.plan_type') == 'basic') {
+    if ($accountConfig->get('plan_type') == 'basic') {
       $isEnterprise = $this->t('No');
     }
 
@@ -97,18 +97,18 @@ class LingotekSettingsTabAccountForm extends LingotekConfigFormBase {
     ];
     $activationRow = [
       ['#markup' => $this->t('Activation Name:'), '#prefix' => '<b>', '#suffix' => '</b>'],
-      ['#markup' => $config->get('account.login_id')],
+      ['#markup' => $accountConfig->get('login_id')],
       [],
     ];
     $tokenRow = [
       ['#markup' => $this->t('Access Token:'), '#prefix' => '<b>', '#suffix' => '</b>'],
-      ['#markup' => $config->get('account.access_token')],
+      ['#markup' => $accountConfig->get('access_token')],
       ['#markup' => ''],
     ];
 
     $resources = $this->lingotek->getResources();
 
-    $default_community = $config->get('default.community');
+    $default_community = $accountConfig->get('default.community');
     $default_community_name = isset($resources['community'][$default_community]) ? $resources['community'][$default_community] : '';
     $communityRow = [
       ['#markup' => $this->t('Community:'), '#prefix' => '<b>', '#suffix' => '</b>'],
@@ -116,7 +116,7 @@ class LingotekSettingsTabAccountForm extends LingotekConfigFormBase {
       ['#markup' => $this->linkGenerator->generate($this->t('Edit defaults'), Url::fromRoute('lingotek.edit_defaults'))],
     ];
 
-    $default_workflow = $config->get('default.workflow');
+    $default_workflow = $accountConfig->get('default.workflow');
 
     if ($default_workflow === 'project_default') {
       $default_workflow_name = $this->t('Project Default');
@@ -131,7 +131,7 @@ class LingotekSettingsTabAccountForm extends LingotekConfigFormBase {
       ['#markup' => $this->linkGenerator->generate($this->t('Edit defaults'), Url::fromRoute('lingotek.edit_defaults'))],
     ];
 
-    $default_project = $config->get('default.project');
+    $default_project = $accountConfig->get('default.project');
     $default_project_name = isset($resources['project'][$default_project]) ? $resources['project'][$default_project] : '';
     $projectRow = [
       ['#markup' => $this->t('Default Project:'), '#prefix' => '<b>', '#suffix' => '</b>'],
@@ -157,7 +157,7 @@ class LingotekSettingsTabAccountForm extends LingotekConfigFormBase {
       ];
     }
 
-    $default_vault = $config->get('default.vault');
+    $default_vault = $accountConfig->get('default.vault');
     $default_vault_name = isset($resources['vault'][$default_vault]) ? $resources['vault'][$default_vault] : '';
 
     $vaultRow = [
@@ -168,7 +168,7 @@ class LingotekSettingsTabAccountForm extends LingotekConfigFormBase {
 
     $tmsRow = [
       ['#markup' => $this->t('Lingotek TMS Server:'), '#prefix' => '<b>', '#suffix' => '</b>'],
-      ['#markup' => $config->get('account.host')],
+      ['#markup' => $accountConfig->get('host')],
       ['#markup' => ''],
     ];
     $gmcRow = [

@@ -5,6 +5,7 @@ namespace Drupal\Tests\lingotek\Functional\Form;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\lingotek\Entity\LingotekProfile;
+use Drupal\lingotek_test\Controller\FakeAuthorizationController;
 use Drupal\Tests\lingotek\Functional\LingotekTestBase;
 
 /**
@@ -721,7 +722,7 @@ class LingotekProfileFormTest extends LingotekTestBase {
   public function testNoFilters() {
     $assert_session = $this->assertSession();
 
-    \Drupal::configFactory()->getEditable('lingotek.settings')->set('account.resources.filter', [])->save();
+    \Drupal::configFactory()->getEditable('lingotek.account')->set('resources.filter', [])->save();
 
     $this->drupalGet('admin/lingotek/settings');
     $this->clickLink(t('Add new Translation Profile'));
@@ -781,28 +782,34 @@ class LingotekProfileFormTest extends LingotekTestBase {
    * Setup test resources for the test.
    */
   protected function setupResources() {
-    $config = \Drupal::configFactory()->getEditable('lingotek.settings');
-    $config->set('account.resources.community', [
+    $config = \Drupal::configFactory()->getEditable('lingotek.account');
+    $config->set('resources.community', [
       'test_community' => 'Test community',
       'test_community2' => 'Test community 2',
     ]);
-    $config->set('account.resources.project', [
+    $config->set('resources.project', [
       'test_project' => 'Test project',
       'test_project2' => 'Test project 2',
     ]);
-    $config->set('account.resources.vault', [
+    $config->set('resources.vault', [
       'test_vault' => 'Test vault',
       'test_vault2' => 'Test vault 2',
     ]);
-    $config->set('account.resources.workflow', [
+    $config->set('resources.workflow', [
       'test_workflow' => 'Test workflow',
       'test_workflow2' => 'Test workflow 2',
     ]);
-    $config->set('account.resources.filter', [
+    $config->set('resources.filter', [
       'test_filter' => 'Test filter',
       'test_filter2' => 'Test filter 2',
       'test_filter3' => 'Test filter 3',
     ]);
+    $config->set('access_token', FakeAuthorizationController::ACCESS_TOKEN);
+
+    $config->set('default.community', 'test_community');
+    $config->set('default.workflow', 'test_workflow');
+    $config->set('default.project', 'test_project');
+    $config->set('default.vault', 'test_vault');
     $config->save();
   }
 

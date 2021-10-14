@@ -28,7 +28,7 @@ class LingotekConnectTest extends BrowserTestBase {
    */
   protected function setUp(): void {
     parent::setUp();
-
+    \Drupal::state()->set('must_remain_disconnected', TRUE);
     // Login as admin.
     $this->drupalLogin($this->rootUser);
   }

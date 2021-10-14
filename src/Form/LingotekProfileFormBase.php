@@ -144,8 +144,9 @@ class LingotekProfileFormBase extends EntityForm {
       '#markup' => '<h3>' . $this->t('Profile settings impacting only new nodes') . '</h3><hr />',
     ];
 
-    $projects = $this->config('lingotek.settings')->get('account.resources.project');
-    $default_project = $this->config('lingotek.settings')->get('default.project');
+    $accountConfig = $this->config('lingotek.account');
+    $projects = $accountConfig->get('resources.project');
+    $default_project = $accountConfig->get('default.project');
     $default_project_name = isset($projects[$default_project]) ? $projects[$default_project] : '';
 
     $form['project'] = [
@@ -156,8 +157,8 @@ class LingotekProfileFormBase extends EntityForm {
       '#default_value' => $profile->getProject(),
     ];
 
-    $workflows = $this->config('lingotek.settings')->get('account.resources.workflow');
-    $default_workflow = $this->config('lingotek.settings')->get('default.workflow');
+    $workflows = $accountConfig->get('resources.workflow');
+    $default_workflow = $accountConfig->get('default.workflow');
 
     if ($default_workflow === 'project_default') {
       $default_workflow_name = $this->t('Project Default');
@@ -187,8 +188,8 @@ class LingotekProfileFormBase extends EntityForm {
       '#default_value' => $profile->getWorkflow(),
     ];
 
-    $vaults = $this->config('lingotek.settings')->get('account.resources.vault');
-    $default_vault = $this->config('lingotek.settings')->get('default.vault');
+    $vaults = $accountConfig->get('resources.vault');
+    $default_vault = $accountConfig->get('default.vault');
     $default_vault_name = isset($vaults[$default_vault]) ? $vaults[$default_vault] : '';
 
     // We have two defaults: default vault, or the Project Workflow Template

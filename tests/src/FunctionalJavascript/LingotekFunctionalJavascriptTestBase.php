@@ -32,7 +32,7 @@ abstract class LingotekFunctionalJavascriptTestBase extends WebDriverTestBase {
 
     // Login as admin.
     $this->drupalLogin($this->rootUser);
-    $this->connectToLingotek();
+    // $this->connectToLingotek();
   }
 
   /**
