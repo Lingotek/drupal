@@ -30,8 +30,6 @@ class LingotekNodeWithTablefieldTranslationTest extends LingotekTestBase {
    * {@inheritdoc}
    */
   protected function setUp(): void {
-    $this->markTestSkipped('Requires tablefield and that has not a D9 compatible version.');
-
     parent::setUp();
 
     // Place the actions and title block.

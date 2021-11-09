@@ -27,3 +27,4 @@ test_dependencies:
   - layout_builder_st:layout_builder_st
   - layout_builder_at:layout_builder_at
   - webform:webform
+  - tablefield:tablefield
