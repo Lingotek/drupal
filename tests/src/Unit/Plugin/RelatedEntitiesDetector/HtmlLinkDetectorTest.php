@@ -11,7 +11,6 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Path\PathValidatorInterface;
 use Drupal\Core\StreamWrapper\PublicStream;
-use Drupal\Core\StreamWrapper\StreamWrapperInterface;
 use Drupal\Core\Url;
 use Drupal\lingotek\LingotekConfigurationServiceInterface;
 use Drupal\lingotek\Plugin\RelatedEntitiesDetector\HtmlLinkDetector;
@@ -115,6 +114,8 @@ class HtmlLinkDetectorTest extends UnitTestCase {
     $this->request = $this->createMock(Request::class);
     $this->entityTypeManager = $this->createMock(EntityTypeManagerInterface::class);
     $this->pathValidator = $this->createMock(PathValidatorInterface::class);
+    // This should be StreamWrapperInterface mock, but it can't be. See
+    // https://www.drupal.org/project/lingotek/issues/3245322#comment-14285860
     $this->publicStream = $this->createMock(PublicStream::class);
     $this->publicStream->expects($this->any())
       ->method('getDirectoryPath')
