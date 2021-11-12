@@ -2222,13 +2222,13 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       // Allow other modules to alter the translation before is saved.
       \Drupal::moduleHandler()->invokeAll('lingotek_content_entity_translation_presave', [&$translation, $langcode, $data]);
 
-      $status_field = $entity->getEntityType()->getKey('status');
-      $status_field_definition = $entity->getFieldDefinition($status_field);
-      if ($status_field_definition !== NULL && $status_field_definition->isTranslatable()) {
-        $status_setting = $this->lingotekConfiguration->getPreference('target_download_status');
-        if ($status_setting !== "same-as-source") {
-          $status_value = ($status_setting === 'published') ? NodeInterface::PUBLISHED : NodeInterface::NOT_PUBLISHED;
-          $translation->set($status_field, $status_value);
+      $published_field = $entity->getEntityType()->getKey('published');
+      $published_field_definition = $entity->getFieldDefinition($published_field);
+      if ($published_field_definition !== NULL && $published_field_definition->isTranslatable()) {
+        $published_setting = $this->lingotekConfiguration->getPreference('target_download_status');
+        if ($published_setting !== "same-as-source") {
+          $published_value = ($published_setting === 'published') ? NodeInterface::PUBLISHED : NodeInterface::NOT_PUBLISHED;
+          $translation->set($published_field, $published_value);
         }
       }
 
