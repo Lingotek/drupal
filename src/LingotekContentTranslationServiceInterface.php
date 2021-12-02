@@ -177,7 +177,7 @@ interface LingotekContentTranslationServiceInterface {
    *
    * @return mixed
    */
-  public function getSourceData(ContentEntityInterface &$entity);
+  public function getSourceData(ContentEntityInterface &$entity, &$visited = []);
 
   /**
    * Updates the entity hash.

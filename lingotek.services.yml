@@ -85,6 +85,9 @@ services:
   plugin.manager.related_entities_detector:
     class: Drupal\lingotek\RelatedEntities\RelatedEntitiesDetectorManager
     parent: default_plugin_manager
+  plugin.manager.lingotek_field_processor:
+    class: Drupal\lingotek\FieldProcessor\LingotekFieldProcessorManager
+    parent: default_plugin_manager
   lingotek.no_moderation_configuration:
     class: Drupal\lingotek\Moderation\LingotekNoModerationConfigurationService
     arguments: ['@module_handler']
