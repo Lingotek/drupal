@@ -243,6 +243,17 @@ trait LingotekTargetTrait {
         ];
       }
     }
+    if ($entity->hasTranslation($langcode) && $entity->getEntityType()->hasLinkTemplate('drupal:content-translation-delete')) {
+      $entity_type_id = $entity->getEntityTypeId();
+      $delete_url = $entity->access('delete') ? $entity->getTranslation($langcode)->toUrl('delete-form') :
+        Url::fromRoute("entity.$entity_type_id.content_translation_delete", [$entity_type_id => $entity->id(), 'language' => $langcode]);
+      $delete_url->setOption('query', $this->getDestinationWithQueryArray());
+      $actions[] = [
+        'title' => $this->t('Delete translation'),
+        'url' => $delete_url,
+        'new_window' => FALSE,
+      ];
+    }
 
     return $actions;
   }
