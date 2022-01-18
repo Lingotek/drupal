@@ -23,19 +23,10 @@ use Drupal\lingotek\Exception\LingotekPaymentRequiredException;
 use Drupal\lingotek\Lingotek;
 
 /**
- * Implements hook_toolbar().
+ * Implements hook_toolbar_alter().
  */
-function lingotek_toolbar() {
-  $items = [];
-  $items['translation'] = [
-    '#type' => 'toolbar_item',
-    '#attached' => [
-      'library' => [
-        'lingotek/lingotek.icons',
-      ],
-    ],
-  ];
-  return $items;
+function lingotek_toolbar_alter(&$items) {
+  $items['administration']['#attached']['library'][] = 'lingotek/lingotek.icons';
 }
 
 /**
