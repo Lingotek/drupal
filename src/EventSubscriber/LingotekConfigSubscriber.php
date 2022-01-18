@@ -207,6 +207,9 @@ class LingotekConfigSubscriber implements EventSubscriberInterface {
         if ($mapper instanceof ConfigEntityMapper) {
           $entity = $mapper->getEntity();
           $document_id = $this->translationService->getDocumentId($entity);
+          if (!$document_id) {
+            return;
+          }
           $translation_statuses = \Drupal::service('lingotek')
             ->getDocumentTranslationStatuses($document_id);
           foreach ($translation_statuses as $lingotek_locale => $progress) {
@@ -224,6 +227,9 @@ class LingotekConfigSubscriber implements EventSubscriberInterface {
         }
         else {
           $document_id = $this->translationService->getConfigDocumentId($mapper);
+          if (!$document_id) {
+            return;
+          }
           $translation_statuses = \Drupal::service('lingotek')
             ->getDocumentTranslationStatuses($document_id);
           foreach ($translation_statuses as $lingotek_locale => $progress) {
