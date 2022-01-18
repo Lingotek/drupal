@@ -337,7 +337,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     // data.
     $names = $mapper->getConfigNames();
     if (count($names) == 1) {
-      $data = $data[$names[0]];
+      $data = $data[$names[0]] ?? [];
     }
     return $data;
   }
