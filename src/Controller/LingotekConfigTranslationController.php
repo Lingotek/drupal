@@ -21,6 +21,7 @@ use Drupal\lingotek\Exception\LingotekDocumentArchivedException;
 use Drupal\lingotek\Exception\LingotekDocumentLockedException;
 use Drupal\lingotek\Exception\LingotekDocumentNotFoundException;
 use Drupal\lingotek\Exception\LingotekPaymentRequiredException;
+use Drupal\lingotek\Exception\LingotekProcessedWordsLimitException;
 use Drupal\lingotek\LanguageLocaleMapperInterface;
 use Drupal\lingotek\Lingotek;
 use Drupal\lingotek\LingotekConfigTranslationServiceInterface;
@@ -236,6 +237,9 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
         catch (LingotekPaymentRequiredException $exception) {
           $this->messenger()->addError($this->t('Community has been disabled. Please contact support@lingotek.com to re-enable your community.'));
         }
+        catch (LingotekProcessedWordsLimitException $exception) {
+          $this->messenger()->addError($this->t('Processed word limit exceeded. Please contact your local administrator or Lingotek Client Success (<a href=":link">@mail</a>) for assistance.', [':link' => 'mailto:sales@lingotek.com', '@mail' => 'sales@lingotek.com']));
+        }
         catch (LingotekApiException $e) {
           $this->messenger()->addError($this->t('%label update failed. Please try again.',
             ['%label' => $mappers[$entity_type]->getTitle()]));
@@ -262,6 +266,9 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
         }
         catch (LingotekPaymentRequiredException $exception) {
           $this->messenger()->addError($this->t('Community has been disabled. Please contact support@lingotek.com to re-enable your community.'));
+        }
+        catch (LingotekProcessedWordsLimitException $exception) {
+          $this->messenger()->addError($this->t('Processed word limit exceeded. Please contact your local administrator or Lingotek Client Success (<a href=":link">@mail</a>) for assistance.', [':link' => 'mailto:sales@lingotek.com', '@mail' => 'sales@lingotek.com']));
         }
         catch (LingotekApiException $e) {
           // Mark the document as failed.
@@ -300,6 +307,9 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
       catch (LingotekPaymentRequiredException $exception) {
         $this->messenger()->addError($this->t('Community has been disabled. Please contact support@lingotek.com to re-enable your community.'));
       }
+      catch (LingotekProcessedWordsLimitException $exception) {
+        $this->messenger()->addError($this->t('Processed word limit exceeded. Please contact your local administrator or Lingotek Client Success (<a href=":link">@mail</a>) for assistance.', [':link' => 'mailto:sales@lingotek.com', '@mail' => 'sales@lingotek.com']));
+      }
       catch (LingotekApiException $e) {
         $this->messenger()->addError($this->t('%label update failed. Please try again.',
           ['%label' => $entity->label()]));
@@ -329,6 +339,9 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
       }
       catch (LingotekPaymentRequiredException $exception) {
         $this->messenger()->addError($this->t('Community has been disabled. Please contact support@lingotek.com to re-enable your community.'));
+      }
+      catch (LingotekProcessedWordsLimitException $exception) {
+        $this->messenger()->addError($this->t('Processed word limit exceeded. Please contact your local administrator or Lingotek Client Success (<a href=":link">@mail</a>) for assistance.', [':link' => 'mailto:sales@lingotek.com', '@mail' => 'sales@lingotek.com']));
       }
       catch (LingotekApiException $e) {
         $this->messenger()->addError($this->t('%label upload failed. Please try again.',
@@ -366,6 +379,9 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
       catch (LingotekPaymentRequiredException $exception) {
         $this->messenger()->addError($this->t('Community has been disabled. Please contact support@lingotek.com to re-enable your community.'));
       }
+      catch (LingotekProcessedWordsLimitException $exception) {
+        $this->messenger()->addError($this->t('Processed word limit exceeded. Please contact your local administrator or Lingotek Client Success (<a href=":link">@mail</a>) for assistance.', [':link' => 'mailto:sales@lingotek.com', '@mail' => 'sales@lingotek.com']));
+      }
       catch (LingotekApiException $e) {
         $this->messenger()->addError($this->t('%label update failed. Please try again.',
           ['%label' => $definition['title']]));
@@ -401,6 +417,9 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
     }
     catch (LingotekPaymentRequiredException $exception) {
       $this->messenger()->addError($this->t('Community has been disabled. Please contact support@lingotek.com to re-enable your community.'));
+    }
+    catch (LingotekProcessedWordsLimitException $exception) {
+      $this->messenger()->addError($this->t('Processed word limit exceeded. Please contact your local administrator or Lingotek Client Success (<a href=":link">@mail</a>) for assistance.', [':link' => 'mailto:sales@lingotek.com', '@mail' => 'sales@lingotek.com']));
     }
     catch (LingotekApiException $e) {
       $this->messenger()->addError($this->t('%label update failed. Please try again.',
@@ -489,6 +508,9 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
       catch (LingotekPaymentRequiredException $exception) {
         $this->messenger()->addError($this->t('Community has been disabled. Please contact support@lingotek.com to re-enable your community.'));
       }
+      catch (LingotekProcessedWordsLimitException $exception) {
+        $this->messenger()->addError($this->t('Processed word limit exceeded. Please contact your local administrator or Lingotek Client Success (<a href=":link">@mail</a>) for assistance.', [':link' => 'mailto:sales@lingotek.com', '@mail' => 'sales@lingotek.com']));
+      }
       catch (LingotekApiException $e) {
         $this->messenger()->addError($this->t('%label @locale translation request failed. Please try again.',
           ['%label' => $definition['title'], '@locale' => $locale]));
@@ -524,6 +546,9 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
     }
     catch (LingotekPaymentRequiredException $exception) {
       $this->messenger()->addError($this->t('Community has been disabled. Please contact support@lingotek.com to re-enable your community.'));
+    }
+    catch (LingotekProcessedWordsLimitException $exception) {
+      $this->messenger()->addError($this->t('Processed word limit exceeded. Please contact your local administrator or Lingotek Client Success (<a href=":link">@mail</a>) for assistance.', [':link' => 'mailto:sales@lingotek.com', '@mail' => 'sales@lingotek.com']));
     }
     catch (LingotekApiException $e) {
       $this->messenger()->addError($this->t('%label @locale translation request failed. Please try again.',

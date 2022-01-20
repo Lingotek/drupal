@@ -194,6 +194,7 @@ interface LingotekConfigTranslationServiceInterface {
    * @return bool
    *   TRUE if the document was uploaded successfully, FALSE if not.
    *
+   * @throws \Drupal\lingotek\Exception\LingotekProcessedWordsLimitException
    * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
    * @throws \Drupal\lingotek\Exception\LingotekApiException
    *
@@ -225,6 +226,7 @@ interface LingotekConfigTranslationServiceInterface {
    * @return bool
    *   TRUE if the document was updated successfully, FALSE if not.
    *
+   * @throws \Drupal\lingotek\Exception\LingotekProcessedWordsLimitException
    * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentArchivedException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentLockedException
@@ -241,6 +243,7 @@ interface LingotekConfigTranslationServiceInterface {
    * @param string $locale
    *   Lingotek translation language which we want to modify.
    *
+   * @throws \Drupal\lingotek\Exception\LingotekProcessedWordsLimitException
    * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentArchivedException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentLockedException
@@ -255,6 +258,7 @@ interface LingotekConfigTranslationServiceInterface {
    * @param \Drupal\Core\Config\Entity\ConfigEntityInterface $entity
    *   The entity being requested for translations.
    *
+   * @throws \Drupal\lingotek\Exception\LingotekProcessedWordsLimitException
    * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentArchivedException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentLockedException
@@ -469,6 +473,7 @@ interface LingotekConfigTranslationServiceInterface {
    * @return bool
    *   TRUE if the document was uploaded successfully, FALSE if not.
    *
+   * @throws \Drupal\lingotek\Exception\LingotekProcessedWordsLimitException
    * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
    * @throws \Drupal\lingotek\Exception\LingotekApiException
    *
@@ -498,6 +503,7 @@ interface LingotekConfigTranslationServiceInterface {
    * @param string $locale
    *   Lingotek translation language which we want to modify.
    *
+   * @throws \Drupal\lingotek\Exception\LingotekProcessedWordsLimitException
    * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentArchivedException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentLockedException
@@ -512,6 +518,7 @@ interface LingotekConfigTranslationServiceInterface {
    * @param string $mapper_id
    *   The entity which target we want to add.
    *
+   * @throws \Drupal\lingotek\Exception\LingotekProcessedWordsLimitException
    * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentArchivedException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentLockedException
@@ -600,6 +607,7 @@ interface LingotekConfigTranslationServiceInterface {
    * @return bool
    *   TRUE if the document was updated successfully, FALSE if not.
    *
+   * @throws \Drupal\lingotek\Exception\LingotekProcessedWordsLimitException
    * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
    * @throws \Drupal\lingotek\Exception\LingotekApiException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentArchivedException
@@ -643,6 +651,7 @@ interface LingotekConfigTranslationServiceInterface {
    * @return \Drupal\Core\Config\Entity\ConfigEntityInterface
    *   Returns the entity which job ID is saved.
    *
+   * @throws \Drupal\lingotek\Exception\LingotekProcessedWordsLimitException
    * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentArchivedException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentLockedException
@@ -676,6 +685,7 @@ interface LingotekConfigTranslationServiceInterface {
    * @return \Drupal\Core\Entity\ContentEntityInterface
    *   Returns the mapper which job ID is saved.
    *
+   * @throws \Drupal\lingotek\Exception\LingotekProcessedWordsLimitException
    * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentArchivedException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentLockedException

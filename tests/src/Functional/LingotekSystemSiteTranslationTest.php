@@ -263,6 +263,36 @@ class LingotekSystemSiteTranslationTest extends LingotekTestBase {
   }
 
   /**
+   * Test that we handle errors in upload.
+   */
+  public function testUploadingWithAProcessedWordsLimitError() {
+    \Drupal::state()->set('lingotek.must_processed_words_limit_error_in_upload', TRUE);
+
+    // Check that the translate tab is in the site information.
+    $this->drupalGet('/admin/config/system/site-information');
+    $this->clickLink('Translate system information');
+
+    $this->clickLink(t('Upload'));
+    $this->checkForMetaRefresh();
+    $this->assertText('Processed word limit exceeded. Please contact your local administrator or Lingotek Client Success (sales@lingotek.com) for assistance.');
+
+    // The config mapper has been marked with the error status.
+    /** @var \Drupal\config_translation\ConfigMapperManagerInterface $mapperManager */
+    $mapperManager = \Drupal::service('plugin.manager.config_translation.mapper');
+    $mapper = $mapperManager->getMappers()['system.site_information_settings'];
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getConfigSourceStatus($mapper);
+    $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The system information has been marked as error.');
+
+    // I can still re-try the upload.
+    \Drupal::state()->set('lingotek.must_processed_words_limit_error_in_upload', FALSE);
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('System information uploaded successfully');
+  }
+
+  /**
    * Test that we handle errors in update.
    */
   public function testCheckSourceStatusWithAnError() {
@@ -450,6 +480,54 @@ class LingotekSystemSiteTranslationTest extends LingotekTestBase {
 
     // I can still re-try the upload.
     \Drupal::state()->set('lingotek.must_payment_required_error_in_update', FALSE);
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('System information has been updated.');
+  }
+
+  /**
+   * Test that we handle errors in update.
+   */
+  public function testUpdatingWithAProcessedWordsLimitError() {
+    // Check that the translate tab is in the site information.
+    $this->drupalGet('/admin/config/system/site-information');
+    $this->clickLink('Translate system information');
+
+    // Upload the document, which must succeed.
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('System information uploaded successfully');
+
+    // Check that the upload succeeded.
+    $this->clickLink('Check upload status');
+    $this->assertText('System information status checked successfully');
+
+    // Edit the system site information.
+    $edit['site_name'] = 'Llamas are cool';
+    $this->drupalPostForm('/admin/config/system/site-information', $edit, t('Save configuration'));
+
+    // Go back to the form.
+    $this->drupalGet('/admin/config/system/site-information');
+    $this->clickLink('Translate system information');
+
+    \Drupal::state()->set('lingotek.must_processed_words_limit_error_in_update', TRUE);
+
+    // Re-upload. Must fail now.
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Processed word limit exceeded. Please contact your local administrator or Lingotek Client Success (sales@lingotek.com) for assistance.');
+
+    // The config mapper has been marked with the error status.
+    /** @var \Drupal\config_translation\ConfigMapperManagerInterface $mapperManager */
+    $mapperManager = \Drupal::service('plugin.manager.config_translation.mapper');
+    $mapper = $mapperManager->getMappers()['system.site_information_settings'];
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getConfigSourceStatus($mapper);
+    $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The system information has been marked as error.');
+
+    // I can still re-try the upload.
+    \Drupal::state()->set('lingotek.must_processed_words_limit_error_in_update', FALSE);
     $this->clickLink('Upload');
     $this->checkForMetaRefresh();
     $this->assertText('System information has been updated.');

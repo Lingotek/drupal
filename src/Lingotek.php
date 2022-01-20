@@ -11,6 +11,7 @@ use Drupal\lingotek\Exception\LingotekDocumentTargetAlreadyCompletedException;
 use Drupal\lingotek\Exception\LingotekPaymentRequiredException;
 use Drupal\lingotek\Remote\LingotekApiInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\lingotek\Exception\LingotekProcessedWordsLimitException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -363,6 +364,15 @@ class Lingotek implements LingotekInterface {
       }
       throw new LingotekPaymentRequiredException($message);
     }
+    elseif ($statusCode == Response::HTTP_TOO_MANY_REQUESTS) {
+      // This only applies to trial users.
+      $responseBody = Json::decode($response->getBody());
+      $message = '';
+      if (!empty($responseBody) && isset($responseBody['messages'])) {
+        $message = $responseBody['messages'][0];
+      }
+      throw new LingotekProcessedWordsLimitException($message);
+    }
     else {
       return FALSE;
     }
@@ -477,6 +487,15 @@ class Lingotek implements LingotekInterface {
         $message = $responseBody['messages'][0];
       }
       throw new LingotekPaymentRequiredException($message);
+    }
+    elseif ($statusCode == Response::HTTP_TOO_MANY_REQUESTS) {
+      // This only applies to trial users.
+      $responseBody = Json::decode($response->getBody());
+      $message = '';
+      if (!empty($responseBody) && isset($responseBody['messages'])) {
+        $message = $responseBody['messages'][0];
+      }
+      throw new LingotekProcessedWordsLimitException($message);
     }
     elseif ($statusCode == Response::HTTP_GONE) {
       // Set the status of the document back to its pre-uploaded state.
@@ -603,6 +622,15 @@ class Lingotek implements LingotekInterface {
         $message = $responseBody['messages'][0];
       }
       throw new LingotekPaymentRequiredException($message);
+    }
+    elseif ($statusCode == Response::HTTP_TOO_MANY_REQUESTS) {
+      // This only applies to trial users.
+      $responseBody = Json::decode($response->getBody());
+      $message = '';
+      if (!empty($responseBody) && isset($responseBody['messages'])) {
+        $message = $responseBody['messages'][0];
+      }
+      throw new LingotekProcessedWordsLimitException($message);
     }
     elseif ($statusCode == Response::HTTP_GONE) {
       // Set the status of the document back to its pre-uploaded state.

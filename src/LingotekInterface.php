@@ -220,6 +220,7 @@ interface LingotekInterface extends ContainerInjectionInterface {
    * @return string
    *   The document ID assigned to the uploaded document.
    *
+   * @throws \Drupal\lingotek\Exception\LingotekProcessedWordsLimitException
    * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
    * @throws \Drupal\lingotek\Exception\LingotekApiException
    */
@@ -250,6 +251,7 @@ interface LingotekInterface extends ContainerInjectionInterface {
    *   TRUE if the document was successfully updated. FALSE if not (v5.1).
    *   New document ID if the document was successfully updated. FALSE if not (v5.2).
    *
+   * @throws \Drupal\lingotek\Exception\LingotekProcessedWordsLimitException
    * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentArchivedException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentLockedException
@@ -271,6 +273,7 @@ interface LingotekInterface extends ContainerInjectionInterface {
    * @return bool
    *   TRUE if the document was successfully updated. FALSE if not.
    *
+   * @throws \Drupal\lingotek\Exception\LingotekProcessedWordsLimitException
    * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentArchivedException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentLockedException

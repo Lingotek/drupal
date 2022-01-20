@@ -22,6 +22,7 @@ use Drupal\lingotek\Exception\LingotekDocumentLockedException;
 use Drupal\lingotek\Exception\LingotekDocumentNotFoundException;
 use Drupal\lingotek\Exception\LingotekDocumentTargetAlreadyCompletedException;
 use Drupal\lingotek\Exception\LingotekPaymentRequiredException;
+use Drupal\lingotek\Exception\LingotekProcessedWordsLimitException;
 use Drupal\lingotek\LanguageLocaleMapperInterface;
 use Drupal\lingotek\Lingotek;
 use Drupal\lingotek\LingotekConfigTranslationServiceInterface;
@@ -819,6 +820,9 @@ class LingotekConfigManagementForm extends FormBase {
         catch (LingotekPaymentRequiredException $exception) {
           $this->messenger()->addError(t('Community has been disabled. Please contact support@lingotek.com to re-enable your community.'));
         }
+        catch (LingotekProcessedWordsLimitException $exception) {
+          $this->messenger()->addError(t('Processed word limit exceeded. Please contact your local administrator or Lingotek Client Success (<a href=":link">@mail</a>) for assistance.', [':link' => 'mailto:sales@lingotek.com', '@mail' => 'sales@lingotek.com']));
+        }
         catch (LingotekDocumentArchivedException $exception) {
           $this->messenger()->addWarning(t('Document @entity_type %title has been archived. Uploading again.', [
             '@entity_type' => $entity->getEntityTypeId(),
@@ -860,6 +864,9 @@ class LingotekConfigManagementForm extends FormBase {
         catch (LingotekDocumentLockedException $exception) {
           $this->messenger()->addError(t('Document %label has a new version. The document id has been updated for all future interactions. Please try again.',
             ['%label' => $mapper->getTitle()]));
+        }
+        catch (LingotekProcessedWordsLimitException $exception) {
+          $this->messenger()->addError(t('Processed word limit exceeded. Please contact your local administrator or Lingotek Client Success (<a href=":link">@mail</a>) for assistance.', [':link' => 'mailto:sales@lingotek.com', '@mail' => 'sales@lingotek.com']));
         }
         catch (LingotekApiException $e) {
           if ($document_id) {
@@ -957,6 +964,9 @@ class LingotekConfigManagementForm extends FormBase {
         catch (LingotekDocumentLockedException $exception) {
           $this->messenger()->addError(t('Document @entity_type %title has a new version. The document id has been updated for all future interactions. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
         }
+        catch (LingotekProcessedWordsLimitException $exception) {
+          $this->messenger()->addError(t('Processed word limit exceeded. Please contact your local administrator or Lingotek Client Success (<a href=":link">@mail</a>) for assistance.', [':link' => 'mailto:sales@lingotek.com', '@mail' => 'sales@lingotek.com']));
+        }
         catch (LingotekApiException $e) {
           $this->messenger()->addError($this->t('Document @entity_type %title translations request failed. Please try again.', [
             '@entity_type' => $entity->getEntityTypeId(),
@@ -982,6 +992,9 @@ class LingotekConfigManagementForm extends FormBase {
         catch (LingotekDocumentLockedException $exception) {
           $this->messenger()->addError(t('Document %label has a new version. The document id has been updated for all future interactions. Please try again.',
             ['%label' => $mapper->getTitle()]));
+        }
+        catch (LingotekProcessedWordsLimitException $exception) {
+          $this->messenger()->addError(t('Processed word limit exceeded. Please contact your local administrator or Lingotek Client Success (<a href=":link">@mail</a>) for assistance.', [':link' => 'mailto:sales@lingotek.com', '@mail' => 'sales@lingotek.com']));
         }
         catch (LingotekApiException $e) {
           $this->messenger()->addError($this->t('%label translations request failed. Please try again.',
@@ -1132,6 +1145,9 @@ class LingotekConfigManagementForm extends FormBase {
         catch (LingotekDocumentLockedException $exception) {
           $this->messenger()->addError(t('Document @entity_type %title has a new version. The document id has been updated for all future interactions. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
         }
+        catch (LingotekProcessedWordsLimitException $exception) {
+          $this->messenger()->addError(t('Processed word limit exceeded. Please contact your local administrator or Lingotek Client Success (<a href=":link">@mail</a>) for assistance.', [':link' => 'mailto:sales@lingotek.com', '@mail' => 'sales@lingotek.com']));
+        }
         catch (LingotekApiException $e) {
           $this->messenger()->addError($this->t('Document @entity_type %title @locale translation request failed. Please try again.', [
             '@entity_type' => $entity->getEntityTypeId(),
@@ -1158,6 +1174,9 @@ class LingotekConfigManagementForm extends FormBase {
         catch (LingotekDocumentLockedException $exception) {
           $this->messenger()->addError(t('Document %label has a new version. The document id has been updated for all future interactions. Please try again.',
             ['%label' => $mapper->getTitle()]));
+        }
+        catch (LingotekProcessedWordsLimitException $exception) {
+          $this->messenger()->addError(t('Processed word limit exceeded. Please contact your local administrator or Lingotek Client Success (<a href=":link">@mail</a>) for assistance.', [':link' => 'mailto:sales@lingotek.com', '@mail' => 'sales@lingotek.com']));
         }
         catch (LingotekApiException $e) {
           $this->messenger()

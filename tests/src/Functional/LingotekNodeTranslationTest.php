@@ -589,6 +589,43 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
   }
 
   /**
+   * Test that we handle errors in upload.
+   */
+  public function testUploadingWithAProcessedWordsLimitError() {
+    \Drupal::state()->set('lingotek.must_processed_words_limit_error_in_upload', TRUE);
+
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    // Check that the translate tab is in the node.
+    $this->drupalGet('node/1');
+    $this->clickLink('Translate');
+
+    // Upload the document, which must fail.
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Processed word limit exceeded. Please contact your local administrator or Lingotek Client Success (sales@lingotek.com) for assistance.');
+
+    // The node has been marked with the error status.
+    $this->node = Node::load(1);
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.content_translation');
+    $source_status = $translation_service->getSourceStatus($this->node);
+    $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The node has been marked as error.');
+
+    // I can still re-try the upload.
+    \Drupal::state()->set('lingotek.must_processed_words_limit_error_in_upload', FALSE);
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Uploaded 1 document to Lingotek.');
+  }
+
+  /**
    * Test that we handle errors in update.
    */
   public function testUpdatingWithAnError() {
@@ -691,6 +728,60 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
 
     // I can still re-try the upload.
     \Drupal::state()->set('lingotek.must_payment_required_error_in_update', FALSE);
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Uploaded 1 document to Lingotek.');
+  }
+
+  /**
+   * Test that we handle errors in update.
+   */
+  public function testUpdatingWithAProcessedWordsLimitError() {
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    // Check that the translate tab is in the node.
+    $this->drupalGet('node/1');
+    $this->clickLink('Translate');
+
+    // Upload the document, which must succeed.
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Uploaded 1 document to Lingotek.');
+
+    // Check that the upload succeeded.
+    $this->clickLink('Check Upload Status');
+    $this->assertText('The import for node Llamas are cool is complete.');
+
+    // Edit the node.
+    $edit['title[0][value]'] = 'Llamas are cool EDITED';
+    $this->saveAndKeepPublishedNodeForm($edit, 1);
+
+    // Go back to the form.
+    $this->drupalGet('node/1');
+    $this->clickLink('Translate');
+
+    \Drupal::state()->set('lingotek.must_processed_words_limit_error_in_update', TRUE);
+
+    // Re-upload. Must fail now.
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Processed word limit exceeded. Please contact your local administrator or Lingotek Client Success (sales@lingotek.com) for assistance.');
+
+    // The node has been marked with the error status.
+    $this->node = Node::load(1);
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.content_translation');
+    $source_status = $translation_service->getSourceStatus($this->node);
+    $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The node has been marked as error.');
+
+    // I can still re-try the upload.
+    \Drupal::state()->set('lingotek.must_processed_words_limit_error_in_update', FALSE);
     $this->clickLink('Upload');
     $this->checkForMetaRefresh();
     $this->assertText('Uploaded 1 document to Lingotek.');
@@ -968,6 +1059,31 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
   }
 
   /**
+   * Test that we handle errors in upload.
+   */
+  public function testUploadingWithAProcessedWordsLimitErrorViaAutomaticUpload() {
+    \Drupal::state()->set('lingotek.must_processed_words_limit_error_in_upload', TRUE);
+
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
+    $this->saveAndPublishNodeForm($edit);
+
+    // The document was uploaded automatically and failed.
+    $this->assertText('Processed word limit exceeded. Please contact your local administrator or Lingotek Client Success (sales@lingotek.com) for assistance.');
+
+    // The node has been marked with the error status.
+    $this->node = Node::load(1);
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.content_translation');
+    $source_status = $translation_service->getSourceStatus($this->node);
+    $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The node has been marked as error.');
+  }
+
+  /**
    * Tests that all the statuses are set when using the Check Translations action.
    */
   public function testCheckSourceStatusWithAnError() {
@@ -1141,6 +1257,35 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
   /**
    * Test that we handle errors in upload.
    */
+  public function testUpdatingWithAProcessedWordsLimitErrorViaAutomaticUpload() {
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'automatic';
+    $this->saveAndPublishNodeForm($edit);
+
+    \Drupal::state()->set('lingotek.must_processed_words_limit_error_in_update', TRUE);
+
+    // Edit the node.
+    $edit['title[0][value]'] = 'Llamas are cool EDITED';
+    $this->saveAndKeepPublishedNodeForm($edit, 1);
+
+    // The document was updated automatically and failed.
+    $this->assertText('Processed word limit exceeded. Please contact your local administrator or Lingotek Client Success (sales@lingotek.com) for assistance.');
+
+    // The node has been marked with the error status.
+    $this->node = Node::load(1);
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.content_translation');
+    $source_status = $translation_service->getSourceStatus($this->node);
+    $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The node has been marked as error.');
+  }
+
+  /**
+   * Test that we handle errors in upload.
+   */
   public function testUpdatingWithADocumentNotFoundErrorViaAutomaticUpload() {
     // Create a node.
     $edit = [];
@@ -1241,6 +1386,47 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $this->clickLink('Request translation');
 
     $this->assertText('Community has been disabled. Please contact support@lingotek.com to re-enable your community.');
+
+    $this->node = Node::load(1);
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.content_translation');
+    $source_status = $translation_service->getSourceStatus($this->node);
+    $this->assertEqual($source_status, Lingotek::STATUS_CURRENT);
+    $this->assertEqual($translation_service->getTargetStatus($this->node, 'ES'), Lingotek::STATUS_UNTRACKED);
+  }
+
+  /**
+   * Test that we handle errors in request translation.
+   */
+  public function testRequestTranslationWithAProcessedWordsLimitError() {
+    \Drupal::state()->set('lingotek.must_processed_words_limit_error_in_request_translation', TRUE);
+
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    // Check that the translate tab is in the node.
+    $this->drupalGet('node/1');
+    $this->clickLink('Translate');
+
+    // Upload the document.
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Uploaded 1 document to Lingotek.');
+
+    // The document should have been automatically uploaded, so let's check
+    // the upload status.
+    $this->clickLink('Check Upload Status');
+    $this->assertText('The import for node Llamas are cool is complete.');
+
+    // Request translation.
+    $this->clickLink('Request translation');
+
+    $this->assertText('Processed word limit exceeded. Please contact your local administrator or Lingotek Client Success (sales@lingotek.com) for assistance.');
 
     $this->node = Node::load(1);
     /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */

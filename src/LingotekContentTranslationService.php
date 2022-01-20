@@ -34,6 +34,7 @@ use Drupal\lingotek\Exception\LingotekDocumentArchivedException;
 use Drupal\lingotek\Exception\LingotekDocumentLockedException;
 use Drupal\lingotek\Exception\LingotekDocumentNotFoundException;
 use Drupal\lingotek\Exception\LingotekPaymentRequiredException;
+use Drupal\lingotek\Exception\LingotekProcessedWordsLimitException;
 use Drupal\node\NodeInterface;
 use Drupal\user\UserInterface;
 
@@ -1151,6 +1152,9 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
         catch (LingotekPaymentRequiredException $exception) {
           throw $exception;
         }
+        catch (LingotekProcessedWordsLimitException $exception) {
+          throw $exception;
+        }
         catch (LingotekApiException $exception) {
           throw $exception;
         }
@@ -1216,6 +1220,9 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
                 throw $exception;
               }
               catch (LingotekPaymentRequiredException $exception) {
+                throw $exception;
+              }
+              catch (LingotekProcessedWordsLimitException $exception) {
                 throw $exception;
               }
               catch (LingotekApiException $exception) {
@@ -1292,6 +1299,10 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       $document_id = $this->lingotek->uploadDocument($document_name, $source_data, $this->getSourceLocale($entity), $url, $profile, $job_id, $process_id);
     }
     catch (LingotekPaymentRequiredException $exception) {
+      $this->setSourceStatus($entity, Lingotek::STATUS_ERROR);
+      throw $exception;
+    }
+    catch (LingotekProcessedWordsLimitException $exception) {
       $this->setSourceStatus($entity, Lingotek::STATUS_ERROR);
       throw $exception;
     }
@@ -1462,6 +1473,10 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       throw $exception;
     }
     catch (LingotekPaymentRequiredException $exception) {
+      $this->setSourceStatus($entity, Lingotek::STATUS_ERROR);
+      throw $exception;
+    }
+    catch (LingotekProcessedWordsLimitException $exception) {
       $this->setSourceStatus($entity, Lingotek::STATUS_ERROR);
       throw $exception;
     }
@@ -2313,6 +2328,9 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
         throw $exception;
       }
       catch (LingotekPaymentRequiredException $exception) {
+        throw $exception;
+      }
+      catch (LingotekProcessedWordsLimitException $exception) {
         throw $exception;
       }
       catch (LingotekApiException $exception) {

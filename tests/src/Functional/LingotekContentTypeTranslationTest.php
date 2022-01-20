@@ -411,6 +411,132 @@ class LingotekContentTypeTranslationTest extends LingotekTestBase {
   /**
    * Test that we handle errors in upload.
    */
+  public function testUploadingWithAProcessedWordsLimitError() {
+    \Drupal::state()->set('lingotek.must_processed_words_limit_error_in_upload', TRUE);
+
+    // Check for translate tab in the node type.
+    $this->drupalGet('/admin/config/regional/config-translation/node_type');
+    $this->clickLink(t('Translate'));
+
+    // Upload the document, will fail
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Processed word limit exceeded. Please contact your local administrator or Lingotek Client Success (sales@lingotek.com) for assistance.');
+
+    // The node type has been marked with the error status.
+    $nodeType = Nodetype::load('article');
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getSourceStatus($nodeType);
+    $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The node type has been marked as error.');
+
+  }
+
+  /**
+   * Test that we handle errors in upload.
+   */
+  public function testUploadingWithAProcessedWordsLimitErrorViaAutomaticUpload() {
+    $this->saveLingotekConfigTranslationSettings([
+      'node_type' => 'automatic',
+    ]);
+
+    \Drupal::state()->set('lingotek.must_processed_words_limit_error_in_upload', TRUE);
+
+    // Create content type
+    $edit = ['name' => 'Landing Page', 'type' => 'landing_page'];
+    $this->drupalPostForm('admin/structure/types/add', $edit, 'Save content type');
+
+    // The document was uploaded automatically and failed.
+    $this->assertText('Processed word limit exceeded. Please contact your local administrator or Lingotek Client Success (sales@lingotek.com) for assistance.');
+
+    // The node type has been marked with the error status.
+    $nodeType = NodeType::load('landing_page');
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getSourceStatus($nodeType);
+    $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The node type has been marked as error.');
+  }
+
+  /**
+   * Test that we handle errors in upload.
+   */
+  public function testUpdatingWithAProcessedWordsLimitError() {
+    // Check that the translate tab is in the node type.
+    $this->drupalGet('/admin/config/regional/config-translation');
+    $this->drupalGet('/admin/config/regional/config-translation/node_type');
+    $this->clickLink(t('Translate'));
+
+    // Upload the document successfully
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Article uploaded successfully');
+
+    // Check that upload succeeded.
+    $this->clickLink('Check upload status');
+    $this->assertText('Article status checked successfully');
+
+    // Edit the content type.
+    $edit['name'] = 'Blogpost';
+    $this->drupalPostForm('/admin/structure/types/manage/article', $edit, t('Save content type'));
+    $this->assertText('The content type Blogpost has been updated');
+
+    // Go back to the form
+    $this->drupalGet('/admin/config/regional/config-translation/node_type');
+    $this->clickLink(t('Translate'));
+
+    \Drupal::state()->set('lingotek.must_processed_words_limit_error_in_update', TRUE);
+
+    // Re-upload. Must fail now.
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Processed word limit exceeded. Please contact your local administrator or Lingotek Client Success (sales@lingotek.com) for assistance.');
+
+    // The node type has been marked with the error status.
+    $nodeType = NodeType::load('article');
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getSourceStatus($nodeType);
+    $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The node type has been marked as error.');
+  }
+
+  /**
+   * Test that we handle errors in upload.
+   */
+  public function testUpdatingWithAProcessedWordsLimitErrorViaAutomaticUpload() {
+    // Check that the translate tab is in the node type.
+    $this->drupalGet('/admin/config/regional/config-translation');
+    $this->drupalGet('/admin/config/regional/config-translation/node_type');
+    $this->clickLink(t('Translate'));
+
+    // Upload the document, which must succeed.
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Article uploaded successfully');
+
+    // Check that the upload succeeded.
+    $this->clickLink('Check upload status');
+    $this->assertText('Article status checked successfully');
+
+    \Drupal::state()->set('lingotek.must_processed_words_limit_error_in_update', TRUE);
+
+    // Edit the content type.
+    $edit['name'] = 'Blogpost';
+    $this->drupalPostForm('/admin/structure/types/manage/article', $edit, t('Save content type'));
+    $this->assertText('The content type Blogpost has been updated.');
+
+    $this->assertText('Processed word limit exceeded. Please contact your local administrator or Lingotek Client Success (sales@lingotek.com) for assistance.');
+
+    // The node type has been marked with the error status.
+    $nodeType = NodeType::load('article');
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getSourceStatus($nodeType);
+    $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The node type has been marked as error.');
+  }
+
+  /**
+   * Test that we handle errors in upload.
+   */
   public function testUpdatingWithADocumentNotFoundErrorViaAutomaticUpload() {
     // Check that the translate tab is in the node type.
     $this->drupalGet('/admin/config/regional/config-translation');
