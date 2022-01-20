@@ -12,6 +12,7 @@ use Drupal\lingotek\Exception\LingotekDocumentArchivedException;
 use Drupal\lingotek\Exception\LingotekDocumentLockedException;
 use Drupal\lingotek\Exception\LingotekDocumentTargetAlreadyCompletedException;
 use Drupal\lingotek\Exception\LingotekPaymentRequiredException;
+use Drupal\lingotek\Exception\LingotekProcessedWordsLimitException;
 use Drupal\lingotek\LanguageLocaleMapperInterface;
 use Drupal\lingotek\Lingotek;
 use Drupal\lingotek\LingotekConfigurationServiceInterface;
@@ -1208,6 +1209,49 @@ class LingotekUnitTest extends UnitTestCase {
   }
 
   /**
+   * @covers ::addTarget
+   */
+  public function testAddTargetProcessedWordsLimit() {
+    $response = $this->getMockBuilder(ResponseInterface::class)
+      ->disableOriginalConstructor()
+      ->getMock();
+    $response->expects($this->any())
+      ->method('getStatusCode')
+      ->willReturn(Response::HTTP_TOO_MANY_REQUESTS);
+    $response->expects($this->any())
+      ->method('getBody')
+      ->willReturn(json_encode(
+        [
+          "error_code" => "PROCESSED_WORDS_LIMIT_EXCEEDED",
+          "messages" => [
+            "Processed word limit exceeded. Please contact your local administrator or Lingotek Client Success (sales@lingotek.com) for assistance.",
+          ],
+        ]
+      ));
+    $language = $this->createMock(ConfigurableLanguageInterface::class);
+    $language->expects($this->any())
+      ->method('getId')
+      ->will($this->returnValue('es'));
+
+    $this->config->expects($this->any())
+      ->method('get')
+      ->will($this->returnValueMap([['default.workflow', 'default_workflow']]));
+    $this->languageLocaleMapper->expects($this->any())
+      ->method('getConfigurableLanguageForLocale')
+      ->with('es_ES')
+      ->will($this->returnValue($language));
+
+    $this->api->expects($this->at(0))
+      ->method('addTranslation')
+      ->with('my_doc_id', 'es_ES', NULL)
+      ->will($this->returnValue($response));
+
+    $this->expectException(LingotekProcessedWordsLimitException::class);
+    $this->expectExceptionMessage('Processed word limit exceeded. Please contact your local administrator or Lingotek Client Success (sales@lingotek.com) for assistance.');
+    $this->lingotek->addTarget('my_doc_id', 'es_ES', NULL);
+  }
+
+  /**
    * @covers ::cancelDocument
    */
   public function testCancelDocument() {
@@ -1808,6 +1852,59 @@ class LingotekUnitTest extends UnitTestCase {
   }
 
   /**
+   * @covers::updateDocument
+   */
+  public function testUpdateDocumentProcessedWordsLimit() {
+    $response = $this->getMockBuilder(ResponseInterface::class)
+      ->disableOriginalConstructor()
+      ->getMock();
+    $this->lingotekFilterManager->expects($this->any())
+      ->method('getFilterId')
+      ->willReturn('4f91482b-5aa1-4a4a-a43f-712af7b39625');
+
+    $this->lingotekFilterManager->expects($this->any())
+      ->method('getSubfilterId')
+      ->willReturn('0e79f34d-f27b-4a0c-880e-cd9181a5d265');
+
+    $response->expects($this->any())
+      ->method('getStatusCode')
+      ->willReturn(Response::HTTP_TOO_MANY_REQUESTS);
+    $response->expects($this->any())
+      ->method('getBody')
+      ->willReturn(json_encode(
+        [
+          "error_code" => "PROCESSED_WORDS_LIMIT_EXCEEDED",
+          "messages" => [
+            "Processed word limit exceeded. Please contact your local administrator or Lingotek Client Success (sales@lingotek.com) for assistance.",
+          ],
+        ]
+      ));
+    $this->api->expects($this->at(0))
+      ->method('patchDocument')
+      ->with('my_doc_id', [
+        'content' => '{"content":"My test content","_lingotek_metadata":{"_entity_id":1}}',
+        'format' => 'JSON',
+        'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
+        'fprm_id' => '4f91482b-5aa1-4a4a-a43f-712af7b39625',
+        'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0',
+        'content_type' => 'node',
+      ])
+      ->will($this->returnValue($response));
+
+    $data = [
+      'content' => 'My test content',
+      '_lingotek_metadata' => [
+        '_entity_id' => 1,
+        '_intelligence' => ['content_type' => 'node'],
+      ],
+    ];
+
+    $this->expectException(LingotekProcessedWordsLimitException::class);
+    $this->expectExceptionMessage('Processed word limit exceeded. Please contact your local administrator or Lingotek Client Success (sales@lingotek.com) for assistance.');
+    $this->lingotek->updateDocument('my_doc_id', $data);
+  }
+
+  /**
    * @covers ::uploadDocument
    */
   public function testUploadDocumentPaymentRequired() {
@@ -1858,6 +1955,62 @@ class LingotekUnitTest extends UnitTestCase {
 
     $this->expectException(LingotekPaymentRequiredException::class);
     $this->expectExceptionMessage('Community has been disabled. Please contact support@lingotek.com to re-enable your community.');
+    $this->lingotek->uploadDocument('title', $data, 'es', NULL, NULL);
+  }
+
+  /**
+   * @covers ::uploadDocument
+   */
+  public function testUploadDocumentProcessedWordsLimit() {
+    $response = $this->getMockBuilder(ResponseInterface::class)
+      ->disableOriginalConstructor()
+      ->getMock();
+
+    $this->lingotekFilterManager->expects($this->any())
+      ->method('getFilterId')
+      ->willReturn('4f91482b-5aa1-4a4a-a43f-712af7b39625');
+
+    $this->lingotekFilterManager->expects($this->any())
+      ->method('getSubfilterId')
+      ->willReturn('0e79f34d-f27b-4a0c-880e-cd9181a5d265');
+
+    $response->expects($this->any())
+      ->method('getStatusCode')
+      ->willReturn(Response::HTTP_TOO_MANY_REQUESTS);
+    $response->expects($this->any())
+      ->method('getBody')
+      ->willReturn(json_encode(
+        [
+          "error_code" => "PROCESSED_WORDS_LIMIT_EXCEEDED",
+          "messages" => [
+            "Processed word limit exceeded. Please contact your local administrator or Lingotek Client Success (sales@lingotek.com) for assistance.",
+          ],
+        ]
+      ));
+    $this->api->expects($this->at(0))
+      ->method('addDocument')
+      ->with([
+        'title' => 'title',
+        'content' => '{"content":"My test content","_lingotek_metadata":{"_entity_id":1}}',
+        'locale_code' => 'es',
+        'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
+        'fprm_id' => '4f91482b-5aa1-4a4a-a43f-712af7b39625',
+        'format' => 'JSON',
+        'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0',
+        'content_type' => 'node',
+      ])
+      ->will($this->returnValue($response));
+
+    $data = [
+      'content' => 'My test content',
+      '_lingotek_metadata' => [
+        '_entity_id' => 1,
+        '_intelligence' => ['content_type' => 'node'],
+      ],
+    ];
+
+    $this->expectException(LingotekProcessedWordsLimitException::class);
+    $this->expectExceptionMessage("Processed word limit exceeded. Please contact your local administrator or Lingotek Client Success (sales@lingotek.com) for assistance.");
     $this->lingotek->uploadDocument('title', $data, 'es', NULL, NULL);
   }
 

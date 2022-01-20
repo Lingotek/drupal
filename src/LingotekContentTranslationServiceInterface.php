@@ -208,6 +208,7 @@ interface LingotekContentTranslationServiceInterface {
    * @param string $locale
    *   Lingotek translation language which we want to modify.
    *
+   * @throws \Drupal\lingotek\Exception\LingotekProcessedWordsLimitException
    * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentArchivedException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentLockedException
@@ -222,6 +223,7 @@ interface LingotekContentTranslationServiceInterface {
    * @param \Drupal\Core\Entity\ContentEntityInterface &$entity
    *   The entity being requested for translations.
    *
+   * @throws \Drupal\lingotek\Exception\LingotekProcessedWordsLimitException
    * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentArchivedException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentLockedException
@@ -241,6 +243,7 @@ interface LingotekContentTranslationServiceInterface {
    * @return bool
    *   TRUE if the document was uploaded successfully, FALSE if not.
    *
+   * @throws \Drupal\lingotek\Exception\LingotekProcessedWordsLimitException
    * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentNotFoundException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentArchivedException
@@ -290,6 +293,7 @@ interface LingotekContentTranslationServiceInterface {
    * @return bool
    *   TRUE if the document was updated successfully, FALSE if not.
    *
+   * @throws \Drupal\lingotek\Exception\LingotekProcessedWordsLimitException
    * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentArchivedException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentLockedException
@@ -385,6 +389,7 @@ interface LingotekContentTranslationServiceInterface {
    * @return \Drupal\Core\Entity\ContentEntityInterface
    *   Returns the entity which job ID is saved.
    *
+   * @throws \Drupal\lingotek\Exception\LingotekProcessedWordsLimitException
    * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentArchivedException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentLockedException

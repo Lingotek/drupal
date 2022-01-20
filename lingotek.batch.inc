@@ -11,6 +11,7 @@ use Drupal\lingotek\Exception\LingotekDocumentNotFoundException;
 use Drupal\lingotek\Exception\LingotekPaymentRequiredException;
 use Drupal\lingotek\Lingotek;
 use Drupal\lingotek\Exception\LingotekApiException;
+use Drupal\lingotek\Exception\LingotekProcessedWordsLimitException;
 
 /**
  * Wrapper function for running content uploads.
@@ -55,6 +56,9 @@ function lingotek_operation_content_upload($entity_type_id, $entity_id, &$contex
     catch (LingotekPaymentRequiredException $exception) {
       $context['results']['error'][] = t('Community has been disabled. Please contact support@lingotek.com to re-enable your community.');
     }
+    catch (LingotekProcessedWordsLimitException $exception) {
+      $context['results']['error'][] = t('Processed word limit exceeded. Please contact your local administrator or Lingotek Client Success (<a href=":link">@mail</a>) for assistance.', [':link' => 'mailto:sales@lingotek.com', '@mail' => 'sales@lingotek.com']);
+    }
     catch (LingotekApiException $exception) {
       $context['results']['error'][] = t('The upload for @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]);
     }
@@ -89,6 +93,9 @@ function lingotek_operation_content_upload($entity_type_id, $entity_id, &$contex
     }
     catch (LingotekPaymentRequiredException $exception) {
       $context['results']['error'][] = t('Community has been disabled. Please contact support@lingotek.com to re-enable your community.');
+    }
+    catch (LingotekProcessedWordsLimitException $exception) {
+      $context['results']['error'][] = t('Processed word limit exceeded. Please contact your local administrator or Lingotek Client Success (<a href=":link">@mail</a>) for assistance.', [':link' => 'mailto:sales@lingotek.com', '@mail' => 'sales@lingotek.com']);
     }
     catch (LingotekApiException $exception) {
       $context['results']['error'][] = t('The update for @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]);

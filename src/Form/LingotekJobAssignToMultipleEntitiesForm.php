@@ -14,6 +14,7 @@ use Drupal\lingotek\Exception\LingotekDocumentArchivedException;
 use Drupal\lingotek\Exception\LingotekDocumentLockedException;
 use Drupal\lingotek\Exception\LingotekDocumentNotFoundException;
 use Drupal\lingotek\Exception\LingotekPaymentRequiredException;
+use Drupal\lingotek\Exception\LingotekProcessedWordsLimitException;
 use Drupal\lingotek\LingotekContentTranslationServiceInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -201,6 +202,10 @@ class LingotekJobAssignToMultipleEntitiesForm extends FormBase {
       catch (LingotekDocumentLockedException $exception) {
         $errors = TRUE;
         $this->messenger()->addError(t('Document @entity_type %title has a new version. The document id has been updated for all future interactions. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
+      }
+      catch (LingotekProcessedWordsLimitException $exception) {
+        $errors = TRUE;
+        $this->messenger()->addError(t('Processed word limit exceeded. Please contact your local administrator or Lingotek Client Success (<a href=":link">@mail</a>) for assistance.', [':link' => 'mailto:sales@lingotek.com', '@mail' => 'sales@lingotek.com']));
       }
       catch (LingotekApiException $exception) {
         $errors = TRUE;

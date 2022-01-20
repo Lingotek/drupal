@@ -636,6 +636,53 @@ class LingotekFieldBodyTranslationTest extends LingotekTestBase {
   /**
    * Test that we handle errors in update.
    */
+  public function testUpdatingWithAProcessedWordsLimitError() {
+    // Check that the translate tab is in the field.
+    $this->drupalGet('/admin/config/regional/config-translation/node_fields');
+    $this->clickLink(t('Translate'));
+
+    // Upload the document, which must succeed.
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Body uploaded successfully');
+
+    // Check that the upload succeeded.
+    $this->clickLink('Check upload status');
+    $this->assertText('Body status checked successfully');
+
+    // Edit the field.
+    $edit = ['label' => 'Contents'];
+    $this->drupalPostForm('/admin/structure/types/manage/article/fields/node.article.body', $edit, t('Save settings'));
+    $this->assertText('Saved Contents configuration.');
+
+    // Go back to the form.
+    $this->drupalGet('/admin/config/regional/config-translation/node_fields');
+    $this->clickLink(t('Translate'));
+
+    \Drupal::state()->set('lingotek.must_processed_words_limit_error_in_update', TRUE);
+
+    // Re-upload. Must fail now.
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Processed word limit exceeded. Please contact your local administrator or Lingotek Client Success (sales@lingotek.com) for assistance.');
+
+    // The field has been marked with the error status.
+    $fieldConfig = FieldConfig::load('node.article.body');
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getSourceStatus($fieldConfig);
+    $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The field has been marked as error.');
+
+    // I can still re-try the upload.
+    \Drupal::state()->set('lingotek.must_processed_words_limit_error_in_update', FALSE);
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Contents has been updated.');
+  }
+
+  /**
+   * Test that we handle errors in update.
+   */
   public function testUpdatingWithADocumentNotFoundError() {
     // Check that the translate tab is in the field.
     $this->drupalGet('/admin/config/regional/config-translation/node_fields');
@@ -713,6 +760,46 @@ class LingotekFieldBodyTranslationTest extends LingotekTestBase {
 
     // I can still re-try the upload.
     \Drupal::state()->set('lingotek.must_payment_required_error_in_update', FALSE);
+    $this->clickLink(t('Translate'));
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Contents has been updated.');
+  }
+
+  /**
+   * Test that we handle errors in update.
+   */
+  public function testUpdatingWithAProcessedWordsLimitErrorViaAutomaticUpload() {
+    // Check that the translate tab is in the field.
+    $this->drupalGet('/admin/config/regional/config-translation/node_fields');
+    $this->clickLink(t('Translate'));
+
+    // Upload the document, which must succeed.
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Body uploaded successfully');
+
+    // Check that the upload succeeded.
+    $this->clickLink('Check upload status');
+    $this->assertText('Body status checked successfully');
+
+    \Drupal::state()->set('lingotek.must_processed_words_limit_error_in_update', TRUE);
+
+    // Edit the field.
+    $edit = ['label' => 'Contents'];
+    $this->drupalPostForm('/admin/structure/types/manage/article/fields/node.article.body', $edit, t('Save settings'));
+    $this->assertText('Saved Contents configuration.');
+    $this->assertText('Processed word limit exceeded. Please contact your local administrator or Lingotek Client Success (sales@lingotek.com) for assistance.');
+
+    // The field has been marked with the error status.
+    $fieldConfig = FieldConfig::load('node.article.body');
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getSourceStatus($fieldConfig);
+    $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The field has been marked as error.');
+
+    // I can still re-try the upload.
+    \Drupal::state()->set('lingotek.must_processed_words_limit_error_in_update', FALSE);
     $this->clickLink(t('Translate'));
     $this->clickLink('Upload');
     $this->checkForMetaRefresh();
@@ -813,6 +900,35 @@ class LingotekFieldBodyTranslationTest extends LingotekTestBase {
   /**
    * Test that we handle errors in upload.
    */
+  public function testUploadingWithAProcessedWordsLimitError() {
+    \Drupal::state()->set('lingotek.must_processed_words_limit_error_in_upload', TRUE);
+
+    // Check that the translate tab is in the field.
+    $this->drupalGet('/admin/config/regional/config-translation/node_fields');
+    $this->clickLink(t('Translate'));
+
+    // Upload the document, which must fail.
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Processed word limit exceeded. Please contact your local administrator or Lingotek Client Success (sales@lingotek.com) for assistance.');
+
+    // The field has been marked with the error status.
+    $fieldConfig = FieldConfig::load('node.article.body');
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getSourceStatus($fieldConfig);
+    $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The field has been marked as error.');
+
+    // I can still re-try the upload.
+    \Drupal::state()->set('lingotek.must_processed_words_limit_error_in_upload', FALSE);
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Body uploaded successfully');
+  }
+
+  /**
+   * Test that we handle errors in upload.
+   */
   public function testUploadingWithAPaymentRequiredErrorViaAutomaticUpload() {
     \Drupal::state()->set('lingotek.must_payment_required_error_in_upload', TRUE);
 
@@ -824,6 +940,29 @@ class LingotekFieldBodyTranslationTest extends LingotekTestBase {
 
     // The document was uploaded automatically and failed.
     $this->assertText('Community has been disabled. Please contact support@lingotek.com to re-enable your community.');
+
+    // The field has been marked with the error status.
+    $fieldConfig = FieldConfig::load('node.article.field_excerpt');
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getSourceStatus($fieldConfig);
+    $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The field has been marked as error.');
+  }
+
+  /**
+   * Test that we handle errors in upload.
+   */
+  public function testUploadingWithAProcessedWordLimitErrorViaAutomaticUpload() {
+    \Drupal::state()->set('lingotek.must_processed_words_limit_error_in_upload', TRUE);
+
+    $this->drupalGet('admin/lingotek/settings');
+
+    // Create a field.
+    $edit = ['label' => 'Excerpt', 'new_storage_type' => 'text', 'field_name' => 'excerpt'];
+    $this->drupalPostForm('/admin/structure/types/manage/article/fields/add-field', $edit, 'Save and continue');
+
+    // The document was uploaded automatically and failed.
+    $this->assertText('Processed word limit exceeded. Please contact your local administrator or Lingotek Client Success (sales@lingotek.com) for assistance.');
 
     // The field has been marked with the error status.
     $fieldConfig = FieldConfig::load('node.article.field_excerpt');

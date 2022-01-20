@@ -15,6 +15,7 @@ use Drupal\lingotek\Exception\LingotekPaymentRequiredException;
 use Drupal\lingotek\LanguageLocaleMapperInterface;
 use Drupal\lingotek\Lingotek;
 use Drupal\Core\Url;
+use Drupal\lingotek\Exception\LingotekProcessedWordsLimitException;
 use Drupal\lingotek\LingotekConfigurationServiceInterface;
 use Drupal\lingotek\LingotekInterface;
 use Psr\Log\LoggerInterface;
@@ -215,6 +216,9 @@ class LingotekEntityController extends LingotekControllerBase {
     catch (LingotekPaymentRequiredException $exception) {
       $this->messenger()->addError(t('Community has been disabled. Please contact support@lingotek.com to re-enable your community.'));
     }
+    catch (LingotekProcessedWordsLimitException $exception) {
+      $this->messenger()->addError(t('Processed word limit exceeded. Please contact your local administrator or Lingotek Client Success (<a href=":link">@mail</a>) for assistance.', [':link' => 'mailto:sales@lingotek.com', '@mail' => 'sales@lingotek.com']));
+    }
     catch (LingotekApiException $exception) {
       $this->messenger()->addError(t('The translation request for @entity_type failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]), 'error');
     }
@@ -251,6 +255,9 @@ class LingotekEntityController extends LingotekControllerBase {
     }
     catch (LingotekPaymentRequiredException $exception) {
       $this->messenger()->addError(t('Community has been disabled. Please contact support@lingotek.com to re-enable your community.'));
+    }
+    catch (LingotekProcessedWordsLimitException $exception) {
+      $this->messenger()->addError(t('Processed word limit exceeded. Please contact your local administrator or Lingotek Client Success (<a href=":link">@mail</a>) for assistance.', [':link' => 'mailto:sales@lingotek.com', '@mail' => 'sales@lingotek.com']));
     }
     catch (LingotekApiException $exception) {
       $this->messenger()->addError(t('The upload for @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
@@ -305,6 +312,9 @@ class LingotekEntityController extends LingotekControllerBase {
     }
     catch (LingotekPaymentRequiredException $exception) {
       $this->messenger()->addError(t('Community has been disabled. Please contact support@lingotek.com to re-enable your community.'));
+    }
+    catch (LingotekProcessedWordsLimitException $exception) {
+      $this->messenger()->addError(t('Processed word limit exceeded. Please contact your local administrator or Lingotek Client Success (<a href=":link">@mail</a>) for assistance.', [':link' => 'mailto:sales@lingotek.com', '@mail' => 'sales@lingotek.com']));
     }
     catch (LingotekApiException $exception) {
       $this->messenger()->addError(t('The update for @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));

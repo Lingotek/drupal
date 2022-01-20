@@ -9,6 +9,7 @@ use Drupal\lingotek\Exception\LingotekDocumentLockedException;
 use Drupal\lingotek\Exception\LingotekDocumentNotFoundException;
 use Drupal\lingotek\Exception\LingotekDocumentTargetAlreadyCompletedException;
 use Drupal\lingotek\Exception\LingotekPaymentRequiredException;
+use Drupal\lingotek\Exception\LingotekProcessedWordsLimitException;
 use Drupal\lingotek\LanguageLocaleMapperInterface;
 use Drupal\lingotek\LingotekInterface;
 use Drupal\lingotek\LingotekProfileInterface;
@@ -148,6 +149,10 @@ class LingotekFake implements LingotekInterface {
       \Drupal::state()->set('lingotek.must_payment_required_error_in_upload', FALSE);
       throw new LingotekPaymentRequiredException('Error was forced.');
     }
+    if (\Drupal::state()->get('lingotek.must_processed_words_limit_error_in_upload', FALSE)) {
+      \Drupal::state()->set('lingotek.must_processed_words_limit_error_in_upload', FALSE);
+      throw new LingotekProcessedWordsLimitException('Error was forced.');
+    }
     if (is_array($content)) {
       $content = json_encode($content);
     }
@@ -201,6 +206,10 @@ class LingotekFake implements LingotekInterface {
     if (\Drupal::state()->get('lingotek.must_document_locked_error_in_update', FALSE)) {
       \Drupal::state()->set('lingotek.must_document_locked_error_in_update', FALSE);
       throw new LingotekDocumentLockedException($doc_id, 'new-doc-id', 'Error was forced.');
+    }
+    if (\Drupal::state()->get('lingotek.must_processed_words_limit_error_in_update', FALSE)) {
+      \Drupal::state()->set('lingotek.must_processed_words_limit_error_in_update', FALSE);
+      throw new LingotekProcessedWordsLimitException('Error was forced');
     }
     if (is_array($content)) {
       $content = json_encode($content);
@@ -277,6 +286,10 @@ class LingotekFake implements LingotekInterface {
     if (\Drupal::state()->get('lingotek.must_document_locked_error_in_request_translation', FALSE)) {
       \Drupal::state()->set('lingotek.must_document_locked_error_in_request_translation', FALSE);
       throw new LingotekDocumentLockedException($doc_id, 'new-doc-id', 'Error was forced.');
+    }
+    if (\Drupal::state()->get('lingotek.must_processed_words_limit_error_in_request_translation', FALSE)) {
+      \Drupal::state()->set('lingotek.must_processed_words_limit_error_in_request_translation', FALSE);
+      throw new LingotekProcessedWordsLimitException('Error was forced');
     }
     $requested_locales = \Drupal::state()->get('lingotek.requested_locales', []);
     $requested_locales[$doc_id][] = $locale;

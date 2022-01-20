@@ -198,6 +198,7 @@ interface LingotekInterfaceTranslationServiceInterface {
    * @param string $locale
    *   Lingotek translation language which we want to modify.
    *
+   * @throws \Drupal\lingotek\Exception\LingotekProcessedWordsLimitException
    * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentArchivedException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentLockedException
@@ -212,6 +213,7 @@ interface LingotekInterfaceTranslationServiceInterface {
    * @param string $component
    *   The component being requested for translations.
    *
+   * @throws \Drupal\lingotek\Exception\LingotekProcessedWordsLimitException
    * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentArchivedException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentLockedException
@@ -231,6 +233,7 @@ interface LingotekInterfaceTranslationServiceInterface {
    * @return bool
    *   TRUE if the document was uploaded successfully, FALSE if not.
    *
+   * @throws \Drupal\lingotek\Exception\LingotekProcessedWordsLimitException
    * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentArchivedException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentLockedException
@@ -264,6 +267,7 @@ interface LingotekInterfaceTranslationServiceInterface {
    * @return bool
    *   TRUE if the document was updated successfully, FALSE if not.
    *
+   * @throws \Drupal\lingotek\Exception\LingotekProcessedWordsLimitException
    * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentArchivedException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentLockedException
@@ -379,6 +383,7 @@ interface LingotekInterfaceTranslationServiceInterface {
    * @return string
    *   Returns the component which job ID is saved.
    *
+   * @throws \Drupal\lingotek\Exception\LingotekProcessedWordsLimitException
    * @throws \Drupal\lingotek\Exception\LingotekPaymentRequiredException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentArchivedException
    * @throws \Drupal\lingotek\Exception\LingotekDocumentLockedException

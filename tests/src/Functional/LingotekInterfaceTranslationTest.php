@@ -398,6 +398,49 @@ class LingotekInterfaceTranslationTest extends LingotekTestBase {
   }
 
   /**
+   * Test that we handle errors in upload.
+   */
+  public function testUploadingWithAProcessedWordsLimitError() {
+    \Drupal::state()->set('lingotek.must_processed_words_limit_error_in_upload', TRUE);
+
+    // In Drupal.org CI the module will be at modules/contrib/lingotek.
+    // In my local that's modules/lingotek. We need to generate the path and not
+    // hardcode it.
+    $path = drupal_get_path('module', 'lingotek_interface_translation_test');
+    $component = $path;
+    $indexOfModuleLink = 2;
+    $assert_session = $this->assertSession();
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
+    $this->goToInterfaceTranslationManagementForm();
+    $assert_session->responseContains('lingotek_interface_translation_test');
+
+    // Clicking English must init the upload of content.
+    $this->assertLingotekInterfaceTranslationUploadLink($component);
+
+    // Upload the document, which must fail.
+    $this->clickLink('EN', $indexOfModuleLink);
+    $assert_session->responseContains('Processed word limit exceeded. Please contact your local administrator or Lingotek Client Success (<a href="mailto:sales@lingotek.com">sales@lingotek.com</a>) for assistance.');
+
+    // Check the right class is added.
+    $this->assertSourceStatus('EN', Lingotek::STATUS_ERROR);
+
+    // Check the right class is added.
+    $this->assertSourceStatus('EN', Lingotek::STATUS_ERROR);
+
+    /** @var \Drupal\lingotek\LingotekInterfaceTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.interface_translation');
+    $source_status = $translation_service->getSourceStatus($component);
+    $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The source upload has been marked as error.');
+
+    // I can still re-try the upload.
+    \Drupal::state()->set('lingotek.must_processed_words_limit_error_in_upload', FALSE);
+    $this->clickLink('EN', $indexOfModuleLink);
+    $assert_session->responseContains('<em class="placeholder">' . $component . '</em> uploaded successfully');
+  }
+
+  /**
    * Tests that we manage errors when using the request translation link.
    */
   public function testRequestTranslationWithAnError() {
@@ -474,6 +517,44 @@ class LingotekInterfaceTranslationTest extends LingotekTestBase {
     $this->clickLink('ES');
     $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
     $assert_session->responseContains('Community has been disabled. Please contact support@lingotek.com to re-enable your community.');
+  }
+
+  /**
+   * Tests that we manage errors when using the request translation link.
+   */
+  public function testRequestTranslationWithAProcessedWordsLimitError() {
+    \Drupal::state()->set('lingotek.must_processed_words_limit_error_in_request_translation', TRUE);
+
+    // In Drupal.org CI the module will be at modules/contrib/lingotek.
+    // In my local that's modules/lingotek. We need to generate the path and not
+    // hardcode it.
+    $path = drupal_get_path('module', 'lingotek_interface_translation_test');
+    $component = $path;
+    $indexOfModuleLink = 2;
+    $assert_session = $this->assertSession();
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
+    $this->goToInterfaceTranslationManagementForm();
+    $assert_session->responseContains('lingotek_interface_translation_test');
+
+    // Clicking English must init the upload of content.
+    $this->assertLingotekInterfaceTranslationUploadLink($component);
+
+    $this->clickLink('EN', $indexOfModuleLink);
+    $assert_session->responseContains('<em class="placeholder">' . $component . '</em> uploaded successfully');
+
+    // I can check current status.
+    $this->assertLingotekInterfaceTranslationCheckSourceStatusLink($component);
+
+    $this->clickLink('EN', $indexOfModuleLink);
+    $assert_session->responseContains('The import for <em class="placeholder">' . $component . '</em> is complete.');
+
+    // Request the Spanish translation.
+    $this->assertLingotekInterfaceTranslationRequestTranslationLink($component, 'es_MX');
+    $this->clickLink('ES');
+    $this->assertTargetStatus('ES', Lingotek::STATUS_REQUEST);
+    $assert_session->responseContains('Processed word limit exceeded. Please contact your local administrator or Lingotek Client Success (<a href="mailto:sales@lingotek.com">sales@lingotek.com</a>) for assistance.');
   }
 
   /**

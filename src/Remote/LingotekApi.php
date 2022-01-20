@@ -5,6 +5,7 @@ namespace Drupal\lingotek\Remote;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\lingotek\Exception\LingotekApiException;
 use Drupal\lingotek\Exception\LingotekDocumentNotFoundException;
+use Drupal\lingotek\Exception\LingotekProcessedWordsLimitException;
 use GuzzleHttp\Exception\ClientException;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -99,6 +100,17 @@ class LingotekApi implements LingotekApiInterface {
       $this->logger->debug('Lingotek::addDocument (POST /api/document) called with %args', ['%args' => var_export($args, TRUE)]);
       $response = $this->lingotekClient->post('/api/document', $args, TRUE);
     }
+    catch (ClientException $e) {
+      if ($e->getCode() === Response::HTTP_TOO_MANY_REQUESTS) {
+        // This only applies to trial users.
+        $responseBody = json_decode($e->getResponse()->getBody(), TRUE);
+        if (!empty($responseBody) && isset($responseBody['messages'])) {
+          $message = $responseBody['messages'][0];
+        }
+        throw new LingotekProcessedWordsLimitException($message);
+      }
+      throw new LingotekApiException('Error adding document: ' . $e->getMessage());
+    }
     catch (\Exception $e) {
       $this->logger->error('Error adding document: %message.', ['%message' => $e->getMessage()]);
       throw new LingotekApiException('Error adding document: ' . $e->getMessage());
@@ -128,6 +140,11 @@ class LingotekApi implements LingotekApiInterface {
         $message = $responseBody['messages'][0];
         throw new LingotekDocumentNotFoundException($message, Response::HTTP_NOT_FOUND);
       }
+      elseif ($e->getCode() === Response::HTTP_TOO_MANY_REQUESTS) {
+        $responseBody = json_decode($e->getResponse()->getBody(), TRUE);
+        $message = $responseBody['messages'][0];
+        throw new LingotekProcessedWordsLimitException($message);
+      }
       throw new LingotekApiException('Failed to patch (update) document: ' . $e->getMessage());
     }
     catch (\Exception $e) {
@@ -143,7 +160,7 @@ class LingotekApi implements LingotekApiInterface {
    */
   public function cancelDocument($id) {
     try {
-      $this->logger->debug('Lingotek::cancelDocument called with id %id', ['%id' =>  $id]);
+      $this->logger->debug('Lingotek::cancelDocument called with id %id', ['%id' => $id]);
       $args = [
         'id' => $id,
         'cancelled_reason' => 'CANCELLED_BY_AUTHOR',
@@ -343,6 +360,11 @@ class LingotekApi implements LingotekApiInterface {
             ['%id' => $id, '%args' => var_export($args, TRUE)]);
         }
         return new Response('Was already requested. All is good.', Response::HTTP_CREATED);
+      }
+      elseif ($e->getCode() === Response::HTTP_TOO_MANY_REQUESTS) {
+        $responseBody = json_decode($e->getResponse()->getBody(), TRUE);
+        $message = $responseBody['messages'][0];
+        throw new LingotekProcessedWordsLimitException($message);
       }
       throw new LingotekApiException('Failed to add translation: ' . $e->getMessage(), $e->getCode(), $e);
     }
