@@ -99,7 +99,10 @@ class LingotekFieldBodyTranslationTest extends LingotekTestBase {
     $assert_session->linkByHrefExists($basepath . '/admin/structure/types/manage/article/fields/node.article.body/translate/es/edit');
 
     // Check that the values are correct.
-    $this->clickLink('Edit', 1);
+    // In Drupal 9.4 blocks have been moved to content from sidebar_left,
+    // and this alters the order. See https://www.drupal.org/project/drupal/issues/3257407.
+    $index = version_compare(\Drupal::VERSION, '9.4', '>=') ? 2 : 1;
+    $this->clickLink('Edit', $index);
     $this->assertFieldByName('translation[config_names][field.field.node.article.body][label]', 'Cuerpo');
     $this->assertFieldByName('translation[config_names][field.field.node.article.body][description]', 'Cuerpo del contenido');
   }
