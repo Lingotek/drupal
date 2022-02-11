@@ -101,7 +101,7 @@ class LingotekEntityReferenceProcessor extends PluginBase implements LingotekFie
   /**
    * {@inheritdoc}
    */
-  public function extract(ContentEntityInterface &$entity, string $field_name, FieldDefinitionInterface $field_definition, array &$data, array &$visited = []) {
+  public function extract(ContentEntityInterface &$entity, string $field_name, FieldDefinitionInterface $field_definition, array &$data, array &$visited = [], $use_last_revision = TRUE) {
     $target_entity_type_id = $field_definition->getFieldStorageDefinition()->getSetting('target_type');
     foreach ($entity->get($field_name) as $delta => $field_item) {
       $embedded_entity_id = $field_item->get('target_id')->getValue();
@@ -113,7 +113,7 @@ class LingotekEntityReferenceProcessor extends PluginBase implements LingotekFie
           // We need to avoid cycles if we have several entity references
           // referencing each other.
           if (!isset($visited[$embedded_entity->bundle()]) || !in_array($embedded_entity->id(), $visited[$embedded_entity->bundle()])) {
-            $embedded_data = $this->lingotekContentTranslation->getSourceData($embedded_entity, $visited);
+            $embedded_data = $this->lingotekContentTranslation->getSourceData($embedded_entity, $visited, $use_last_revision);
             $data[$field_name][$delta] = $embedded_data;
           }
           else {

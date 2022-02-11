@@ -33,8 +33,10 @@ interface LingotekFieldProcessorInterface {
    *   The data being extracted.
    * @param array $visited
    *   We register the entities already extracted, avoiding infinite cycles.
+   * @param bool $use_last_revision
+   *   Flag if we want to load the last revision, or we should operate on the passed one.
    */
-  public function extract(ContentEntityInterface &$entity, string $field_name, FieldDefinitionInterface $field_definition, array &$data, array &$visited = []);
+  public function extract(ContentEntityInterface &$entity, string $field_name, FieldDefinitionInterface $field_definition, array &$data, array &$visited = [], $use_last_revision = TRUE);
 
   /**
    * Extract data for the given field in the entity.

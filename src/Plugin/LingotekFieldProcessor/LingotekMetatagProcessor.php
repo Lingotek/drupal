@@ -25,7 +25,7 @@ class LingotekMetatagProcessor extends PluginBase implements LingotekFieldProces
   /**
    * {@inheritdoc}
    */
-  public function extract(ContentEntityInterface &$entity, string $field_name, FieldDefinitionInterface $field_definition, array &$data, array &$visited = []) {
+  public function extract(ContentEntityInterface &$entity, string $field_name, FieldDefinitionInterface $field_definition, array &$data, array &$visited = [], $use_last_revision = TRUE) {
     $y = $entity->get($field_name);
     foreach ($y as $delta => $field_item) {
       $metatag_serialized = $field_item->get('value')->getValue();

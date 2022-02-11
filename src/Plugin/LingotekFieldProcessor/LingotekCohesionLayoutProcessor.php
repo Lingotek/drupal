@@ -126,7 +126,7 @@ class LingotekCohesionLayoutProcessor extends PluginBase implements LingotekFiel
   /**
    * {@inheritdoc}
    */
-  public function extract(ContentEntityInterface &$entity, string $field_name, FieldDefinitionInterface $field_definition, array &$data, array &$visited = []) {
+  public function extract(ContentEntityInterface &$entity, string $field_name, FieldDefinitionInterface $field_definition, array &$data, array &$visited = [], $use_last_revision = TRUE) {
     $value = $entity->get($field_name)->value;
     $layout_canvas = new LayoutCanvas($value);
     foreach ($layout_canvas->iterateCanvas() as $element) {

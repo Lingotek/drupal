@@ -3,6 +3,7 @@
 namespace Drupal\lingotek;
 
 use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Component\Utility\SortArray;
 use Drupal\Core\Database\Connection;
@@ -570,13 +571,13 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
   /**
    * {@inheritdoc}
    */
-  public function getSourceData(ContentEntityInterface &$entity, &$visited = []) {
+  public function getSourceData(ContentEntityInterface &$entity, &$visited = [], $use_last_revision = TRUE) {
     // Logic adapted from Content Translation core module and TMGMT contrib
     // module for pulling translatable field info from content entities.
     $source_entity = NULL;
     if ($entity instanceof RevisionableInterface) {
       $storage = $this->entityTypeManager->getStorage($entity->getEntityTypeId());
-      if ($revision_id = $storage->getLatestTranslationAffectedRevisionId($entity->id(), $entity->getUntranslated()->language()->getId())) {
+      if ($use_last_revision && $revision_id = $storage->getLatestTranslationAffectedRevisionId($entity->id(), $entity->getUntranslated()->language()->getId())) {
         $source_entity = $storage->loadRevision($revision_id);
       }
       else {
@@ -612,7 +613,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       /** @var \Drupal\lingotek\FieldProcessor\LingotekFieldProcessorInterface[] $field_processors */
       $field_processors = $field_processor_manager->getProcessorsForField($field_definitions[$field_name], $source_entity);
       foreach ($field_processors as $field_processor) {
-        $field_processor->extract($source_entity, $field_name, $field_definitions[$field_name], $data, $visited);
+        $field_processor->extract($source_entity, $field_name, $field_definitions[$field_name], $data, $visited, $use_last_revision);
       }
     }
 
@@ -626,8 +627,10 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
   /**
    * {@inheritdoc}
    */
-  public function updateEntityHash(ContentEntityInterface $entity) {
-    $source_data = json_encode($this->getSourceData($entity));
+  public function updateEntityHash(ContentEntityInterface $entity, $precalculated_source_data = []) {
+    $visited = [];
+    $source_data = !empty($precalculated_source_data) ? Json::encode($precalculated_source_data) :
+      Json::encode($this->getSourceData($entity, $visited, FALSE));
     if ($entity->lingotek_metadata->entity) {
       $entity->lingotek_metadata->entity->lingotek_hash = md5($source_data);
       $entity->lingotek_metadata->entity->save();
@@ -646,13 +649,14 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       if (isset($source_data['_lingotek_metadata'])) {
         unset($source_data['_lingotek_metadata']['_entity_revision']);
       }
-      $source_data = json_encode($source_data);
+      $source_data = Json::encode($source_data);
       $hash = md5($source_data);
-      $old_source_data = $this->getSourceData($entity->original);
+      $visited = [];
+      $old_source_data = $this->getSourceData($entity->original, $visited, FALSE);
       if (isset($old_source_data['_lingotek_metadata'])) {
         unset($old_source_data['_lingotek_metadata']['_entity_revision']);
       }
-      $old_source_data = json_encode($old_source_data);
+      $old_source_data = Json::encode($old_source_data);
       $old_hash = md5($old_source_data);
       return (bool) strcmp($hash, $old_hash);
     }
@@ -881,6 +885,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       $this->setTargetStatuses($entity, Lingotek::STATUS_REQUEST);
       $this->setJobId($entity, $job_id);
       $this->setLastUploaded($entity, \Drupal::time()->getRequestTime());
+      $this->updateEntityHash($entity, $source_data);
       if ($process_id !== NULL) {
         $this->storeUploadProcessId($entity, $process_id);
       }
@@ -1058,6 +1063,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       $this->setTargetStatuses($entity, Lingotek::STATUS_PENDING);
       $this->setJobId($entity, $job_id);
       $this->setLastUpdated($entity, \Drupal::time()->getRequestTime());
+      $this->updateEntityHash($entity, $source_data);
       if ($process_id !== NULL) {
         $this->storeUploadProcessId($entity, $process_id);
       }

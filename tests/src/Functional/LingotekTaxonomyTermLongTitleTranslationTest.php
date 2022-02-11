@@ -283,7 +283,7 @@ class LingotekTaxonomyTermLongTitleTranslationTest extends LingotekTestBase {
     $this->assertTargetStatus('ES', 'error');
 
     // Check that the Target Status is Error
-    $this->term = Term::load(1);
+    $this->term = $this->resetStorageCachesAndReloadContentEntity('taxonomy_term', 1);
     $content_translation_service = \Drupal::service('lingotek.content_translation');
     $this->assertIdentical(Lingotek::STATUS_ERROR, $content_translation_service->getTargetStatus($this->term, 'es'));
 

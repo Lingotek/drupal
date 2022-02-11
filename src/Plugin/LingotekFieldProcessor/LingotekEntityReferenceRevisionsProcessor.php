@@ -112,7 +112,7 @@ class LingotekEntityReferenceRevisionsProcessor extends PluginBase implements Li
   /**
    * {@inheritdoc}
    */
-  public function extract(ContentEntityInterface &$entity, string $field_name, FieldDefinitionInterface $field_definition, array &$data, array &$visited = []) {
+  public function extract(ContentEntityInterface &$entity, string $field_name, FieldDefinitionInterface $field_definition, array &$data, array &$visited = [], $use_last_revision = TRUE) {
     $target_entity_type_id = $field_definition->getFieldStorageDefinition()->getSetting('target_type');
     foreach ($entity->get($field_name) as $delta => $field_item) {
       $embedded_entity_id = $field_item->get('target_id')->getValue();
@@ -120,7 +120,7 @@ class LingotekEntityReferenceRevisionsProcessor extends PluginBase implements Li
       $embedded_entity = $this->entityTypeManager->getStorage($target_entity_type_id)->loadRevision($embedded_entity_revision_id);
       // Handle the unlikely case where a paragraph has lost its parent.
       if (!empty($embedded_entity)) {
-        $embedded_data = $this->lingotekContentTranslation->getSourceData($embedded_entity, $visited);
+        $embedded_data = $this->lingotekContentTranslation->getSourceData($embedded_entity, $visited, $use_last_revision);
         $data[$field_name][$delta] = $embedded_data;
       }
       else {

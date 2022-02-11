@@ -162,7 +162,7 @@ class LingotekLayoutBuilderSTProcessor extends PluginBase implements LingotekFie
   /**
    * {@inheritdoc}
    */
-  public function extract(ContentEntityInterface &$entity, string $field_name, FieldDefinitionInterface $field_definition, array &$data, array &$visited = []) {
+  public function extract(ContentEntityInterface &$entity, string $field_name, FieldDefinitionInterface $field_definition, array &$data, array &$visited = [], $use_last_revision = TRUE) {
     // TODO: This could be in applies.
     // We need to get the original data from the layout.
     $layoutBuilderST = $this->moduleHandler->moduleExists('layout_builder_st');
@@ -201,7 +201,7 @@ class LingotekLayoutBuilderSTProcessor extends PluginBase implements LingotekFie
           if (strpos($pluginIDName, 'inline_block') === 0) {
             $blockRevisionId = $blockConfig['block_revision_id'];
             if ($block = $this->entityTypeManager->getStorage('block_content')->loadRevision($blockRevisionId)) {
-              $data[$field_name]['entities']['block_content'][$blockRevisionId] = $this->lingotekContentTranslation->getSourceData($block, $visited);
+              $data[$field_name]['entities']['block_content'][$blockRevisionId] = $this->lingotekContentTranslation->getSourceData($block, $visited, $use_last_revision);
             }
           }
         }

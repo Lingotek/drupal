@@ -728,19 +728,29 @@ abstract class LingotekTestBase extends BrowserTestBase {
    *   The node.
    */
   protected function resetStorageCachesAndReloadNode() {
-    /** @var \Drupal\node\NodeStorageInterface $node_storage */
-    $node_storage = $this->container->get('entity_type.manager')->getStorage('node');
+    return $this->resetStorageCachesAndReloadContentEntity('node', 1);
+  }
+
+  /**
+   * Resets entity storage and metadata storage caches and reloads the entity.
+   *
+   * @return \Drupal\Core\Entity\ContentEntityInterface
+   *   The content entity.
+   */
+  protected function resetStorageCachesAndReloadContentEntity($entity_type_id = 'node', $entity_id = 1) {
+    /** @var \Drupal\Core\Entity\ContentEntityStorageInterface $storage */
+    $storage = $this->container->get('entity_type.manager')->getStorage($entity_type_id);
     /** @var \Drupal\Core\Entity\EntityStorageInterface; $metadata_storage */
     $metadata_storage = $this->container->get('entity_type.manager')
       ->getStorage('lingotek_content_metadata');
 
     // The node and the metadata caches need to be reset before reload.
-    $metadata_storage->resetCache([1]);
-    $node_storage->resetCache([1]);
+    $metadata_storage->resetCache([$entity_id]);
+    $storage->resetCache([$entity_id]);
 
-    /** @var \Drupal\node\NodeInterface $node */
-    $node = $node_storage->load(1);
-    return $node;
+    /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
+    $entity = $storage->load($entity_id);
+    return $entity;
   }
 
 }
