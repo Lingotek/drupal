@@ -4,7 +4,6 @@ namespace Drupal\Tests\lingotek\Functional;
 
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
-use Drupal\lingotek\Lingotek;
 use Drupal\taxonomy\Entity\Term;
 use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
 
@@ -128,26 +127,6 @@ class LingotekTaxonomyTermTranslationTest extends LingotekTestBase {
     $this->clickLink('Las llamas son chulas');
     $this->assertText('Las llamas son chulas');
     $this->assertText('Las llamas son muy chulas');
-  }
-
-  /**
-   * Tests that a term is marked as edited after being current and edited.
-   */
-  public function testTermTranslationIsEditedAfterEdit() {
-    $this->testTermTranslation();
-
-    $this->drupalGet('taxonomy/term/1');
-    $this->clickLink('Edit');
-
-    $edit = [];
-    $edit['name[0][value]'] = 'Dogs are cool';
-    $edit['description[0][value]'] = 'Dogs are very cool';
-    $edit['langcode[0][value]'] = 'en';
-    $edit['lingotek_translation_management[lingotek_translation_profile]'] = 'manual';
-    $this->submitForm($edit, 'Save');
-
-    $this->goToContentBulkManagementForm('taxonomy_term');
-    $this->assertSourceStatus('EN', Lingotek::STATUS_EDITED);
   }
 
   /**

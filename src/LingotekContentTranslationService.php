@@ -6,7 +6,6 @@ use Drupal\cohesion\LayoutCanvas\ElementModel;
 use Drupal\cohesion\LayoutCanvas\LayoutCanvas;
 use Drupal\cohesion_elements\Entity\Component;
 use Drupal\Component\Render\FormattableMarkup;
-use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Component\Utility\SortArray;
 use Drupal\Component\Utility\UrlHelper;
@@ -578,13 +577,13 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
   /**
    * {@inheritdoc}
    */
-  public function getSourceData(ContentEntityInterface &$entity, &$visited = [], $use_last_revision = TRUE) {
+  public function getSourceData(ContentEntityInterface &$entity, &$visited = []) {
     // Logic adapted from Content Translation core module and TMGMT contrib
     // module for pulling translatable field info from content entities.
     $source_entity = NULL;
     if ($entity instanceof RevisionableInterface) {
       $storage = $this->entityTypeManager->getStorage($entity->getEntityTypeId());
-      if ($use_last_revision && $revision_id = $storage->getLatestTranslationAffectedRevisionId($entity->id(), $entity->getUntranslated()->language()->getId())) {
+      if ($revision_id = $storage->getLatestTranslationAffectedRevisionId($entity->id(), $entity->getUntranslated()->language()->getId())) {
         $source_entity = $storage->loadRevision($revision_id);
       }
       else {
@@ -683,7 +682,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
           if (strpos($pluginId, 'block_content') === 0) {
             $uuid = $block_instance->getDerivativeId();
             if ($block = \Drupal::service('entity.repository')->loadEntityByUuid('block_content', $uuid)) {
-              $embedded_data['entity'] = $this->getSourceData($block, $visited, $use_last_revision);
+              $embedded_data['entity'] = $this->getSourceData($block, $visited);
             }
           }
           $data[$k][$field_item->getName()] = $embedded_data;
@@ -728,7 +727,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
               if (strpos($pluginIDName, 'inline_block') === 0) {
                 $blockRevisionId = $blockConfig['block_revision_id'];
                 if ($block = $this->entityTypeManager->getStorage('block_content')->loadRevision($blockRevisionId)) {
-                  $data[$k]['entities']['block_content'][$blockRevisionId] = $this->getSourceData($block, $visited, $use_last_revision);
+                  $data[$k]['entities']['block_content'][$blockRevisionId] = $this->getSourceData($block, $visited);
                 }
               }
             }
@@ -777,7 +776,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
               if (strpos($pluginIDName, 'inline_block') === 0) {
                 $blockRevisionId = $blockConfig['block_revision_id'];
                 if ($block = $this->entityTypeManager->getStorage('block_content')->loadRevision($blockRevisionId)) {
-                  $data[$k]['entities']['block_content'][$blockRevisionId] = $this->getSourceData($block, $visited, $use_last_revision);
+                  $data[$k]['entities']['block_content'][$blockRevisionId] = $this->getSourceData($block, $visited);
                 }
               }
             }
@@ -797,7 +796,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
               // We need to avoid cycles if we have several entity references
               // referencing each other.
               if (!isset($visited[$embedded_entity->bundle()]) || !in_array($embedded_entity->id(), $visited[$embedded_entity->bundle()])) {
-                $embedded_data = $this->getSourceData($embedded_entity, $visited, $use_last_revision);
+                $embedded_data = $this->getSourceData($embedded_entity, $visited);
                 $data[$k][$field_item->getName()] = $embedded_data;
               }
               else {
@@ -830,7 +829,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
           $embedded_entity = $this->entityTypeManager->getStorage($target_entity_type_id)->loadRevision($embedded_entity_revision_id);
           // Handle the unlikely case where a paragraph has lost its parent.
           if (!empty($embedded_entity)) {
-            $embedded_data = $this->getSourceData($embedded_entity, $visited, $use_last_revision);
+            $embedded_data = $this->getSourceData($embedded_entity, $visited);
             $data[$k][$field_item->getName()] = $embedded_data;
           }
           else {
@@ -1063,10 +1062,8 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
   /**
    * {@inheritdoc}
    */
-  public function updateEntityHash(ContentEntityInterface $entity, $precalculated_source_data = []) {
-    $visited = [];
-    $source_data = !empty($precalculated_source_data) ? Json::encode($precalculated_source_data) :
-      Json::encode($this->getSourceData($entity, $visited, FALSE));
+  public function updateEntityHash(ContentEntityInterface $entity) {
+    $source_data = json_encode($this->getSourceData($entity));
     if ($entity->lingotek_metadata->entity) {
       $entity->lingotek_metadata->entity->lingotek_hash = md5($source_data);
       $entity->lingotek_metadata->entity->save();
@@ -1085,14 +1082,13 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       if (isset($source_data['_lingotek_metadata'])) {
         unset($source_data['_lingotek_metadata']['_entity_revision']);
       }
-      $source_data = Json::encode($source_data);
+      $source_data = json_encode($source_data);
       $hash = md5($source_data);
-      $visited = [];
-      $old_source_data = $this->getSourceData($entity->original, $visited, FALSE);
+      $old_source_data = $this->getSourceData($entity->original);
       if (isset($old_source_data['_lingotek_metadata'])) {
         unset($old_source_data['_lingotek_metadata']['_entity_revision']);
       }
-      $old_source_data = Json::encode($old_source_data);
+      $old_source_data = json_encode($old_source_data);
       $old_hash = md5($old_source_data);
       return (bool) strcmp($hash, $old_hash);
     }
@@ -1321,7 +1317,6 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       $this->setTargetStatuses($entity, Lingotek::STATUS_REQUEST);
       $this->setJobId($entity, $job_id);
       $this->setLastUploaded($entity, \Drupal::time()->getRequestTime());
-      $this->updateEntityHash($entity, $source_data);
       if ($process_id !== NULL) {
         $this->storeUploadProcessId($entity, $process_id);
       }
@@ -1499,7 +1494,6 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       $this->setTargetStatuses($entity, Lingotek::STATUS_PENDING);
       $this->setJobId($entity, $job_id);
       $this->setLastUpdated($entity, \Drupal::time()->getRequestTime());
-      $this->updateEntityHash($entity, $source_data);
       if ($process_id !== NULL) {
         $this->storeUploadProcessId($entity, $process_id);
       }

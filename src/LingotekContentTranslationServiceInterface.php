@@ -174,27 +174,20 @@ interface LingotekContentTranslationServiceInterface {
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface &$entity
    *   The entity which we want the source data.
-   * @param array &$visited
-   *   The array of already visited entities, avoiding cycles and infinite loops.
-   * @param bool $use_last_revision
-   *   Flag if we want to load the last revision, or we should operate on the passed one.
    *
-   * @return array
+   * @return mixed
    */
-  public function getSourceData(ContentEntityInterface &$entity, &$visited = [], $use_last_revision = TRUE);
+  public function getSourceData(ContentEntityInterface &$entity);
 
   /**
    * Updates the entity hash.
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The entity being checked
-   * @param array $precalculated_source_data
-   *   The entity source data if we have already calculated that, avoiding doing
-   *   it twice.
    *
    * @return $this
    */
-  public function updateEntityHash(ContentEntityInterface $entity, $precalculated_source_data = []);
+  public function updateEntityHash(ContentEntityInterface $entity);
 
   /**
    * Checks if the source entity data has changed from last time we uploaded it.

@@ -13,6 +13,7 @@ use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\lingotek\Entity\LingotekContentMetadata;
 use Drupal\lingotek\Entity\LingotekProfile;
 use Drupal\lingotek\Exception\LingotekApiException;
 use Drupal\lingotek\Exception\LingotekDocumentArchivedException;
@@ -33,14 +34,35 @@ function lingotek_toolbar_alter(&$items) {
  * Implements hook_module_implements_alter().
  */
 function lingotek_module_implements_alter(&$implementations, $hook) {
+  // Make sure lingotek_entity_presave() comes last.
   switch ($hook) {
     // Move our hook_entity_type_alter() implementation to the end of the list.
-    case 'entity_update':
+    case 'entity_presave':
     case 'entity_insert':
       $group = $implementations['lingotek'];
       unset($implementations['lingotek']);
       $implementations['lingotek'] = $group;
       break;
+  }
+}
+
+/**
+ * Implements hook_entity_presave().
+ */
+function lingotek_entity_presave(EntityInterface $entity) {
+  $configuration_service = \Drupal::service('lingotek.configuration');
+
+  if ($entity instanceof ContentEntityInterface && $configuration_service->isEnabled($entity->getEntityTypeId(), $entity->bundle())) {
+    if ($entity->language() === $entity->getUntranslated()->language()) {
+      if ($entity->lingotek_metadata->entity === NULL) {
+        $metadata = LingotekContentMetadata::create();
+        $metadata->save();
+        $entity->lingotek_metadata = $metadata;
+      }
+
+      $translation_service = \Drupal::service('lingotek.content_translation');
+      $translation_service->updateEntityHash($entity);
+    }
   }
 }
 
