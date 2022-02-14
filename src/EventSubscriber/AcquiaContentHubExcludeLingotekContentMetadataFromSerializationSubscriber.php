@@ -3,39 +3,54 @@
 namespace Drupal\lingotek\EventSubscriber;
 
 use Drupal\Core\Field\FieldItemListInterface;
-use Drupal\acquia_contenthub\Event\SerializeCdfEntityFieldEvent;
+use Drupal\acquia_contenthub\Event\ExcludeEntityFieldEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
+/**
+ * Exclude Lingotek field from serialization.
+ */
 class AcquiaContentHubExcludeLingotekContentMetadataFromSerializationSubscriber implements EventSubscriberInterface {
 
   /**
    * {@inheritdoc}
    */
+  public static $priority = 1001;
+
+  /**
+   * {@inheritdoc}
+   */
   public static function getSubscribedEvents() {
-    // AcquiaContentHubEvents::SERIALIZE_CONTENT_ENTITY_FIELD
-    $events['serialize_content_entity_field'][] = [
-      'onSerializeContentField',
-      1001,
-    ];
+    $events['acquia_contenthub_exclude_entity_field'][] =
+      ['excludeContentField', self::$priority];
     return $events;
   }
 
   /**
-   * Serialize content field event.
+   * Sets the "exclude" flag.
    *
-   * @param \Drupal\acquia_contenthub\Event\SerializeCdfEntityFieldEvent $event
-   *   Serialized CDF Entity Field event.
+   * @param \Drupal\acquia_contenthub\Event\ExcludeEntityFieldEvent $event
+   *   The content entity field serialization event.
    */
-  public function onSerializeContentField(SerializeCdfEntityFieldEvent $event) {
-    $field = $event->getField();
-    if (!$this->includeField($field)) {
-      $event->setExcluded();
+  public function excludeContentField(ExcludeEntityFieldEvent $event) {
+    if ($this->shouldExclude($event)) {
+      $event->exclude();
       $event->stopPropagation();
     }
   }
 
   /**
-   * Whether we should include this field in the dependency calculation.
+   * Prevent entity fields from being added to the serialized output.
+   *
+   * @param \Drupal\acquia_contenthub\Event\ExcludeEntityFieldEvent $event
+   *   The content entity field serialization event.
+   */
+  public function shouldExclude(ExcludeEntityFieldEvent $event): bool {
+    $field = $event->getField();
+    return !$this->includeField($field);
+  }
+
+  /**
+   * Whether we should include this field in the serialization.
    *
    * @param \Drupal\Core\Field\FieldItemListInterface $field
    *   The entity field.
