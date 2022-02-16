@@ -12,7 +12,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
-use Drupal\Core\Utility\LinkGeneratorInterface;
+use Drupal\lingotek\FormComponent\LingotekFormComponentFieldManager;
 use Drupal\lingotek\LanguageLocaleMapperInterface;
 use Drupal\lingotek\LingotekConfigurationServiceInterface;
 use Drupal\lingotek\LingotekContentTranslationServiceInterface;
@@ -58,11 +58,11 @@ class LingotekJobManagementContentEntitiesForm extends LingotekManagementFormBas
    *   The entity field manager.
    * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entity_type_bundle_info
    *   The entity type bundle info.
-   * @param \Drupal\Core\Utility\LinkGeneratorInterface $link_generator
-   *   The link generator.
+   * @param \Drupal\lingotek\FormComponent\LingotekFormComponentFieldManager $form_field_manager
+   *   The form-field plugin manager.
    */
-  public function __construct(Connection $connection, EntityTypeManagerInterface $entity_type_manager, LanguageManagerInterface $language_manager, LingotekInterface $lingotek, LingotekConfigurationServiceInterface $lingotek_configuration, LanguageLocaleMapperInterface $language_locale_mapper, ContentTranslationManagerInterface $content_translation_manager, LingotekContentTranslationServiceInterface $translation_service, PrivateTempStoreFactory $temp_store_factory, StateInterface $state, ModuleHandlerInterface $module_handler, EntityFieldManagerInterface $entity_field_manager = NULL, EntityTypeBundleInfoInterface $entity_type_bundle_info = NULL, LinkGeneratorInterface $link_generator = NULL) {
-    parent::__construct($connection, $entity_type_manager, $language_manager, $lingotek, $lingotek_configuration, $language_locale_mapper, $content_translation_manager, $translation_service, $temp_store_factory, $state, $module_handler, NULL, $entity_field_manager, $entity_type_bundle_info, $link_generator);
+  public function __construct(Connection $connection, EntityTypeManagerInterface $entity_type_manager, LanguageManagerInterface $language_manager, LingotekInterface $lingotek, LingotekConfigurationServiceInterface $lingotek_configuration, LanguageLocaleMapperInterface $language_locale_mapper, ContentTranslationManagerInterface $content_translation_manager, LingotekContentTranslationServiceInterface $translation_service, PrivateTempStoreFactory $temp_store_factory, StateInterface $state, ModuleHandlerInterface $module_handler, EntityFieldManagerInterface $entity_field_manager = NULL, EntityTypeBundleInfoInterface $entity_type_bundle_info = NULL, LingotekFormComponentFieldManager $form_field_manager) {
+    parent::__construct($connection, $entity_type_manager, $language_manager, $lingotek, $lingotek_configuration, $language_locale_mapper, $content_translation_manager, $translation_service, $temp_store_factory, $state, $module_handler, NULL, $entity_field_manager, $entity_type_bundle_info, $form_field_manager);
   }
 
   /**
@@ -83,7 +83,7 @@ class LingotekJobManagementContentEntitiesForm extends LingotekManagementFormBas
       $container->get('module_handler'),
       $container->get('entity_field.manager'),
       $container->get('entity_type.bundle.info'),
-      $container->get('link_generator')
+      $container->get('plugin.manager.lingotek_form_field')
     );
   }
 
@@ -141,22 +141,6 @@ class LingotekJobManagementContentEntitiesForm extends LingotekManagementFormBas
    */
   public function getFormId() {
     return 'lingotek_job_content_entities_management';
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function getHeaders() {
-    $headers = [
-      'label' => $this->t('Label'),
-      'entity_type_id' => $this->t('Content Type'),
-      'bundle' => $this->t('Bundle'),
-      'source' => $this->t('Source'),
-      'translations' => $this->t('Translations'),
-      'profile' => $this->t('Profile'),
-      'job_id' => $this->t('Job ID'),
-    ];
-    return $headers;
   }
 
   protected function getRows($entity_list) {

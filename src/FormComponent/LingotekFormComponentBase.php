@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\lingotek\Plugin\lingotek\FormComponent;
+namespace Drupal\lingotek\FormComponent;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
@@ -12,9 +12,9 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * Base class for Lingotek form-component plugins.
  *
- * @package Drupal\lingotek\Plugin\lingotek
+ * @package Drupal\lingotek\FormComponent
  */
-abstract class FormComponentBase extends PluginBase implements FormComponentInterface {
+abstract class LingotekFormComponentBase extends PluginBase implements LingotekFormComponentInterface {
 
   /**
    * The entity_type.manager service.
@@ -59,7 +59,7 @@ abstract class FormComponentBase extends PluginBase implements FormComponentInte
   protected $entityTypes = [];
 
   /**
-   * FormComponentBase constructor.
+   * LingotekFormComponentBase constructor.
    *
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.

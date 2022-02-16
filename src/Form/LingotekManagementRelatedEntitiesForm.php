@@ -14,12 +14,11 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
-use Drupal\Core\Utility\LinkGeneratorInterface;
+use Drupal\lingotek\FormComponent\LingotekFormComponentFieldManager;
 use Drupal\lingotek\LanguageLocaleMapperInterface;
 use Drupal\lingotek\LingotekConfigurationServiceInterface;
 use Drupal\lingotek\LingotekContentTranslationServiceInterface;
 use Drupal\lingotek\LingotekInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Form for bulk management of related content.
@@ -41,7 +40,7 @@ class LingotekManagementRelatedEntitiesForm extends LingotekManagementFormBase {
    * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
    *   The language manager.
    * @param \Drupal\lingotek\LingotekInterface $lingotek
-   *   The lingotek service.
+   *   The Lingotek service.
    * @param \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_configuration
    *   The Lingotek configuration service.
    * @param \Drupal\lingotek\LanguageLocaleMapperInterface $language_locale_mapper
@@ -52,39 +51,24 @@ class LingotekManagementRelatedEntitiesForm extends LingotekManagementFormBase {
    *   The Lingotek content translation service.
    * @param \Drupal\Core\TempStore\PrivateTempStoreFactory $temp_store_factory
    *   The factory for the temp store object.
+   * @param \Drupal\Core\State\StateInterface $state
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler.
+   * @param string $entity_type_id
+   *   The entity type id.
    * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
    *   The entity field manager.
    * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entity_type_bundle_info
    *   The entity type bundle info.
-   * @param \Drupal\Core\Utility\LinkGeneratorInterface $link_generator
-   *   The link generator.
+   * @param \Drupal\lingotek\FormComponent\LingotekFormComponentFieldManager $form_field_manager
+   *   The form-field plugin manager.
    */
-  public function __construct(Connection $connection, EntityTypeManagerInterface $entity_type_manager, LanguageManagerInterface $language_manager, LingotekInterface $lingotek, LingotekConfigurationServiceInterface $lingotek_configuration, LanguageLocaleMapperInterface $language_locale_mapper, ContentTranslationManagerInterface $content_translation_manager, LingotekContentTranslationServiceInterface $translation_service, PrivateTempStoreFactory $temp_store_factory, StateInterface $state, ModuleHandlerInterface $module_handler, EntityFieldManagerInterface $entity_field_manager = NULL, EntityTypeBundleInfoInterface $entity_type_bundle_info = NULL, LinkGeneratorInterface $link_generator = NULL) {
-    parent::__construct($connection, $entity_type_manager, $language_manager, $lingotek, $lingotek_configuration, $language_locale_mapper, $content_translation_manager, $translation_service, $temp_store_factory, $state, $module_handler, NULL, $entity_field_manager, $entity_type_bundle_info, $link_generator);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('database'),
-      $container->get('entity_type.manager'),
-      $container->get('language_manager'),
-      $container->get('lingotek'),
-      $container->get('lingotek.configuration'),
-      $container->get('lingotek.language_locale_mapper'),
-      $container->get('content_translation.manager'),
-      $container->get('lingotek.content_translation'),
-      $container->get('tempstore.private'),
-      $container->get('state'),
-      $container->get('module_handler'),
-      $container->get('entity_field.manager'),
-      $container->get('entity_type.bundle.info'),
-      $container->get('link_generator')
-    );
+  public function __construct(Connection $connection, EntityTypeManagerInterface $entity_type_manager, LanguageManagerInterface $language_manager, LingotekInterface $lingotek, LingotekConfigurationServiceInterface $lingotek_configuration, LanguageLocaleMapperInterface $language_locale_mapper, ContentTranslationManagerInterface $content_translation_manager, LingotekContentTranslationServiceInterface $translation_service, PrivateTempStoreFactory $temp_store_factory, StateInterface $state, ModuleHandlerInterface $module_handler, $entity_type_id, EntityFieldManagerInterface $entity_field_manager, EntityTypeBundleInfoInterface $entity_type_bundle_info, LingotekFormComponentFieldManager $form_field_manager) {
+    // The entity type is inevitably a node, but let's find out the proper way.
+    $route_parameters = \Drupal::routeMatch()->getParameters()->all();
+    /** @var \Drupal\Core\Entity\EntityInterface $entity */
+    $entity = reset($route_parameters);
+    parent::__construct($connection, $entity_type_manager, $language_manager, $lingotek, $lingotek_configuration, $language_locale_mapper, $content_translation_manager, $translation_service, $temp_store_factory, $state, $module_handler, $entity->getEntityTypeId(), $entity_field_manager, $entity_type_bundle_info, $form_field_manager);
   }
 
   public function buildForm(array $form, FormStateInterface $form_state, ContentEntityInterface $node = NULL) {
@@ -154,22 +138,6 @@ class LingotekManagementRelatedEntitiesForm extends LingotekManagementFormBase {
   }
 
   /**
-   * {@inheritdoc}
-   */
-  protected function getHeaders() {
-    $headers = [
-      'title' => $this->t('Label'),
-      'entity_type_id' => $this->t('Content Type'),
-      'bundle' => $this->t('Bundle'),
-      'source' => $this->t('Source'),
-      'translations' => $this->t('Translations'),
-      'profile' => $this->t('Profile'),
-      'job_id' => $this->t('Job ID'),
-    ];
-    return $headers;
-  }
-
-  /**
    * @deprecated in lingotek:3.1.0 and is removed from lingotek:4.0.0.
    *
    * @see \Drupal\lingotek\RelatedEntities\RelatedEntitiesDetectorInterface
@@ -225,25 +193,6 @@ class LingotekManagementRelatedEntitiesForm extends LingotekManagementFormBase {
       }
     }
     return $rows;
-  }
-
-  protected function getRow($entity) {
-    // For this method to be able to be reused for the table component, order
-    // matters, so we rebuild the order of the row. For tableselect the headers
-    // defines the order, for the table, the order we add to the array matters.
-    $parentRow = parent::getRow($entity);
-    $bundleInfo = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
-
-    $row['title'] = $parentRow['title'];
-    $row['entity_type_id'] = $entity->getEntityType()->getLabel();
-    $row['bundle'] = $bundleInfo[$entity->bundle()]['label'];
-    $row['title'] = $parentRow['title'];
-    $row['source'] = $parentRow['source'];
-    $row['translations'] = $parentRow['translations'];
-    $row['profile'] = $parentRow['profile'];
-    $row['job_id'] = $parentRow['job_id'];
-
-    return $row;
   }
 
   /**

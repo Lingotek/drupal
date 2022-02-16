@@ -7,7 +7,7 @@ use Drupal\Component\Annotation\Plugin;
 /**
  * Base class for form-component plugins.
  */
-abstract class LingotekFormComponentBase extends Plugin {
+abstract class LingotekFormComponentAnnotationBase extends Plugin {
 
   /**
    * The plugin ID.

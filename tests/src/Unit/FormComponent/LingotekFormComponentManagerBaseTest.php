@@ -6,24 +6,24 @@ use Drupal\Component\Plugin\Discovery\DiscoveryInterface;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Logger\LoggerChannelFactory;
-use Drupal\lingotek\Annotation\LingotekFormComponentBase;
-use Drupal\lingotek\FormComponent\FormComponentManagerBase;
-use Drupal\lingotek\Plugin\lingotek\FormComponent\FormComponentInterface;
+use Drupal\lingotek\Annotation\LingotekFormComponentAnnotationBase;
+use Drupal\lingotek\FormComponent\LingotekFormComponentInterface;
+use Drupal\lingotek\FormComponent\LingotekFormComponentManagerBase;
 use Drupal\Tests\UnitTestCase;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * @coversDefaultClass \Drupal\lingotek\FormComponent\FormComponentManagerBase
+ * @coversDefaultClass \Drupal\lingotek\FormComponent\LingotekFormComponentManagerBase
  * @group lingotek
  * @preserveGlobalState disabled
  */
-class FormComponentManagerBaseTest extends UnitTestCase {
+class LingotekFormComponentManagerBaseTest extends UnitTestCase {
 
   /**
    * The form component manager under test.
    *
-   * @var \Drupal\lingotek\FormComponent\FormComponentManagerBase
+   * @var \Drupal\lingotek\FormComponent\LingotekFormComponentManagerBase
    */
   protected $formComponentManager;
 
@@ -41,7 +41,7 @@ class FormComponentManagerBaseTest extends UnitTestCase {
     parent::setUp();
     $module_handler = $this->createMock(ModuleHandlerInterface::class);
 
-    $this->formComponentManager = new TestFormComponentManagerBase('whatever', new \ArrayObject(), $module_handler);
+    $this->formComponentManager = new TestLingotekFormComponentManagerBase('whatever', new \ArrayObject(), $module_handler);
 
     $container = new ContainerBuilder();
     $moduleHandler = $this->createMock(ModuleHandlerInterface::class);
@@ -98,7 +98,7 @@ class FormComponentManagerBaseTest extends UnitTestCase {
       'form_ids' => [
         'test_form_id',
       ],
-      'class' => TestFormComponent::class,
+      'class' => TestLingotekFormComponent::class,
     ];
     $definitions['with_same_form_id_and_entity_type'] = [
       'id' => 'with_same_form_id_and_entity_type',
@@ -106,7 +106,7 @@ class FormComponentManagerBaseTest extends UnitTestCase {
         'test_form_id',
       ],
       'entity_types' => ['my_entity_type_id'],
-      'class' => TestFormComponent::class,
+      'class' => TestLingotekFormComponent::class,
     ];
     $definitions['with_same_form_id_but_different_entity_type'] = [
       'id' => 'with_same_form_id_but_different_entity_type',
@@ -114,14 +114,14 @@ class FormComponentManagerBaseTest extends UnitTestCase {
         'test_form_id',
       ],
       'entity_types' => ['different_entity_type'],
-      'class' => TestFormComponent::class,
+      'class' => TestLingotekFormComponent::class,
     ];
     $definitions['with_different_form_id'] = [
       'id' => 'with_different_form_id',
       'form_ids' => [
         'another_test_form_id',
       ],
-      'class' => TestFormComponent::class,
+      'class' => TestLingotekFormComponent::class,
     ];
     $discovery = $this->prophesize(DiscoveryInterface::class);
     $discovery->getDefinitions()->willReturn($definitions);
@@ -166,7 +166,7 @@ class FormComponentManagerBaseTest extends UnitTestCase {
       'form_ids' => [
         'test_form_id',
       ],
-      'class' => TestFormComponent::class,
+      'class' => TestLingotekFormComponent::class,
     ];
     $definitions['with_same_form_id_and_entity_type'] = [
       'id' => 'with_same_form_id_and_entity_type',
@@ -174,7 +174,7 @@ class FormComponentManagerBaseTest extends UnitTestCase {
         'test_form_id',
       ],
       'entity_types' => ['my_entity_type_id'],
-      'class' => TestFormComponent::class,
+      'class' => TestLingotekFormComponent::class,
     ];
     $definitions['with_same_form_id_but_different_entity_type'] = [
       'id' => 'with_same_form_id_but_different_entity_type',
@@ -182,14 +182,14 @@ class FormComponentManagerBaseTest extends UnitTestCase {
         'test_form_id',
       ],
       'entity_types' => ['different_entity_type'],
-      'class' => TestFormComponent::class,
+      'class' => TestLingotekFormComponent::class,
     ];
     $definitions['with_different_form_id'] = [
       'id' => 'with_different_form_id',
       'form_ids' => [
         'another_test_form_id',
       ],
-      'class' => TestFormComponent::class,
+      'class' => TestLingotekFormComponent::class,
     ];
     $discovery = $this->prophesize(DiscoveryInterface::class);
     $discovery->getDefinitions()->willReturn($definitions);
@@ -206,7 +206,7 @@ class FormComponentManagerBaseTest extends UnitTestCase {
 
 }
 
-class TestFormComponentManagerBase extends FormComponentManagerBase {
+class TestLingotekFormComponentManagerBase extends LingotekFormComponentManagerBase {
 
   public function setDiscovery(DiscoveryInterface $discovery) {
     $this->discovery = $discovery;
@@ -214,9 +214,9 @@ class TestFormComponentManagerBase extends FormComponentManagerBase {
 
 }
 
-class TestLingotekFormComponentAnnotation extends LingotekFormComponentBase {}
+class TestLingotekFormComponentAnnotation extends LingotekFormComponentAnnotationBase {}
 
-class TestFormComponent implements FormComponentInterface {
+class TestLingotekFormComponent implements LingotekFormComponentInterface {
 
   protected $configuration;
   protected $pluginId;
@@ -235,7 +235,7 @@ class TestFormComponent implements FormComponentInterface {
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     $configuration['weight'] = $configuration['weight'] ?? 0;
-    return new TestFormComponent($configuration, $plugin_id, $plugin_definition);
+    return new TestLingotekFormComponent($configuration, $plugin_id, $plugin_definition);
   }
 
   /**

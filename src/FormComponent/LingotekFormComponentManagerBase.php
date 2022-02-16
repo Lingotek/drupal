@@ -10,9 +10,9 @@ use InvalidArgumentException;
 /**
  * Abstract class for all form-component-plugin managers.
  *
- * @package Drupal\lingotek
+ * @package Drupal\lingotek\FormComponent
  */
-abstract class FormComponentManagerBase extends DefaultPluginManager implements FormComponentManagerInterface {
+abstract class LingotekFormComponentManagerBase extends DefaultPluginManager implements LingotekFormComponentManagerInterface {
 
   /**
    * {@inheritdoc}
@@ -41,7 +41,7 @@ abstract class FormComponentManagerBase extends DefaultPluginManager implements 
     $form_id = $arguments['form_id'];
     $entity_type_id = $arguments['entity_type_id'];
 
-    /** @var \Drupal\lingotek\Plugin\lingotek\FormComponent\FormComponentInterface[] $plugins */
+    /** @var \Drupal\lingotek\FormComponent\LingotekFormComponentInterface[] $plugins */
     $plugins = [];
 
     $definitions = array_filter($this->getDefinitions(), function ($definition) use ($form_id, $entity_type_id) {
@@ -69,7 +69,7 @@ abstract class FormComponentManagerBase extends DefaultPluginManager implements 
 
     foreach (array_keys($definitions) as $plugin_id) {
       try {
-        /** @var \Drupal\lingotek\Plugin\lingotek\FormComponent\FormComponentInterface $plugin */
+        /** @var \Drupal\lingotek\FormComponent\LingotekFormComponentInterface $plugin */
         $plugin = $this->createInstance($plugin_id);
 
         if ($plugin->isApplicable($arguments)) {

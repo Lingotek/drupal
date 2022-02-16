@@ -17,7 +17,6 @@ use Drupal\Core\Routing\LocalRedirectResponse;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Drupal\Core\Url;
-use Drupal\Core\Utility\LinkGeneratorInterface;
 use Drupal\file\Entity\File;
 use Drupal\lingotek\Exception\LingotekApiException;
 use Drupal\lingotek\Exception\LingotekContentEntityStorageException;
@@ -27,13 +26,13 @@ use Drupal\lingotek\Exception\LingotekDocumentNotFoundException;
 use Drupal\lingotek\Exception\LingotekDocumentTargetAlreadyCompletedException;
 use Drupal\lingotek\Exception\LingotekPaymentRequiredException;
 use Drupal\lingotek\Exception\LingotekProcessedWordsLimitException;
+use Drupal\lingotek\FormComponent\LingotekFormComponentFieldManager;
 use Drupal\lingotek\Helpers\LingotekManagementFormHelperTrait;
 use Drupal\lingotek\LanguageLocaleMapperInterface;
 use Drupal\lingotek\Lingotek;
 use Drupal\lingotek\LingotekConfigurationServiceInterface;
 use Drupal\lingotek\LingotekContentTranslationServiceInterface;
 use Drupal\lingotek\LingotekInterface;
-use Drupal\lingotek\LingotekLocale;
 use Drupal\lingotek\LingotekSetupTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -131,6 +130,20 @@ abstract class LingotekManagementFormBase extends FormBase {
   protected $entityTypeId;
 
   /**
+   * Available form-field plugins.
+   *
+   * @var \Drupal\lingotek\FormComponent\LingotekFormComponentFieldInterface[]
+   */
+  protected $formFields = [];
+
+  /**
+   * The table's headers.
+   *
+   * @var array|null
+   */
+  protected $headers = NULL;
+
+  /**
    * Constructs a new LingotekManagementFormBase object.
    *
    * @param \Drupal\Core\Database\Connection $connection
@@ -160,10 +173,10 @@ abstract class LingotekManagementFormBase extends FormBase {
    *   The entity field manager.
    * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entity_type_bundle_info
    *   The entity type bundle info.
-   * @param \Drupal\Core\Utility\LinkGeneratorInterface $link_generator
-   *   The link generator.
+   * @param \Drupal\lingotek\FormComponent\LingotekFormComponentFieldManager $form_field_manager
+   *   The form-field plugin manager.
    */
-  public function __construct(Connection $connection, EntityTypeManagerInterface $entity_type_manager, LanguageManagerInterface $language_manager, LingotekInterface $lingotek, LingotekConfigurationServiceInterface $lingotek_configuration, LanguageLocaleMapperInterface $language_locale_mapper, ContentTranslationManagerInterface $content_translation_manager, LingotekContentTranslationServiceInterface $translation_service, PrivateTempStoreFactory $temp_store_factory, StateInterface $state, ModuleHandlerInterface $module_handler, $entity_type_id, EntityFieldManagerInterface $entity_field_manager, EntityTypeBundleInfoInterface $entity_type_bundle_info, LinkGeneratorInterface $link_generator) {
+  public function __construct(Connection $connection, EntityTypeManagerInterface $entity_type_manager, LanguageManagerInterface $language_manager, LingotekInterface $lingotek, LingotekConfigurationServiceInterface $lingotek_configuration, LanguageLocaleMapperInterface $language_locale_mapper, ContentTranslationManagerInterface $content_translation_manager, LingotekContentTranslationServiceInterface $translation_service, PrivateTempStoreFactory $temp_store_factory, StateInterface $state, ModuleHandlerInterface $module_handler, $entity_type_id, EntityFieldManagerInterface $entity_field_manager, EntityTypeBundleInfoInterface $entity_type_bundle_info, LingotekFormComponentFieldManager $form_field_manager) {
     $this->connection = $connection;
     $this->entityTypeManager = $entity_type_manager;
     $this->languageManager = $language_manager;
@@ -179,7 +192,11 @@ abstract class LingotekManagementFormBase extends FormBase {
     $this->entityTypeId = $entity_type_id;
     $this->entityFieldManager = $entity_field_manager;
     $this->entityTypeBundleInfo = $entity_type_bundle_info;
-    $this->linkGenerator = $link_generator;
+    $form_component_arguments = [
+      'form_id' => $this->getFormId(),
+      'entity_type_id' => $this->entityTypeId,
+    ];
+    $this->formFields = $form_field_manager->getApplicable($form_component_arguments);
   }
 
   /**
@@ -201,7 +218,7 @@ abstract class LingotekManagementFormBase extends FormBase {
       \Drupal::routeMatch()->getParameter('entity_type_id'),
       $container->get('entity_field.manager'),
       $container->get('entity_type.bundle.info'),
-      $container->get('link_generator')
+      $container->get('plugin.manager.lingotek_form_field')
     );
   }
 
@@ -395,9 +412,19 @@ abstract class LingotekManagementFormBase extends FormBase {
   }
 
   /**
-   * @return string[]
+   * Builds the table headers
    */
-  abstract protected function getHeaders();
+  protected function getHeaders() {
+    if (is_null($this->headers)) {
+      $this->headers = [];
+
+      foreach ($this->formFields as $field_id => $field) {
+        $this->headers[$field_id] = $field->getHeader($this->entityTypeId);
+      }
+    }
+
+    return $this->headers;
+  }
 
   /**
    * Load the entities corresponding with the given identifiers.
@@ -539,40 +566,19 @@ abstract class LingotekManagementFormBase extends FormBase {
   abstract protected function getPager();
 
   /**
-   * Gets a rows fo rendering based on the passed entity.
+   * Gets a row of fields for an entity.
    *
    * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity.
    *
    * @return array
-   *   A render array.
+   *   A renderable array.
    */
   protected function getRow($entity) {
-    $row = [];
-    $source = $this->getSourceStatus($entity);
-    $entityTypeId = $entity->getEntityTypeId();
-    $translations = $this->getTranslationsStatuses($entity);
-    $profile = $this->lingotekConfiguration->getEntityProfile($entity, TRUE);
-    $job_id = $this->translationService->getJobId($entity);
-    $entity_type = $this->entityTypeManager->getDefinition($entityTypeId);
-    $has_bundles = $entity_type->get('bundle_entity_type') != 'bundle';
-
-    if ($has_bundles) {
-      $bundleInfo = $this->entityTypeBundleInfo->getBundleInfo($entityTypeId);
-      $row['bundle'] = $bundleInfo[$entity->bundle()]['label'];
+    foreach ($this->formFields as $field_id => $field) {
+      $row[$field_id] = $field->getData($entity);
     }
 
-    $row += [
-      'title' => $entity->hasLinkTemplate('canonical') ? $this->linkGenerator
-        ->generate($entity->label(), Url::fromRoute($entity->toUrl()
-          ->getRouteName(), [$entityTypeId => $entity->id()])) : $entity->id(),
-      'source' => $source,
-      'translations' => $translations,
-      'profile' => $profile ? $profile->label() : '',
-      'job_id' => $job_id ?: '',
-    ];
-    if (!$this->lingotekConfiguration->isEnabled($entityTypeId, $entity->bundle())) {
-      $row['profile'] = 'Not enabled';
-    }
     return $row;
   }
 
@@ -1591,67 +1597,6 @@ abstract class LingotekManagementFormBase extends FormBase {
     catch (LingotekApiException $exception) {
       $this->messenger()->addError(t('The Tranlsation Profile change for @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
     }
-  }
-
-  /**
-   * Gets the source status of an entity in a format ready to display.
-   *
-   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
-   *   The entity.
-   *
-   * @return array
-   *   A render array.
-   */
-  protected function getSourceStatus(ContentEntityInterface $entity) {
-    $langcode_source = LingotekLocale::convertLingotek2Drupal($this->translationService->getSourceLocale($entity));
-    $language = $this->languageManager->getLanguage($langcode_source);
-    $source_status = $this->translationService->getSourceStatus($entity);
-    $data = [
-      'data' => [
-        '#type' => 'lingotek_source_status',
-        '#entity' => $entity,
-        '#language' => $language,
-        '#status' => $source_status,
-      ],
-    ];
-    if ($source_status == Lingotek::STATUS_EDITED && !$this->translationService->getDocumentId($entity)) {
-      $data['data']['#context']['status'] = strtolower(Lingotek::STATUS_REQUEST);
-    }
-    return $data;
-  }
-
-  /**
-   * Gets the translation status of an entity in a format ready to display.
-   *
-   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
-   *   The entity.
-   *
-   * @return array
-   *   A render array.
-   */
-  protected function getTranslationsStatuses(ContentEntityInterface &$entity) {
-    $statuses = $this->translationService->getTargetStatuses($entity);
-    /** @var \Drupal\lingotek\LingotekProfileInterface $profile */
-    $profile = $this->lingotekConfiguration->getEntityProfile($entity);
-    array_walk($statuses, function (&$status, $langcode) use ($entity, $profile) {
-      if ($profile !== NULL && $profile->hasDisabledTarget($langcode)) {
-        $status = Lingotek::STATUS_DISABLED;
-      }
-    });
-    $languages = $this->lingotekConfiguration->getEnabledLanguages();
-    foreach ($languages as $langcode => $language) {
-      if ($profile !== NULL && $profile->hasDisabledTarget($langcode)) {
-        $statuses[$langcode] = Lingotek::STATUS_DISABLED;
-      }
-    }
-    return [
-      'data' => [
-        '#type' => 'lingotek_target_statuses',
-        '#entity' => $entity,
-        '#source_langcode' => $entity->language()->getId(),
-        '#statuses' => $statuses,
-      ],
-    ];
   }
 
   /**

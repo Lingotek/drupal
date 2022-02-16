@@ -1,14 +1,16 @@
 <?php
 
-namespace Drupal\lingotek\Plugin\lingotek\FormComponent;
+namespace Drupal\lingotek\FormComponent;
 
 use Drupal\Component\Plugin\PluginInspectionInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 
 /**
  * Generic interface for Lingotek form plugins.
+ *
+ * @package Drupal\lingotek\FormComponent
  */
-interface FormComponentInterface extends PluginInspectionInterface, ContainerFactoryPluginInterface {
+interface LingotekFormComponentInterface extends PluginInspectionInterface, ContainerFactoryPluginInterface {
 
   /**
    * Establishes whether the plugin is applicable to the form.

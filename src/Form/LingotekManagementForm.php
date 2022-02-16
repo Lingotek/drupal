@@ -24,26 +24,6 @@ class LingotekManagementForm extends LingotekManagementFormBase {
   /**
    * {@inheritdoc}
    */
-  protected function getHeaders() {
-    $entity_type = $this->entityTypeManager->getDefinition($this->entityTypeId);
-    $properties = $this->entityFieldManager->getBaseFieldDefinitions($this->entityTypeId);
-    $has_bundles = $entity_type->get('bundle_entity_type') != 'bundle';
-    if ($has_bundles) {
-      $headers['bundle'] = $entity_type->getBundleLabel();
-    }
-    $headers += [
-      'title' => $has_bundles && $entity_type->hasKey('label') ? $properties[$entity_type->getKey('label')]->getLabel() : $entity_type->getLabel(),
-      'source' => $this->t('Source'),
-      'translations' => $this->t('Translations'),
-      'profile' => $this->t('Profile'),
-      'job_id' => $this->t('Job ID'),
-    ];
-    return $headers;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   protected function getFilteredEntities() {
     $items_per_page = $this->getItemsPerPage();
 

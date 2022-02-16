@@ -17,13 +17,15 @@ namespace Drupal\Tests\lingotek\Unit\Form {
   use Drupal\Core\Language\LanguageManagerInterface;
   use Drupal\Core\State\StateInterface;
   use Drupal\Core\TempStore\PrivateTempStoreFactory;
-  use Drupal\Core\Utility\LinkGeneratorInterface;
   use Drupal\language\ConfigurableLanguageInterface;
   use Drupal\lingotek\Form\LingotekManagementForm;
+  use Drupal\lingotek\FormComponent\LingotekFormComponentFieldManager;
   use Drupal\lingotek\LanguageLocaleMapperInterface;
   use Drupal\lingotek\LingotekConfigurationServiceInterface;
   use Drupal\lingotek\LingotekContentTranslationServiceInterface;
   use Drupal\lingotek\LingotekInterface;
+  use Drupal\lingotek\Plugin\LingotekFormComponent\Field\Profile;
+  use Drupal\lingotek\Plugin\LingotekFormComponent\Field\Title;
   use Drupal\Tests\UnitTestCase;
 
   /**
@@ -130,11 +132,11 @@ namespace Drupal\Tests\lingotek\Unit\Form {
     protected $state;
 
     /**
-     * The link generator.
+     * The form component field manager.
      *
-     * @var \Drupal\Core\Utility\LinkGeneratorInterface|\PHPUnit_Framework_MockObject_MockObject
+     * @var \Drupal\lingotek\FormComponent\LingotekFormComponentFieldManager|\PHPUnit_Framework_MockObject_MockObject
      */
-    protected $linkGenerator;
+    protected $formComponentFieldManager;
 
     protected function setUp(): void {
       parent::setUp();
@@ -156,7 +158,23 @@ namespace Drupal\Tests\lingotek\Unit\Form {
         ->getMock();
       $this->state = $this->createMock(StateInterface::class);
       $this->moduleHandler = $this->createMock(ModuleHandlerInterface::class);
-      $this->linkGenerator = $this->createMock(LinkGeneratorInterface::class);
+      $this->formComponentFieldManager = $this->createMock(LingotekFormComponentFieldManager::class);
+
+      $fieldTitle = $this->createMock(Title::class);
+      $fieldTitle->expects($this->any())
+        ->method('getHeader')
+        ->with('node')
+        ->willReturn('Title');
+      $fieldProfile = $this->createMock(Profile::class);
+      $fieldProfile->expects($this->any())
+        ->method('getHeader')
+        ->with('node')
+        ->willReturn('Profile');
+
+      $this->formComponentFieldManager->expects($this->any())
+        ->method('getApplicable')
+        ->with(['form_id' => 'lingotek_management', 'entity_type_id' => 'node'])
+        ->willReturn(['title' => $fieldTitle, 'profile' => $fieldProfile]);
 
       $this->form = new LingotekManagementForm(
         $this->connection,
@@ -173,7 +191,7 @@ namespace Drupal\Tests\lingotek\Unit\Form {
         'node',
         $this->entityFieldManager,
         $this->entityTypeBundleInfo,
-        $this->linkGenerator
+        $this->formComponentFieldManager
       );
       $this->form->setConfigFactory($this->getConfigFactoryStub(
         [
