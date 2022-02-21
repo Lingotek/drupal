@@ -13,6 +13,7 @@ use Drupal\Core\Plugin\PluginBase;
 use Drupal\lingotek\FieldProcessor\LingotekFieldProcessorInterface;
 use Drupal\lingotek\LingotekConfigTranslationServiceInterface;
 use Drupal\lingotek\LingotekConfigurationServiceInterface;
+use Drupal\lingotek\LingotekContentTranslationEntityRevisionResolver;
 use Drupal\lingotek\LingotekContentTranslationServiceInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -137,7 +138,7 @@ class LingotekBlockFieldProcessor extends PluginBase implements LingotekFieldPro
   /**
    * {@inheritdoc}
    */
-  public function extract(ContentEntityInterface &$entity, string $field_name, FieldDefinitionInterface $field_definition, array &$data, array &$visited = [], $use_last_revision = TRUE) {
+  public function extract(ContentEntityInterface &$entity, string $field_name, FieldDefinitionInterface $field_definition, array &$data, array &$visited = [], string $revision_mode = LingotekContentTranslationEntityRevisionResolver::RESOLVE_LATEST_TRANSLATION_AFFECTED) {
     foreach ($entity->get($field_name) as $delta => $field_item) {
       $pluginId = $field_item->get('plugin_id')->getValue();
       $block_instance = $field_item->getBlock();
@@ -158,7 +159,7 @@ class LingotekBlockFieldProcessor extends PluginBase implements LingotekFieldPro
       if (strpos($pluginId, 'block_content') === 0) {
         $uuid = $block_instance->getDerivativeId();
         if ($block = $this->entityRepository->loadEntityByUuid('block_content', $uuid)) {
-          $embedded_data['entity'] = $this->lingotekContentTranslation->getSourceData($block, $visited, $use_last_revision);
+          $embedded_data['entity'] = $this->lingotekContentTranslation->getSourceData($block, $visited, $revision_mode);
         }
       }
       $data[$field_name][$delta] = $embedded_data;

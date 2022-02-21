@@ -6,6 +6,7 @@ use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Plugin\PluginBase;
 use Drupal\lingotek\FieldProcessor\LingotekFieldProcessorInterface;
+use Drupal\lingotek\LingotekContentTranslationEntityRevisionResolver;
 
 /**
  * @LingotekFieldProcessor(
@@ -25,7 +26,7 @@ class LingotekTablefieldProcessor extends PluginBase implements LingotekFieldPro
   /**
    * {@inheritdoc}
    */
-  public function extract(ContentEntityInterface &$entity, string $field_name, FieldDefinitionInterface $field_definition, array &$data, array &$visited = [], $use_last_revision = TRUE) {
+  public function extract(ContentEntityInterface &$entity, string $field_name, FieldDefinitionInterface $field_definition, array &$data, array &$visited = [], string $revision_mode = LingotekContentTranslationEntityRevisionResolver::RESOLVE_LATEST_TRANSLATION_AFFECTED) {
     foreach ($entity->get($field_name) as $index => $field_item) {
       $tableValue = $field_item->value;
       $embedded_data = [];

@@ -15,6 +15,7 @@ use Drupal\Core\Plugin\PluginBase;
 use Drupal\lingotek\FieldProcessor\LingotekFieldProcessorInterface;
 use Drupal\lingotek\LingotekConfigTranslationServiceInterface;
 use Drupal\lingotek\LingotekConfigurationServiceInterface;
+use Drupal\lingotek\LingotekContentTranslationEntityRevisionResolver;
 use Drupal\lingotek\LingotekContentTranslationServiceInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -161,7 +162,7 @@ class LingotekLayoutBuilderATProcessor extends PluginBase implements LingotekFie
   /**
    * {@inheritdoc}
    */
-  public function extract(ContentEntityInterface &$entity, string $field_name, FieldDefinitionInterface $field_definition, array &$data, array &$visited = [], $use_last_revision = TRUE) {
+  public function extract(ContentEntityInterface &$entity, string $field_name, FieldDefinitionInterface $field_definition, array &$data, array &$visited = [], string $revision_mode = LingotekContentTranslationEntityRevisionResolver::RESOLVE_LATEST_TRANSLATION_AFFECTED) {
     // TODO: This could be in applies.
     $layoutBuilderAT = $this->moduleHandler->moduleExists('layout_builder_at');
     if ($layoutBuilderAT) {
@@ -196,7 +197,7 @@ class LingotekLayoutBuilderATProcessor extends PluginBase implements LingotekFie
           if (strpos($pluginIDName, 'inline_block') === 0) {
             $blockRevisionId = $blockConfig['block_revision_id'];
             if ($block = $this->entityTypeManager->getStorage('block_content')->loadRevision($blockRevisionId)) {
-              $data[$field_name]['entities']['block_content'][$blockRevisionId] = $this->lingotekContentTranslation->getSourceData($block, $visited, $use_last_revision);
+              $data[$field_name]['entities']['block_content'][$blockRevisionId] = $this->lingotekContentTranslation->getSourceData($block, $visited, $revision_mode);
             }
           }
         }

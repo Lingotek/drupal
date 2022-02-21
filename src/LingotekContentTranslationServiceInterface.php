@@ -176,12 +176,13 @@ interface LingotekContentTranslationServiceInterface {
    *   The entity which we want the source data.
    * @param array &$visited
    *   The array of already visited entities, avoiding cycles and infinite loops.
-   * @param bool $use_last_revision
-   *   Flag if we want to load the last revision, or we should operate on the passed one.
+   * @param string $revision_mode
+   *   The mode to use for resolving the revision.
    *
    * @return array
+   *   The source data extracted.
    */
-  public function getSourceData(ContentEntityInterface &$entity, &$visited = [], $use_last_revision = TRUE);
+  public function getSourceData(ContentEntityInterface &$entity, array &$visited = [], string $revision_mode = LingotekContentTranslationEntityRevisionResolver::RESOLVE_LATEST_TRANSLATION_AFFECTED);
 
   /**
    * Updates the entity hash.

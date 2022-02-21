@@ -13,6 +13,7 @@ use Drupal\Core\Plugin\PluginBase;
 use Drupal\lingotek\FieldProcessor\LingotekFieldProcessorInterface;
 use Drupal\lingotek\LingotekConfigTranslationServiceInterface;
 use Drupal\lingotek\LingotekConfigurationServiceInterface;
+use Drupal\lingotek\LingotekContentTranslationEntityRevisionResolver;
 use Drupal\lingotek\LingotekContentTranslationServiceInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -126,7 +127,7 @@ class LingotekCohesionLayoutProcessor extends PluginBase implements LingotekFiel
   /**
    * {@inheritdoc}
    */
-  public function extract(ContentEntityInterface &$entity, string $field_name, FieldDefinitionInterface $field_definition, array &$data, array &$visited = [], $use_last_revision = TRUE) {
+  public function extract(ContentEntityInterface &$entity, string $field_name, FieldDefinitionInterface $field_definition, array &$data, array &$visited = [], string $revision_mode = LingotekContentTranslationEntityRevisionResolver::RESOLVE_LATEST_TRANSLATION_AFFECTED) {
     $value = $entity->get($field_name)->value;
     $layout_canvas = new LayoutCanvas($value);
     foreach ($layout_canvas->iterateCanvas() as $element) {

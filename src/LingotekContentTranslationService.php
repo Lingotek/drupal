@@ -14,7 +14,6 @@ use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\EntityStorageException;
 use Drupal\Core\Entity\RevisionableEntityBundleInterface;
-use Drupal\Core\Entity\RevisionableInterface;
 use Drupal\Core\Entity\RevisionLogInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
@@ -96,6 +95,13 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
   protected $connection;
 
   /**
+   * The content entity revision resolver from where to extract the data from.
+   *
+   * @var \Drupal\lingotek\LingotekContentTranslationEntityRevisionResolverInterface
+   */
+  protected $contentRevisionResolver;
+
+  /**
    * Constructs a new LingotekContentTranslationService object.
    *
    * @param \Drupal\lingotek\LingotekInterface $lingotek
@@ -114,8 +120,10 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    *   The entity field manager.
    * @param \Drupal\Core\Database\Connection $connection
    *   The database connection object.
+   * @param \Drupal\lingotek\LingotekContentTranslationEntityRevisionResolverInterface $content_revision_resolver
+   *   The content revision resolver.
    */
-  public function __construct(LingotekInterface $lingotek, LanguageLocaleMapperInterface $language_locale_mapper, LingotekConfigurationServiceInterface $lingotek_configuration, LingotekConfigTranslationServiceInterface $lingotek_config_translation, EntityTypeManagerInterface $entity_type_manager, LanguageManagerInterface $language_manager, EntityFieldManagerInterface $entity_field_manager, Connection $connection) {
+  public function __construct(LingotekInterface $lingotek, LanguageLocaleMapperInterface $language_locale_mapper, LingotekConfigurationServiceInterface $lingotek_configuration, LingotekConfigTranslationServiceInterface $lingotek_config_translation, EntityTypeManagerInterface $entity_type_manager, LanguageManagerInterface $language_manager, EntityFieldManagerInterface $entity_field_manager, Connection $connection, LingotekContentTranslationEntityRevisionResolverInterface $content_revision_resolver) {
     $this->lingotek = $lingotek;
     $this->languageLocaleMapper = $language_locale_mapper;
     $this->lingotekConfiguration = $lingotek_configuration;
@@ -124,6 +132,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     $this->languageManager = $language_manager;
     $this->entityFieldManager = $entity_field_manager;
     $this->connection = $connection;
+    $this->contentRevisionResolver = $content_revision_resolver;
   }
 
   /**
@@ -571,19 +580,8 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
   /**
    * {@inheritdoc}
    */
-  public function getSourceData(ContentEntityInterface &$entity, &$visited = [], $use_last_revision = TRUE) {
-    // Logic adapted from Content Translation core module and TMGMT contrib
-    // module for pulling translatable field info from content entities.
-    $source_entity = NULL;
-    if ($entity instanceof RevisionableInterface) {
-      $storage = $this->entityTypeManager->getStorage($entity->getEntityTypeId());
-      if ($use_last_revision && $revision_id = $storage->getLatestTranslationAffectedRevisionId($entity->id(), $entity->getUntranslated()->language()->getId())) {
-        $source_entity = $storage->loadRevision($revision_id);
-      }
-      else {
-        $source_entity = $entity->getUntranslated();
-      }
-    }
+  public function getSourceData(ContentEntityInterface &$entity, &$visited = [], string $revision_mode = LingotekContentTranslationEntityRevisionResolver::RESOLVE_LATEST_TRANSLATION_AFFECTED) {
+    $source_entity = $this->contentRevisionResolver->resolve($entity, $revision_mode);
     $isParentEntity = count($visited) === 0;
     $visited[$entity->bundle()][] = $entity->id();
     $entity_type = $entity->getEntityType();
@@ -613,7 +611,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       /** @var \Drupal\lingotek\FieldProcessor\LingotekFieldProcessorInterface[] $field_processors */
       $field_processors = $field_processor_manager->getProcessorsForField($field_definitions[$field_name], $source_entity);
       foreach ($field_processors as $field_processor) {
-        $field_processor->extract($source_entity, $field_name, $field_definitions[$field_name], $data, $visited, $use_last_revision);
+        $field_processor->extract($source_entity, $field_name, $field_definitions[$field_name], $data, $visited, $revision_mode);
       }
     }
 
@@ -630,7 +628,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
   public function updateEntityHash(ContentEntityInterface $entity, $precalculated_source_data = []) {
     $visited = [];
     $source_data = !empty($precalculated_source_data) ? Json::encode($precalculated_source_data) :
-      Json::encode($this->getSourceData($entity, $visited, FALSE));
+      Json::encode($this->getSourceData($entity, $visited, LingotekContentTranslationEntityRevisionResolver::RESOLVE_SAME));
     if ($entity->lingotek_metadata->entity) {
       $entity->lingotek_metadata->entity->lingotek_hash = md5($source_data);
       $entity->lingotek_metadata->entity->save();
@@ -652,7 +650,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       $source_data = Json::encode($source_data);
       $hash = md5($source_data);
       $visited = [];
-      $old_source_data = $this->getSourceData($entity->original, $visited, FALSE);
+      $old_source_data = $this->getSourceData($entity->original, $visited, LingotekContentTranslationEntityRevisionResolver::RESOLVE_SAME);
       if (isset($old_source_data['_lingotek_metadata'])) {
         unset($old_source_data['_lingotek_metadata']['_entity_revision']);
       }

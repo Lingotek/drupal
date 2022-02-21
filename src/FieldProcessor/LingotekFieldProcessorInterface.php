@@ -4,6 +4,7 @@ namespace Drupal\lingotek\FieldProcessor;
 
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
+use Drupal\lingotek\LingotekContentTranslationEntityRevisionResolver;
 
 /**
  * A Lingotek field processor extracts data for upload and stores it on download.
@@ -33,10 +34,10 @@ interface LingotekFieldProcessorInterface {
    *   The data being extracted.
    * @param array $visited
    *   We register the entities already extracted, avoiding infinite cycles.
-   * @param bool $use_last_revision
-   *   Flag if we want to load the last revision, or we should operate on the passed one.
+   * @param string $revision_mode
+   *   The mode to use for resolving the revision.
    */
-  public function extract(ContentEntityInterface &$entity, string $field_name, FieldDefinitionInterface $field_definition, array &$data, array &$visited = [], $use_last_revision = TRUE);
+  public function extract(ContentEntityInterface &$entity, string $field_name, FieldDefinitionInterface $field_definition, array &$data, array &$visited = [], string $revision_mode = LingotekContentTranslationEntityRevisionResolver::RESOLVE_LATEST_TRANSLATION_AFFECTED);
 
   /**
    * Extract data for the given field in the entity.

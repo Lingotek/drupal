@@ -9,6 +9,7 @@ use Drupal\Core\Plugin\PluginBase;
 use Drupal\lingotek\Exception\LingotekContentEntityFieldTooLongStorageException;
 use Drupal\lingotek\FieldProcessor\LingotekFieldProcessorInterface;
 use Drupal\lingotek\LingotekConfigurationServiceInterface;
+use Drupal\lingotek\LingotekContentTranslationEntityRevisionResolver;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -65,7 +66,7 @@ class LingotekDefaultProcessor extends PluginBase implements LingotekFieldProces
   /**
    * {@inheritdoc}
    */
-  public function extract(ContentEntityInterface &$entity, string $field_name, FieldDefinitionInterface $field_definition, array &$data, array &$visited = [], $use_last_revision = TRUE) {
+  public function extract(ContentEntityInterface &$entity, string $field_name, FieldDefinitionInterface $field_definition, array &$data, array &$visited = [], string $revision_mode = LingotekContentTranslationEntityRevisionResolver::RESOLVE_LATEST_TRANSLATION_AFFECTED) {
     // If there is only one relevant attribute, upload it.
     // Get the column translatability configuration.
     module_load_include('inc', 'content_translation', 'content_translation.admin');

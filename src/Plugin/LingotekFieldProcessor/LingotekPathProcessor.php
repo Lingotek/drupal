@@ -10,6 +10,7 @@ use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginBase;
 use Drupal\lingotek\FieldProcessor\LingotekFieldProcessorInterface;
+use Drupal\lingotek\LingotekContentTranslationEntityRevisionResolver;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -89,7 +90,7 @@ class LingotekPathProcessor extends PluginBase implements LingotekFieldProcessor
   /**
    * {@inheritdoc}
    */
-  public function extract(ContentEntityInterface &$entity, string $field_name, FieldDefinitionInterface $field_definition, array &$data, array &$visited = [], $use_last_revision = TRUE) {
+  public function extract(ContentEntityInterface &$entity, string $field_name, FieldDefinitionInterface $field_definition, array &$data, array &$visited = [], string $revision_mode = LingotekContentTranslationEntityRevisionResolver::RESOLVE_LATEST_TRANSLATION_AFFECTED) {
     if ($entity->id()) {
       $source = '/' . $entity->toUrl()->getInternalPath();
       /** @var \Drupal\Core\Entity\EntityStorageInterface $aliasStorage */
