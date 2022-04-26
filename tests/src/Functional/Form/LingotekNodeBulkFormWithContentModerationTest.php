@@ -73,47 +73,47 @@ class LingotekNodeBulkFormWithContentModerationTest extends LingotekNodeBulkForm
 
     // Go to the bulk management form.
     $this->goToContentBulkManagementForm();
-    $assert_session->optionExists('filters[advanced_options][content_state]', 'All');
-    $assert_session->optionExists('filters[advanced_options][content_state]', 'archived');
-    $assert_session->optionExists('filters[advanced_options][content_state]', 'published');
-    $assert_session->optionExists('filters[advanced_options][content_state]', 'draft');
+    $assert_session->optionExists('filters[advanced_options][moderation_state]', 'All');
+    $assert_session->optionExists('filters[advanced_options][moderation_state]', 'archived');
+    $assert_session->optionExists('filters[advanced_options][moderation_state]', 'published');
+    $assert_session->optionExists('filters[advanced_options][moderation_state]', 'draft');
 
     // After we filter by "draft", there is no pager and the rows
     // selected are the ones expected.
     $update = [
-      'filters[advanced_options][content_state]' => 'draft',
+      'filters[advanced_options][moderation_state]' => 'draft',
     ];
     $this->drupalPostForm(NULL, $update, 'edit-filters-actions-submit');
     $assert_session->linkExists('Llamas are cool');
 
-    $this->assertFieldByName('filters[advanced_options][content_state]', 'draft', 'The value is retained in the filter.');
+    $this->assertFieldByName('filters[advanced_options][moderation_state]', 'draft', 'The value is retained in the filter.');
 
     // Change the content moderation state to published
     $this->saveAndKeepPublishedNodeForm($edit, 1);
     $this->goToContentBulkManagementForm();
 
     $update = [
-      'filters[advanced_options][content_state]' => 'published',
+      'filters[advanced_options][moderation_state]' => 'published',
     ];
     $this->drupalPostForm(NULL, $update, 'edit-filters-actions-submit');
     $assert_session->linkExists('Llamas are cool');
 
-    $this->assertFieldByName('filters[advanced_options][content_state]', 'published', 'The value is retained in the filter.');
+    $this->assertFieldByName('filters[advanced_options][moderation_state]', 'published', 'The value is retained in the filter.');
 
     // Change the content moderation state to archived
     $this->saveAndArchiveNodeForm($edit, 1);
     $this->goToContentBulkManagementForm();
 
     $update = [
-      'filters[advanced_options][content_state]' => 'archived',
+      'filters[advanced_options][moderation_state]' => 'archived',
     ];
     $this->drupalPostForm(NULL, $update, 'edit-filters-actions-submit');
     $assert_session->linkExists('Llamas are cool');
 
-    $this->assertFieldByName('filters[advanced_options][content_state]', 'archived', 'The value is retained in the filter.');
+    $this->assertFieldByName('filters[advanced_options][moderation_state]', 'archived', 'The value is retained in the filter.');
 
     $update = [
-      'filters[advanced_options][content_state]' => 'published',
+      'filters[advanced_options][moderation_state]' => 'published',
     ];
     $this->drupalPostForm(NULL, $update, 'edit-filters-actions-submit');
 

@@ -43,11 +43,4 @@ class ContentType extends LingotekFormComponentFieldBase {
     return $entity->getEntityType()->getLabel();
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  protected function sort($entity_type_id) {
-    return [];
-  }
-
 }

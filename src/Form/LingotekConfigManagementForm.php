@@ -145,7 +145,7 @@ class LingotekConfigManagementForm extends FormBase {
 
     $this->filter = $this->getFilter();
     $temp_store = $this->getFilterTempStore();
-    $jobFilter = $temp_store->get('job');
+    $jobFilter = $temp_store->get('job_id');
 
     // Create the headers first so they can be used for sorting.
     $headers = [
@@ -311,7 +311,7 @@ class LingotekConfigManagementForm extends FormBase {
         '#attributes' => ['class' => ['form-item']],
       ];
     }
-    $form['filters']['wrapper']['job'] = [
+    $form['filters']['wrapper']['job_id'] = [
       '#type' => 'lingotek_job_id',
       '#title' => $this->t('Job ID'),
       '#default_value' => $jobFilter,
@@ -395,13 +395,13 @@ class LingotekConfigManagementForm extends FormBase {
    */
   public function filterForm(array &$form, FormStateInterface $form_state) {
     $value = $form_state->getValue(['filters', 'wrapper', 'bundle']);
-    $job_id = $form_state->getValue(['filters', 'wrapper', 'job']) ?: NULL;
+    $job_id = $form_state->getValue(['filters', 'wrapper', 'job_id']) ?: NULL;
     $label = $form_state->getValue(['filters', 'wrapper', 'label']) ?: NULL;
 
     /** @var \Drupal\user\PrivateTempStore $temp_store */
     $temp_store = $this->getFilterTempStore();
     $temp_store->set('bundle', $value);
-    $temp_store->set('job', $job_id);
+    $temp_store->set('job_id', $job_id);
     $temp_store->set('label', trim($label));
     $this->filter = $value;
     // If we apply any filters, we need to go to the first page again.
@@ -420,7 +420,7 @@ class LingotekConfigManagementForm extends FormBase {
     /** @var \Drupal\user\PrivateTempStore $temp_store */
     $temp_store = $this->getFilterTempStore();
     $temp_store->delete('bundle');
-    $temp_store->delete('job');
+    $temp_store->delete('job_id');
     $temp_store->delete('label');
   }
 

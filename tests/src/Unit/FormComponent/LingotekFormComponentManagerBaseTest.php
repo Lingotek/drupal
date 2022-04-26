@@ -294,4 +294,11 @@ class TestLingotekFormComponent implements LingotekFormComponentInterface {
     return $this->pluginDefinition;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getGroupMachineName() {
+    return $this->pluginDefinition['group'];
+  }
+
 }

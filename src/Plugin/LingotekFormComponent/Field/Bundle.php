@@ -87,7 +87,7 @@ class Bundle extends LingotekFormComponentFieldBase {
       return $this->t('Bundle');
     }
     $entity_type = $this->getEntityType($entity_type_id);
-    return array_merge(['data' => $entity_type->getBundleLabel()], $this->sort($entity_type_id));
+    return ['data' => $entity_type->getBundleLabel()];
   }
 
   /**
@@ -99,19 +99,6 @@ class Bundle extends LingotekFormComponentFieldBase {
     }
 
     return $data ?? '';
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function sort($entity_type_id) {
-    if ($entity_type = $this->getEntityType($entity_type_id)) {
-      return [
-        'field' => 'entity_table.' . $entity_type->getKey('bundle'),
-      ];
-    }
-
-    return [];
   }
 
 }

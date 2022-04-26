@@ -61,6 +61,14 @@ interface LingotekFormComponentInterface extends PluginInspectionInterface, Cont
   public function getGroup();
 
   /**
+   * Creates a machine name for the plugin's group.
+   *
+   * @return string|null
+   *   The group's machine name.
+   */
+  public function getGroupMachineName();
+
+  /**
    * Gets the plugin's weight.
    *
    * @return int

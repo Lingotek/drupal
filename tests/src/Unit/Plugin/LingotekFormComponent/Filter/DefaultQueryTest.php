@@ -1,33 +1,42 @@
 <?php
 
-namespace Drupal\Tests\lingotek\Unit\Plugin\LingotekFormComponent\Field;
+namespace Drupal\Tests\lingotek\Unit\Plugin\LingotekFormComponent\Filter;
 
-use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Database\Connection;
+use Drupal\Core\Database\Query\PagerSelectExtender;
 use Drupal\Core\Entity\ContentEntityTypeInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\lingotek\LingotekConfigurationServiceInterface;
 use Drupal\lingotek\LingotekContentTranslationServiceInterface;
-use Drupal\lingotek\Plugin\LingotekFormComponent\Field\Bundle;
+use Drupal\lingotek\Plugin\LingotekFormComponent\Filter\DefaultQuery;
 use Drupal\Tests\UnitTestCase;
 
 /**
- * Unit test for the bundle field form component.
+ * Unit test for the default query filter form component.
  *
- * @coversDefaultClass \Drupal\lingotek\Plugin\LingotekFormComponent\Field\Bundle
+ * @coversDefaultClass \Drupal\lingotek\Plugin\LingotekFormComponent\Filter\DefaultQuery
  * @group lingotek
  * @preserve GlobalState disabled
  */
-class BundleTest extends UnitTestCase {
+class DefaultQueryTest extends UnitTestCase {
 
   /**
    * The class instance under test.
    *
-   * @var \Drupal\lingotek\Plugin\LingotekFormComponent\Field\Bundle
+   * @var \Drupal\lingotek\Plugin\LingotekFormComponent\Filter\DefaultQuery
    */
-  protected $field;
+  protected $filter;
+
+  /**
+   * The connection object on which to run queries.
+   *
+   * @var \Drupal\Core\Database\Connection|\PHPUnit_Framework_MockObject_MockObject
+   */
+  protected $connection;
 
   /**
    * The mocked language manager.
@@ -51,7 +60,7 @@ class BundleTest extends UnitTestCase {
   protected $entityTypeManager;
 
   /**
-   * The entity_type.bundle.info service.
+   * The mocked entity_type.bundle.info service.
    *
    * @var \Drupal\Core\Entity\EntityTypeBundleInfoInterface|\PHPUnit\Framework\MockObject\MockObject
    */
@@ -77,104 +86,89 @@ class BundleTest extends UnitTestCase {
   protected function setUp(): void {
     parent::setUp();
 
+    $this->connection = $this->getMockBuilder(Connection::class)
+      ->disableOriginalConstructor()
+      ->getMock();
+
     $this->entityType = $this->createMock(ContentEntityTypeInterface::class);
     $this->entityType->expects($this->any())
       ->method('getBundleLabel')
       ->willReturn(new TranslatableMarkup("My Bundle Label"));
     $this->entityType->expects($this->any())
       ->method('getKey')
-      ->with('bundle')
-      ->willReturn('bundle_key');
+      ->withConsecutive(['id'], ['langcode'], ['bundle'])
+      ->willReturnOnConsecutiveCalls('id', 'langcode', 'bundle');
 
     $this->entityTypeManager = $this->createMock(EntityTypeManagerInterface::class);
     $this->entityTypeManager->expects($this->any())
       ->method('getDefinition')
       ->with('my_entity_type_id')
       ->willReturn($this->entityType);
+    $this->entityTypeBundleInfo = $this->createMock(EntityTypeBundleInfoInterface::class);
     $this->languageManager = $this->createMock(LanguageManagerInterface::class);
     $this->lingotekConfiguration = $this->createMock(LingotekConfigurationServiceInterface::class);
     $this->lingotekContentTranslation = $this->createMock(LingotekContentTranslationServiceInterface::class);
-    $this->entityTypeBundleInfo = $this->createMock(EntityTypeBundleInfoInterface::class);
-    $this->field = new Bundle([], 'bundle', [], $this->entityTypeManager, $this->languageManager, $this->lingotekConfiguration, $this->lingotekContentTranslation, $this->entityTypeBundleInfo);
+    $this->filter = new DefaultQuery([], 'default', ['id' => 'default'], $this->entityTypeManager, $this->entityTypeBundleInfo, $this->languageManager, $this->lingotekConfiguration, $this->lingotekContentTranslation, $this->connection);
 
     /** @var \Drupal\Core\StringTranslation\TranslationInterface $translation */
     $translation = $this->getStringTranslationStub();
-    $this->field->setStringTranslation($translation);
-  }
-
-  /**
-   * @covers ::getHeader
-   */
-  public function testGetHeaderWithNoEntityType() {
-    $header = $this->field->getHeader();
-    $this->assertSame('Bundle', $header->getUntranslatedString());
-  }
-
-  /**
-   * @covers ::getHeader
-   */
-  public function testGetHeader() {
-    $header = $this->field->getHeader('my_entity_type_id');
-    $this->assertIsArray($header);
-    $this->assertSame('My Bundle Label', $header['data']->getUntranslatedString());
+    $this->filter->setStringTranslation($translation);
   }
 
   /**
    * @covers ::isApplicable
    */
-  public function testIsApplicableWithNoEntityType() {
-    $this->assertTrue($this->field->isApplicable());
+  public function testIsApplicable() {
+    $this->assertTrue($this->filter->isApplicable());
   }
 
   /**
-   * @covers ::isApplicable
-   * @dataProvider dataProviderIsApplicable
+   * @covers ::getSubmittedValue
    */
-  public function testIsApplicable($bundle, $expected) {
-    $arguments = ['entity_type_id' => 'my_entity_type_id'];
-    $this->entityType->expects($this->once())
-      ->method('get')
-      ->with('bundle_entity_type')
-      ->willReturn($bundle);
-    $this->assertSame($expected, $this->field->isApplicable($arguments));
+  public function testGetSubmittedValue() {
+    $value = [];
+    $this->assertTrue($this->filter->getSubmittedValue($value));
   }
 
   /**
-   * Data provider for testIsApplicable.
-   *
-   * @return array
-   *   [bundle_entity_type, expected]
+   * @covers ::buildElement
    */
-  public function dataProviderIsApplicable() {
-    yield "has bundle" => ['my_bundle_id', TRUE];
-    yield "no bundle" => [NULL, FALSE];
-    yield "default bundle" => ['bundle', FALSE];
+  public function testBuildElement() {
+    $build = $this->filter->buildElement();
+    $this->assertEmpty($build);
   }
 
   /**
-   * @covers ::getData
+   * @covers ::filter
    */
-  public function testGetData() {
-    $bundleDefinitions = [
-      'bundle_entity_type' => [
-        'label' => 'My Entity Type ID',
-        'translatable' => TRUE,
-      ],
-    ];
+  public function testFilter() {
+    $select = $this->getMockBuilder(PagerSelectExtender::class)->disableOriginalConstructor()->getMock();
+    $select->expects(($this->any()))
+      ->method('extend')
+      ->with('\Drupal\Core\Database\Query\PagerSelectExtender')
+      ->willReturnSelf();
+    $select->expects(($this->any()))
+      ->method('fields')
+      ->with('entity_table', ['id'])
+      ->willReturnSelf();
 
-    $entity = $this->createMock(ContentEntityInterface::class);
-    $entity->expects($this->once())
-      ->method('getEntityTypeId')
-      ->willReturn('my_entity_type_id');
-    $entity->expects($this->once())
-      ->method('bundle')
-      ->willReturn('bundle_entity_type');
-    $this->entityTypeBundleInfo->expects($this->once())
-      ->method('getBundleInfo')
+    // Assert that condition is called filtering by the undefined language.
+    $select->expects($this->any())
+      ->method('condition')
+      ->with('entity_table.langcode', 'und', '!=')
+      ->willReturnSelf();
+
+    $this->connection->expects($this->once())
+      ->method('select')
+      ->willReturn($select);
+
+    $entityType = $this->createMock(EntityTypeInterface::class);
+    $this->entityTypeManager->expects($this->exactly(1))
+      ->method('getDefinition')
       ->with('my_entity_type_id')
-      ->willReturn($bundleDefinitions);
+      ->willReturn($entityType);
 
-    $this->assertSame('My Entity Type ID', $this->field->getData($entity));
+    $this->filter->filter('my_entity_type_id', [], 'value', $select);
   }
 
 }

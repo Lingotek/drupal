@@ -74,7 +74,7 @@ trait LingotekFormComponentBundleTrait {
   protected function hasBundles(string $entity_type_id) {
     $entity_type = $this->getEntityType($entity_type_id);
     $bundle_entity_type = $entity_type->get('bundle_entity_type');
-    return $bundle_entity_type ? $bundle_entity_type != 'bundle' : FALSE;
+    return $bundle_entity_type && ($bundle_entity_type !== 'bundle');
   }
 
 }

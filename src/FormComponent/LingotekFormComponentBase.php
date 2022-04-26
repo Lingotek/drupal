@@ -5,6 +5,7 @@ namespace Drupal\lingotek\FormComponent;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Plugin\PluginBase;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\lingotek\LingotekConfigurationServiceInterface;
 use Drupal\lingotek\LingotekContentTranslationServiceInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -93,6 +94,21 @@ abstract class LingotekFormComponentBase extends PluginBase implements LingotekF
   }
 
   /**
+   * Prevents serializing the container in children when the form is submitted.
+   *
+   * For some reason DependencySerializationTrait doesn't do the trick. Because
+   * these classes should get serialized only when performing a batch operation,
+   * and because they're not needed when the form object is unserialized, there
+   * should be no need to implement __wakeup().
+   *
+   * @return array
+   *   The properties to maintain.
+   */
+  public function __sleep() {
+    return [];
+  }
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
@@ -148,6 +164,21 @@ abstract class LingotekFormComponentBase extends PluginBase implements LingotekF
   public function getGroup() {
     if ($group = $this->pluginDefinition['group'] ?? NULL) {
       return $group;
+    }
+
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getGroupMachineName() {
+    if ($group = $this->pluginDefinition['group'] ?? NULL) {
+      if ($group instanceof TranslatableMarkup) {
+        $group = $group->getUntranslatedString();
+      }
+
+      return preg_replace("/[^a-z0-9_]+/", '_', strtolower($group));
     }
 
     return NULL;

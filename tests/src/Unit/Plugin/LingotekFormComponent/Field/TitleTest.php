@@ -149,7 +149,6 @@ class TitleTest extends UnitTestCase {
     $header = $this->field->getHeader('my_entity_type_id');
     $this->assertIsArray($header);
     $this->assertSame('My Bundle Label', $header['data']->getUntranslatedString());
-    $this->assertSame('entity_table.label_key', $header['field']);
   }
 
   /**

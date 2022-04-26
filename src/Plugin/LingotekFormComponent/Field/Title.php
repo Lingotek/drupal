@@ -38,7 +38,7 @@ class Title extends LingotekFormComponentFieldBase {
     $properties = $field_manager->getBaseFieldDefinitions($entity_type_id);
     $header = $this->hasBundles($entity_type_id) && $entity_type->hasKey('label') ? $properties[$entity_type->getKey('label')]->getLabel() : $entity_type->getLabel();
 
-    return array_merge(['data' => $header], $this->sort($entity_type_id));
+    return ['data' => $header];
   }
 
   /**
@@ -46,19 +46,6 @@ class Title extends LingotekFormComponentFieldBase {
    */
   public function getData(EntityInterface $entity) {
     return $entity->hasLinkTemplate('canonical') ? Link::fromTextAndUrl($entity->label(), $entity->toUrl())->toString() : $entity->label();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function sort($entity_type_id) {
-    if ($entity_type = $this->getEntityType($entity_type_id)) {
-      return [
-        'field' => 'entity_table.' . $entity_type->getKey('label'),
-      ];
-    }
-
-    return [];
   }
 
 }

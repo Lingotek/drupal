@@ -27,10 +27,10 @@ class LingotekJobManagementConfigForm extends LingotekConfigManagementForm {
   public function buildForm(array $form, FormStateInterface $form_state, $job_id = NULL) {
     $this->jobId = $job_id;
     $temp_store = $this->getFilterTempStore();
-    $temp_store->set('job', $job_id);
+    $temp_store->set('job_id', $job_id);
     $form = parent::buildForm($form, $form_state);
-    $form['filters']['wrapper']['job']['#access'] = FALSE;
-    $form['filters']['wrapper']['job']['#default_value'] = $this->jobId;
+    $form['filters']['wrapper']['job_id']['#access'] = FALSE;
+    $form['filters']['wrapper']['job_id']['#default_value'] = $this->jobId;
     $form['options']['job_id']['#access'] = FALSE;
     $form['options']['job_id']['#default_value'] = $this->jobId;
 

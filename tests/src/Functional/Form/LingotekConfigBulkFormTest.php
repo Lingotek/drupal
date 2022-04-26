@@ -1296,7 +1296,7 @@ class LingotekConfigBulkFormTest extends LingotekTestBase {
 
     // After we filter by an unexisting job, there is no content and no rows.
     $edit = [
-      'filters[wrapper][job]' => 'this job does not exist',
+      'filters[wrapper][job_id]' => 'this job does not exist',
     ];
     $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
     $this->assertText('No content available');
@@ -1334,7 +1334,7 @@ class LingotekConfigBulkFormTest extends LingotekTestBase {
     // After we filter by prime, there is no pager and the rows
     // selected are the ones expected.
     $edit = [
-      'filters[wrapper][job]' => 'prime',
+      'filters[wrapper][job_id]' => 'prime',
     ];
     $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
     foreach ([1, 2, 3, 5, 7] as $j) {
@@ -1346,7 +1346,7 @@ class LingotekConfigBulkFormTest extends LingotekTestBase {
     // After we filter by even, there is no pager and the rows selected are the
     // ones expected.
     $edit = [
-      'filters[wrapper][job]' => 'even',
+      'filters[wrapper][job_id]' => 'even',
     ];
     $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
     foreach ([4, 6, 8] as $j) {

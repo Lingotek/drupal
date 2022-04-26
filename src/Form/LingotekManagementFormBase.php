@@ -27,6 +27,7 @@ use Drupal\lingotek\Exception\LingotekDocumentTargetAlreadyCompletedException;
 use Drupal\lingotek\Exception\LingotekPaymentRequiredException;
 use Drupal\lingotek\Exception\LingotekProcessedWordsLimitException;
 use Drupal\lingotek\FormComponent\LingotekFormComponentFieldManager;
+use Drupal\lingotek\FormComponent\LingotekFormComponentFilterManager;
 use Drupal\lingotek\Helpers\LingotekManagementFormHelperTrait;
 use Drupal\lingotek\LanguageLocaleMapperInterface;
 use Drupal\lingotek\Lingotek;
@@ -144,6 +145,13 @@ abstract class LingotekManagementFormBase extends FormBase {
   protected $headers = NULL;
 
   /**
+   * Available form-filter plugins.
+   *
+   * @var \Drupal\lingotek\FormComponent\FormComponentFilterInterface[]
+   */
+  protected $formFilters = [];
+
+  /**
    * Constructs a new LingotekManagementFormBase object.
    *
    * @param \Drupal\Core\Database\Connection $connection
@@ -175,8 +183,10 @@ abstract class LingotekManagementFormBase extends FormBase {
    *   The entity type bundle info.
    * @param \Drupal\lingotek\FormComponent\LingotekFormComponentFieldManager $form_field_manager
    *   The form-field plugin manager.
+   * @param \Drupal\lingotek\FormComponent\LingotekFormComponentFilterManager $form_filter_manager
+   *   The form-filter plugin manager.
    */
-  public function __construct(Connection $connection, EntityTypeManagerInterface $entity_type_manager, LanguageManagerInterface $language_manager, LingotekInterface $lingotek, LingotekConfigurationServiceInterface $lingotek_configuration, LanguageLocaleMapperInterface $language_locale_mapper, ContentTranslationManagerInterface $content_translation_manager, LingotekContentTranslationServiceInterface $translation_service, PrivateTempStoreFactory $temp_store_factory, StateInterface $state, ModuleHandlerInterface $module_handler, $entity_type_id, EntityFieldManagerInterface $entity_field_manager, EntityTypeBundleInfoInterface $entity_type_bundle_info, LingotekFormComponentFieldManager $form_field_manager) {
+  public function __construct(Connection $connection, EntityTypeManagerInterface $entity_type_manager, LanguageManagerInterface $language_manager, LingotekInterface $lingotek, LingotekConfigurationServiceInterface $lingotek_configuration, LanguageLocaleMapperInterface $language_locale_mapper, ContentTranslationManagerInterface $content_translation_manager, LingotekContentTranslationServiceInterface $translation_service, PrivateTempStoreFactory $temp_store_factory, StateInterface $state, ModuleHandlerInterface $module_handler, $entity_type_id, EntityFieldManagerInterface $entity_field_manager, EntityTypeBundleInfoInterface $entity_type_bundle_info, LingotekFormComponentFieldManager $form_field_manager, LingotekFormComponentFilterManager $form_filter_manager) {
     $this->connection = $connection;
     $this->entityTypeManager = $entity_type_manager;
     $this->languageManager = $language_manager;
@@ -197,6 +207,7 @@ abstract class LingotekManagementFormBase extends FormBase {
       'entity_type_id' => $this->entityTypeId,
     ];
     $this->formFields = $form_field_manager->getApplicable($form_component_arguments);
+    $this->formFilters = $form_filter_manager->getApplicable($form_component_arguments);
   }
 
   /**
@@ -218,7 +229,8 @@ abstract class LingotekManagementFormBase extends FormBase {
       \Drupal::routeMatch()->getParameter('entity_type_id'),
       $container->get('entity_field.manager'),
       $container->get('entity_type.bundle.info'),
-      $container->get('plugin.manager.lingotek_form_field')
+      $container->get('plugin.manager.lingotek_form_field'),
+      $container->get('plugin.manager.lingotek_form_filter')
     );
   }
 
@@ -230,22 +242,8 @@ abstract class LingotekManagementFormBase extends FormBase {
       return $redirect;
     }
 
-    $temp_store = $this->tempStoreFactory->get($this->getTempStorageFilterKey());
-
-    $labelFilter = $temp_store->get('label');
-    $bundleFilter = $temp_store->get('bundle');
-    $jobFilter = $temp_store->get('job');
-    $documentIdFilter = $temp_store->get('document_id');
-    $entityIdFilter = $temp_store->get('entity_id');
-    $sourceLanguageFilter = $temp_store->get('source_language');
-    $sourceStatusFilter = $temp_store->get('source_status');
-    $targetStatusFilter = $temp_store->get('target_status');
-    $contentStateFilter = $temp_store->get('content_state');
-    $profileFilter = $temp_store->get('profile');
-
     // Add the filters if any.
-    $filters = $this->getFilters();
-    if (!empty($filters)) {
+    if ($filters = $this->getFilters()) {
       $form['filters'] = [
         '#type' => 'details',
         '#title' => $this->t('Filter'),
@@ -253,97 +251,10 @@ abstract class LingotekManagementFormBase extends FormBase {
         '#weight' => 5,
         '#tree' => TRUE,
       ];
-      $form['filters']['wrapper'] = [
-        '#type' => 'container',
-        '#attributes' => ['class' => ['form--inline', 'clearfix']],
-      ];
+
       foreach ($filters as $filter_id => $filter) {
-        $form['filters']['wrapper'][$filter_id] = $filter;
+        $form['filters'][$filter_id] = $filter;
       }
-      // Advanced filters
-      $form['filters']['advanced_options'] = [
-        '#type' => 'container',
-        '#attributes' => ['class' => ['form--inline', 'clearfix']],
-      ];
-      $form['filters']['advanced_options'] = [
-        '#type' => 'details',
-        '#title' => $this->t('Show advanced options'),
-        '#title_display' => 'before',
-        '#attributes' => ['class' => ['form--inline', 'clearfix']],
-      ];
-      $form['filters']['advanced_options']['document_id'] = [
-        '#type' => 'textfield',
-        '#size' => 35,
-        '#title' => $this->t('Document ID'),
-        '#description' => $this->t('You can indicate multiple comma-separated values.'),
-        '#default_value' => $documentIdFilter,
-       ];
-      $form['filters']['advanced_options']['entity_id'] = [
-        '#type' => 'textfield',
-        '#title' => $this->t('Entity ID'),
-        '#description' => $this->t('You can indicate multiple comma-separated values.'),
-        '#size' => 35,
-        '#default_value' => $entityIdFilter,
-      ];
-      $form['filters']['advanced_options']['source_language'] = [
-        '#type' => 'select',
-        '#title' => $this->t('Source language'),
-        '#options' => ['' => $this->t('All languages')] + $this->getAllLanguages(),
-        '#default_value' => $sourceLanguageFilter,
-      ];
-      $form['filters']['advanced_options']['source_status'] = [
-        '#type' => 'select',
-        '#title' => $this->t('Source Status'),
-        '#default_value' => $sourceStatusFilter,
-        '#options' => [
-          '' => $this->t('All'),
-          'UPLOAD_NEEDED' => $this->t('Upload Needed'),
-          Lingotek::STATUS_CURRENT => $this->t('Current'),
-          Lingotek::STATUS_IMPORTING => $this->t('Importing'),
-          Lingotek::STATUS_EDITED => $this->t('Edited'),
-          Lingotek::STATUS_CANCELLED => $this->t('Cancelled'),
-          Lingotek::STATUS_ERROR => $this->t('Error'),
-        ],
-      ];
-      $form['filters']['advanced_options']['target_status'] = [
-        '#type' => 'select',
-        '#title' => $this->t('Target Status'),
-        '#default_value' => $targetStatusFilter,
-        '#options' => [
-          '' => $this->t('All'),
-          Lingotek::STATUS_CURRENT => $this->t('Current'),
-          Lingotek::STATUS_EDITED => $this->t('Edited'),
-          Lingotek::STATUS_PENDING => $this->t('In Progress'),
-          Lingotek::STATUS_READY => $this->t('Ready'),
-          Lingotek::STATUS_INTERMEDIATE => $this->t('Interim'),
-          Lingotek::STATUS_REQUEST => $this->t('Not Requested'),
-          Lingotek::STATUS_CANCELLED => $this->t('Cancelled'),
-          Lingotek::STATUS_ERROR => $this->t('Error'),
-        ],
-      ];
-      if ($this->moduleHandler->moduleExists('content_moderation')) {
-        $workflow = $this->entityTypeManager->getStorage('workflow')->load('editorial');
-        if ($workflow != NULL) {
-          $states = $workflow->getTypePlugin()->getStates();
-          $options = ['' => $this->t('All')];
-          foreach ($states as $state_id => $state) {
-            $options[$state_id] = $state->label();
-          }
-          $form['filters']['advanced_options']['content_state'] = [
-            '#type' => 'select',
-            '#title' => $this->t('Content State'),
-            '#default_value' => $contentStateFilter,
-            '#options' => $options,
-          ];
-        }
-      }
-      $form['filters']['advanced_options']['profile'] = [
-        '#type' => 'select',
-        '#title' => $this->t('Profile'),
-        '#options' => ['' => $this->t('All')] + $this->lingotekConfiguration->getProfileOptions(),
-        '#multiple' => TRUE,
-        '#default_value' => $profileFilter,
-      ];
 
       // Filter actions
       $form['filters']['actions'] = [
@@ -446,14 +357,6 @@ abstract class LingotekManagementFormBase extends FormBase {
   abstract protected function getTempStorageFilterKey();
 
   /**
-   * Gets the filter keys so we can persist or clear filtering options.
-   *
-   * @return string[]
-   *   Array of filter identifiers.
-   */
-  abstract protected function getFilterKeys();
-
-  /**
    * Form submission handler for resetting the filters.
    *
    * @param array $form
@@ -462,13 +365,8 @@ abstract class LingotekManagementFormBase extends FormBase {
    *   The current state of the form.
    */
   public function resetFilterForm(array &$form, FormStateInterface $form_state) {
-    /** @var \Drupal\user\PrivateTempStore $temp_store */
     $temp_store = $this->tempStoreFactory->get($this->getTempStorageFilterKey());
-    $keys = $this->getFilterKeys();
-    foreach ($keys as $key) {
-      // Reset the filter, no matter if it's under 'wrapper' or 'advanced_filters.'
-      $temp_store->delete($key[1]);
-    }
+    $temp_store->delete('filters');
   }
 
   /**
@@ -482,15 +380,8 @@ abstract class LingotekManagementFormBase extends FormBase {
   public function filterForm(array &$form, FormStateInterface $form_state) {
     /** @var \Drupal\user\PrivateTempStore $temp_store */
     $temp_store = $this->tempStoreFactory->get($this->getTempStorageFilterKey());
-    $keys = $this->getFilterKeys();
-    $trimmableKeys = ['label'];
-    foreach ($keys as $key) {
-      if (in_array($key[1], $trimmableKeys)) {
-        $form_state->setValue(['filters', $key[0], $key[1]], trim($form_state->getValue(['filters', $key[0], $key[1]])));
-      }
-      // This sets and gets the values of the specific key. $key[0] can be either 'wrapper' or 'advanced_filters', and $key[1] is the specific filter itself.
-      $temp_store->set($key[1], $form_state->getValue(['filters', $key[0], $key[1]]));
-    }
+    $values = $form_state->getValue('filters') ?? [];
+    $temp_store->set('filters', $values);
     // If we apply any filters, we need to go to the first page again.
     $form_state->setRedirect('<current>');
   }

@@ -13,6 +13,7 @@ use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Drupal\lingotek\FormComponent\LingotekFormComponentFieldManager;
+use Drupal\lingotek\FormComponent\LingotekFormComponentFilterManager;
 use Drupal\lingotek\LanguageLocaleMapperInterface;
 use Drupal\lingotek\LingotekConfigurationServiceInterface;
 use Drupal\lingotek\LingotekContentTranslationServiceInterface;
@@ -60,9 +61,11 @@ class LingotekJobManagementContentEntitiesForm extends LingotekManagementFormBas
    *   The entity type bundle info.
    * @param \Drupal\lingotek\FormComponent\LingotekFormComponentFieldManager $form_field_manager
    *   The form-field plugin manager.
+   * @param \Drupal\lingotek\FormComponent\LingotekFormComponentFilterManager $form_filter_manager
+   *   The form-filter plugin manager.
    */
-  public function __construct(Connection $connection, EntityTypeManagerInterface $entity_type_manager, LanguageManagerInterface $language_manager, LingotekInterface $lingotek, LingotekConfigurationServiceInterface $lingotek_configuration, LanguageLocaleMapperInterface $language_locale_mapper, ContentTranslationManagerInterface $content_translation_manager, LingotekContentTranslationServiceInterface $translation_service, PrivateTempStoreFactory $temp_store_factory, StateInterface $state, ModuleHandlerInterface $module_handler, EntityFieldManagerInterface $entity_field_manager = NULL, EntityTypeBundleInfoInterface $entity_type_bundle_info = NULL, LingotekFormComponentFieldManager $form_field_manager) {
-    parent::__construct($connection, $entity_type_manager, $language_manager, $lingotek, $lingotek_configuration, $language_locale_mapper, $content_translation_manager, $translation_service, $temp_store_factory, $state, $module_handler, NULL, $entity_field_manager, $entity_type_bundle_info, $form_field_manager);
+  public function __construct(Connection $connection, EntityTypeManagerInterface $entity_type_manager, LanguageManagerInterface $language_manager, LingotekInterface $lingotek, LingotekConfigurationServiceInterface $lingotek_configuration, LanguageLocaleMapperInterface $language_locale_mapper, ContentTranslationManagerInterface $content_translation_manager, LingotekContentTranslationServiceInterface $translation_service, PrivateTempStoreFactory $temp_store_factory, StateInterface $state, ModuleHandlerInterface $module_handler, EntityFieldManagerInterface $entity_field_manager = NULL, EntityTypeBundleInfoInterface $entity_type_bundle_info = NULL, LingotekFormComponentFieldManager $form_field_manager, LingotekFormComponentFilterManager $form_filter_manager) {
+    parent::__construct($connection, $entity_type_manager, $language_manager, $lingotek, $lingotek_configuration, $language_locale_mapper, $content_translation_manager, $translation_service, $temp_store_factory, $state, $module_handler, NULL, $entity_field_manager, $entity_type_bundle_info, $form_field_manager, $form_filter_manager);
   }
 
   /**
@@ -83,7 +86,8 @@ class LingotekJobManagementContentEntitiesForm extends LingotekManagementFormBas
       $container->get('module_handler'),
       $container->get('entity_field.manager'),
       $container->get('entity_type.bundle.info'),
-      $container->get('plugin.manager.lingotek_form_field')
+      $container->get('plugin.manager.lingotek_form_field'),
+      $container->get('plugin.manager.lingotek_form_filter')
     );
   }
 
@@ -178,16 +182,6 @@ class LingotekJobManagementContentEntitiesForm extends LingotekManagementFormBas
    *   Temp storage identifier where filters are persisted.
    */
   protected function getTempStorageFilterKey() {
-    return NULL;
-  }
-
-  /**
-   * Gets the filter keys so we can persist or clear filtering options.
-   *
-   * @return string[]
-   *   Array of filter identifiers.
-   */
-  protected function getFilterKeys() {
     return NULL;
   }
 

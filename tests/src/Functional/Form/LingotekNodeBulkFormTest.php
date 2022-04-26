@@ -232,7 +232,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
 
     // After we filter by an unexisting job, there is no content and no rows.
     $edit = [
-      'filters[wrapper][job]' => 'this job does not exist',
+      'filters[wrapper][job_id]' => 'this job does not exist',
     ];
     $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
     $assert_session->linkNotExists('Llamas are cool');
@@ -283,7 +283,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     // After we filter by prime, there is no pager and the rows
     // selected are the ones expected.
     $edit = [
-      'filters[wrapper][job]' => 'prime',
+      'filters[wrapper][job_id]' => 'prime',
     ];
     $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
     foreach ([1, 2, 3, 5, 7, 11, 13] as $j) {
@@ -292,12 +292,12 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $assert_session->linkNotExists('Page 2');
     $assert_session->linkNotExists('Llamas are cool ' . $indexes[4]);
 
-    $this->assertFieldByName('filters[wrapper][job]', 'prime', 'The value is retained in the filter.');
+    $this->assertFieldByName('filters[wrapper][job_id]', 'prime', 'The value is retained in the filter.');
 
     // After we filter by even, there is no pager and the rows selected are the
     // ones expected.
     $edit = [
-      'filters[wrapper][job]' => 'even',
+      'filters[wrapper][job_id]' => 'even',
     ];
     $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
     foreach ([4, 6, 8, 10, 12, 14] as $j) {
@@ -306,7 +306,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $assert_session->linkByHrefNotExists('?page=1');
     $assert_session->linkNotExists('Llamas are cool ' . $indexes[5]);
 
-    $this->assertFieldByName('filters[wrapper][job]', 'even', 'The value is retained in the filter.');
+    $this->assertFieldByName('filters[wrapper][job_id]', 'even', 'The value is retained in the filter.');
 
     // After we reset, we get back to having a pager and all the content.
     $this->drupalPostForm(NULL, [], 'Reset');

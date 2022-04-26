@@ -182,7 +182,7 @@ class LingotekJobManagementTests extends LingotekTestBase {
     $this->assertNoText('Account settings');
 
     // Assert the fields are not there.
-    $this->assertNoField('filters[wrapper][job]');
+    $this->assertNoField('filters[wrapper][job_id]');
     $this->assertNoField('job_id');
   }
 
