@@ -161,7 +161,7 @@ class LingotekFieldBodyBulkDisabledTargetOverrideTranslationTest extends Lingote
     $assert_session->linkByHrefNotExists($basepath . '/admin/lingotek/config/download/field_config/node.article.body/ca_ES?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[node.article.body]' => TRUE,
-      $this->getBulkOperationFormName() => 'download:ca',
+      $this->getBulkOperationFormName() => 'download_translation:ca',
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     $this->assertIdentical(NULL, \Drupal::state()

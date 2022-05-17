@@ -2,35 +2,26 @@
 
 namespace Drupal\lingotek\Form;
 
+use Drupal\Component\Utility\NestedArray;
 use Drupal\content_translation\ContentTranslationManagerInterface;
 use Drupal\Core\Database\Connection;
-use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
-use Drupal\Core\Routing\LocalRedirectResponse;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Drupal\Core\Url;
-use Drupal\file\Entity\File;
-use Drupal\lingotek\Exception\LingotekApiException;
-use Drupal\lingotek\Exception\LingotekContentEntityStorageException;
-use Drupal\lingotek\Exception\LingotekDocumentArchivedException;
-use Drupal\lingotek\Exception\LingotekDocumentLockedException;
-use Drupal\lingotek\Exception\LingotekDocumentNotFoundException;
-use Drupal\lingotek\Exception\LingotekDocumentTargetAlreadyCompletedException;
-use Drupal\lingotek\Exception\LingotekPaymentRequiredException;
-use Drupal\lingotek\Exception\LingotekProcessedWordsLimitException;
+use Drupal\lingotek\FormComponent\LingotekFormComponentBulkActionExecutor;
+use Drupal\lingotek\FormComponent\LingotekFormComponentBulkActionManager;
+use Drupal\lingotek\FormComponent\LingotekFormComponentBulkActionOptionManager;
 use Drupal\lingotek\FormComponent\LingotekFormComponentFieldManager;
 use Drupal\lingotek\FormComponent\LingotekFormComponentFilterManager;
 use Drupal\lingotek\Helpers\LingotekManagementFormHelperTrait;
 use Drupal\lingotek\LanguageLocaleMapperInterface;
-use Drupal\lingotek\Lingotek;
 use Drupal\lingotek\LingotekConfigurationServiceInterface;
 use Drupal\lingotek\LingotekContentTranslationServiceInterface;
 use Drupal\lingotek\LingotekInterface;
@@ -152,6 +143,41 @@ abstract class LingotekManagementFormBase extends FormBase {
   protected $formFilters = [];
 
   /**
+   * Available form-bulk-actions plugins.
+   *
+   * @var \Drupal\lingotek\FormComponent\LingotekFormComponentBulkActionInterface[]
+   */
+  protected $formBulkActions = [];
+
+  /**
+   * Available form-bulk-actions options plugins.
+   *
+   * @var \Drupal\lingotek\FormComponent\LingotekFormComponentBulkActionOptionInterface[]
+   */
+  protected $formBulkActionOptions = [];
+
+  /**
+   * Available form-bulk-actions plugin manager.
+   *
+   * @var \Drupal\lingotek\FormComponent\LingotekFormComponentBulkActionManager
+   */
+  protected $formBulkActionManager;
+
+  /**
+   * Available form-bulk-actions options plugin manager.
+   *
+   * @var \Drupal\lingotek\FormComponent\LingotekFormComponentBulkActionOptionManager
+   */
+  protected $formBulkActionOptionsManager;
+
+  /**
+   * Available form-bulk-actions executor.
+   *
+   * @var \Drupal\lingotek\FormComponent\LingotekFormComponentBulkActionExecutor
+   */
+  protected $formBulkActionExecutor;
+
+  /**
    * Constructs a new LingotekManagementFormBase object.
    *
    * @param \Drupal\Core\Database\Connection $connection
@@ -173,6 +199,7 @@ abstract class LingotekManagementFormBase extends FormBase {
    * @param \Drupal\Core\TempStore\PrivateTempStoreFactory $temp_store_factory
    *   The factory for the temp store object.
    * @param \Drupal\Core\State\StateInterface $state
+   *   The state key value store.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler.
    * @param string $entity_type_id
@@ -185,8 +212,14 @@ abstract class LingotekManagementFormBase extends FormBase {
    *   The form-field plugin manager.
    * @param \Drupal\lingotek\FormComponent\LingotekFormComponentFilterManager $form_filter_manager
    *   The form-filter plugin manager.
+   * @param \Drupal\lingotek\FormComponent\LingotekFormComponentBulkActionManager $form_actions_manager
+   *   The form-actions plugin manager.
+   * @param \Drupal\lingotek\FormComponent\LingotekFormComponentBulkActionOptionManager $form_action_options_manager
+   *   The form-action options plugin manager.
+   * @param \Drupal\lingotek\FormComponent\LingotekFormComponentBulkActionExecutor $form_bulk_action_executor
+   *   The form-action options plugin manager.
    */
-  public function __construct(Connection $connection, EntityTypeManagerInterface $entity_type_manager, LanguageManagerInterface $language_manager, LingotekInterface $lingotek, LingotekConfigurationServiceInterface $lingotek_configuration, LanguageLocaleMapperInterface $language_locale_mapper, ContentTranslationManagerInterface $content_translation_manager, LingotekContentTranslationServiceInterface $translation_service, PrivateTempStoreFactory $temp_store_factory, StateInterface $state, ModuleHandlerInterface $module_handler, $entity_type_id, EntityFieldManagerInterface $entity_field_manager, EntityTypeBundleInfoInterface $entity_type_bundle_info, LingotekFormComponentFieldManager $form_field_manager, LingotekFormComponentFilterManager $form_filter_manager) {
+  public function __construct(Connection $connection, EntityTypeManagerInterface $entity_type_manager, LanguageManagerInterface $language_manager, LingotekInterface $lingotek, LingotekConfigurationServiceInterface $lingotek_configuration, LanguageLocaleMapperInterface $language_locale_mapper, ContentTranslationManagerInterface $content_translation_manager, LingotekContentTranslationServiceInterface $translation_service, PrivateTempStoreFactory $temp_store_factory, StateInterface $state, ModuleHandlerInterface $module_handler, $entity_type_id, EntityFieldManagerInterface $entity_field_manager, EntityTypeBundleInfoInterface $entity_type_bundle_info, LingotekFormComponentFieldManager $form_field_manager, LingotekFormComponentFilterManager $form_filter_manager, LingotekFormComponentBulkActionManager $form_actions_manager, LingotekFormComponentBulkActionOptionManager $form_action_options_manager, LingotekFormComponentBulkActionExecutor $form_bulk_action_executor) {
     $this->connection = $connection;
     $this->entityTypeManager = $entity_type_manager;
     $this->languageManager = $language_manager;
@@ -202,12 +235,17 @@ abstract class LingotekManagementFormBase extends FormBase {
     $this->entityTypeId = $entity_type_id;
     $this->entityFieldManager = $entity_field_manager;
     $this->entityTypeBundleInfo = $entity_type_bundle_info;
+    $this->formBulkActionManager = $form_actions_manager;
+    $this->formBulkActionOptionsManager = $form_action_options_manager;
     $form_component_arguments = [
       'form_id' => $this->getFormId(),
       'entity_type_id' => $this->entityTypeId,
     ];
     $this->formFields = $form_field_manager->getApplicable($form_component_arguments);
     $this->formFilters = $form_filter_manager->getApplicable($form_component_arguments);
+    $this->formBulkActions = $form_actions_manager->getApplicable($form_component_arguments);
+    $this->formBulkActionOptions = $form_action_options_manager->getOptions();
+    $this->formBulkActionExecutor = $form_bulk_action_executor;
   }
 
   /**
@@ -230,7 +268,10 @@ abstract class LingotekManagementFormBase extends FormBase {
       $container->get('entity_field.manager'),
       $container->get('entity_type.bundle.info'),
       $container->get('plugin.manager.lingotek_form_field'),
-      $container->get('plugin.manager.lingotek_form_filter')
+      $container->get('plugin.manager.lingotek_form_filter'),
+      $container->get('plugin.manager.lingotek_form_bulk_action'),
+      $container->get('plugin.manager.lingotek_form_bulk_action_option'),
+      $container->get('lingotek.form_bulk_action_executor')
     );
   }
 
@@ -393,32 +434,45 @@ abstract class LingotekManagementFormBase extends FormBase {
    *   A form array.
    */
   protected function getBulkOptions() {
-    $options = [];
-    $options['operation'] = [
+    $element = [];
+    $element['operation'] = [
       '#type' => 'select',
       '#title' => $this->t('Action'),
       '#title_display' => 'invisible',
       '#options' => $this->generateBulkOptions(),
     ];
-    $options['submit'] = [
+    $options = $this->generateBulkActionOptions();
+
+    $element['options'] = [
+      '#type' => 'container',
+      '#tree' => TRUE,
+    ];
+    $element['options'] = array_merge($element['options'], $options);
+
+    $element['submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Execute'),
     ];
-    $options['show_advanced'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Show advanced options'),
-      '#title_display' => 'before',
-    ];
-    $options['job_id'] = [
-      '#type' => 'lingotek_job_id',
-      '#title' => $this->t('Job ID'),
-      '#description' => $this->t('Assign a job id that you can filter on later on the TMS or in this page.'),
-      '#states' => [
-        'visible' => [
-          ':input[name="show_advanced"]' => ['checked' => TRUE],
-        ],
-      ],
-    ];
+    return $element;
+  }
+
+  protected function generateBulkActionOptions() {
+    $options = [];
+
+    $optionActionsMap = [];
+
+    foreach ($this->formBulkActions as $plugin) {
+      $pluginOptions = $plugin->getOptions();
+      array_walk($pluginOptions, function ($option_id) use ($plugin, &$optionActionsMap) {
+        $optionActionsMap[$option_id][] = $plugin->getPluginId();
+      });
+    }
+
+    foreach ($optionActionsMap as $option_id => $actions) {
+      $this->formBulkActionOptions[$option_id]->registerBulkActions($actions);
+      $options[$option_id] = $this->formBulkActionOptions[$option_id]->buildFormElement();
+    }
+
     return $options;
   }
 
@@ -478,1064 +532,31 @@ abstract class LingotekManagementFormBase extends FormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $operation = $form_state->getValue('operation');
-    $job_id = $form_state->getValue('job_id') ?: NULL;
+    $options = $form_state->getValue('options');
     $values = array_keys(array_filter($form_state->getValue(['table'])));
-    $processed = FALSE;
-    switch ($operation) {
-      case 'debug.export':
-        $this->createDebugExportBatch($values);
-        $processed = TRUE;
-        break;
-
-      case 'upload':
-        $this->createUploadBatch($values, $job_id);
-        $processed = TRUE;
-        break;
-
-      case 'check_upload':
-        $this->createUploadCheckStatusBatch($values);
-        $processed = TRUE;
-        break;
-
-      case 'request_translations':
-        $this->createRequestTranslationsBatch($values);
-        $processed = TRUE;
-        break;
-
-      case 'check_translations':
-        $this->createTranslationCheckStatusBatch($values);
-        $processed = TRUE;
-        break;
-
-      case 'download':
-        $this->createDownloadBatch($values);
-        $processed = TRUE;
-        break;
-
-      case 'cancel':
-        $this->createCancelBatch($values);
-        $processed = TRUE;
-        break;
-
-      case 'assign_job':
-        $this->redirectToAssignJobIdMultipleEntitiesForm($values, $form_state);
-        $processed = TRUE;
-        break;
-
-      case 'clear_job':
-        $this->redirectToClearJobIdMultipleEntitiesForm($values, $form_state);
-        $processed = TRUE;
-        break;
-
-      case 'delete_nodes':
-        $this->redirectToDeleteMultipleNodesForm($values, $form_state);
-        $processed = TRUE;
-        break;
-
-      case 'delete_translations':
-        $this->redirectToDeleteMultipleTranslationsForm($values, $form_state);
-        $processed = TRUE;
-        break;
-    }
-    if (!$processed) {
-      if (0 === strpos($operation, 'request_translation:')) {
-        list($operation, $language) = explode(':', $operation);
-        $this->createLanguageRequestTranslationBatch($values, $language);
-        $processed = TRUE;
-      }
-      if (0 === strpos($operation, 'check_translation:')) {
-        list($operation, $language) = explode(':', $operation);
-        $this->createLanguageTranslationCheckStatusBatch($values, $language);
-        $processed = TRUE;
-      }
-      if (0 === strpos($operation, 'download:')) {
-        list($operation, $language) = explode(':', $operation);
-        $this->createLanguageDownloadBatch($values, $language);
-        $processed = TRUE;
-      }
-      if (0 === strpos($operation, 'cancel:')) {
-        list($operation, $language) = explode(':', $operation);
-        $this->createTargetCancelBatch($values, $language);
-        $processed = TRUE;
-      }
-      if (0 === strpos($operation, 'delete_translation:')) {
-        list($operation, $language) = explode(':', $operation);
-        $this->redirectToDeleteTranslationForm($values, $language, $form_state);
-        $processed = TRUE;
-      }
-      if (0 === strpos($operation, 'change_profile:')) {
-        list($operation, $profile_id) = explode(':', $operation);
-        $this->createChangeProfileBatch($values, $profile_id);
-        $processed = TRUE;
-      }
-    }
-  }
-
-  /**
-   * Performs an operation to several values in a batch.
-   *
-   * @param string $operation
-   *   The method in this object we need to call.
-   * @param array $values
-   *   Array of ids to process.
-   * @param string $title
-   *   The title for the batch progress.
-   * @param string $language
-   *   (Optional) The language code for the request. NULL if is not applicable.
-   * @param string $job_id
-   *   (Optional) The job ID to be used. NULL if is not applicable.
-   */
-  protected function createBatch($operation, $values, $title, $language = NULL, $job_id = NULL) {
-    $operations = [];
     $entities = $this->getSelectedEntities($values);
 
-    foreach ($entities as $entity) {
-      $split_download_all = $this->lingotekConfiguration->getPreference('split_download_all');
-      if ($operation == 'downloadTranslations' && $split_download_all) {
-
-        $languages = $this->languageManager->getLanguages();
-        foreach ($languages as $langcode => $language) {
-          if ($langcode !== $entity->language()->getId()) {
-            $operations[] = [
-              [$this, 'downloadTranslation'],
-              [$entity, $langcode, $job_id],
-            ];
+    $result = $this->formBulkActionExecutor->execute($this->formBulkActions[$operation], $entities, $options, $this->formBulkActions['upload'] ?? NULL);
+    if ($result) {
+      $redirect = $this->formBulkActions[$operation]->getPluginDefinition()['redirect'] ?? NULL;
+      if ($redirect) {
+        if (strpos($redirect, 'entity:') === 0) {
+          [, $redirect_template] = explode(':', $redirect);
+          if (count($entities) > 0) {
+            $entity = reset($entities);
+            $form_state->setRedirectUrl(Url::fromUserInput($entity->getEntityType()
+              ->getLinkTemplate($redirect_template), ['query' => $this->getDestinationWithQueryArray()]));
           }
         }
-      }
-      else {
-        $operations[] = [[$this, $operation], [$entity, $language, $job_id]];
-      }
-    }
-    $batch = [
-      'title' => $title,
-      'operations' => $operations,
-      'finished' => [$this, 'batchFinished'],
-      'progressive' => TRUE,
-      'batch_redirect' => $this->getRequest()->getUri(),
-    ];
-    batch_set($batch);
-  }
-
-  /**
-   * Batch callback called when the batch finishes.
-   *
-   * @param $success
-   * @param $results
-   * @param $operations
-   *
-   * @return \Drupal\Core\Routing\LocalRedirectResponse
-   */
-  public function batchFinished($success, $results, $operations) {
-    if ($success) {
-      $batch = &batch_get();
-      $this->messenger()->addStatus('Operations completed.');
-    }
-    return new LocalRedirectResponse($batch['sets'][0]['batch_redirect']);
-  }
-
-  /**
-   * Create and set an upload batch.
-   *
-   * @param array $values
-   *   Array of ids to upload.
-   * @param string $job_id
-   *   (Optional) The job ID to be used. NULL if is not applicable.
-   */
-  protected function createUploadBatch($values, $job_id = NULL) {
-    $this->createBatch('uploadDocument', $values, $this->t('Uploading content to Lingotek service'), NULL, $job_id);
-  }
-
-  /**
-   * Create and set an export batch.
-   *
-   * @param array $values
-   *   Array of ids to upload.
-   */
-  protected function createDebugExportBatch($values) {
-    $entities = $this->getSelectedEntities($values);
-
-    foreach ($entities as $entity) {
-      $operations[] = [[$this, 'debugExport'], [$entity]];
-    }
-    $batch = [
-      'title' => $this->t('Exporting content (debugging purposes)'),
-      'operations' => $operations,
-      'finished' => [$this, 'debugExportFinished'],
-      'progressive' => TRUE,
-    ];
-    batch_set($batch);
-  }
-
-  /**
-   * Batch callback called when the debug export batch finishes.
-   *
-   * @param $success
-   * @param $results
-   * @param $operations
-   *
-   * @return \Drupal\Core\Routing\LocalRedirectResponse
-   */
-  public function debugExportFinished($success, $results, $operations) {
-    if ($success) {
-      $links = [];
-      if (isset($results['exported'])) {
-        foreach ($results['exported'] as $result) {
-          $links[] = [
-            '#theme' => 'file_link',
-            '#file' => File::load($result),
-          ];
+        else {
+          $form_state->setRedirect($redirect, [], ['query' => $this->getDestinationWithQueryArray()]);
         }
-        $build = [
-          '#theme' => 'item_list',
-          '#items' => $links,
-        ];
-        $this->messenger()->addStatus($this->t('Exports available at: @exports',
-          ['@exports' => \Drupal::service('renderer')->render($build)]));
       }
-    }
-  }
-
-  /**
-   * Create and set a check upload status batch.
-   *
-   * @param array $values
-   *   Array of ids to upload.
-   */
-  protected function createUploadCheckStatusBatch($values) {
-    $this->createBatch('checkDocumentUploadStatus', $values, $this->t('Checking content upload status with the Lingotek service'));
-  }
-
-  /**
-   * Create and set a request translations batch for all languages.
-   *
-   * @param array $values
-   *   Array of ids to upload.
-   */
-  protected function createRequestTranslationsBatch($values) {
-    $this->createBatch('requestTranslations', $values, $this->t('Requesting translations to Lingotek service.'));
-  }
-
-  /**
-   * Create and set a request translations batch for all languages.
-   *
-   * @param array $values
-   *   Array of ids to upload.
-   * @param string $language
-   *   Language code for the request.
-   */
-  protected function createLanguageRequestTranslationBatch($values, $language) {
-    $this->createBatch('requestTranslation', $values, $this->t('Requesting translations to Lingotek service.'), $language);
-  }
-
-  /**
-   * Create and set a check translation status batch for all languages.
-   *
-   * @param array $values
-   *   Array of ids to upload.
-   */
-  protected function createTranslationCheckStatusBatch($values) {
-    $this->createBatch('checkTranslationStatuses', $values, $this->t('Checking translations status from the Lingotek service.'));
-  }
-
-  /**
-   * Create and set a check translation status batch for a given language.
-   *
-   * @param array $values
-   *   Array of ids to upload.
-   * @param string $language
-   *   Language code for the request.
-   */
-  protected function createLanguageTranslationCheckStatusBatch($values, $language) {
-    $this->createBatch('checkTranslationStatus', $values, $this->t('Checking translations status from the Lingotek service.'), $language);
-  }
-
-  /**
-   * Create and set a request target and download batch for all languages.
-   *
-   * @param array $values
-   *   Array of ids to upload.
-   */
-  protected function createDownloadBatch($values) {
-    $this->createBatch('downloadTranslations', $values, $this->t('Downloading translations from the Lingotek service.'));
-  }
-
-  /**
-   * Create and set a request target and download batch for a given language.
-   *
-   * @param array $values
-   *   Array of ids to upload.
-   * @param string $language
-   *   Language code for the request.
-   */
-  protected function createLanguageDownloadBatch($values, $language) {
-    $this->createBatch('downloadTranslation', $values, $this->t('Downloading translations to Lingotek service'), $language);
-  }
-
-  /**
-   * Create and set a cancellation batch.
-   *
-   * @param array $values
-   *   Array of ids to cancel.
-   */
-  protected function createCancelBatch($values) {
-    $this->createBatch('cancel', $values, $this->t('Cancelling content from Lingotek service'));
-  }
-
-  /**
-   * Create and set a target cancellation batch.
-   *
-   * @param array $values
-   *   Array of ids to cancel.
-   * @param string $language
-   *   Language code for the request.
-   */
-  protected function createTargetCancelBatch($values, $language) {
-    $this->createBatch('cancelTarget', $values, $this->t('Cancelling target content from Lingotek service'), $language);
-  }
-
-  /**
-   * Create and set a profile change batch.
-   *
-   * @param array $values
-   *   Array of ids to change the Profile.
-   */
-  protected function createChangeProfileBatch($values, $profile_id) {
-    $this->createBatch('changeProfile', $values, $this->t('Updating Translation Profile'), $profile_id);
-  }
-
-  /**
-   * Redirect to delete content form.
-   *
-   * @param array $values
-   *   Array of ids to delete.
-   */
-  protected function redirectToDeleteMultipleNodesForm($values, FormStateInterface $form_state) {
-    $entityInfo = [];
-    $entities = $this->getSelectedEntities($values);
-    foreach ($entities as $entity) {
-      /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
-      $language = $entity->getUntranslated()->language();
-      $entityInfo[$entity->id()] = [$language->getId() => $language->getId()];
-    }
-    $this->tempStoreFactory->get('entity_delete_multiple_confirm')
-      ->set($this->currentUser()->id() . ':' . $this->entityTypeId, $entityInfo);
-    $form_state->setRedirectUrl(Url::fromUserInput($entity->getEntityType()->getLinkTemplate('delete-multiple-form'), ['query' => $this->getDestinationWithQueryArray()]));
-  }
-
-  /**
-   * Redirect to assign Job ID form.
-   *
-   * @param array $values
-   *   Array of ids to assign a Job ID.
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   The current state of the form.
-   */
-  protected function redirectToAssignJobIdMultipleEntitiesForm($values, FormStateInterface $form_state) {
-    $entityInfo = [];
-    $entities = $this->getSelectedEntities($values);
-    foreach ($entities as $entity) {
-      /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
-      $language = $entity->getUntranslated()->language();
-      $entityInfo[$entity->getEntityTypeId()][$entity->id()] = [$language->getId() => $language->getId()];
-    }
-    $this->tempStoreFactory->get('lingotek_assign_job_entity_multiple_confirm')
-      ->set($this->currentUser()->id(), $entityInfo);
-    $form_state->setRedirect('lingotek.assign_job_entity_multiple_form', [], ['query' => $this->getDestinationWithQueryArray()]);
-  }
-
-  /**
-   * Redirect to clear Job ID form.
-   *
-   * @param array $values
-   *   Array of ids to clear Job ID.
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   The current state of the form.
-   */
-  protected function redirectToClearJobIdMultipleEntitiesForm($values, FormStateInterface $form_state) {
-    $entityInfo = [];
-    $entities = $this->getSelectedEntities($values);
-    foreach ($entities as $entity) {
-      /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
-      $language = $entity->getUntranslated()->language();
-      $entityInfo[$entity->getEntityTypeId()][$entity->id()] = [$language->getId() => $language->getId()];
-    }
-    $this->tempStoreFactory->get('lingotek_assign_job_entity_multiple_confirm')
-      ->set($this->currentUser()->id(), $entityInfo);
-    $form_state->setRedirect('lingotek.clear_job_entity_multiple_form', [], ['query' => $this->getDestinationWithQueryArray()]);
-  }
-
-  /**
-   * Redirect to delete specific translation form.
-   *
-   * @param array $values
-   *   Array of ids to delete.
-   */
-  protected function redirectToDeleteTranslationForm($values, $langcode, FormStateInterface $form_state) {
-    $entityInfo = [];
-    $entities = $this->getSelectedEntities($values);
-    foreach ($entities as $entity) {
-      $source_language = $entity->getUntranslated()->language();
-      if ($source_language->getId() !== $langcode && $entity->hasTranslation($langcode)) {
-        /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
-        $entityInfo[$entity->id()][$langcode] = $langcode;
-      }
-    }
-    if (!empty($entityInfo)) {
-      $this->tempStoreFactory->get('entity_delete_multiple_confirm')
-        ->set($this->currentUser()->id() . ':' . $this->entityTypeId, $entityInfo);
-      $form_state->setRedirectUrl(Url::fromUserInput($entity->getEntityType()->getLinkTemplate('delete-multiple-form'), ['query' => $this->getDestinationWithQueryArray()]));
     }
     else {
-      $this->messenger()->addWarning($this->t('No valid translations for deletion.'));
-      // Ensure selection is persisted.
+      // Ensure selection is kept.
       $form_state->setRebuild();
     }
-  }
-
-  /**
-   * Redirect to delete translations form.
-   *
-   * @param array $values
-   *   Array of ids to delete.
-   */
-  protected function redirectToDeleteMultipleTranslationsForm($values, FormStateInterface $form_state) {
-    $entityInfo = [];
-    $entities = $this->getSelectedEntities($values);
-    $languages = $this->languageManager->getLanguages();
-    foreach ($entities as $entity) {
-      $source_language = $entity->getUntranslated()->language();
-      foreach ($languages as $langcode => $language) {
-        if ($source_language->getId() !== $langcode && $entity->hasTranslation($langcode)) {
-          /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
-          $entityInfo[$entity->id()][$langcode] = $langcode;
-        }
-      }
-    }
-    if (!empty($entityInfo)) {
-      $this->tempStoreFactory->get('entity_delete_multiple_confirm')
-        ->set($this->currentUser()->id() . ':' . $this->entityTypeId, $entityInfo);
-      $form_state->setRedirectUrl(Url::fromUserInput($entity->getEntityType()->getLinkTemplate('delete-multiple-form'), ['query' => $this->getDestinationWithQueryArray()]));
-    }
-    else {
-      $this->messenger()->addWarning($this->t('No valid translations for deletion.'));
-      // Ensure selection is persisted.
-      $form_state->setRebuild();
-    }
-  }
-
-  /**
-   * Export source for debugging purposes.
-   *
-   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
-   *   The entity.
-   */
-  public function debugExport(ContentEntityInterface $entity, &$context) {
-    $context['message'] = $this->t('Exporting @type %label.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label()]);
-    $bundleInfos = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
-    if (!$entity->getEntityType()->isTranslatable() || !$bundleInfos[$entity->bundle()]['translatable']) {
-      \Drupal::messenger()->addWarning(t('Cannot debug export @type %label. That @bundle_label is not enabled for translation.',
-        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label(), '@bundle_label' => $entity->getEntityType()->getBundleLabel()]));
-      return;
-    }
-    if (!$this->lingotekConfiguration->isEnabled($entity->getEntityTypeId(), $entity->bundle())) {
-      $this->messenger()->addWarning(t('Cannot debug export @type %label. That @bundle_label is not enabled for Lingotek translation.',
-        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label(), '@bundle_label' => $entity->getEntityType()->getBundleLabel()]
-      ));
-      return;
-    }
-    if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE)) {
-      $data = $this->translationService->getSourceData($entity);
-      $data['_debug'] = [
-        'title' => $entity->bundle() . ' (' . $entity->getEntityTypeId() . '): ' . $entity->label(),
-        'profile' => $profile ? $profile->id() : '<null>',
-        'source_locale' => $this->translationService->getSourceLocale($entity),
-      ];
-      $source_data = json_encode($data);
-      $filename = $entity->getEntityTypeId() . '.' . $entity->bundle() . '.' . $entity->id() . '.json';
-      $file = File::create([
-        'uid' => 1,
-        'filename' => $filename,
-        'uri' => 'public://' . $filename,
-        'filemime' => 'text/plain',
-        'created' => \Drupal::time()->getRequestTime(),
-        'changed' => \Drupal::time()->getRequestTime(),
-      ]);
-      file_put_contents($file->getFileUri(), $source_data);
-      $file->save();
-      $context['results']['exported'][] = $file->id();
-    }
-    else {
-      $bundleInfos = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
-      $this->messenger()->addWarning($this->t('The @type %label has no profile assigned so it was not processed.',
-        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]));
-    }
-  }
-
-  /**
-   * Upload source for translation.
-   *
-   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
-   *   The entity.
-   */
-  public function uploadDocument(ContentEntityInterface $entity, $language, $job_id, &$context) {
-    $context['message'] = $this->t('Uploading @type %label.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label()]);
-    $bundleInfos = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
-    if (!$entity->getEntityType()->isTranslatable() || !$bundleInfos[$entity->bundle()]['translatable']) {
-      \Drupal::messenger()->addWarning(t('Cannot upload @type %label. That @bundle_label is not enabled for translation.',
-        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label(), '@bundle_label' => $entity->getEntityType()->getBundleLabel()]));
-      return;
-    }
-    if (!$this->lingotekConfiguration->isEnabled($entity->getEntityTypeId(), $entity->bundle())) {
-      $this->messenger()->addWarning(t('Cannot upload @type %label. That @bundle_label is not enabled for Lingotek translation.',
-        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label(), '@bundle_label' => $entity->getEntityType()->getBundleLabel()]
-      ));
-      return;
-    }
-    if ($profile = $this->lingotekConfiguration->getEntityProfile($entity)) {
-      try {
-        $this->translationService->uploadDocument($entity, $job_id);
-      }
-      catch (LingotekDocumentNotFoundException $exc) {
-        $this->messenger()->addError(t('Document @entity_type %title was not found. Please upload again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
-      }
-      catch (LingotekPaymentRequiredException $exception) {
-        $this->messenger()->addError(t('Community has been disabled. Please contact support@lingotek.com to re-enable your community.'));
-      }
-      catch (LingotekDocumentArchivedException $exception) {
-        $this->messenger()->addWarning(t('Document @entity_type %title has been archived. Uploading again.', [
-          '@entity_type' => $entity->getEntityTypeId(),
-          '%title' => $entity->label(),
-        ]));
-        return $this->uploadDocument($entity, $language, $job_id, $context);
-      }
-      catch (LingotekDocumentLockedException $exception) {
-        $this->messenger()->addError(t('Document @entity_type %title has a new version. The document id has been updated for all future interactions. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
-      }
-      catch (LingotekProcessedWordsLimitException $exception) {
-        $this->messenger()->addError(t('Processed word limit exceeded. Please contact your local administrator or Lingotek Client Success (<a href=":link">@mail</a>) for assistance.', [':link' => 'mailto:sales@lingotek.com', '@mail' => 'sales@lingotek.com']));
-      }
-      catch (LingotekApiException $exception) {
-        if ($this->translationService->getDocumentId($entity)) {
-          $this->messenger()->addError(t('The update for @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
-        }
-        else {
-          $this->messenger()->addError(t('The upload for @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
-        }
-      }
-    }
-    else {
-      $bundleInfos = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
-      $this->messenger()->addWarning($this->t('The @type %label has no profile assigned so it was not processed.',
-        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]));
-    }
-  }
-
-  /**
-   * Check document upload status for a given content.
-   *
-   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
-   *   The entity.
-   */
-  public function checkDocumentUploadStatus(ContentEntityInterface $entity, $language, $job_id, &$context) {
-    $context['message'] = $this->t('Checking status of @type %label.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label()]);
-    $bundleInfos = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
-    if (!$entity->getEntityType()->isTranslatable() || !$bundleInfos[$entity->bundle()]['translatable']) {
-      \Drupal::messenger()->addWarning(t('Cannot check upload @type %label. That @bundle_label is not enabled for translation.',
-        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label(), '@bundle_label' => $entity->getEntityType()->getBundleLabel()]));
-      return;
-    }
-    if (!$this->lingotekConfiguration->isEnabled($entity->getEntityTypeId(), $entity->bundle())) {
-      $this->messenger()->addWarning(t('Cannot check upload @type %label. That @bundle_label is not enabled for Lingotek translation.',
-        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label(), '@bundle_label' => $entity->getEntityType()->getBundleLabel()]
-      ));
-      return;
-    }
-    if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE)) {
-      try {
-        if (!$this->translationService->checkSourceStatus($entity)) {
-          $this->messenger()->addStatus($this->t('The import for @entity_type %label is still pending.', [
-            '@entity_type' => $entity->getEntityTypeId(),
-            '%label' => $entity->label(),
-          ]));
-        }
-      }
-      catch (LingotekDocumentNotFoundException $exc) {
-        $this->messenger()->addError(t('Document @entity_type %title was not found. Please upload again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
-      }
-      catch (LingotekApiException $exception) {
-        $this->messenger()->addError(t('The upload status check for @entity_type %title translation failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
-      }
-    }
-    else {
-      $bundleInfos = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
-      $this->messenger()->addWarning($this->t('The @type %label has no profile assigned so it was not processed.',
-        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]));
-    }
-  }
-
-  /**
-   * Request all translations for a given content.
-   *
-   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
-   *   The entity.
-   */
-  public function requestTranslations(ContentEntityInterface $entity, $language, $job_id, &$context) {
-    $result = NULL;
-    $context['message'] = $this->t('Requesting translations for @type %label.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label()]);
-    $bundleInfos = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
-    if (!$entity->getEntityType()->isTranslatable() || !$bundleInfos[$entity->bundle()]['translatable']) {
-      \Drupal::messenger()->addWarning(t('Cannot request translations for @type %label. That @bundle_label is not enabled for translation.',
-        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label(), '@bundle_label' => $entity->getEntityType()->getBundleLabel()]));
-      return;
-    }
-    if (!$this->lingotekConfiguration->isEnabled($entity->getEntityTypeId(), $entity->bundle())) {
-      $this->messenger()->addWarning(t('Cannot request translations for @type %label. That @bundle_label is not enabled for Lingotek translation.',
-        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label(), '@bundle_label' => $entity->getEntityType()->getBundleLabel()]
-      ));
-      return;
-    }
-    if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE)) {
-      try {
-        $result = $this->translationService->requestTranslations($entity);
-      }
-      catch (LingotekDocumentNotFoundException $exc) {
-        $this->messenger()->addError(t('Document @entity_type %title was not found. Please upload again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
-      }
-      catch (LingotekPaymentRequiredException $exception) {
-        $this->messenger()->addError(t('Community has been disabled. Please contact support@lingotek.com to re-enable your community.'));
-      }
-      catch (LingotekDocumentArchivedException $exception) {
-        $this->messenger()->addWarning(t('Document @entity_type %title has been archived. Uploading again.', [
-          '@entity_type' => $entity->getEntityTypeId(),
-          '%title' => $entity->label(),
-        ]));
-        return $this->uploadDocument($entity, $language, $job_id, $context);
-      }
-      catch (LingotekDocumentLockedException $exception) {
-        $this->messenger()->addError(t('Document @entity_type %title has a new version. The document id has been updated for all future interactions. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
-      }
-      catch (LingotekProcessedWordsLimitException $exception) {
-        $this->messenger()->addError(t('Processed word limit exceeded. Please contact your local administrator or Lingotek Client Success (<a href=":link">@mail</a>) for assistance.', [':link' => 'mailto:sales@lingotek.com', '@mail' => 'sales@lingotek.com']));
-      }
-      catch (LingotekApiException $exception) {
-        $this->messenger()->addError(t('The request for @entity_type %title translation failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
-      }
-    }
-    else {
-      $bundleInfos = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
-      $this->messenger()->addWarning($this->t('The @type %label has no profile assigned so it was not processed.',
-        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]));
-    }
-    return $result;
-  }
-
-  /**
-   * Checks all translations statuses for a given content.
-   *
-   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
-   *   The entity.
-   */
-  public function checkTranslationStatuses(ContentEntityInterface $entity, $language, $job_id, &$context) {
-    $context['message'] = $this->t('Checking translation status for @type %label.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label()]);
-    $bundleInfos = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
-    if (!$entity->getEntityType()->isTranslatable() || !$bundleInfos[$entity->bundle()]['translatable']) {
-      \Drupal::messenger()->addWarning(t('Cannot check translations for @type %label. That @bundle_label is not enabled for translation.',
-        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label(), '@bundle_label' => $entity->getEntityType()->getBundleLabel()]));
-      return;
-    }
-    if (!$this->lingotekConfiguration->isEnabled($entity->getEntityTypeId(), $entity->bundle())) {
-      $this->messenger()->addWarning(t('Cannot check translations for @type %label. That @bundle_label is not enabled for Lingotek translation.',
-        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label(), '@bundle_label' => $entity->getEntityType()->getBundleLabel()]
-      ));
-      return;
-    }
-    if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE)) {
-      try {
-        $this->translationService->checkTargetStatuses($entity);
-      }
-      catch (LingotekDocumentNotFoundException $exc) {
-        $this->messenger()->addError(t('Document @entity_type %title was not found. Please upload again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
-      }
-      catch (LingotekApiException $exception) {
-        $this->messenger()->addError(t('The request for @entity_type %title translation status failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
-      }
-    }
-    else {
-      $bundleInfos = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
-      $this->messenger()->addWarning($this->t('The @type %label has no profile assigned so it was not processed.',
-        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]));
-    }
-  }
-
-  /**
-   * Checks translation status for a given content in a given language.
-   *
-   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
-   *   The entity.
-   * @param string $language
-   *   The language to check.
-   */
-  public function checkTranslationStatus(ContentEntityInterface $entity, $language, $job_id, &$context) {
-    $context['message'] = $this->t('Checking translation status for @type %label to language @language.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label(), '@language' => $language]);
-    $bundleInfos = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
-    if (!$entity->getEntityType()->isTranslatable() || !$bundleInfos[$entity->bundle()]['translatable']) {
-      \Drupal::messenger()->addWarning(t('Cannot check @type %label translation to @language. That @bundle_label is not enabled for translation.',
-        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label(), '@bundle_label' => $entity->getEntityType()->getBundleLabel(), '@language' => $language]));
-      return;
-    }
-    if (!$this->lingotekConfiguration->isEnabled($entity->getEntityTypeId(), $entity->bundle())) {
-      $this->messenger()->addWarning(t('Cannot check @type %label translation to @language. That @bundle_label is not enabled for Lingotek translation.',
-        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label(), '@bundle_label' => $entity->getEntityType()->getBundleLabel(), '@language' => $language]
-      ));
-      return;
-    }
-    if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE)) {
-      try {
-        $this->translationService->checkTargetStatus($entity, $language);
-      }
-      catch (LingotekDocumentNotFoundException $exc) {
-        $this->messenger()->addError(t('Document @entity_type %title was not found. Please upload again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
-      }
-      catch (LingotekApiException $exception) {
-        $this->messenger()->addError(t('The request for @entity_type %title translation status failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
-      }
-    }
-    else {
-      $bundleInfos = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
-      $this->messenger()->addWarning($this->t('The @type %label has no profile assigned so it was not processed.',
-        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]));
-    }
-  }
-
-  /**
-   * Request translations for a given content in a given language.
-   *
-   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
-   *   The entity.
-   * @param string $langcode
-   *   The language to download.
-   */
-  public function requestTranslation(ContentEntityInterface $entity, $langcode, $job_id, &$context) {
-    $context['message'] = $this->t('Requesting translation for @type %label to language @language.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label(), '@language' => $langcode]);
-    $bundleInfos = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
-    if (!$entity->getEntityType()->isTranslatable() || !$bundleInfos[$entity->bundle()]['translatable']) {
-      \Drupal::messenger()->addWarning(t('Cannot request @type %label translation for @language. That @bundle_label is not enabled for translation.',
-        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label(), '@bundle_label' => $entity->getEntityType()->getBundleLabel(), '@language' => $langcode]));
-      return;
-    }
-    if (!$this->lingotekConfiguration->isEnabled($entity->getEntityTypeId(), $entity->bundle())) {
-      $this->messenger()->addWarning(t('Cannot request @type %label translation for @language. That @bundle_label is not enabled for Lingotek translation.',
-        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label(), '@bundle_label' => $entity->getEntityType()->getBundleLabel(), '@language' => $langcode]
-      ));
-      return;
-    }
-    $locale = $this->languageLocaleMapper->getLocaleForLangcode($langcode);
-    if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE)) {
-      try {
-        $this->translationService->addTarget($entity, $locale);
-      }
-      catch (LingotekDocumentNotFoundException $exc) {
-        $this->messenger()->addError(t('Document @entity_type %title was not found. Please upload again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
-      }
-      catch (LingotekPaymentRequiredException $exception) {
-        $this->messenger()->addError(t('Community has been disabled. Please contact support@lingotek.com to re-enable your community.'));
-      }
-      catch (LingotekDocumentArchivedException $exception) {
-        $this->messenger()->addWarning(t('Document @entity_type %title has been archived. Uploading again.', [
-          '@entity_type' => $entity->getEntityTypeId(),
-          '%title' => $entity->label(),
-        ]));
-        return $this->uploadDocument($entity, $langcode, $job_id, $context);
-      }
-      catch (LingotekDocumentNotFoundException $exc) {
-        $this->messenger()->addError(t('Document @entity_type %title was not found. Please upload again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
-      }
-      catch (LingotekDocumentLockedException $exception) {
-        $this->messenger()->addError(t('Document @entity_type %title has a new version. The document id has been updated for all future interactions. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
-      }
-      catch (LingotekProcessedWordsLimitException $exception) {
-        $this->messenger()->addError(t('Processed word limit exceeded. Please contact your local administrator or Lingotek Client Success (<a href=":link">@mail</a>) for assistance.', [':link' => 'mailto:sales@lingotek.com', '@mail' => 'sales@lingotek.com']));
-      }
-      catch (LingotekApiException $exception) {
-        $this->messenger()->addError(t('The request for @entity_type %title translation failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
-      }
-    }
-    else {
-      $bundleInfos = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
-      $this->messenger()->addWarning($this->t('The @type %label has no profile assigned so it was not processed.',
-        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]));
-    }
-  }
-
-  /**
-   * Download translation for a given content in a given language.
-   *
-   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
-   *   The entity.
-   * @param string $langcode
-   *   The language to download.
-   */
-  public function downloadTranslation(ContentEntityInterface $entity, $langcode, $job_id, &$context) {
-    // We need to reload the entity, just in case we are using the split bulk upload. The metadata isn't true anymore.
-    // ToDo: Look for a better way of invalidating already loaded metadata.
-    $entity = $this->entityTypeManager->getStorage($entity->getEntityTypeId())->load($entity->id());
-    $context['message'] = $this->t('Downloading translation for @type %label in language @language.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label(), '@language' => $langcode]);
-    $bundleInfos = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
-    if (!$entity->getEntityType()->isTranslatable() || !$bundleInfos[$entity->bundle()]['translatable']) {
-      \Drupal::messenger()->addWarning(t('Cannot download @type %label translation for @language. That @bundle_label is not enabled for translation.',
-        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label(), '@bundle_label' => $entity->getEntityType()->getBundleLabel(), '@language' => $langcode]));
-      return;
-    }
-    if (!$this->lingotekConfiguration->isEnabled($entity->getEntityTypeId(), $entity->bundle())) {
-      $this->messenger()->addWarning(t('Cannot download @type %label translation for @language. That @bundle_label is not enabled for Lingotek translation.',
-        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label(), '@bundle_label' => $entity->getEntityType()->getBundleLabel(), '@language' => $langcode]
-      ));
-      return;
-    }
-    $locale = $this->languageLocaleMapper->getLocaleForLangcode($langcode);
-    if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE)) {
-      try {
-        $this->translationService->downloadDocument($entity, $locale);
-      }
-      catch (LingotekDocumentNotFoundException $exc) {
-        $this->messenger()->addError(t('Document @entity_type %title was not found. Please upload again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
-      }
-      catch (LingotekApiException $exception) {
-        $this->messenger()->addError(t('The download for @entity_type %title translation failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
-      }
-      catch (LingotekContentEntityStorageException $storage_exception) {
-        \Drupal::logger('lingotek')->error('The download for @entity_type %title failed because of the length of one field translation (%locale) value: %table.',
-          ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label(), '%locale' => $locale, '%table' => $storage_exception->getTable()]);
-        $this->messenger()->addError(t('The download for @entity_type %title failed because of the length of one field translation (%locale) value: %table.',
-          ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label(), '%locale' => $locale, '%table' => $storage_exception->getTable()]));
-      }
-    }
-    else {
-      $bundleInfos = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
-      $this->messenger()->addWarning($this->t('The @type %label has no profile assigned so it was not processed.',
-        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]));
-    }
-  }
-
-  /**
-   * Download translations for a given content in all enabled languages.
-   *
-   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
-   *   The entity.
-   */
-  public function downloadTranslations(ContentEntityInterface $entity, $language, $job_id, &$context) {
-    $context['message'] = $this->t('Downloading all translations for @type %label.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label()]);
-    $bundleInfos = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
-    if (!$entity->getEntityType()->isTranslatable() || !$bundleInfos[$entity->bundle()]['translatable']) {
-      \Drupal::messenger()->addWarning(t('Cannot download translations for @type %label. That @bundle_label is not enabled for translation.',
-        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label(), '@bundle_label' => $entity->getEntityType()->getBundleLabel()]));
-      return;
-    }
-    if (!$this->lingotekConfiguration->isEnabled($entity->getEntityTypeId(), $entity->bundle())) {
-      $this->messenger()->addWarning(t('Cannot download translations for @type %label. That @bundle_label is not enabled for Lingotek translation.',
-        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label(), '@bundle_label' => $entity->getEntityType()->getBundleLabel()]
-      ));
-      return;
-    }
-    if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE)) {
-      $languages = $this->languageManager->getLanguages();
-      foreach ($languages as $langcode => $language) {
-        if ($langcode !== $entity->language()->getId()) {
-          $locale = $this->languageLocaleMapper->getLocaleForLangcode($langcode);
-          if ($this->translationService->checkTargetStatus($entity, $langcode)) {
-            try {
-              $this->translationService->downloadDocument($entity, $locale);
-            }
-            catch (LingotekDocumentNotFoundException $exc) {
-              $this->messenger()->addError(t('Document @entity_type %title was not found. Please upload again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
-            }
-            catch (LingotekApiException $exception) {
-              $this->messenger()->addError(t('The download for @entity_type %title translation failed. Please try again.', [
-                '@entity_type' => $entity->getEntityTypeId(),
-                '%title' => $entity->label(),
-              ]));
-            }
-          }
-        }
-      }
-    }
-    else {
-      $bundleInfos = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
-      $this->messenger()->addWarning($this->t('The @type %label has no profile assigned so it was not processed.',
-        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]));
-    }
-  }
-
-  /**
-   * Cancel the content from Lingotek.
-   *
-   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
-   *   The entity.
-   */
-  public function cancel(ContentEntityInterface $entity, $language, $job_id, &$context) {
-    $context['message'] = $this->t('Cancelling all translations for @type %label.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label()]);
-    $bundleInfos = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
-    if (!$entity->getEntityType()->isTranslatable() || !$bundleInfos[$entity->bundle()]['translatable']) {
-      \Drupal::messenger()->addWarning(t('Cannot cancel @type %label. That @bundle_label is not enabled for translation.',
-        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label(), '@bundle_label' => $entity->getEntityType()->getBundleLabel()]));
-      return;
-    }
-    if (!$this->lingotekConfiguration->isEnabled($entity->getEntityTypeId(), $entity->bundle())) {
-      $this->messenger()->addWarning(t('Cannot cancel @type %label. That @bundle_label is not enabled for Lingotek translation.',
-        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label(), '@bundle_label' => $entity->getEntityType()->getBundleLabel()]
-      ));
-      return;
-    }
-    if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE)) {
-      try {
-        $this->translationService->cancelDocument($entity);
-      }
-      catch (LingotekDocumentNotFoundException $exc) {
-        $this->messenger()->addWarning(t('Document @entity_type %title was not found, so nothing to cancel.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
-      }
-      catch (LingotekApiException $exception) {
-        $this->messenger()->addError(t('The cancellation of @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
-      }
-    }
-    else {
-      $bundleInfos = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
-      $this->messenger()->addWarning($this->t('The @type %label has no profile assigned so it was not processed.',
-        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]));
-    }
-  }
-
-  /**
-   * Cancel the content from Lingotek.
-   *
-   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
-   *   The entity.
-   */
-  public function cancelTarget(ContentEntityInterface $entity, $langcode, $job_id, &$context) {
-    $context['message'] = $this->t('Cancelling translation for @type %label to language @language.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label(), '@language' => $langcode]);
-    $locale = $this->languageLocaleMapper->getLocaleForLangcode($langcode);
-    $bundleInfos = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
-    if (!$entity->getEntityType()->isTranslatable() || !$bundleInfos[$entity->bundle()]['translatable']) {
-      $this->messenger()->addWarning(t('Cannot cancel @type %label translation to @language. That @bundle_label is not enabled for translation.',
-        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label(), '@bundle_label' => $entity->getEntityType()->getBundleLabel(), '@language' => $langcode]));
-      return;
-    }
-    if (!$this->lingotekConfiguration->isEnabled($entity->getEntityTypeId(), $entity->bundle())) {
-      $this->messenger()->addWarning(t('Cannot cancel @type %label translation to @language. That @bundle_label is not enabled for Lingotek translation.',
-        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label(), '@bundle_label' => $entity->getEntityType()->getBundleLabel(), '@language' => $langcode]
-      ));
-      return;
-    }
-    if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE)) {
-      try {
-        $this->translationService->cancelDocumentTarget($entity, $locale);
-      }
-      catch (LingotekDocumentTargetAlreadyCompletedException $e) {
-        $this->translationService->checkTargetStatus($entity, $langcode);
-        $this->messenger()->addError($this->t('Target %language for @entity_type %title was already completed in the TMS and cannot be cancelled unless the entire document is cancelled.',
-          ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label(), '%language' => $langcode]));
-      }
-      catch (LingotekDocumentNotFoundException $exc) {
-        $this->messenger()->addWarning(t('Document @entity_type %title was not found, so nothing to cancel.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
-      }
-      catch (LingotekApiException $exception) {
-        $this->messenger()->addError(t('The cancellation of @entity_type %title translation to @language failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label(), '@language' => $langcode]));
-      }
-    }
-    else {
-      $bundleInfos = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
-      $this->messenger()->addWarning($this->t('The @type %label has no profile assigned so it was not processed.',
-        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]));
-    }
-  }
-
-  /**
-   * Change Translation Profile.
-   *
-   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
-   *   The entity.
-   */
-  public function changeProfile(ContentEntityInterface $entity, $profile_id = NULL, $job_id = NULL, &$context = NULL) {
-    $context['message'] = $this->t('Changing Translation Profile for @type %label.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label()]);
-    $bundleInfos = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
-    if (!$entity->getEntityType()->isTranslatable() || !$bundleInfos[$entity->bundle()]['translatable']) {
-      \Drupal::messenger()->addWarning(t('Cannot change profile for @type %label. That @bundle_label is not enabled for translation.',
-        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label(), '@bundle_label' => $entity->getEntityType()->getBundleLabel()]));
-      return;
-    }
-    if (!$this->lingotekConfiguration->isEnabled($entity->getEntityTypeId(), $entity->bundle())) {
-      $this->messenger()->addWarning(t('Cannot change profile for @type %label. That @bundle_label is not enabled for Lingotek translation.',
-        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label(), '@bundle_label' => $entity->getEntityType()->getBundleLabel()]
-      ));
-      return;
-    }
-    try {
-      $this->lingotekConfiguration->setProfile($entity, $profile_id, TRUE);
-      if ($profile_id === Lingotek::PROFILE_DISABLED) {
-        $this->translationService->setSourceStatus($entity, Lingotek::STATUS_DISABLED);
-        $this->translationService->setTargetStatuses($entity, Lingotek::STATUS_DISABLED);
-      }
-      elseif ($this->translationService->getSourceStatus($entity) === Lingotek::STATUS_DISABLED) {
-        if ($this->translationService->getDocumentId($entity) !== NULL) {
-          $this->translationService->setSourceStatus($entity, Lingotek::STATUS_CURRENT);
-        }
-        else {
-          $this->translationService->setSourceStatus($entity, Lingotek::STATUS_CURRENT);
-        }
-        $this->translationService->checkTargetStatuses($entity);
-      }
-    }
-    catch (LingotekApiException $exception) {
-      $this->messenger()->addError(t('The Tranlsation Profile change for @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]));
-    }
-  }
-
-  /**
-   * Gets all the bundles as options.
-   *
-   * @return array
-   *   The bundles as a valid options array.
-   */
-  protected function getAllBundles() {
-    $bundles = $this->entityTypeBundleInfo->getBundleInfo($this->entityTypeId);
-    $options = [];
-    foreach ($bundles as $id => $bundle) {
-      $options[$id] = $bundle['label'];
-    }
-    return $options;
-  }
-
-  /**
-   * Gets all the languages as options.
-   *
-   * @return array
-   *   The languages as a valid options array.
-   */
-  protected function getAllLanguages() {
-    $languages = $this->languageManager->getLanguages();
-    $options = [];
-    foreach ($languages as $id => $language) {
-      $options[$id] = $language->getName();
-    }
-    return $options;
-  }
-
-  /**
-   * Gets all the groups as options.
-   *
-   * @return array
-   *   The groups as a valid options array.
-   */
-  protected function getAllGroups() {
-    $options = [];
-    if ($this->entityTypeId === 'node') {
-      /** @var GroupInterface[] $groups */
-      $groups = $this->entityTypeManager->getStorage('group')->loadMultiple();
-      foreach ($groups as $id => $group) {
-        $options[$id] = $group->label();
-      }
-    }
-    return $options;
   }
 
   /**
@@ -1546,74 +567,23 @@ abstract class LingotekManagementFormBase extends FormBase {
    */
   public function generateBulkOptions() {
     $operations = [];
-    $operations['upload'] = $this->t('Upload source for translation');
-    $operations['check_upload'] = $this->t('Check upload progress');
-    $operations[(string) $this->t('Request translations')]['request_translations'] = $this->t('Request all translations');
-    $operations[(string) $this->t('Check translation progress')]['check_translations'] = $this->t('Check progress of all translations');
-    $operations[(string) $this->t('Download')]['download'] = $this->t('Download all translations');
-    if ($this->canHaveDeleteTranslationBulkOptions()) {
-      $operations[(string) $this->t('Delete translations')]['delete_translations'] = $this->t('Delete translations');
-    }
-    foreach ($this->lingotekConfiguration->getProfileOptions() as $profile_id => $profile) {
-      $operations[(string) $this->t('Change Translation Profile')]['change_profile:' . $profile_id] = $this->t('Change to @profile Profile', ['@profile' => $profile]);
-    }
-    $operations[(string) $this->t('Cancel document')]['cancel'] = $this->t('Cancel document');
-    $target_languages = $this->languageManager->getLanguages();
-    $target_languages = array_filter($target_languages, function (LanguageInterface $language) {
-      $configLanguage = $this->entityTypeManager->getStorage('configurable_language')->load($language->getId());
-      return $this->lingotekConfiguration->isLanguageEnabled($configLanguage);
-    });
-    foreach ($target_languages as $langcode => $language) {
-      $operations[(string) $this->t('Cancel document')]['cancel:' . $langcode] = $this->t('Cancel @language translation', ['@language' => $language->getName() . ' (' . $language->getId() . ')']);
-      $operations[(string) $this->t('Request translations')]['request_translation:' . $langcode] = $this->t('Request @language translation', ['@language' => $language->getName() . ' (' . $language->getId() . ')']);
-      $operations[(string) $this->t('Check translation progress')]['check_translation:' . $langcode] = $this->t('Check progress of @language translation', ['@language' => $language->getName() . ' (' . $language->getId() . ')']);
-      $operations[(string) $this->t('Download')]['download:' . $langcode] = $this->t('Download @language translation', ['@language' => $language->getName() . ' (' . $language->getId() . ')']);
-      if ($this->canHaveDeleteTranslationBulkOptions()) {
-        $operations[(string) $this->t('Delete translations')]['delete_translation:' . $langcode] = $this->t('Delete @language translation', ['@language' => $language->getName() . ' (' . $language->getId() . ')']);
+    if ($this->formBulkActions) {
+      foreach ($this->formBulkActions as $action_id => $plugin) {
+        $parents = [];
+
+        if ($group = $plugin->getGroup()) {
+          $parents[] = (string) $group;
+        }
+
+        $parents[] = $action_id;
+        NestedArray::setValue($operations, $parents, $plugin->getTitle());
       }
     }
-
-    $operations['Jobs management'] = [
-      'assign_job' => $this->t('Assign Job ID'),
-      'clear_job' => $this->t('Clear Job ID'),
-    ];
-
-    if ($this->canHaveDeleteBulkOptions()) {
-      $operations['delete_nodes'] = $this->t('Delete content');
-    }
-
-    $debug_enabled = $this->state->get('lingotek.enable_debug_utilities', FALSE);
-    if ($debug_enabled) {
-      $operations['debug']['debug.export'] = $this->t('Debug: Export sources as JSON');
-    }
-
     return $operations;
   }
 
   protected function getDestinationWithQueryArray() {
     return ['destination' => \Drupal::request()->getRequestUri()];
-  }
-
-  /**
-   * Check if we can delete translation in bulk based on the entity definition.
-   *
-   * @return bool
-   *   TRUE if can delete translation in bulk, FALSE if cannot.
-   */
-  protected function canHaveDeleteTranslationBulkOptions() {
-    return $this->entityTypeManager->getDefinition($this->entityTypeId)
-      ->hasLinkTemplate('delete-multiple-form');
-  }
-
-  /**
-   * Check if we can delete content in bulk based on the entity definition.
-   *
-   * @return bool
-   *   TRUE if can delete translation in bulk, FALSE if cannot.
-   */
-  protected function canHaveDeleteBulkOptions() {
-    return $this->entityTypeManager->getDefinition($this->entityTypeId)
-      ->hasLinkTemplate('delete-multiple-form');
   }
 
 }

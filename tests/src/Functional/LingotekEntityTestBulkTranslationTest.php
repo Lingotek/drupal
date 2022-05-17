@@ -179,7 +179,7 @@ class LingotekEntityTestBulkTranslationTest extends LingotekTestBase {
     $key = $this->getBulkSelectionKey('en', 1);
     $edit = [
       $key => TRUE,
-      $this->getBulkOperationFormName() => 'download:de',
+      $this->getBulkOperationFormName() => 'download_translation:de',
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     $this->assertIdentical('de_AT', \Drupal::state()->get('lingotek.downloaded_locale'));

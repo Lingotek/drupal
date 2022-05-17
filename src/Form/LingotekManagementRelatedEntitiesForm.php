@@ -14,6 +14,9 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
+use Drupal\lingotek\FormComponent\LingotekFormComponentBulkActionExecutor;
+use Drupal\lingotek\FormComponent\LingotekFormComponentBulkActionManager;
+use Drupal\lingotek\FormComponent\LingotekFormComponentBulkActionOptionManager;
 use Drupal\lingotek\FormComponent\LingotekFormComponentFieldManager;
 use Drupal\lingotek\FormComponent\LingotekFormComponentFilterManager;
 use Drupal\lingotek\LanguageLocaleMapperInterface;
@@ -65,13 +68,17 @@ class LingotekManagementRelatedEntitiesForm extends LingotekManagementFormBase {
    *   The form-field plugin manager.
    * @param \Drupal\lingotek\FormComponent\LingotekFormComponentFilterManager $form_filter_manager
    *   The form-filter plugin manager.
+   * @param \Drupal\lingotek\FormComponent\LingotekFormComponentBulkActionManager $form_actions_manager
+   *   The form-actions plugin manager.
+   * @param \Drupal\lingotek\FormComponent\LingotekFormComponentBulkActionOptionManager $form_action_options_manager
+   *   The form-action options plugin manager.
    */
-  public function __construct(Connection $connection, EntityTypeManagerInterface $entity_type_manager, LanguageManagerInterface $language_manager, LingotekInterface $lingotek, LingotekConfigurationServiceInterface $lingotek_configuration, LanguageLocaleMapperInterface $language_locale_mapper, ContentTranslationManagerInterface $content_translation_manager, LingotekContentTranslationServiceInterface $translation_service, PrivateTempStoreFactory $temp_store_factory, StateInterface $state, ModuleHandlerInterface $module_handler, $entity_type_id, EntityFieldManagerInterface $entity_field_manager, EntityTypeBundleInfoInterface $entity_type_bundle_info, LingotekFormComponentFieldManager $form_field_manager, LingotekFormComponentFilterManager $form_filter_manager) {
+  public function __construct(Connection $connection, EntityTypeManagerInterface $entity_type_manager, LanguageManagerInterface $language_manager, LingotekInterface $lingotek, LingotekConfigurationServiceInterface $lingotek_configuration, LanguageLocaleMapperInterface $language_locale_mapper, ContentTranslationManagerInterface $content_translation_manager, LingotekContentTranslationServiceInterface $translation_service, PrivateTempStoreFactory $temp_store_factory, StateInterface $state, ModuleHandlerInterface $module_handler, $entity_type_id, EntityFieldManagerInterface $entity_field_manager, EntityTypeBundleInfoInterface $entity_type_bundle_info, LingotekFormComponentFieldManager $form_field_manager, LingotekFormComponentFilterManager $form_filter_manager, LingotekFormComponentBulkActionManager $form_actions_manager, LingotekFormComponentBulkActionOptionManager $form_action_options_manager, LingotekFormComponentBulkActionExecutor $form_bulk_action_executor) {
     // The entity type is inevitably a node, but let's find out the proper way.
     $route_parameters = \Drupal::routeMatch()->getParameters()->all();
     /** @var \Drupal\Core\Entity\EntityInterface $entity */
     $entity = reset($route_parameters);
-    parent::__construct($connection, $entity_type_manager, $language_manager, $lingotek, $lingotek_configuration, $language_locale_mapper, $content_translation_manager, $translation_service, $temp_store_factory, $state, $module_handler, $entity->getEntityTypeId(), $entity_field_manager, $entity_type_bundle_info, $form_field_manager, $form_filter_manager);
+    parent::__construct($connection, $entity_type_manager, $language_manager, $lingotek, $lingotek_configuration, $language_locale_mapper, $content_translation_manager, $translation_service, $temp_store_factory, $state, $module_handler, $entity->getEntityTypeId(), $entity_field_manager, $entity_type_bundle_info, $form_field_manager, $form_filter_manager, $form_actions_manager, $form_action_options_manager, $form_bulk_action_executor);
   }
 
   public function buildForm(array $form, FormStateInterface $form_state, ContentEntityInterface $node = NULL) {
@@ -259,20 +266,6 @@ class LingotekManagementRelatedEntitiesForm extends LingotekManagementFormBase {
   public function recursionDepthCallback(array &$form, FormStateInterface $form_state) {
     $value = $form_state->getValue('depth');
     $this->setRecursionDepth($value);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function canHaveDeleteTranslationBulkOptions() {
-    return FALSE;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function canHaveDeleteBulkOptions() {
-    return FALSE;
   }
 
 }

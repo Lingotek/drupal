@@ -4,6 +4,7 @@ namespace Drupal\lingotek\Plugin\LingotekFormComponent\Filter;
 
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Query\SelectInterface;
+use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -26,6 +27,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * )
  */
 class Title extends LingotekFormComponentFilterBase {
+
+  use DependencySerializationTrait;
 
   /**
    * @var \Drupal\Core\Entity\EntityFieldManagerInterface

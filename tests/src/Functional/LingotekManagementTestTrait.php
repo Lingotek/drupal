@@ -319,19 +319,19 @@ trait LingotekManagementTestTrait {
   }
 
   protected function getBulkOperationNameForDownloadTranslations($entity_type_id) {
-    return 'download';
+    return 'download_translations';
   }
 
   protected function getBulkOperationNameForDownloadTranslation($langcode, $entity_type_id) {
-    return 'download:' . $langcode;
+    return 'download_translation:' . $langcode;
   }
 
   protected function getBulkOperationNameForCancel($entity_type_id) {
-    return 'cancel';
+    return 'cancel_document';
   }
 
   protected function getBulkOperationNameForCancelTarget($langcode, $entity_type_id) {
-    return 'cancel:' . $langcode;
+    return 'cancel_translation:' . $langcode;
   }
 
   protected function getBulkOperationNameForDeleteTranslation($langcode, $entity_type_id) {

@@ -46,7 +46,7 @@ class LingotekSystemSiteBulkCancelTest extends LingotekTestBase {
     // Mark the first for cancelling.
     $edit = [
       'table[system.site_information_settings]' => TRUE,
-      $this->getBulkOperationFormName() => 'cancel',
+      $this->getBulkOperationFormName() => 'cancel_document',
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
@@ -99,7 +99,7 @@ class LingotekSystemSiteBulkCancelTest extends LingotekTestBase {
     // Mark the first for cancelling.
     $edit = [
       'table[system.site_information_settings]' => TRUE,
-      $this->getBulkOperationFormName() => 'cancel:es',
+      $this->getBulkOperationFormName() => 'cancel_translation:es',
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 

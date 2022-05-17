@@ -2,23 +2,7 @@
 
 namespace Drupal\lingotek\Form;
 
-use Drupal\content_translation\ContentTranslationManagerInterface;
-use Drupal\Core\Database\Connection;
-use Drupal\Core\Entity\EntityFieldManagerInterface;
-use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Language\LanguageManagerInterface;
-use Drupal\Core\State\StateInterface;
-use Drupal\Core\TempStore\PrivateTempStoreFactory;
-use Drupal\lingotek\FormComponent\LingotekFormComponentFieldManager;
-use Drupal\lingotek\FormComponent\LingotekFormComponentFilterManager;
-use Drupal\lingotek\LanguageLocaleMapperInterface;
-use Drupal\lingotek\LingotekConfigurationServiceInterface;
-use Drupal\lingotek\LingotekContentTranslationServiceInterface;
-use Drupal\lingotek\LingotekInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Form for bulk management of job filtered content.
@@ -32,96 +16,33 @@ class LingotekJobManagementContentEntitiesForm extends LingotekManagementFormBas
    */
   protected $jobId;
 
-  /**
-   * Constructs a new LingotekJobManagementContentEntitiesForm object.
-   *
-   * @param \Drupal\Core\Database\Connection $connection
-   *   The current database connection.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity manager.
-   * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
-   *   The language manager.
-   * @param \Drupal\lingotek\LingotekInterface $lingotek
-   *   The lingotek service.
-   * @param \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_configuration
-   *   The Lingotek configuration service.
-   * @param \Drupal\lingotek\LanguageLocaleMapperInterface $language_locale_mapper
-   *   The language-locale mapper.
-   * @param \Drupal\content_translation\ContentTranslationManagerInterface $content_translation_manager
-   *   The content translation manager.
-   * @param \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service
-   *   The Lingotek content translation service.
-   * @param \Drupal\Core\TempStore\PrivateTempStoreFactory $temp_store_factory
-   *   The factory for the temp store object.
-   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
-   *   The module handler.
-   * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
-   *   The entity field manager.
-   * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entity_type_bundle_info
-   *   The entity type bundle info.
-   * @param \Drupal\lingotek\FormComponent\LingotekFormComponentFieldManager $form_field_manager
-   *   The form-field plugin manager.
-   * @param \Drupal\lingotek\FormComponent\LingotekFormComponentFilterManager $form_filter_manager
-   *   The form-filter plugin manager.
-   */
-  public function __construct(Connection $connection, EntityTypeManagerInterface $entity_type_manager, LanguageManagerInterface $language_manager, LingotekInterface $lingotek, LingotekConfigurationServiceInterface $lingotek_configuration, LanguageLocaleMapperInterface $language_locale_mapper, ContentTranslationManagerInterface $content_translation_manager, LingotekContentTranslationServiceInterface $translation_service, PrivateTempStoreFactory $temp_store_factory, StateInterface $state, ModuleHandlerInterface $module_handler, EntityFieldManagerInterface $entity_field_manager = NULL, EntityTypeBundleInfoInterface $entity_type_bundle_info = NULL, LingotekFormComponentFieldManager $form_field_manager, LingotekFormComponentFilterManager $form_filter_manager) {
-    parent::__construct($connection, $entity_type_manager, $language_manager, $lingotek, $lingotek_configuration, $language_locale_mapper, $content_translation_manager, $translation_service, $temp_store_factory, $state, $module_handler, NULL, $entity_field_manager, $entity_type_bundle_info, $form_field_manager, $form_filter_manager);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('database'),
-      $container->get('entity_type.manager'),
-      $container->get('language_manager'),
-      $container->get('lingotek'),
-      $container->get('lingotek.configuration'),
-      $container->get('lingotek.language_locale_mapper'),
-      $container->get('content_translation.manager'),
-      $container->get('lingotek.content_translation'),
-      $container->get('tempstore.private'),
-      $container->get('state'),
-      $container->get('module_handler'),
-      $container->get('entity_field.manager'),
-      $container->get('entity_type.bundle.info'),
-      $container->get('plugin.manager.lingotek_form_field'),
-      $container->get('plugin.manager.lingotek_form_filter')
-    );
-  }
-
   public function buildForm(array $form, FormStateInterface $form_state, $job_id = NULL) {
     $this->jobId = $job_id;
     $form = parent::buildForm($form, $form_state);
     $form['filters']['wrapper']['job']['#access'] = FALSE;
+    $form['options']['options']['job_id']['#value'] = $this->jobId;
+    $form['options']['options']['job_id']['#access'] = FALSE;
     return $form;
   }
 
-  protected function getBulkOptions() {
-    $options = parent::getBulkOptions();
-    $options['show_advanced']['#access'] = FALSE;
-    $options['job_id']['#access'] = FALSE;
-    $options['job_id']['#default_value'] = $this->jobId;
-    return $options;
-  }
-
   protected function getFilteredEntities() {
-    $entity_query = $this->entityTypeManager->getStorage('lingotek_content_metadata')->getQuery();
+    $metadataStorage = $this->entityTypeManager->getStorage('lingotek_content_metadata');
+    $entity_query = $metadataStorage->getQuery();
     $entity_query->condition('job_id', $this->jobId);
     $ids = $entity_query->execute();
 
-    $metadatas = $this->entityTypeManager->getStorage('lingotek_content_metadata')
-      ->loadMultiple($ids);
+    $metadatas = $metadataStorage->loadMultiple($ids);
     $entities = [];
 
     /** @var \Drupal\lingotek\Entity\LingotekContentMetadata $metadata */
-    foreach ($metadatas as $metadata) {
-      $content_entity_type_id = $metadata->getContentEntityTypeId();
-      $content_entity_id = $metadata->getContentEntityId();
-      $entity = $this->entityTypeManager->getStorage($content_entity_type_id)
-        ->load($content_entity_id);
-      $entities[$content_entity_type_id][] = $entity;
+    if (!empty($metadatas)) {
+      foreach ($metadatas as $metadata) {
+        $content_entity_type_id = $metadata->getContentEntityTypeId();
+        $content_entity_id = $metadata->getContentEntityId();
+        $entity = $this->entityTypeManager->getStorage($content_entity_type_id)
+          ->load($content_entity_id);
+        $entities[$content_entity_type_id][] = $entity;
+      }
     }
     return $entities;
   }
@@ -130,7 +51,7 @@ class LingotekJobManagementContentEntitiesForm extends LingotekManagementFormBas
     $entityTypes = [];
     $entities = [];
     foreach ($values as $type_entity_id) {
-      list($type, $entity_id) = explode(":", $type_entity_id);
+      [$type, $entity_id] = explode(":", $type_entity_id);
       $entityTypes[$type][] = $entity_id;
     }
 

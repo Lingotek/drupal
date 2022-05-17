@@ -160,7 +160,7 @@ class LingotekContentTypeBulkDisabledTargetOverrideTranslationTest extends Lingo
     $assert_session->linkByHrefNotExists($basepath . '/admin/lingotek/config/download/node_type/article/ca_ES?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[article]' => TRUE,
-      $this->getBulkOperationFormName() => 'download:ca',
+      $this->getBulkOperationFormName() => 'download_translation:ca',
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     $this->assertIdentical(NULL, \Drupal::state()

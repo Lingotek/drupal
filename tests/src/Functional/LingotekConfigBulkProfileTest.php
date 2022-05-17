@@ -131,7 +131,7 @@ class LingotekConfigBulkProfileTest extends LingotekTestBase {
 
     $edit = [
       'table[system.site_information_settings]' => TRUE,
-      $this->getBulkOperationFormName() => 'download:es',
+      $this->getBulkOperationFormName() => 'download_translation:es',
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
@@ -200,13 +200,13 @@ class LingotekConfigBulkProfileTest extends LingotekTestBase {
 
     $edit = [
       'table[system.site_information_settings]' => TRUE,
-      $this->getBulkOperationFormName() => 'download',
+      $this->getBulkOperationFormName() => 'download_translations',
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     $edit = [
       'table[system.site_information_settings]' => TRUE,
-      $this->getBulkOperationFormName() => 'cancel',
+      $this->getBulkOperationFormName() => 'cancel_document',
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 

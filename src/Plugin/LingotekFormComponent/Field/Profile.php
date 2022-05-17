@@ -2,6 +2,7 @@
 
 namespace Drupal\lingotek\Plugin\LingotekFormComponent\Field;
 
+use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\lingotek\FormComponent\LingotekFormComponentFieldBase;
 
@@ -20,6 +21,8 @@ use Drupal\lingotek\FormComponent\LingotekFormComponentFieldBase;
  * )
  */
 class Profile extends LingotekFormComponentFieldBase {
+
+  use DependencySerializationTrait;
 
   /**
    * {@inheritdoc}

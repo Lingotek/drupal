@@ -3,6 +3,7 @@
 namespace Drupal\lingotek\Plugin\LingotekFormComponent\Filter;
 
 use Drupal\Core\Database\Query\SelectInterface;
+use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\lingotek\FormComponent\LingotekFormComponentBundleTrait;
 use Drupal\lingotek\FormComponent\LingotekFormComponentFilterBase;
 
@@ -20,6 +21,7 @@ use Drupal\lingotek\FormComponent\LingotekFormComponentFilterBase;
  */
 class Bundle extends LingotekFormComponentFilterBase {
 
+  use DependencySerializationTrait;
   use LingotekFormComponentBundleTrait;
 
   /**

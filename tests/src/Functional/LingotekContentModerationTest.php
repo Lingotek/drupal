@@ -498,7 +498,7 @@ class LingotekContentModerationTest extends LingotekTestBase {
     // Download translation.
     $edit = [
       'table[1]' => TRUE,
-      'operation' => 'download:es',
+      'operation' => 'download_translation:es',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
     $this->assertText('Operations completed.');
@@ -573,7 +573,7 @@ class LingotekContentModerationTest extends LingotekTestBase {
     // Download translation.
     $edit = [
       'table[1]' => TRUE,
-      'operation' => 'download',
+      'operation' => 'download_translations',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
     $this->assertText('Operations completed.');
@@ -642,7 +642,7 @@ class LingotekContentModerationTest extends LingotekTestBase {
     // Download translation.
     $edit = [
       'table[1]' => TRUE,
-      'operation' => 'download:es',
+      'operation' => 'download_translation:es',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
     $this->assertText('Operations completed.');

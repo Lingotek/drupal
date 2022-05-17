@@ -2,6 +2,7 @@
 
 namespace Drupal\lingotek\FormComponent;
 
+use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Plugin\PluginBase;
@@ -16,6 +17,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @package Drupal\lingotek\FormComponent
  */
 abstract class LingotekFormComponentBase extends PluginBase implements LingotekFormComponentInterface {
+
+  use DependencySerializationTrait;
 
   /**
    * The entity_type.manager service.

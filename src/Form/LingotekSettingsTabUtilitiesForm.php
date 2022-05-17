@@ -102,7 +102,7 @@ class LingotekSettingsTabUtilitiesForm extends LingotekConfigFormBase {
     $callback_url = $accountConfig->get('callback_url');
     $update_callback_url_row = [];
     $update_callback_url_row['update_description'] = [
-      '#markup' => '<h5>' . $this->t('Update Notification Callback URL') . '</h5>' . '<p>' . $this->t('Update the notification callback URL. This can be run whenever your site is moved (e.g., domain name change or sub-directory re-location) or whenever you would like your security token re-generated.') . '</p>' . $this->t('<b>Current notification callback URL:</b> %callback_url', ['%callback_url' => $callback_url]),
+      '#markup' => '<h5>' . $this->t('Update Notification Callback URL') . '</h5>' . '<p>' . $this->t('Update the notification callback URL. This can be run whenever your site is moved (e.g., domain name change or sub-directory re-location) or whenever you would like your security token re-generated.') . '</p>' . $this->t('<b>Current notification callback URL:</b> %callback_url', ['%callback_url' => $callback_url ?? '']),
     ];
     $update_callback_url_row['actions']['update_url'] = [
       '#type' => 'submit',

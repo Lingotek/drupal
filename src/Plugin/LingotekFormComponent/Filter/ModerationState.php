@@ -4,6 +4,7 @@ namespace Drupal\lingotek\Plugin\LingotekFormComponent\Filter;
 
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Query\SelectInterface;
+use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
@@ -27,6 +28,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * )
  */
 class ModerationState extends LingotekFormComponentFilterBase {
+
+  use DependencySerializationTrait;
 
   /**
    * The module_handler service.

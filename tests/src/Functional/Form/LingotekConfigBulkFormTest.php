@@ -157,7 +157,7 @@ class LingotekConfigBulkFormTest extends LingotekTestBase {
     $edit = [
       'table[article]' => TRUE,
       'table[page]' => TRUE,
-      'job_id' => 'my_custom_job_id',
+      'options[job_id]' => 'my_custom_job_id',
       $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node_type'),
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
@@ -206,7 +206,7 @@ class LingotekConfigBulkFormTest extends LingotekTestBase {
       'table[recipe]' => TRUE,
       'table[book]' => TRUE,
       'table[banner]' => TRUE,
-      'job_id' => 'my_custom_job_id',
+      'options[job_id]' => 'my_custom_job_id',
       $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node_type'),
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
@@ -1316,7 +1316,7 @@ class LingotekConfigBulkFormTest extends LingotekTestBase {
       'table[content_type_6]' => TRUE,
       'table[content_type_8]' => TRUE,
       $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node_type'),
-      'job_id' => 'even numbers',
+      'options[job_id]' => 'even numbers',
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
@@ -1327,7 +1327,7 @@ class LingotekConfigBulkFormTest extends LingotekTestBase {
       'table[content_type_5]' => TRUE,
       'table[content_type_7]' => TRUE,
       $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node_type'),
-      'job_id' => 'prime numbers',
+      'options[job_id]' => 'prime numbers',
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 

@@ -149,7 +149,7 @@ class LingotekFieldBodyBulkTranslationTest extends LingotekTestBase {
     $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/download/field_config/node.article.body/de_AT?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[node.article.body]' => TRUE,
-      $this->getBulkOperationFormName() => 'download:de',
+      $this->getBulkOperationFormName() => 'download_translation:de',
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     $this->assertIdentical('de_AT', \Drupal::state()->get('lingotek.downloaded_locale'));

@@ -3,6 +3,7 @@
 namespace Drupal\lingotek\Plugin\LingotekFormComponent\Filter;
 
 use Drupal\Core\Database\Query\SelectInterface;
+use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\lingotek\FormComponent\LingotekFormComponentFilterBase;
 
 /**
@@ -19,6 +20,8 @@ use Drupal\lingotek\FormComponent\LingotekFormComponentFilterBase;
  * )
  */
 class Profile extends LingotekFormComponentFilterBase {
+
+  use DependencySerializationTrait;
 
   /**
    * {@inheritdoc}

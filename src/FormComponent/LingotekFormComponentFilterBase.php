@@ -5,6 +5,7 @@ namespace Drupal\lingotek\FormComponent;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Query\SelectInterface;
+use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
@@ -18,6 +19,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @package Drupal\lingotek\FormComponent
  */
 abstract class LingotekFormComponentFilterBase extends LingotekFormComponentBase implements LingotekFormComponentFilterInterface {
+
+  use DependencySerializationTrait;
 
   use LingotekFormComponentBundleTrait;
 

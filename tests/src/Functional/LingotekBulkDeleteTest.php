@@ -99,7 +99,7 @@ class LingotekBulkDeleteTest extends LingotekTestBase {
       'table[1]' => TRUE,
       'table[2]' => TRUE,
       'table[3]' => FALSE,
-      $this->getBulkOperationFormName() => 'delete_nodes',
+      $this->getBulkOperationFormName() => 'delete_content',
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 

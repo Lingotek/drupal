@@ -98,6 +98,14 @@ services:
   plugin.manager.lingotek_form_filter:
     class: Drupal\lingotek\FormComponent\LingotekFormComponentFilterManager
     parent: default_plugin_manager
+  plugin.manager.lingotek_form_bulk_action:
+    class: Drupal\lingotek\FormComponent\LingotekFormComponentBulkActionManager
+    parent: default_plugin_manager
+  plugin.manager.lingotek_form_bulk_action_option:
+    class: Drupal\lingotek\FormComponent\LingotekFormComponentBulkActionOptionManager
+    parent: default_plugin_manager
+  lingotek.form_bulk_action_executor:
+    class: Drupal\lingotek\FormComponent\LingotekFormComponentBulkActionExecutor
 
   lingotek.no_moderation_configuration:
     class: Drupal\lingotek\Moderation\LingotekNoModerationConfigurationService

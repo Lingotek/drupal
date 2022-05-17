@@ -333,24 +333,28 @@ class LingotekConfigManagementForm extends FormBase {
     ];
 
     // Build an 'Update options' form.
-    $form['options'] = [
+    $form['actions'] = [
       '#type' => 'details',
       '#title' => $this->t('Bulk document management'),
       '#open' => TRUE,
       '#attributes' => ['class' => ['container-inline']],
       '#weight' => 10,
     ];
-    $form['options']['operation'] = [
+    $form['actions']['operation'] = [
       '#type' => 'select',
       '#title' => $this->t('Action'),
       '#title_display' => 'invisible',
       '#options' => $this->generateBulkOptions(),
     ];
-    $form['options']['submit'] = [
+    $form['actions']['submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Execute'),
     ];
-    $form['options']['job_id'] = [
+    $form['actions']['options'] = [
+      '#type' => 'container',
+      '#tree' => TRUE,
+    ];
+    $form['actions']['options']['job_id'] = [
       '#type' => 'lingotek_job_id',
       '#title' => $this->t('Job ID'),
       '#description' => $this->t('Assign a job id that you can filter on later on the TMS or in this page.'),
@@ -429,11 +433,11 @@ class LingotekConfigManagementForm extends FormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $operation = $form_state->getValue('operation');
-    $job_id = $form_state->getValue('job_id') ?: NULL;
+    $job_id = $form_state->getValue(['options', 'job_id']) ?: NULL;
     $values = array_keys(array_filter($form_state->getValue(['table'])));
     $processed = FALSE;
     switch ($operation) {
-      case 'debug.export':
+      case 'debug_export':
         $this->createDebugExportBatch($values);
         $processed = TRUE;
         break;
@@ -458,12 +462,12 @@ class LingotekConfigManagementForm extends FormBase {
         $processed = TRUE;
         break;
 
-      case 'download':
+      case 'download_translations':
         $this->createDownloadBatch($values);
         $processed = TRUE;
         break;
 
-      case 'cancel':
+      case 'cancel_document':
         $this->createCancelBatch($values);
         $processed = TRUE;
         break;
@@ -489,12 +493,12 @@ class LingotekConfigManagementForm extends FormBase {
         $this->createLanguageTranslationCheckStatusBatch($values, $language);
         $processed = TRUE;
       }
-      if (0 === strpos($operation, 'download:')) {
+      if (0 === strpos($operation, 'download_translation:')) {
         list($operation, $language) = explode(':', $operation);
         $this->createLanguageDownloadBatch($values, $language);
         $processed = TRUE;
       }
-      if (0 === strpos($operation, 'cancel:')) {
+      if (0 === strpos($operation, 'cancel_translation:')) {
         list($operation, $language) = explode(':', $operation);
         $this->createTargetCancelBatch($values, $language);
         $processed = TRUE;
@@ -1707,8 +1711,8 @@ class LingotekConfigManagementForm extends FormBase {
     $operations['check_upload'] = $this->t('Check upload progress');
     $operations[(string) $this->t('Request translations')]['request_translations'] = $this->t('Request all translations');
     $operations[(string) $this->t('Check translation progress')]['check_translations'] = $this->t('Check progress of all translations');
-    $operations[(string) $this->t('Download')]['download'] = $this->t('Download all translations');
-    $operations[(string) $this->t('Cancel document')]['cancel'] = $this->t('Cancel document');
+    $operations[(string) $this->t('Download')]['download_translations'] = $this->t('Download all translations');
+    $operations[(string) $this->t('Cancel document')]['cancel_document'] = $this->t('Cancel document');
 
     $target_languages = $this->languageManager->getLanguages();
     $target_languages = array_filter($target_languages, function (LanguageInterface $language) {
@@ -1716,21 +1720,21 @@ class LingotekConfigManagementForm extends FormBase {
       return $this->lingotekConfiguration->isLanguageEnabled($configLanguage);
     });
     foreach ($target_languages as $langcode => $language) {
-      $operations[(string) $this->t('Cancel document')]['cancel:' . $langcode] = $this->t('Cancel @language translation', ['@language' => $language->getName() . ' (' . $language->getId() . ')']);
+      $operations[(string) $this->t('Cancel document')]['cancel_translation:' . $langcode] = $this->t('Cancel @language translation', ['@language' => $language->getName() . ' (' . $language->getId() . ')']);
       $operations[(string) $this->t('Request translations')]['request_translation:' . $langcode] = $this->t('Request @language translation', ['@language' => $language->getName() . ' (' . $language->getId() . ')']);
       $operations[(string) $this->t('Check translation progress')]['check_translation:' . $langcode] = $this->t('Check progress of @language translation', ['@language' => $language->getName() . ' (' . $language->getId() . ')']);
-      $operations[(string) $this->t('Download')]['download:' . $langcode] = $this->t('Download @language translation', ['@language' => $language->getName() . ' (' . $language->getId() . ')']);
+      $operations[(string) $this->t('Download')]['download_translation:' . $langcode] = $this->t('Download @language translation', ['@language' => $language->getName() . ' (' . $language->getId() . ')']);
     }
     foreach ($this->lingotekConfiguration->getProfileOptions() as $profile_id => $profile) {
       $operations[(string) $this->t('Change Translation Profile')]['change_profile:' . $profile_id] = $this->t('Change to @profile Profile', ['@profile' => $profile]);
     }
-    $operations['Jobs management'] = [
+    $operations[(string) $this->t('Jobs management')] = [
       'assign_job' => $this->t('Assign Job ID'),
       'clear_job' => $this->t('Clear Job ID'),
     ];
     $debug_enabled = \Drupal::state()->get('lingotek.enable_debug_utilities', FALSE);
     if ($debug_enabled) {
-      $operations['debug']['debug.export'] = $this->t('Debug: Export sources as JSON');
+      $operations[(string) $this->t('Debug')]['debug_export'] = $this->t('Debug: Export sources as JSON');
     }
 
     return $operations;

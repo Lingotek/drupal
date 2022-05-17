@@ -3,6 +3,7 @@
 namespace Drupal\lingotek\Plugin\LingotekFormComponent\Filter;
 
 use Drupal\Core\Database\Query\SelectInterface;
+use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\lingotek\FormComponent\LingotekFormComponentFilterBase;
 
@@ -19,6 +20,8 @@ use Drupal\lingotek\FormComponent\LingotekFormComponentFilterBase;
  * )
  */
 class DefaultQuery extends LingotekFormComponentFilterBase {
+
+  use DependencySerializationTrait;
 
   public function filter(string $entity_type_id, array $entities, $value, SelectInterface &$query = NULL) {
     /** @var \Drupal\Core\Entity\EntityTypeInterface $entity_type */

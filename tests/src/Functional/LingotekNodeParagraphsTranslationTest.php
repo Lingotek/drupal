@@ -815,7 +815,7 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     $key = $this->getBulkSelectionKey('en', 1);
     $edit = [
       $key => TRUE,
-      $this->getBulkOperationFormName() => 'download:es-ar',
+      $this->getBulkOperationFormName() => 'download_translation:es-ar',
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     $this->assertIdentical('es_AR', \Drupal::state()->get('lingotek.downloaded_locale'));

@@ -138,7 +138,7 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
     $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/download/system.site_information_settings/system.site_information_settings/de_AT?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[system.site_information_settings]' => TRUE,
-      $this->getBulkOperationFormName() => 'download:de',
+      $this->getBulkOperationFormName() => 'download_translation:de',
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     $this->assertIdentical('de_AT', \Drupal::state()->get('lingotek.downloaded_locale'));
@@ -263,7 +263,7 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
     $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/download/system.site_information_settings/system.site_information_settings/de_AT?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[system.site_information_settings]' => TRUE,
-      $this->getBulkOperationFormName() => 'download',
+      $this->getBulkOperationFormName() => 'download_translations',
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
   }
@@ -1430,7 +1430,7 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
     $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/download/system.site_information_settings/system.site_information_settings/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[system.site_information_settings]' => TRUE,
-      $this->getBulkOperationFormName() => 'download',
+      $this->getBulkOperationFormName() => 'download_translations',
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
@@ -1511,7 +1511,7 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
     $assert_session->linkByHrefExists($basepath . '/admin/lingotek/config/download/system.site_information_settings/system.site_information_settings/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[system.site_information_settings]' => TRUE,
-      $this->getBulkOperationFormName() => 'download',
+      $this->getBulkOperationFormName() => 'download_translations',
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 

@@ -26,14 +26,12 @@ class LingotekManagementForm extends LingotekManagementFormBase {
     // The query will be initialized in FormComponentFilterBase.
     /** @var \Drupal\Core\Database\Query\PagerSelectExtender $query */
     $query = NULL;
-    $union1 = NULL;
-    $union2 = NULL;
     $temp_store = $this->tempStoreFactory->get($this->getTempStorageFilterKey());
     $submitted = $temp_store->get('filters') ?? [];
 
     foreach ($this->formFilters as $filter) {
       if ($filter_value = $filter->getSubmittedValue($submitted)) {
-        $filter->filter($this->entityTypeId, [], $filter_value, $query, $union1, $union2);
+        $filter->filter($this->entityTypeId, [], $filter_value, $query);
       }
     }
     // This should never happen, but just in case.

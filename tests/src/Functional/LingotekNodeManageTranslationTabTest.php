@@ -400,7 +400,7 @@ class LingotekNodeManageTranslationTabTest extends LingotekTestBase {
 
     $edit = [
       'table[node:1]' => TRUE,
-      'job_id' => 'my_custom_job_id',
+      'options[job_id]' => 'my_custom_job_id',
       $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node'),
     ];
 
