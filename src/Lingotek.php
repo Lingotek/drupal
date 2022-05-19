@@ -781,7 +781,10 @@ class Lingotek implements LingotekInterface {
           if ($data['properties']['locale_code'] === $lingotek_locale) {
             $progress = $data['properties']['percent_complete'];
             if (isset($data['properties']['ready_to_download'])) {
-              $readyToDownload = $data['properties']['ready_to_download'];
+              // "false" should evaluate to FALSE, that's why we add the filter_var.
+              $readyToDownload = is_string($data['properties']['ready_to_download']) ?
+                filter_var($data['properties']['ready_to_download'], FILTER_VALIDATE_BOOLEAN) :
+                (bool) $data['properties']['ready_to_download'];
             }
             // We need this for compatibility before this flag existed.
             // TODO: Remove the else after 4.0.0 is released.
