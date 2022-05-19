@@ -152,6 +152,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
         'complete' => 'true',
         'type' => 'target',
         'progress' => '100',
+        'ready_to_download' => 'true',
       ],
     ])->setAbsolute()->toString();
     $request = $this->client->post($url, [
@@ -258,6 +259,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
         'complete' => 'true',
         'type' => 'target',
         'progress' => '100',
+        'ready_to_download' => 'true',
       ],
     ])->setAbsolute()->toString();
     $request = $this->client->post($url, [
@@ -286,10 +288,6 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
    * Tests that a node reacts to incomplete target and not phase notifications, and does download interim translations.
    */
   public function testIncompletePhaseNotificationWithNoInterimNodeTranslation() {
-    // Originally we only downloaded the interim translation if the doc was
-    // reported complete. Now we assume that if the target notification was
-    // configured, Drupal needs to take that as word of truth and react to that
-    // no matter what.
     $this->drupalLogin($this->rootUser);
 
     // Create a node.
@@ -356,6 +354,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
         'locale' => 'es_ES',
         'complete' => 'true',
         'type' => 'target',
+        'ready_to_download' => 'false',
         'progress' => '50',
       ],
     ])->setAbsolute()->toString();
@@ -368,22 +367,18 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
       'http_errors' => FALSE,
     ]);
     $response = json_decode($request->getBody(), TRUE);
-    $this->assertTrue($response['result']['download'], 'Document downloaded.');
-    $this->assertSame('Document downloaded.', $response['messages'][0]);
+    $this->assertFalse($response['result']['download'], 'Document not downloaded.');
+    $this->assertSame('Download for target es_ES in document dummy-document-hash-id not happening as it is not ready to download.', $response['messages'][0]);
 
     $node = $this->resetStorageCachesAndReloadNode();
 
-    $this->assertSame(Lingotek::STATUS_INTERMEDIATE, $content_translation_service->getTargetStatus($node, 'es'));
+    $this->assertSame(Lingotek::STATUS_PENDING, $content_translation_service->getTargetStatus($node, 'es'));
   }
 
   /**
    * Tests that a node reacts to download_interim_translation notification and downloads interim translations.
    */
   public function testDownloadInterimTranslationNotificationWithNoInterimNodeTranslation() {
-    // Originally we only downloaded the interim translation if the doc was
-    // reported complete. Now we assume that if the target notification was
-    // configured, Drupal needs to take that as word of truth and react to that
-    // no matter what.
     $this->drupalLogin($this->rootUser);
 
     // Create a node.
@@ -418,6 +413,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
         'complete' => 'true',
         'type' => 'phase',
         'progress' => '50',
+        'ready_to_download' => 'false',
       ],
     ])->setAbsolute()->toString();
     $request = $this->client->post($url, [
@@ -450,6 +446,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
         'locale' => 'es_ES',
         'complete' => 'true',
         'type' => 'target',
+        'ready_to_download' => 'false',
         'progress' => '50',
       ],
     ])->setAbsolute()->toString();
@@ -462,12 +459,12 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
       'http_errors' => FALSE,
     ]);
     $response = json_decode($request->getBody(), TRUE);
-    $this->assertTrue($response['result']['download'], 'Document downloaded.');
-    $this->assertSame('Document downloaded.', $response['messages'][0]);
+    $this->assertFalse($response['result']['download'], 'Document not downloaded.');
+    $this->assertSame('Download for target es_ES in document dummy-document-hash-id not happening as it is not ready to download.', $response['messages'][0]);
 
     $node = $this->resetStorageCachesAndReloadNode();
 
-    $this->assertSame(Lingotek::STATUS_INTERMEDIATE, $content_translation_service->getTargetStatus($node, 'es'));
+    $this->assertSame(Lingotek::STATUS_PENDING, $content_translation_service->getTargetStatus($node, 'es'));
   }
 
   /**
@@ -555,6 +552,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
         'locale_code' => 'es-ES',
         'locale' => 'es_ES',
         'complete' => 'true',
+        'ready_to_download' => 'true',
         'type' => 'target',
         'progress' => '50',
       ],
@@ -622,6 +620,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
         'locale' => 'es_ES',
         'complete' => 'true',
         'type' => 'download_interim_translation',
+        'ready_to_download' => 'true',
         'progress' => '50',
       ],
     ])->setAbsolute()->toString();
@@ -663,6 +662,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
         'complete' => 'true',
         'type' => 'target',
         'progress' => '50',
+        'ready_to_download' => 'false',
       ],
     ])->setAbsolute()->toString();
     $request = $this->client->post($url, [
@@ -674,7 +674,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
       'http_errors' => FALSE,
     ]);
     $response = json_decode($request->getBody(), TRUE);
-    $this->assertTrue($response['result']['download'], 'Document downloaded.');
+    $this->assertFalse($response['result']['download'], 'Document downloaded.');
 
     $this->goToContentBulkManagementForm();
 
@@ -758,6 +758,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
         'locale' => 'es_ES',
         'complete' => 'true',
         'type' => 'target',
+        'ready_to_download' => 'true',
         'progress' => '100',
       ],
     ])->setAbsolute()->toString();
@@ -888,6 +889,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
         'locale' => 'es_ES',
         'complete' => 'true',
         'type' => 'target',
+        'ready_to_download' => 'true',
         'progress' => '100',
       ],
     ])->setAbsolute()->toString();
@@ -911,6 +913,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
         'locale_code' => 'ca-ES',
         'locale' => 'ca_ES',
         'complete' => 'true',
+        'ready_to_download' => 'true',
         'type' => 'target',
         'progress' => '100',
       ],
@@ -934,6 +937,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
         'locale_code' => 'de-DE',
         'locale' => 'de_DE',
         'complete' => 'true',
+        'ready_to_download' => 'true',
         'type' => 'target',
         'progress' => '100',
       ],
@@ -1062,6 +1066,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
         'complete' => 'true',
         'type' => 'target',
         'progress' => '100',
+        'ready_to_download' => 'true',
       ],
     ])->setAbsolute()->toString();
     $request = $this->client->post($url, [
@@ -1085,6 +1090,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
         'complete' => 'true',
         'type' => 'target',
         'progress' => '100',
+        'ready_to_download' => 'true',
       ],
     ])->setAbsolute()->toString();
     $request = $this->client->post($url, [
@@ -1251,6 +1257,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
           'complete' => 'true',
           'type' => 'target',
           'progress' => '100',
+          'ready_to_download' => 'true',
         ],
       ])->setAbsolute()->toString();
       $requests[] = \Drupal::httpClient()->postAsync($url);
@@ -1330,6 +1337,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
         'complete' => 'true',
         'type' => 'target',
         'progress' => '100',
+        'ready_to_download' => 'true',
       ],
     ])->setAbsolute()->toString();
     $request = $this->client->post($url, [
@@ -1387,6 +1395,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
         'complete' => 'true',
         'type' => 'target',
         'progress' => '100',
+        'ready_to_download' => 'true',
       ],
     ])->setAbsolute()->toString();
     $request = $this->client->post($url, [
@@ -1422,6 +1431,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
         'complete' => 'true',
         'type' => 'target',
         'progress' => '100',
+        'ready_to_download' => 'true',
       ],
     ])->setAbsolute()->toString();
     $request = $this->client->post($url, [
@@ -1446,6 +1456,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
         'complete' => 'true',
         'type' => 'target',
         'progress' => '100',
+        'ready_to_download' => 'true',
       ],
     ])->setAbsolute()->toString();
     $request = \Drupal::httpClient()->postAsync($url);
@@ -1524,6 +1535,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
         'complete' => 'true',
         'type' => 'target',
         'progress' => '100',
+        'ready_to_download' => 'true',
       ],
     ])->setAbsolute()->toString();
     $request = $this->client->post($url, [
@@ -1549,6 +1561,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
         'complete' => 'true',
         'type' => 'target',
         'progress' => '100',
+        'ready_to_download' => 'true',
       ],
     ])->setAbsolute()->toString();
     $request = $this->client->post($url, [
@@ -1652,6 +1665,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
         'complete' => 'true',
         'type' => 'target',
         'progress' => '100',
+        'ready_to_download' => 'true',
       ],
     ])->setAbsolute()->toString();
     $request = $this->client->post($url, [
@@ -1677,6 +1691,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
         'complete' => 'true',
         'type' => 'target',
         'progress' => '100',
+        'ready_to_download' => 'true',
       ],
     ])->setAbsolute()->toString();
     $request = $this->client->post($url, [

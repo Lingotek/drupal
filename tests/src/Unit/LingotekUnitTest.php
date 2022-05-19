@@ -1408,6 +1408,70 @@ class LingotekUnitTest extends UnitTestCase {
   /**
    * @covers ::getDocumentTranslationStatus
    */
+  public function testGetDocumentTranslationStatusWithStrings() {
+    $response = $this->getMockBuilder(ResponseInterface::class)
+      ->disableOriginalConstructor()
+      ->getMock();
+    $response->expects($this->any())
+      ->method('getStatusCode')
+      ->willReturn(Response::HTTP_OK);
+    $response->expects($this->any())
+      ->method('getBody')
+      ->willReturn(json_encode(
+        [
+          'entities' =>
+            [
+              [
+                'properties' =>
+                  [
+                    'locale_code' => 'es-ES',
+                    'ready_to_download' => 'true',
+                    'percent_complete' => 100,
+                    'status' => 'READY',
+                  ],
+              ],
+              [
+                'properties' =>
+                  [
+                    'locale_code' => 'de-DE',
+                    'ready_to_download' => 'false',
+                    'percent_complete' => 50,
+                    'status' => 'READY',
+                  ],
+              ],
+
+            ],
+        ]
+      ));
+    $this->api->expects($this->at(0))
+      ->method('getDocumentTranslationStatus')
+      ->with('my_doc_id', 'es_ES')
+      ->will($this->returnValue($response));
+    $this->api->expects($this->at(1))
+      ->method('getDocumentTranslationStatus')
+      ->with('my_doc_id', 'de_DE')
+      ->will($this->returnValue($response));
+    $this->api->expects($this->at(2))
+      ->method('getDocumentTranslationStatus')
+      ->with('my_doc_id', 'ca_ES')
+      ->will($this->returnValue($response));
+
+    // Assert that a complete translation is reported as completed.
+    $result = $this->lingotek->getDocumentTranslationStatus('my_doc_id', 'es_ES');
+    $this->assertSame(TRUE, $result);
+
+    // Assert that an incomplete translation is reported as not completed.
+    $result = $this->lingotek->getDocumentTranslationStatus('my_doc_id', 'de_DE');
+    $this->assertSame(50, $result);
+
+    // Assert that an unrequested translation is reported as not completed.
+    $result = $this->lingotek->getDocumentTranslationStatus('my_doc_id', 'ca_ES');
+    $this->assertSame(FALSE, $result);
+  }
+
+  /**
+   * @covers ::getDocumentTranslationStatus
+   */
   public function testGetDocumentTranslationStatusCancelled() {
     $response = $this->getMockBuilder(ResponseInterface::class)
       ->disableOriginalConstructor()

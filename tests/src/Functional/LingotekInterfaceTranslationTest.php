@@ -1003,6 +1003,7 @@ class LingotekInterfaceTranslationTest extends LingotekTestBase {
         'complete' => 'true',
         'type' => 'target',
         'progress' => '100',
+        'ready_to_download' => 'true',
       ],
     ])->setAbsolute()->toString();
     $request = $this->client->post($url, [

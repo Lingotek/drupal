@@ -448,93 +448,107 @@ class LingotekNotificationController extends LingotekControllerBase {
         // ex. ?project_id=103956f4-17cf-4d79-9d15-5f7b7a88dee2&locale_code=de-DE&document_id=bbf48a7b-b201-47a0-bc0e-0446f9e33a2f&complete=true&locale=de_DE&progress=100&type=target
         $document_id = $request->query->get('document_id');
         $locale = $request->query->get('locale');
-        $langcode = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale)
-          ->id();
+        $readyToDownload = $request->query->get('ready_to_download');
 
-        $lock = \Drupal::lock();
-        $lock_name = __FUNCTION__ . ':' . $document_id;
-
-        do {
-          if ($lock->lockMayBeAvailable($lock_name)) {
-            if ($held = $lock->acquire($lock_name)) {
-              break;
-            }
-          }
-          $lock->wait($lock_name, rand(1, 3));
-        } while (TRUE);
-
-        try {
-          $entity = $this->getEntity($document_id);
-          /** @var \Drupal\lingotek\Entity\LingotekProfile $profile */
-          $profile = $this->getProfile($entity);
-          if ($entity) {
-            if ($entity instanceof ConfigEntityInterface) {
-              $translation_service = $this->lingotekConfigTranslation;
-            }
-            elseif (is_string($entity)) {
-              $translation_service = $this->lingotekInterfaceTranslation;
-            }
-            if ($type === 'target') {
-              $translation_service->setTargetStatus($entity, $langcode, Lingotek::STATUS_READY);
-            }
-            elseif ($type === 'download_interim_translation') {
-              $translation_service->setTargetStatus($entity, $langcode, Lingotek::STATUS_INTERMEDIATE);
-            }
-            if ($profile !== NULL && $profile->hasAutomaticDownloadForTarget($langcode) && $profile->hasAutomaticDownloadWorker()) {
-              $queue = \Drupal::queue('lingotek_downloader_queue_worker');
-              $item = [
-                'entity_type_id' => $entity->getEntityTypeId(),
-                'entity_id' => $entity->id(),
-                'locale' => $locale,
-                'document_id' => $document_id,
-              ];
-              $result['download_queued'] = $queue->createItem($item);
-            }
-            elseif ($profile !== NULL && $profile->hasAutomaticDownloadForTarget($langcode) && !$profile->hasAutomaticDownloadWorker()) {
-              $result['download'] = $translation_service->downloadDocument($entity, $locale);
-            }
-            else {
-              $result['download'] = FALSE;
-            }
-            if (isset($result['download']) && $result['download']) {
-              $messages[] = "Document downloaded.";
-              $http_status_code = Response::HTTP_OK;
-            }
-            elseif (isset($result['download_queued']) && $result['download_queued']) {
-              $messages[] = new FormattableMarkup('Download for target @locale in document @document has been queued.', [
-                '@locale' => $locale,
-                '@document' => $document_id,
-              ]);
-              $result['download_queued'] = TRUE;
-              $http_status_code = Response::HTTP_OK;
-            }
-            else {
-              $messages[] = new FormattableMarkup('No download for target @locale happened in document @document.', [
-                '@locale' => $locale,
-                '@document' => $document_id,
-              ]);
-              if ($profile !== NULL && !$profile->hasAutomaticDownloadForTarget($langcode)) {
-                $http_status_code = Response::HTTP_OK;
-              }
-              else {
-                $http_status_code = Response::HTTP_SERVICE_UNAVAILABLE;
-              }
-            }
-          }
-          else {
-            $http_status_code = Response::HTTP_NO_CONTENT;
-            $messages[] = "Document not found.";
-          }
-        }
-        catch (\Exception $exception) {
-          $http_status_code = Response::HTTP_SERVICE_UNAVAILABLE;
-          $messages[] = new FormattableMarkup('Download of target @locale for document @document failed', [
+        $readyToDownload = is_string($readyToDownload) ? filter_var($readyToDownload, FILTER_VALIDATE_BOOLEAN) :
+          (bool) $readyToDownload;
+        if (!$readyToDownload) {
+          $messages[] = new FormattableMarkup('Download for target @locale in document @document not happening as it is not ready to download.', [
             '@locale' => $locale,
             '@document' => $document_id,
           ]);
+          $result['download'] = FALSE;
+          $http_status_code = Response::HTTP_OK;
         }
-        finally {
-          $lock->release($lock_name);
+        else {
+
+          $langcode = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale)
+            ->id();
+
+          $lock = \Drupal::lock();
+          $lock_name = __FUNCTION__ . ':' . $document_id;
+
+          do {
+            if ($lock->lockMayBeAvailable($lock_name)) {
+              if ($held = $lock->acquire($lock_name)) {
+                break;
+              }
+            }
+            $lock->wait($lock_name, rand(1, 3));
+          } while (TRUE);
+
+          try {
+            $entity = $this->getEntity($document_id);
+            /** @var \Drupal\lingotek\Entity\LingotekProfile $profile */
+            $profile = $this->getProfile($entity);
+            if ($entity) {
+              if ($entity instanceof ConfigEntityInterface) {
+                $translation_service = $this->lingotekConfigTranslation;
+              }
+              elseif (is_string($entity)) {
+                $translation_service = $this->lingotekInterfaceTranslation;
+              }
+              if ($type === 'target') {
+                $translation_service->setTargetStatus($entity, $langcode, Lingotek::STATUS_READY);
+              }
+              elseif ($type === 'download_interim_translation') {
+                $translation_service->setTargetStatus($entity, $langcode, Lingotek::STATUS_INTERMEDIATE);
+              }
+              if ($profile !== NULL && $profile->hasAutomaticDownloadForTarget($langcode) && $profile->hasAutomaticDownloadWorker()) {
+                $queue = \Drupal::queue('lingotek_downloader_queue_worker');
+                $item = [
+                  'entity_type_id' => $entity->getEntityTypeId(),
+                  'entity_id' => $entity->id(),
+                  'locale' => $locale,
+                  'document_id' => $document_id,
+                ];
+                $result['download_queued'] = $queue->createItem($item);
+              }
+              elseif ($profile !== NULL && $profile->hasAutomaticDownloadForTarget($langcode) && !$profile->hasAutomaticDownloadWorker()) {
+                $result['download'] = $translation_service->downloadDocument($entity, $locale);
+              }
+              else {
+                $result['download'] = FALSE;
+              }
+              if (isset($result['download']) && $result['download']) {
+                $messages[] = "Document downloaded.";
+                $http_status_code = Response::HTTP_OK;
+              }
+              elseif (isset($result['download_queued']) && $result['download_queued']) {
+                $messages[] = new FormattableMarkup('Download for target @locale in document @document has been queued.', [
+                  '@locale' => $locale,
+                  '@document' => $document_id,
+                ]);
+                $result['download_queued'] = TRUE;
+                $http_status_code = Response::HTTP_OK;
+              }
+              else {
+                $messages[] = new FormattableMarkup('No download for target @locale happened in document @document.', [
+                  '@locale' => $locale,
+                  '@document' => $document_id,
+                ]);
+                if ($profile !== NULL && !$profile->hasAutomaticDownloadForTarget($langcode)) {
+                  $http_status_code = Response::HTTP_OK;
+                }
+                else {
+                  $http_status_code = Response::HTTP_SERVICE_UNAVAILABLE;
+                }
+              }
+            }
+            else {
+              $http_status_code = Response::HTTP_NO_CONTENT;
+              $messages[] = "Document not found.";
+            }
+          }
+          catch (\Exception $exception) {
+            $http_status_code = Response::HTTP_SERVICE_UNAVAILABLE;
+            $messages[] = new FormattableMarkup('Download of target @locale for document @document failed', [
+              '@locale' => $locale,
+              '@document' => $document_id,
+            ]);
+          } finally {
+            $lock->release($lock_name);
+          }
         }
         break;
 

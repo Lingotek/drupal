@@ -138,6 +138,7 @@ class LingotekNodeNotificationCallbackQueueWorkerTest extends LingotekTestBase {
         'complete' => 'true',
         'type' => 'target',
         'progress' => '100',
+        'ready_to_download' => 'true',
       ],
     ])->setAbsolute()->toString();
     $request = $this->client->post($url, [
@@ -215,6 +216,7 @@ class LingotekNodeNotificationCallbackQueueWorkerTest extends LingotekTestBase {
           'complete' => 'true',
           'type' => 'target',
           'progress' => '100',
+          'ready_to_download' => 'true',
         ],
       ])->setAbsolute()->toString();
       $requests[] = \Drupal::httpClient()->postAsync($url);
@@ -310,6 +312,7 @@ class LingotekNodeNotificationCallbackQueueWorkerTest extends LingotekTestBase {
         'complete' => 'true',
         'type' => 'target',
         'progress' => '100',
+        'ready_to_download' => 'true',
       ],
     ])->setAbsolute()->toString();
     $request = $this->client->post($url, [
@@ -349,6 +352,7 @@ class LingotekNodeNotificationCallbackQueueWorkerTest extends LingotekTestBase {
         'complete' => 'true',
         'type' => 'target',
         'progress' => '100',
+        'ready_to_download' => 'true',
       ],
     ])->setAbsolute()->toString();
     $request = $this->client->post($url, [
@@ -373,6 +377,7 @@ class LingotekNodeNotificationCallbackQueueWorkerTest extends LingotekTestBase {
         'complete' => 'true',
         'type' => 'target',
         'progress' => '100',
+        'ready_to_download' => 'true',
       ],
     ])->setAbsolute()->toString();
     $request = \Drupal::httpClient()->postAsync($url);

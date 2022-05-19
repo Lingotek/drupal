@@ -1591,6 +1591,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
         'locale' => 'es_MX',
         'complete' => 'true',
         'type' => 'target',
+        'ready_to_download' => 'true',
         'progress' => '100',
       ],
     ])->setAbsolute()->toString();
